@@ -1,0 +1,18 @@
+8
+comp 0.991004
+kprime -3.0277
+esym 0.164672
+gamma 0.644177
+trans1 1.51202
+index1 0.576381
+trans2 4.60466 
+index2 1.21507
+name file           slice inital mass
+1608 indata/1608.dat    total 1.39737
+1745 indata/1745.dat    total 1.60703
+1820 indata/1820.dat    total 1.72533
+1731 indata/1731.dat    total 1.3
+m13  indata/m13.dat     dat   0.976594
+wcen indata/wcen.dat    dat   1.46027
+x7   indata/x7.dat      dat   1.86694
+u24  indata/u24.dat     dat   0.976594
