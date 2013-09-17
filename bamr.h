@@ -26,8 +26,7 @@
 #include <iostream>
 
 #include <o2scl/cold_nstar.h>
-#include <o2scl/gsl_rnga.h>
-#include <o2scl/gsl_mmin_simp.h>
+#include <o2scl/rng_gsl.h>
 #include <o2scl/hist.h>
 #include <o2scl/shared_ptr.h>
 #include <o2scl/uniform_grid.h>
@@ -94,20 +93,8 @@ namespace o2scl {
     cli::parameter_double p_nb_high;
     cli::parameter_double p_e_low;
     cli::parameter_double p_e_high;
-    cli::parameter_double p_c_low;
-    cli::parameter_double p_c_high;
-    cli::parameter_double p_p_low;
-    cli::parameter_double p_p_high;
-    cli::parameter_double p_eoa_low;
-    cli::parameter_double p_eoa_high;
-    cli::parameter_double p_L_low;
-    cli::parameter_double p_L_high;
-    cli::parameter_double p_S_low;
-    cli::parameter_double p_S_high;
     cli::parameter_double p_m_low;
     cli::parameter_double p_m_high;
-    cli::parameter_double p_r_low;
-    cli::parameter_double p_r_high;
     //@}
 
     /** \name Histogram limits
@@ -117,33 +104,15 @@ namespace o2scl {
     double nb_high;
     double e_low;
     double e_high;
-    double eoa_low;
-    double eoa_high;
-    double p_low;
-    double p_high;
-    double r_low;
-    double r_high;
     double m_low;
     double m_high;
-    double c_low;
-    double c_high;
-    double L_low;
-    double L_high;
-    double S_low;
-    double S_high;
     //@}
 
     /// \name Grids
     //@{
     uniform_grid<double> nb_grid;
     uniform_grid<double> e_grid;
-    uniform_grid<double> eoa_grid;
-    uniform_grid<double> p_grid;
-    uniform_grid<double> r_grid;
     uniform_grid<double> m_grid;
-    uniform_grid<double> c_grid;
-    uniform_grid<double> L_grid;
-    uniform_grid<double> S_grid;
     //@}
 
     /// \name Other parameters accessed by 'set' and 'get'
@@ -330,7 +299,7 @@ namespace o2scl {
     hist nb_hist;
 
     /// Random number generator
-    gsl_rnga gr;
+    rng_gsl gr;
   
     /// The screen output file
     std::ofstream scr_out;
@@ -362,7 +331,7 @@ namespace o2scl {
 			     bool &bad_step);
 
     /// Setup column names for data table
-    virtual void table_names(std::string &s);
+    virtual void table_names_units(std::string &s, std::string &u);
 
     /** \brief Make any necessary preparations for the mcmc() function
 

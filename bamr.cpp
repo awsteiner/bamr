@@ -52,7 +52,7 @@ bamr::bamr() {
   n_warm_up=500;
   in_file="default.in";
   // Minimum allowed maximum mass
-  min_max_mass=1.93;
+  min_max_mass=2.0;
   // Minimum neutron star mass
   min_mass=0.8;
   debug_star=false;
@@ -84,28 +84,12 @@ bamr::bamr() {
   e_low=0.3;
   e_high=10.0;
 
-  p_low=1.0e-4;
-  p_high=15.0;
-
-  eoa_low=0.0;
-  eoa_high=2.5;
-
-  L_low=0.0/hc_mev_fm;
-  L_high=120.0/hc_mev_fm;
-
-  S_low=28.0/hc_mev_fm;
-  S_high=38.0/hc_mev_fm;
-
   // We set the mass minimum to 0.2 so that we get a full mass vs.
   // radius curve, even though the data doesn't go that far down
-  r_low=5.0;
-  r_high=18.0;
+  //r_low=5.0;
+  //r_high=18.0;
   m_low=0.2;
   m_high=3.0;
-  
-  // Limits for ratio
-  c_low=0.1;
-  c_high=10.0;
   
   modp=0;
   modp2=0;
@@ -119,11 +103,13 @@ bamr::bamr() {
   def_ts.verbose=0;
   def_ts.set_units("1/fm^4","1/fm^4","1/fm^3");
   def_ts.set_eos(teos);
+  def_ts.err_nonconv=false;
   ts=&def_ts;
 
   def_ts2.verbose=0;
   def_ts2.set_units("1/fm^4","1/fm^4","1/fm^3");
   def_ts2.set_eos(teos);
+  def_ts2.err_nonconv=false;
   ts2=&def_ts2;
 }
 
@@ -132,51 +118,77 @@ bamr::~bamr() {
   if (modp2!=0) delete modp2;
 }
 
-void bamr::table_names(std::string &s) {
-  s="N mult weight ";
+void bamr::table_names_units(std::string &s, std::string &u) {
+  s="N mult ";
+  u+=". . ";
+  s+="weight ";
+  if (norm_max) {
+    u+=". ";
+  } else {
+    u+=((string)"1/km^")+szttos(nsources)+"/Msun^"+
+      szttos(nsources)+" ";
+  }
   for(size_t i=0;i<nsources;i++) {
     s+=((string)"wgt_")+source_names[i]+" ";
+    if (norm_max) {
+      u+=". ";
+    } else {
+      u+="1/km/Msun ";
+    }
   }
   for(size_t i=0;i<nparams;i++) {
     s+=((string)"param_")+modp->param_name(i)+" ";
+    u+=modp->param_unit(i)+" ";
   }
   for(size_t i=0;i<nsources;i++) {
     s+=((string)"R_")+source_names[i]+" ";
+    u+="km ";
   }
   for(size_t i=0;i<nsources;i++) {
     s+=((string)"M_")+source_names[i]+" ";
+    u+="Msun ";
   }
   if (has_eos) {
     for(size_t i=0;i<hist_size;i++) {
       s+=((string)"P_")+szttos(i)+" ";
+      u+="1/fm^4 ";
     }
   }
   for(size_t i=0;i<hist_size;i++) {
     s+=((string)"R_")+szttos(i)+" ";
+    u+="km ";
     if (has_eos) {
       s+=((string)"PM_")+szttos(i)+" ";
+      u+="1/fm^4 ";
     }
   }
   if (has_eos) {
     if (baryon_density) {
       for(size_t i=0;i<hist_size;i++) {
 	s+=((string)"Pnb_")+szttos(i)+" ";
+	u+="1/fm^4 ";
 	s+=((string)"EoA_")+szttos(i)+" ";
+	u+="MeV ";
       }
     }
     if (has_esym) {
       s+="S L ";
+      u+="MeV MeV ";
     }
     s+="M_max P_max e_max ";
+    u+="Msun 1/fm^4 1/fm^4 ";
     if (baryon_density) {
       s+="nb_max ";
+      u+="1/fm^3 ";
     }
     for(size_t i=0;i<nsources;i++) {
       s+=((string)"ce_")+source_names[i]+" ";
+      u+="1/fm^4 ";
     }
     if (baryon_density) {
       for(size_t i=0;i<nsources;i++) {
 	s+=((string)"cnb_")+source_names[i]+" ";
+	u+="1/fm^3 ";
       }
     }
   }
@@ -197,13 +209,7 @@ void bamr::init_grids_table(entry &low, entry &high) {
 
   nb_grid=uniform_grid_end<double>(nb_low,nb_high,hist_size);
   e_grid=uniform_grid_end<double>(e_low,e_high,hist_size);
-  eoa_grid=uniform_grid_end<double>(eoa_low,eoa_high,hist_size);
-  p_grid=uniform_grid_log_end<double>(p_low,p_high,hist_size);
-  r_grid=uniform_grid_end<double>(r_low,r_high,hist_size);
   m_grid=uniform_grid_end<double>(m_low,m_high,hist_size);
-  c_grid=uniform_grid_log_end<double>(c_low,c_high,hist_size);
-  L_grid=uniform_grid_end<double>(L_low,L_high,hist_size);
-  S_grid=uniform_grid_end<double>(S_low,S_high,hist_size);
 
   e_hist.set_bin_edges(e_grid);
   m_hist.set_bin_edges(m_grid);
@@ -212,9 +218,25 @@ void bamr::init_grids_table(entry &low, entry &high) {
   // -----------------------------------------------------------
   // Init table
 
-  std::string s;
-  table_names(s);
+  std::string s, u;
+  table_names_units(s,u);
   tc.line_of_names(s);
+
+  {
+    size_t ctr=0;
+    std::string unit;
+    std::istringstream is(u);
+    while(is >> unit) {
+      if (unit!=((string)".")) {
+	tc.set_unit(tc.get_column_name(ctr),unit);
+      }
+      ctr++;
+    } 
+    if (ctr!=tc.get_ncolumns()) {
+      O2SCL_ERR("Column/unit alignment in bamr::init_grids_table().",
+		gsl_esanity);
+    }
+  }
 
   return;
 }
@@ -406,20 +428,8 @@ void bamr::first_update(hdf_file &hf, model &modp) {
   hf.setd("nb_high",nb_high);
   hf.setd("e_low",e_low);
   hf.setd("e_high",e_high);
-  hf.setd("eoa_low",eoa_low);
-  hf.setd("eoa_high",eoa_high);
-  hf.setd("p_low",p_low);
-  hf.setd("p_high",p_high);
-  hf.setd("r_low",r_low);
-  hf.setd("r_high",r_high);
   hf.setd("m_low",m_low);
   hf.setd("m_high",m_high);
-  hf.setd("c_low",c_low);
-  hf.setd("c_high",c_high);
-  hf.setd("L_low",L_low);
-  hf.setd("L_high",L_high);
-  hf.setd("S_low",S_low);
-  hf.setd("S_high",S_high);
     
   std::vector<double> low_vec, high_vec;
   for(size_t i=0;i<nparams;i++) {
@@ -492,14 +502,155 @@ void bamr::load_mc() {
     } else {
       scr_out << "Normalizing integral of distribution to 1." << endl;
     }
-    
+
     scr_out << "File name total max P(10,1.4)" << endl;
+
+#ifdef BAMR_MPI_LOAD
+
+    bool mpi_load_debug=true;
+    int buffer=0, tag=0;
+    
+    // Choose which file to read first for this rank
+    int filestart=0;
+    if (mpi_rank>mpi_nprocs-((int)nsources) && mpi_rank>0) {
+      filestart=mpi_nprocs-mpi_rank;
+    }
+    if (mpi_load_debug) {
+      scr_out << "Variable 'filestart' is " << filestart << " for rank "
+	      << mpi_rank << "." << endl;
+    }
+    
+    // Loop through all files
+    for(int k=0;k<((int)nsources);k++) {
+      
+      // For k=0, we choose some ranks to begin reading, the others
+      // have to wait. For k>=1, all ranks have to wait their turn.
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)nsources))) {
+	int prev=mpi_rank-1;
+	if (prev<0) prev+=mpi_nprocs;
+	if (mpi_load_debug) {
+	  scr_out << "Rank " << mpi_rank << " waiting for " 
+		  << prev << "." << endl;
+	}
+	MPI_Recv(&buffer,1,MPI_INT,prev,tag,MPI_COMM_WORLD,
+		 MPI_STATUS_IGNORE);
+      }
+      
+      // Determine which file to read next
+      int file=filestart+k;
+      if (file>=((int)nsources)) file-=nsources;
+
+      if (mpi_load_debug) {
+	scr_out << "Rank " << mpi_rank << " reading file " 
+		<< file << "." << endl;
+      }
+
+      // 
+      {
+	hdf_file hf;
+	hf.open(source_fnames[file]);
+	hdf_input(hf,source_tables[file]);
+	hf.close();
+      }
+      
+      // Update input limits
+      if (file==0) {
+	in_r_min=source_tables[file].get_grid_x(0);
+	in_r_max=source_tables[file].get_grid_x(source_tables[file].get_nx()-1);
+	in_m_min=source_tables[file].get_grid_y(0);
+	in_m_max=source_tables[file].get_grid_y(source_tables[file].get_ny()-1);
+      } else {
+	if (in_r_min>source_tables[file].get_grid_x(0)) {
+	  in_r_min=source_tables[file].get_grid_x(0);
+	}
+	if (in_r_max<source_tables[file].get_grid_x
+	    (source_tables[file].get_nx()-1)) {
+	  in_r_max=source_tables[file].get_grid_x
+	    (source_tables[file].get_nx()-1);
+	}
+	if (in_m_min>source_tables[file].get_grid_y(0)) {
+	  in_m_min=source_tables[file].get_grid_y(0);
+	}
+	if (in_m_max<source_tables[file].get_grid_y
+	    (source_tables[file].get_ny()-1)) {
+	  in_m_max=source_tables[file].get_grid_y
+	    (source_tables[file].get_ny()-1);
+	}
+      }
+
+      // Renormalize
+      tot=0.0;
+      max=0.0;
+      for(size_t i=0;i<source_tables[file].get_nx();i++) {
+	for(size_t j=0;j<source_tables[file].get_ny();j++) {
+	  tot+=source_tables[file].get(i,j,slice_names[file]);
+	  if (source_tables[file].get(i,j,slice_names[file])>max) {
+	    max=source_tables[file].get(i,j,slice_names[file]);
+	  }
+	}
+      }
+      for(size_t i=0;i<source_tables[file].get_nx();i++) {
+	for(size_t j=0;j<source_tables[file].get_ny();j++) {
+	  if (norm_max) {
+	    source_tables[file].set
+	      (i,j,slice_names[file],
+	       source_tables[file].get(i,j,slice_names[file])/max);
+	  } else {
+	    source_tables[file].set
+	      (i,j,slice_names[file],
+	       source_tables[file].get(i,j,slice_names[file])/tot);
+	  }
+	}
+      }
+
+      if (debug_load) {
+	cout << source_fnames[file] << endl;
+	for(size_t i=0;i<source_tables[file].get_nx();i++) {
+	  cout << i << " " << source_tables[file].get_grid_x(i) << endl;
+	}
+	for(size_t j=0;j<source_tables[file].get_ny();j++) {
+	  cout << j << " " << source_tables[file].get_grid_y(j) << endl;
+	}
+	for(size_t i=0;i<source_tables[file].get_nx();i++) {
+	  for(size_t j=0;j<source_tables[file].get_ny();j++) {
+	    cout << source_tables[file].get(i,j,slice_names[file]) << " ";
+	  }
+	  cout << endl;
+	}
+      }
+
+      scr_out.setf(ios::left);
+      scr_out.width(25);
+      scr_out << source_fnames[file] << " ";
+      scr_out.width(6);
+      scr_out << source_names[file] << " " << tot << " " << max << " ";
+      scr_out.unsetf(ios::left);
+      scr_out << source_tables[file].interp(10.0,1.4,slice_names[file]) << endl;
+      
+      // Send a message, unless the rank is the last one to read a
+      // file.
+      if (k<((int)nsources)-1 || mpi_rank<mpi_nprocs-((int)nsources)) {
+	int next=mpi_rank+1;
+	if (next>=mpi_nprocs) next-=mpi_nprocs;
+	if (mpi_load_debug) {
+	  scr_out << "Rank " << mpi_rank << " sending to " 
+		  << next << "." << endl;
+	}
+	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
+      }
+      
+    }
+    
+#else
+
     for(size_t k=0;k<nsources;k++) {
 
-      hdf_file hf;
-      hf.open(source_fnames[k]);
-      hdf_input(hf,source_tables[k]);
-      hf.close();
+      {
+	hdf_file hf;
+	hf.open(source_fnames[k]);
+	hdf_input(hf,source_tables[k]);
+	hf.close();
+      }
       
       // Update input limits
       if (k==0) {
@@ -511,13 +662,15 @@ void bamr::load_mc() {
 	if (in_r_min>source_tables[k].get_grid_x(0)) {
 	  in_r_min=source_tables[k].get_grid_x(0);
 	}
-	if (in_r_max<source_tables[k].get_grid_x(source_tables[k].get_nx()-1)) {
+	if (in_r_max<source_tables[k].get_grid_x
+	    (source_tables[k].get_nx()-1)) {
 	  in_r_max=source_tables[k].get_grid_x(source_tables[k].get_nx()-1);
 	}
 	if (in_m_min>source_tables[k].get_grid_y(0)) {
 	  in_m_min=source_tables[k].get_grid_y(0);
 	}
-	if (in_m_max<source_tables[k].get_grid_y(source_tables[k].get_ny()-1)) {
+	if (in_m_max<source_tables[k].get_grid_y
+	    (source_tables[k].get_ny()-1)) {
 	  in_m_max=source_tables[k].get_grid_y(source_tables[k].get_ny()-1);
 	}
       }
@@ -570,6 +723,8 @@ void bamr::load_mc() {
       scr_out << source_tables[k].interp(10.0,1.4,slice_names[k]) << endl;
 
     }
+
+#endif
 
     scr_out << endl;
   }
@@ -876,7 +1031,12 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Solve for M vs. R curve
-    tsr->mvsr();
+    int ret=tsr->mvsr();
+    if (ret!=0) {
+      scr_out << "M vs. R failed." << endl;
+      success=false;
+      return;
+    }
     tab_mvsr=tsr->get_results();
     tab_mvsr->set_interp_type(itp_linear);
   
@@ -1393,6 +1553,7 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // We set the transition density a bit lower (because by default
     // it's the largest density in the crust EOS) and then add a 
     // small width
+    teos.transition_mode=tov_interp_eos::smooth_trans;
     teos.set_transition(pt/1.2,1.2);
 
   } else {
@@ -1908,46 +2069,6 @@ void bamr::setup_cli() {
   p_e_high.help="Largest energy density grid point in 1/fm^4 (default 10.0).";
   cl.par_list.insert(make_pair("e_high",&p_e_high));
   
-  p_c_low.d=&c_low;
-  p_c_low.help="Smallest ratio grid point in 1/fm^4 (default 0.1).";
-  cl.par_list.insert(make_pair("c_low",&p_c_low));
-
-  p_c_high.d=&c_high;
-  p_c_high.help="Largest ratio grid point in 1/fm^4 (default 10.0).";
-  cl.par_list.insert(make_pair("c_high",&p_c_high));
-  
-  p_p_low.d=&p_low;
-  p_p_low.help="Smallest pressure grid point in 1/fm^4 (default 1.0e-4).";
-  cl.par_list.insert(make_pair("p_low",&p_p_low));
-
-  p_p_high.d=&p_high;
-  p_p_high.help="Largest pressure grid point in 1/fm^4 (default 15.0).";
-  cl.par_list.insert(make_pair("p_high",&p_p_high));
-
-  p_eoa_low.d=&eoa_low;
-  p_eoa_low.help="Smallest energy per baryon grid point in 1/fm (default 0.0).";
-  cl.par_list.insert(make_pair("eoa_low",&p_eoa_low));
-
-  p_eoa_high.d=&eoa_high;
-  p_eoa_high.help="Largest energy per baryon grid point in 1/fm (default 2.5).";
-  cl.par_list.insert(make_pair("eoa_high",&p_eoa_high));
-
-  p_L_low.d=&L_low;
-  p_L_low.help="Smallest L grid point in 1/fm (default 0.0).";
-  cl.par_list.insert(make_pair("L_low",&p_L_low));
-
-  p_L_high.d=&L_high;
-  p_L_high.help="Largest L grid point in 1/fm (default 120.0/hc).";
-  cl.par_list.insert(make_pair("L_high",&p_L_high));
-
-  p_S_low.d=&S_low;
-  p_S_low.help="Smallest symmetry energy grid point in 1/fm (default 28.0/hc).";
-  cl.par_list.insert(make_pair("S_low",&p_S_low));
-
-  p_S_high.d=&S_high;
-  p_S_high.help="Largest symmetry energy grid point in 1/fm (default 38.0/hc).";
-  cl.par_list.insert(make_pair("S_high",&p_S_high));
-
   p_m_low.d=&m_low;
   p_m_low.help="Smallest mass grid point in Msun (default 0.2).";
   cl.par_list.insert(make_pair("m_low",&p_m_low));
@@ -1955,14 +2076,6 @@ void bamr::setup_cli() {
   p_m_high.d=&m_high;
   p_m_high.help="Largest mass grid point in Msun (default 3.0).";
   cl.par_list.insert(make_pair("m_high",&p_m_high));
-
-  p_r_low.d=&r_low;
-  p_r_low.help="Smallest radius grid point in km (default 5.0).";
-  cl.par_list.insert(make_pair("r_low",&p_r_low));
-
-  p_r_high.d=&r_high;
-  p_r_high.help="Largest radius grid point in km (default 18.0).";
-  cl.par_list.insert(make_pair("r_high",&p_r_high));
 
   // --------------------------------------------------------
   

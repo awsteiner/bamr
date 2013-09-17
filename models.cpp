@@ -88,6 +88,17 @@ string two_polytropes::param_name(size_t i) {
   return "index2";
 }
 
+string two_polytropes::param_unit(size_t i) {
+  if (i==0) return "1/fm";
+  else if (i==1) return "1/fm";
+  else if (i==2) return "1/fm";
+  else if (i==3) return ".";
+  else if (i==4) return "1/fm^4";
+  else if (i==5) return ".";
+  else if (i==6) return "1/fm^4";
+  return ".";
+}
+
 void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
 
   fail=false;
@@ -211,6 +222,12 @@ string alt_polytropes::param_name(size_t i) {
   if (i==5) return "exp1";
   else if (i==7) return "exp2";
   return two_polytropes::param_name(i);
+}
+
+string alt_polytropes::param_unit(size_t i) {
+  if (i==5) return ".";
+  else if (i==7) return ".";
+  return two_polytropes::param_unit(i);
 }
 
 void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
@@ -347,6 +364,14 @@ string fixed_pressure::param_name(size_t i) {
   return two_polytropes::param_name(i);
 }
 
+string fixed_pressure::param_unit(size_t i) {
+  if (i==4) return "1/fm^4";
+  else if (i==5) return "1/fm^4";
+  else if (i==6) return "1/fm^4";
+  else if (i==7) return "1/fm^4";
+  return two_polytropes::param_unit(i);
+}
+
 void fixed_pressure::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
 
   fail=false;
@@ -465,6 +490,18 @@ string generic_quarks::param_name(size_t i) {
   else if (i==6) return "trans2";
   else if (i==7) return "a2";
   return "a4";
+}
+
+string generic_quarks::param_unit(size_t i) {
+  if (i==0) return "1/fm";
+  else if (i==1) return "1/fm";
+  else if (i==2) return "1/fm";
+  else if (i==3) return ".";
+  else if (i==4) return "1/fm^4";
+  else if (i==5) return ".";
+  else if (i==6) return "1/fm^4";
+  else if (i==7) return "1/fm^2";
+  return ".";
 }
 
 void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
@@ -677,6 +714,13 @@ std::string quark_star::param_name(size_t i) {
   else if (i==1) return "c";
   else if (i==2) return "Delta";
   return "ms";
+}
+
+std::string quark_star::param_unit(size_t i) {
+  if (i==0) return "1/fm";
+  else if (i==1) return ".";
+  else if (i==2) return "1/fm";
+  return "1/fm";
 }
   
 void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {

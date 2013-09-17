@@ -5,13 +5,13 @@
 
 # This variable should include the directories for the o2scl, gsl, and
 # hdf libraries. 
-LIB_DIRS = -L$(HOME)/install/lib
+LIB_DIRS = -L$(HOME)/install/lib -L$(HOME)/install/o2scl-0.914/lib
 
 # This variable should include the parent directories for the 
 # gsl and o2scl header files as well as the directories for the
 # hdf5 include files
 INC_DIRS = -I$(HOME)/install/include -I$(HOME)/install/include/hdf5 \
-	-I$(HOME)/install/include/o2scl-0.913 \
+	-I$(HOME)/install/o2scl-0.914/include \
 	-I$(HOME)/pkgs/Eigen-3.1.3 -I$(HOME)/install/arma/include \
 	-I$(HOME)/pkgs/boost_1_53_0
 
@@ -28,7 +28,8 @@ READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
 READLINE_LIBS = -lreadline -lncurses
 
 # Some basic warning and optimization flags
-COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3
+COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
+	-DBAMR_MPI_LOAD
 
 # The root include directory (only necessary if you're using the 
 # plotting code, otherwise can be blank)

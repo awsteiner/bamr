@@ -27,7 +27,7 @@
 
 #include <o2scl/cold_nstar.h>
 #include <o2scl/schematic_eos.h>
-#include <o2scl/gsl_root_brent.h>
+#include <o2scl/root_brent_gsl.h>
 #include <o2scl/prob_dens_func.h>
 
 #include "misc.h"
@@ -64,6 +64,9 @@ namespace o2scl {
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i)=0;
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i)=0;
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -141,6 +144,8 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    virtual std::string param_unit(size_t i);
+
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
@@ -171,6 +176,8 @@ namespace o2scl {
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
+
+    virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -203,6 +210,8 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    virtual std::string param_unit(size_t i);
+
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
@@ -228,10 +237,10 @@ namespace o2scl {
     double ms;
 
     /// The solver to find the chemical potential for zero pressure
-    gsl_mroot_hybrids<> gmh;
+    mroot_hybrids<> gmh;
 
     /// Desc
-    gsl_root_brent<> grb;
+    root_brent_gsl<> grb;
 
     quark_star() {
     }
@@ -257,6 +266,8 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
   
+    virtual std::string param_unit(size_t i);
+
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
@@ -335,6 +346,8 @@ namespace o2scl {
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
+
+    virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos

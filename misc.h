@@ -32,7 +32,7 @@
 #include <o2scl/cold_nstar.h>
 #include <o2scl/hist.h>
 #include <o2scl/hist_2d.h>
-#include <o2scl/expect_val.h>
+#include <o2scl/expval.h>
 
 #ifndef DOXYGEN
 namespace o2scl {
