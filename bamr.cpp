@@ -98,7 +98,6 @@ bamr::bamr() {
   // Set up TOV solvers
 
   teos.verbose=0;
-  teos.set_units("1/fm^4","1/fm^4","1/fm^3");
 
   def_ts.verbose=0;
   def_ts.set_units("1/fm^4","1/fm^4","1/fm^3");
@@ -914,6 +913,8 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
     // Read the EOS into the tov_eos object. We don't specify a baryon
     // number density column here, even though it might be provided,
     // just to make the TOV solver a bit faster.
+    tab_eos->set_unit("ed","1/fm^4");
+    tab_eos->set_unit("pr","1/fm^4");
     teos.read_table(*tab_eos,"ed","pr");
   
     if (use_crust) {

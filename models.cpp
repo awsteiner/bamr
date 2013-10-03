@@ -48,9 +48,9 @@ void two_polytropes::low_limits(entry &e) {
   e.params[0]=180.0/hc_mev_fm;
   e.params[1]=-1000.0/hc_mev_fm;
   e.params[2]=28.0/hc_mev_fm;
-  //e.params[3]=0.2;
   e.params[3]=0.0;
-  // 0.75 fm^{-4} is about the energy density of nuclear matter
+  // The value 0.75 fm^{-4} is about the energy density of nuclear
+  // matter
   e.params[4]=0.75;
   e.params[5]=0.2;
   e.params[6]=0.75;
