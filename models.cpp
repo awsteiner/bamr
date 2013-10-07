@@ -543,7 +543,9 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   }
   double pr1=tab_eos->interp("ed",e.params[4],"pr");
   double coeff1=pr1/pow(e.params[4],e.params[5]);
-
+  
+  tab_eos->add_constant("pr_pt",pr1);
+  
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
@@ -591,6 +593,8 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   double a4=e.params[8];
   double ed_trans=e.params[6];
   double pr_trans=coeff1*pow(ed_trans,e.params[5]);
+
+  tab_eos->add_constant("pr_q",pr_trans);
 
   // Coefficients of quadratic
   double quad_b=a2/2.0/a4;

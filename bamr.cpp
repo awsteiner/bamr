@@ -916,7 +916,7 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
     tab_eos->set_unit("ed","1/fm^4");
     tab_eos->set_unit("pr","1/fm^4");
     teos.read_table(*tab_eos,"ed","pr");
-  
+    
     if (use_crust) {
     
       if (false) {
