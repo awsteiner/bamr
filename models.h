@@ -144,6 +144,7 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -177,6 +178,7 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -210,6 +212,7 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -266,6 +269,7 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
   
+    /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -347,6 +351,7 @@ namespace o2scl {
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
 
+    /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
 
     /** \brief Compute the EOS corresponding to parameters in 
