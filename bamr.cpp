@@ -1263,7 +1263,8 @@ double bamr::compute_weight(entry &e, model &modref, tov_solve *tsr,
 
   if (m_max_current>exit_mass) {
     scr_out.setf(ios::scientific);
-    scr_out << "Exiting because maximum mass larger than 'exit_mass'." 
+    scr_out << "Exiting because maximum mass (" << m_max_current 
+	    << ") larger than exit_mass (" << exit_mass << ")." 
 	    << endl;
     scr_out << "e,ret: " << e << " " << ret << endl;
     exit(-1);
@@ -1713,8 +1714,10 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
       }
     }
     
-    select_mass(e_current,e_next,high.mass[0],bad_step);
-    if (bad_step) return gsl_efailed;
+    if (nsources>0) {
+      select_mass(e_current,e_next,high.mass[0],bad_step);
+      if (bad_step) return gsl_efailed;
+    }
 
     // Output the next point
     if (output_next) {

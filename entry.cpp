@@ -90,11 +90,12 @@ entry::entry(const entry &e) {
 std::ostream &o2scl::operator<<(std::ostream &os, entry &e) {
 
   os << "EOS: ";
-  for(size_t k=0;k<e.np;k++) {
+  for(size_t k=0;k<e.np-1;k++) {
     os << e.params[k] << " ";
   }
+  os << e.params[e.np-1];
   if (e.ns>0) {
-    os << "Mass: ";
+    os << " Mass: ";
     for(size_t k=0;k<e.ns;k++) {
       os << e.mass[k] << " ";
     }
