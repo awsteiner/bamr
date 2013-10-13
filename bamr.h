@@ -441,6 +441,9 @@ namespace o2scl {
     tov_solve def_ts2;
     //@}
 
+    /// Desc
+    std::vector<std::string> run_args;
+
   public:
 
     bamr();

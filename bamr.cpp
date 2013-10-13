@@ -446,6 +446,8 @@ void bamr::first_update(hdf_file &hf, model &modp) {
   hf.setd_vec("low",low_vec);
   hf.setd_vec("high",high_vec);
 
+  hf.sets_vec("run_args",run_args);
+
   return;
 }
 
@@ -2095,6 +2097,10 @@ void bamr::run(int argc, char *argv[]) {
   
   cl.prompt="bamr> ";
   cl.run_auto(argc,argv);
+
+  for(int i=0;i<argc;i++) {
+    run_args.push_back(argv[i]);
+  }
     
   return;
 }
