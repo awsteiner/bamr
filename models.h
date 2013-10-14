@@ -88,6 +88,12 @@ namespace o2scl {
       return;
     }
 
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      return;
+    }
+
   };
 
   /** \brief Two polytropes
@@ -152,6 +158,20 @@ namespace o2scl {
     */
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
 
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      e.params[0]=1.0;
+      e.params[1]=-3.0;
+      e.params[2]=0.165;
+      e.params[3]=0.644;
+      e.params[4]=1.51;
+      e.params[5]=0.576;
+      e.params[6]=4.60;
+      e.params[7]=1.21;
+     return;
+    }
+
   };
 
   /** \brief Alternate polytropes
@@ -185,6 +205,20 @@ namespace o2scl {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      e.params[0]=1.0;
+      e.params[1]=-2.66;
+      e.params[2]=0.165;
+      e.params[3]=0.66;
+      e.params[4]=1.48;
+      e.params[5]=2.913;
+      e.params[6]=4.066;
+      e.params[7]=1.80;
+     return;
+    }
   
   };
 
@@ -219,6 +253,20 @@ namespace o2scl {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);  
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      e.params[0]=1.0;
+      e.params[1]=-2.5;
+      e.params[2]=0.165;
+      e.params[3]=0.8;
+      e.params[4]=0.024;
+      e.params[5]=0.74;
+      e.params[6]=0.60;
+      e.params[7]=1.84;
+     return;
+    }
 
   };
 
@@ -276,6 +324,16 @@ namespace o2scl {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      e.params[0]=0.2446;
+      e.params[1]=0.0740;
+      e.params[2]=0.00289;
+      e.params[3]=0.0754;
+      return;
+    }
 
   };
 
@@ -358,6 +416,21 @@ namespace o2scl {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e) {
+      e.params[0]=1.19;
+      e.params[1]=-2.52;
+      e.params[2]=0.188;
+      e.params[3]=0.357;
+      e.params[4]=1.86;
+      e.params[5]=5.70;
+      e.params[6]=2.29;
+      e.params[7]=0.1907;
+      e.params[8]=0.0796;
+      return;
+    }
 
   };
 

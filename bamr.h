@@ -64,6 +64,7 @@ namespace o2scl {
       file is updated (currently every 10 successful MH steps or 
       when a block is finished)
       \future Allow non-tabulated data specified as a function
+      \future Get rid of the 'best' file
   */
   class bamr {
     

@@ -867,7 +867,13 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     // Now compute baryon density
 
+    if (tab_eos->is_column("nb")) {
+      scr_out << "EOS table cannot contain a column named 'nb'." << endl;
+      exit(-1);
+    }
+
     tab_eos->new_column("nb");
+    tab_eos->set_unit("nb","1/fm^3");
 
     for(size_t i=0;i<tab_eos->get_nlines();i++) {      
 

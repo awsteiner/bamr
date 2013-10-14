@@ -1,6 +1,6 @@
 /** \mainpage User's Guide
     
-    This document describes the open source MPI implementation of a
+    This document describes the open-source MPI implementation of a
     Bayesian analysis of mass and radius data to determine the mass
     versus radius curve and the equation of state of dense matter.
     This package will principally be useful for those physicists and
@@ -10,8 +10,13 @@
     This implementation was originally supported by Chandra grant
     TM1-12003X.
 
-    This is a <em>very</em> early release, a beta version. Use at your
-    own risk.
+    This is a beta version. Use at your own risk.
+
+    Currently, \bm is dual-hosted as an SVN respostory at
+    http://www.sourceforge.net/projects/bamr and a git repository at
+    http://www.github.com/awsteiner/bamr . This documentation (when it
+    corresponds to a release) is hosted at http://bamr.sourceforge.net
+    .
 
     \comment
     Test of a citation \cite Steiner10. 
@@ -21,8 +26,8 @@
     encourage you to contact me so that I can help you with the
     details and so that you can let me know if and how this code is
     useful to you. Nevertheless, you are not required to contact me
-    and I will try to continue to improve the documentation and update
-    this code as time permits.
+    and I will be improving documentation and updating this code as
+    time permits.
     
     \hline
     \section contents_sect Contents
@@ -72,9 +77,9 @@
     
     The basic usage is something like
     \verbatim
-    ./bamr -model twop -set in_file default.in -mcmc run1
+    mpirun -np 4 ./bamr -model twop -set in_file default.in -mcmc run1
     \endverbatim
-    to make a one day run with model \c twop with the input
+    to perform a one day run with model \c twop with the input
     file in \c default.in. 
 
     There are several variables which can be modified with the
@@ -135,7 +140,7 @@
     then X is always zero.
 
     \hline
-    \section detail_sect Details
+    \section detail_sect Some Details
 
     The basic functionality is provided in the \ref bamr class and
     each Monte Carlo point is an object of type \ref entry. All of the
@@ -173,23 +178,34 @@
     \section model_sect EOS Model
 
     Some EOS models are already provided. New models (i.e. new
-    children of the \ref model class) must include a minimal
-    functionality. The function \ref model::compute_eos() should use
-    the parameters in the \ref entry argument to compute the EOS and
-    store it into the object returned by \ref
-    cold_nstar::get_eos_results(). The energy density should be stored
-    in a column named <tt>ed</tt> and the pressure in <tt>pr</tt>. 
-    If the baryon density is provided,
-    \ref model::compute_eos() should store one baryon density and
-    energy density in \ref model::nb_n1 and \ref model::nb_e1,
-    respectively. If the model provides the symmetry energy, it should
-    be stored as constants named <tt>"S"</tt> and <tt>"L"</tt> in the
-    table. Causality is automatically checked in bamr::compute_star(),
-    but the \ref model::compute_eos() function should check that the
-    pressure is not decreasing. Finally, it is recommended to set the
-    interpolation type in the \ref table_units object to linear
-    interpolation.
+    children of the \ref model class) must perform several tasks
 
+    - The function \ref model::compute_eos() should use the parameters
+    in the \ref entry argument to compute the EOS and store it in the
+    object returned by \ref cold_nstar::get_eos_results().
+
+    - The energy density should be stored in a column named
+    <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
+    set for each column (currently only <tt>1/fm^4</tt> is supported).
+
+    - If \ref bamr::baryon_density is true, then \ref
+    model::compute_eos() should return one baryon density and energy
+    density in \ref model::baryon_density_point(), and no column
+    should be named <tt>"nb"</tt>, since this is reserved by \bm for
+    computing the baryon density.
+
+    - If the model provides the symmetry energy and its density
+    derivative, it should be stored as constants named <tt>"S"</tt>
+    and <tt>"L"</tt> in the table (in MeV).
+
+    - Causality is automatically checked in bamr::compute_star(), but
+    the \ref model::compute_eos() function should check that the
+    pressure is not decreasing. 
+
+    - Finally, it is recommended to set the interpolation type in the
+    \ref table_units object to linear interpolation.
+
+    \comment
     \hline
     \section plot_sect Plotting
 
@@ -198,6 +214,7 @@
     basic functionality of ROOT so all of the extra packages which are
     available can be disabled. The relevant \c makefile targets
     are \c plot and \c plot2d.
+    \endcomment
 
     \hline
     \section ack_sect Acknowledgements
