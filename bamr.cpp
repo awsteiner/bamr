@@ -1519,9 +1519,6 @@ void bamr::select_mass(entry &e_current, entry &e_next, double mmax,
 
 int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
-  int iret=mcmc_init();
-  if (iret!=0) return iret;
-
   // User-specified filename prefix
   if (sv.size()<2) {
     cout << "No filename prefix given in bamr::mcmc()." << endl;
@@ -1546,6 +1543,11 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
     scr_out << "Model not set." << endl;
     return gsl_efailed;
   }
+
+  // Run init() function (have to make sure to do this after opening
+  // scr_out). 
+  int iret=mcmc_init();
+  if (iret!=0) return iret;
 
   // Low-density crust
   if (use_crust) {

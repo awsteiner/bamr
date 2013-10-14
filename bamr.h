@@ -58,10 +58,10 @@ namespace o2scl {
       \todo More .in files
       \todo Help with plots
       \todo Currently warm_up is changed to false only during 
-      the first accepted step after <tt>iteration > n_warm_up<tt>,
-      not immediately after <tt>iteration > n_warm_up<tt>.
+      the first accepted step after <tt>iteration > n_warm_up</tt>,
+      not immediately after <tt>iteration > n_warm_up</tt>.
       \future Allow the user to control how often the output 
-      file is updated (current every 10 successful MH steps or 
+      file is updated (currently every 10 successful MH steps or 
       when a block is finished)
       \future Allow non-tabulated data specified as a function
   */
@@ -330,7 +330,7 @@ namespace o2scl {
     virtual void select_mass(entry &e_current, entry &e_next, double mmax,
 			     bool &bad_step);
 
-    /// Setup column names for data table
+    /// Setup column names and units for data table
     virtual void table_names_units(std::string &s, std::string &u);
 
     /** \brief Make any necessary preparations for the mcmc() function
@@ -369,6 +369,9 @@ namespace o2scl {
        o2_shared_ptr<table_units<> >::type tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights);
 
+    /** \brief Fill vector in <tt>line</tt> with data from the
+	current Monte Carlo point
+     */
     virtual void fill_line
       (entry &e, o2_shared_ptr<table_units<> >::type tab_eos,
        o2_shared_ptr<table_units<> >::type tab_mvsr,
@@ -441,7 +444,8 @@ namespace o2scl {
     tov_solve def_ts2;
     //@}
 
-    /// Desc
+    /** \brief The arguments sent to the command-line
+     */
     std::vector<std::string> run_args;
 
   public:
