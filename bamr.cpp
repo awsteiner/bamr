@@ -2095,13 +2095,13 @@ void bamr::run(int argc, char *argv[]) {
   
   setup_cli();
   
-  cl.prompt="bamr> ";
-  cl.run_auto(argc,argv);
-
   for(int i=0;i<argc;i++) {
     run_args.push_back(argv[i]);
   }
     
+  cl.prompt="bamr> ";
+  cl.run_auto(argc,argv);
+
   return;
 }
 
