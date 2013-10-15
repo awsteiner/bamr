@@ -20,6 +20,9 @@
 
   -------------------------------------------------------------------
 */
+/** \file entry.h
+    \brief Definition of entry class
+*/
 #ifndef ENTRY_H
 #define ENTRY_H
 
@@ -27,9 +30,7 @@
 
 #include "misc.h"
 
-#ifndef DOXYGEN
-namespace o2scl {
-#endif
+namespace bamr {
 
   /** \brief A data class which holds the EOS parameters,
       the masses and the radii
@@ -76,8 +77,6 @@ namespace o2scl {
   /// Output an entry object (without trailing endline)
   std::ostream &operator<<(std::ostream &os, entry &e);
 
-#ifndef DOXYGEN
 }
-#endif
 
 #endif

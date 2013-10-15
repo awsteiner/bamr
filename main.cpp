@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   // ---------------------------------------
   // Main bamr object 
   
-  o2scl::bamr b;
+  bamr::bamr_class b;
   b.run(argc,argv);
   
   // ---------------------------------------

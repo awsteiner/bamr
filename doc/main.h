@@ -1,3 +1,6 @@
+/** \file main.h
+    \brief File containing user's guide documentation
+*/
 /** \mainpage User's Guide
     
     This document describes the open-source MPI implementation of a
@@ -18,10 +21,6 @@
     corresponds to a release) is hosted at http://bamr.sourceforge.net
     .
 
-    \comment
-    Test of a citation \cite Steiner10. 
-    \endcomment
-
     If you are considering using this code for your research, I
     encourage you to contact me so that I can help you with the
     details and so that you can let me know if and how this code is
@@ -38,7 +37,6 @@
     - \ref infile_sect 
     - \ref outfile_sect
     - \ref detail_sect
-    - \ref plot_sect
     - \ref ack_sect
     - \ref ref_sect
     - \ref license_page
@@ -77,7 +75,7 @@
     
     The basic usage is something like
     \verbatim
-    mpirun -np 4 ./bamr -model twop -set in_file default.in -mcmc run1
+    mpirun -np 4 ./bamr -model twop -run default.in -mcmc run1
     \endverbatim
     to perform a one day run with model \c twop with the input
     file in \c default.in. 
@@ -85,12 +83,12 @@
     There are several variables which can be modified with the
     \c set command, e.g. 
     \verbatim
-    ./bamr -model twop -set max_time 43200 -set in_file default.in -mcmc run2
+    ./bamr -model twop -set max_time 43200 -run default.in -mcmc run2
     \endverbatim
 
     An example of an MPI invocation is
     \verbatim
-    mpirun -np 4 ./bamr -set model twop -set in_file default.in -mcmc run3 &
+    mpirun -np 4 ./bamr -set model twop -run default.in -mcmc run3 &
     \endverbatim
     which runs with four processors on the current machine.
 
@@ -102,28 +100,12 @@
     relevant functions and parameters. 
 
     \hline
-    \section infile_sect Input File
+    \section infile_sect Data files
 
-    There are two kinds of input files, the first is a text file which
-    specifies the initial values of all of the parameters. The second
-    is a set of HDF5 files (typically named with a <tt>.o2</tt>
+    The data files are HDF5 files (typically named with a <tt>.o2</tt>
     extension) which contain one \ref table3d object giving the
     probability density of a neutron star observation as a slice in
     that table.
-
-    The input text file must contains the following lines
-    - The number of sources (may be zero)
-    - For each parameter, a name (not containing whitespace) and an
-    initial value
-    - A line of column headers (must be five words separated with
-    whitespace)
-    - The input line for each source
-
-    The input line for each source should contain the following columns
-    - Short name without whitespace
-    - Filename of the HDF5 file which holds the \ref table3d object
-    - The name of the relevant slice in the \ref table3d object
-    - The initial mass
 
     \hline
     \section outfile_sect Output Files

@@ -26,6 +26,7 @@ using namespace std;
 using namespace o2scl;
 using namespace o2scl_hdf;
 using namespace o2scl_const;
+using namespace bamr;
 
 two_polytropes::two_polytropes() {
   se.kpp=0.0;

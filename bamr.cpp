@@ -32,25 +32,36 @@ using namespace o2scl;
 using namespace o2scl_hdf;
 // For pi, pi^2, etc.
 using namespace o2scl_const;
+using namespace bamr;
   
-bamr::bamr() {
+bamr_class::bamr_class() {
 
   nparams=0;
   nsources=0;
   first_file_update=false;
   hist_size=100;
   model_type="";
+  has_eos=true;
+  chain_size=0;
+  n_chains=0;
+  schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
 
+  in_m_min=0.8;
+  in_m_max=3.0;
+  in_r_min=5.0;
+  in_r_max=18.0;
+
+  modp=0;
+  modp2=0;
+  
   // Default parameter values
 
   first_point_file="";
   debug_load=false;
   step_fac=15.0;
-  schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
   // Default to 24 hours
   max_time=3.6e3*24;
-  n_warm_up=500;
-  in_file="default.in";
+  n_warm_up=0;
   // Minimum allowed maximum mass
   min_max_mass=2.0;
   // Minimum neutron star mass
@@ -65,16 +76,8 @@ bamr::bamr() {
   user_seed=0;
   best_detail=false;
   max_iters=0;
-  chain_size=0;
-  n_chains=0;
   norm_max=true;
-  has_eos=true;
 
-  in_m_min=0.8;
-  in_m_max=3.0;
-  in_r_min=5.0;
-  in_r_max=18.0;
-  
   // -----------------------------------------------------------
   // Grid limits
   
@@ -84,16 +87,9 @@ bamr::bamr() {
   e_low=0.3;
   e_high=10.0;
 
-  // We set the mass minimum to 0.2 so that we get a full mass vs.
-  // radius curve, even though the data doesn't go that far down
-  //r_low=5.0;
-  //r_high=18.0;
   m_low=0.2;
   m_high=3.0;
   
-  modp=0;
-  modp2=0;
-
   // -----------------------------------------------------------
   // Set up TOV solvers
 
@@ -112,12 +108,12 @@ bamr::bamr() {
   ts2=&def_ts2;
 }
 
-bamr::~bamr() {
+bamr_class::~bamr_class() {
   if (modp!=0) delete modp;
   if (modp2!=0) delete modp2;
 }
 
-void bamr::table_names_units(std::string &s, std::string &u) {
+void bamr_class::table_names_units(std::string &s, std::string &u) {
   s="N mult ";
   u+=". . ";
   s+="weight ";
@@ -195,12 +191,12 @@ void bamr::table_names_units(std::string &s, std::string &u) {
   return;
 }
 
-void bamr::init_grids_table(entry &low, entry &high) {
+void bamr_class::init_grids_table(entry &low, entry &high) {
   
   scr_out << "In init()." << std::endl;
 
   if (low.np==0 || high.np==0) {
-    O2SCL_ERR("No parameters in bamr::init().",gsl_einval);
+    O2SCL_ERR("No parameters in bamr_class::init().",gsl_einval);
   }
 
   // -----------------------------------------------------------
@@ -232,7 +228,7 @@ void bamr::init_grids_table(entry &low, entry &high) {
       ctr++;
     } 
     if (ctr!=tc.get_ncolumns()) {
-      O2SCL_ERR("Column/unit alignment in bamr::init_grids_table().",
+      O2SCL_ERR("Column/unit alignment in bamr_class::init_grids_table().",
 		gsl_esanity);
     }
   }
@@ -240,7 +236,7 @@ void bamr::init_grids_table(entry &low, entry &high) {
   return;
 }
 
-void bamr::fill_line
+void bamr_class::fill_line
 (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
  o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts,
@@ -358,7 +354,7 @@ void bamr::fill_line
   return;
 }
 
-void bamr::add_measurement
+void bamr_class::add_measurement
 (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
  o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
@@ -390,7 +386,7 @@ void bamr::add_measurement
   return;
 }
 
-void bamr::first_update(hdf_file &hf, model &modp) {
+void bamr_class::first_update(hdf_file &hf, model &modp) {
 
   vector<string> param_names;
   for(size_t i=0;i<nparams;i++) {
@@ -406,7 +402,6 @@ void bamr::first_update(hdf_file &hf, model &modp) {
   hf.set_szt("nparams",nparams);
   hf.set_szt("nsources",nsources);
   hf.sets("model",model_type);
-  hf.sets("in_file",in_file);
   hf.setd("max_time",max_time);
   hf.seti("user_seed",user_seed);
   hf.seti("n_warm_up",n_warm_up);
@@ -451,7 +446,8 @@ void bamr::first_update(hdf_file &hf, model &modp) {
   return;
 }
 
-void bamr::update_files(string fname_prefix, model &modp, entry &e_current) {
+void bamr_class::update_files(string fname_prefix, model &modp, 
+			      entry &e_current) {
 
   hdf_file hf;
 
@@ -486,7 +482,7 @@ void bamr::update_files(string fname_prefix, model &modp, entry &e_current) {
   return;
 }
 
-void bamr::load_mc() {
+void bamr_class::load_mc() {
 
   double tot, max;
 
@@ -550,7 +546,11 @@ void bamr::load_mc() {
       {
 	hdf_file hf;
 	hf.open(source_fnames[file]);
-	hdf_input(hf,source_tables[file]);
+	if (table_names[file].length()>0) {
+	  hdf_input(hf,source_tables[file],table_names[file]);
+	} else {
+	  hdf_input(hf,source_tables[file]);
+	}
 	hf.close();
       }
       
@@ -649,7 +649,11 @@ void bamr::load_mc() {
       {
 	hdf_file hf;
 	hf.open(source_fnames[k]);
-	hdf_input(hf,source_tables[k]);
+	if (table_names[k].length()>0) {
+	  hdf_input(hf,source_tables[k],table_names[k]);
+	} else {
+	  hdf_input(hf,source_tables[k]);
+	}
 	hf.close();
       }
       
@@ -732,9 +736,6 @@ void bamr::load_mc() {
 
   if (in_m_min<min_mass) in_m_min=min_mass;
 
-  // Merciless hack
-  //in_m_max=2.5;
-  
   scr_out << "M limits: (" 
 	  << in_m_min << "," << in_m_max << ")" << endl;
   scr_out << "R limits: ("
@@ -743,12 +744,12 @@ void bamr::load_mc() {
   return;
 }
   
-void bamr::prepare_eos(entry &e, model &modref, tov_solve *tsr, 
+void bamr_class::prepare_eos(entry &e, model &modref, tov_solve *tsr, 
 		       bool &success) {
   return;
 }
 
-void bamr::compute_star(entry &e, model &modref, tov_solve *tsr, 
+void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr, 
 			bool &success) {
   
   success=true;
@@ -800,7 +801,7 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
     
     if (n1<=0.0 && e1<=0.0) {
       O2SCL_ERR2("Computing the baryon density requires one ",
-		 "calibration point in bamr::compute_star().",gsl_einval);
+		 "calibration point in bamr_class::compute_star().",gsl_einval);
     }
 
     // Compute inverse of gibbs energy density, 'igb'
@@ -1184,7 +1185,7 @@ void bamr::compute_star(entry &e, model &modref, tov_solve *tsr,
   return;
 }
 
-double bamr::compute_weight(entry &e, model &modref, tov_solve *tsr, 
+double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr, 
 			    bool &success, ubvector &wgts, bool warm_up) {
 			     
   // Compute the M vs R curve and return if it failed
@@ -1281,78 +1282,45 @@ double bamr::compute_weight(entry &e, model &modref, tov_solve *tsr,
   return ret;
 }
 
-void bamr::read_input(entry &e_current) {
-    
-  bool debug=true;
+int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 
-  string stmp;
-  
-  // Open file
-  if (debug) {
-    scr_out << "Opening input file named: " 
-	    << in_file.c_str() << endl;
-  }
-  ifstream fin(in_file.c_str());
-    
-  // Read number of sources, and allocate e_current 
-
-  fin >> nsources;
-  e_current.allocate(nparams,nsources);
-
-  // Read parameter names and initial guesses
-
-  if (debug) {
-    scr_out << "Looking for " << nparams 
-	    << " parameter names and initial guesses." << endl;
-  }
-  for(size_t i=0;i<e_current.np;i++) {
-    fin >> stmp;
-    fin >> e_current.params[i];
-    if (debug) {
-      scr_out << i << " " << e_current.params[i] << endl;
-    }
+  if (sv.size()<5) {
+    cout << "Not enough arguments given to 'add-data'." << endl;
+    return gsl_efailed;
   }
 
-  // Read information for each source
-
-  if (nsources>0) {
-
-    fin >> stmp;
-    fin >> stmp;
-    fin >> stmp;
-    fin >> stmp;
-    fin >> stmp;
-      
-    source_names.resize(nsources);
-    source_fnames.resize(nsources);
-    slice_names.resize(nsources);
-      
-    for(size_t i=0;i<nsources;i++) {
-      fin >> source_names[i];
-      fin >> source_fnames[i];
-      fin >> slice_names[i];
-      fin >> e_current.mass[i];
-      if (debug) {
-	scr_out << i << " ";
-	scr_out.width(6);
-	scr_out << source_names[i] << " ";
-	scr_out.width(30);
-	scr_out.setf(ios::left);
-	scr_out << source_fnames[i] << " ";
-	scr_out.unsetf(ios::left);
-	scr_out.width(6);
-	scr_out << slice_names[i] << " " << e_current.mass[i] << endl;
-      }
-    }
-
+  source_names.push_back(sv[1]);
+  source_fnames.push_back(sv[2]);
+  slice_names.push_back(sv[3]);
+  first_mass.push_back(stod(sv[4]));
+  if (sv.size()==6) {
+    table_names.push_back(sv[5]);
+  } else {
+    table_names.push_back("");
   }
 
-  fin.close();
+  nsources++;
 
-  return;
+  return 0;
 }
 
-int bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
+int bamr_class::set_first_point(std::vector<std::string> &sv, 
+				bool itive_com) {
+
+  if (sv.size()<2) {
+    cout << "No arguments given to 'first-point'." << endl;
+    return gsl_efailed;
+  }
+
+  first_point.resize(sv.size()-1);
+  for(size_t i=1;i<sv.size();i++) {
+    first_point[i-1]=stod(sv[i]);
+  }
+
+  return 0;
+}
+
+int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   if (sv.size()<2) {
     cout << "Model name not given." << endl;
     return gsl_efailed;
@@ -1415,7 +1383,7 @@ int bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-void bamr::output_best(string fname_prefix, entry &e_best, double w_best,
+void bamr_class::output_best(string fname_prefix, entry &e_best, double w_best,
 		       o2_shared_ptr<table_units<> >::type tab_eos,
 		       o2_shared_ptr<table_units<> >::type tab_mvsr,
 		       ubvector &wgts) {
@@ -1467,11 +1435,11 @@ void bamr::output_best(string fname_prefix, entry &e_best, double w_best,
   return;
 }
 
-int bamr::mcmc_init() {
+int bamr_class::mcmc_init() {
   return 0;
 }
 
-bool bamr::make_step(double w_current, double w_next, bool debug,
+bool bamr_class::make_step(double w_current, double w_next, bool debug,
 		     bool warm_up, int iteration) {
   
   double r=gr.random();
@@ -1489,7 +1457,7 @@ bool bamr::make_step(double w_current, double w_next, bool debug,
   return accept;
 }
 
-void bamr::select_mass(entry &e_current, entry &e_next, double mmax,
+void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
 		       bool &bad_step) {
 
   // Step for masses
@@ -1523,11 +1491,11 @@ void bamr::select_mass(entry &e_current, entry &e_next, double mmax,
   return;
 }
 
-int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
+int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // User-specified filename prefix
   if (sv.size()<2) {
-    cout << "No filename prefix given in bamr::mcmc()." << endl;
+    cout << "No filename prefix given in bamr_class::mcmc()." << endl;
     return gsl_efailed;
   }
   string fname_prefix=sv[1];
@@ -1588,9 +1556,55 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
   scr_out << " Start time: " << mpi_start_time << endl;
   scr_out.precision(6);
 
-  // Read input file
-  entry e_current;
-  read_input(e_current);
+  // First MC point
+  entry e_current(nparams,nsources);
+  
+  // Determine first point in parameter space
+  if (first_point_file.length()>0) {
+    
+    // If necessary, read initial guess from file
+    std::vector<double> best_point;
+    hdf_file hf;
+    hf.open(first_point_file);
+    hf.getd_vec("best_point",best_point);
+    hf.close();
+    scr_out << "Reading best point from file '" << first_point_file
+	    << "'." << endl;
+    for(size_t i=0;i<nparams;i++) {
+      e_current.params[i]=best_point[i];
+      scr_out << e_current.params[i] << endl;
+    }
+    scr_out << endl;
+    for(size_t i=nparams;i<nsources+nparams;i++) {
+      e_current.mass[i-nparams]=best_point[i];
+      scr_out << e_current.mass[i-nparams] << endl;
+    }
+    scr_out << endl;
+
+  } else if (first_point.size()>0) {
+    
+    scr_out << "First point from command-line." << endl;
+    for(size_t i=0;i<nparams;i++) {
+      e_current.params[i]=first_point[i];
+      scr_out << e_current.params[i] << endl;
+    }
+    scr_out << endl;
+
+  } else {
+    
+    scr_out << "First point from default." << endl;
+    modp->first_point(e_current);
+
+  }
+
+  // Determine initial masses
+
+  for(size_t i=0;i<nsources;i++) {
+    e_current.mass[i]=first_mass[i];
+    e_current.rad[i]=0.0;
+  }
+
+  scr_out << "First point: " << e_current << endl;
 
   // Set lower and upper bounds for parameters
   low.allocate(nparams,nsources);
@@ -1610,27 +1624,6 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // Load data
   load_mc();
-
-  // If necessary, read initial guess
-  if (first_point_file.length()>0) {
-    std::vector<double> best_point;
-    hdf_file hf;
-    hf.open(first_point_file);
-    hf.getd_vec("best_point",best_point);
-    hf.close();
-    scr_out << "Reading best point from file '" << first_point_file
-	    << "'." << endl;
-    for(size_t i=0;i<nparams;i++) {
-      e_current.params[i]=best_point[i];
-      scr_out << e_current.params[i] << endl;
-    }
-    scr_out << endl;
-    for(size_t i=nparams;i<nsources+nparams;i++) {
-      e_current.mass[i-nparams]=best_point[i];
-      scr_out << e_current.mass[i-nparams] << endl;
-    }
-    scr_out << endl;
-  }
 
   // Set lower and upper bounds for masses and radii from load_mc()
   for(size_t i=0;i<nsources;i++) {
@@ -1938,26 +1931,34 @@ int bamr::mcmc(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-void bamr::setup_cli() {
+void bamr_class::setup_cli() {
 
   // ---------------------------------------
   // Set options
     
-  static const int nopt=3;
+  static const int nopt=4;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      1,1,"<filename prefix>",((string)"This is the main part of ")+
      "the code which performs the simulation. Make sure to set the "+
-     "model first using the 'model' command and the input file "+
-     "by setting the 'in_file' variable using the 'set' command. "+
+     "model first using the 'model' command. "+
      "The one required argument to mcmc is the prefix for the "+
      "output files.",
-     new comm_option_mfptr<bamr>(this,&bamr::mcmc),
+     new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
      cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
      "Typical values are 'twop', 'impp', 'fixp', and 'genq'.",
-     new comm_option_mfptr<bamr>(this,&bamr::set_model),
+     new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
+     cli::comm_option_both},
+    {'a',"add-data","Add data source to the list.",
+     4,5,"<name> <file> <slice> <initial mass> [obj name]",
+     ((string)"Desc. ")+"Desc2.",
+     new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
+     cli::comm_option_both},
+    {'f',"first-point","Desc.",
+     1,-1,"<>",((string)"Desc. ")+"Desc2.",
+     new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
      cli::comm_option_both},
   };
   cl.set_comm_option_vec(nopt,options);
@@ -2057,10 +2058,6 @@ void bamr::setup_cli() {
     "true).";
   cl.par_list.insert(make_pair("use_crust",&p_use_crust));
 
-  p_in_file.str=&in_file;
-  p_in_file.help="Input file name (default \"default.in\").";
-  cl.par_list.insert(make_pair("in_file",&p_in_file));
-
   p_first_point_file.str=&first_point_file;
   p_first_point_file.help="First point file name (default \"\").";
   cl.par_list.insert(make_pair("first_point_file",&p_first_point_file));
@@ -2096,7 +2093,7 @@ void bamr::setup_cli() {
   return;
 }
 
-void bamr::run(int argc, char *argv[]) {
+void bamr_class::run(int argc, char *argv[]) {
   
   // ---------------------------------------
   // Process command-line arguments and run

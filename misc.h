@@ -20,6 +20,9 @@
 
   -------------------------------------------------------------------
 */
+/** \file misc.h
+    \brief Definition of cold_nstar2
+*/
 #ifndef MISC_H
 #define MISC_H
 
@@ -34,9 +37,7 @@
 #include <o2scl/hist_2d.h>
 #include <o2scl/expval.h>
 
-#ifndef DOXYGEN
-namespace o2scl {
-#endif
+namespace bamr {
 
   typedef boost::numeric::ublas::vector<double> ubvector;
   typedef boost::numeric::ublas::vector<size_t> ubvector_size_t;
@@ -49,7 +50,7 @@ namespace o2scl {
       pressure rather than the \o2 version which computes several
       extra quantities. This class is part of \ref model.
   */
-  class cold_nstar2 : public cold_nstar {
+  class cold_nstar2 : public o2scl::cold_nstar {
 
   public:
 
@@ -58,8 +59,6 @@ namespace o2scl {
 
   };
 
-#ifndef DOXYGEN
 }
-#endif
 
 #endif

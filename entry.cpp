@@ -24,6 +24,7 @@
 
 using namespace std;
 using namespace o2scl;
+using namespace bamr;
 
 entry::entry() {
   np=0;
@@ -87,7 +88,7 @@ entry::entry(const entry &e) {
   }
 }
 
-std::ostream &o2scl::operator<<(std::ostream &os, entry &e) {
+std::ostream &bamr::operator<<(std::ostream &os, entry &e) {
 
   os << "EOS: ";
   for(size_t k=0;k<e.np-1;k++) {

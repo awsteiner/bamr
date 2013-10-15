@@ -20,6 +20,9 @@
 
   -------------------------------------------------------------------
 */
+/** \file bamr.h
+    \brief Definition of main bamr class
+*/
 #ifndef BAMR_H
 #define BAMR_H
 
@@ -44,9 +47,7 @@
 #include "entry.h"
 #include "models.h"
 
-#ifndef DOXYGEN
-namespace o2scl {
-#endif
+namespace bamr {
 
   /** \brief Statistical analysis of EOS from M and R constraints
 
@@ -66,36 +67,35 @@ namespace o2scl {
       \future Allow non-tabulated data specified as a function
       \future Get rid of the 'best' file
   */
-  class bamr {
+  class bamr_class {
     
   protected:
 
     /// \name Parameter objects for the 'set' command
     //@{
-    cli::parameter_double p_max_time;
-    cli::parameter_double p_min_max_mass;
-    cli::parameter_double p_step_fac;
-    cli::parameter_double p_exit_mass;
-    cli::parameter_double p_input_dist_thresh;
-    cli::parameter_double p_min_mass;
-    cli::parameter_int p_warm_up;
-    cli::parameter_int p_user_seed;
-    cli::parameter_int p_max_iters;
-    cli::parameter_bool p_norm_max;
-    cli::parameter_bool p_debug_star;
-    cli::parameter_bool p_debug_load;
-    cli::parameter_bool p_debug_eos;
-    cli::parameter_bool p_output_next;
-    cli::parameter_bool p_baryon_density;
-    cli::parameter_bool p_use_crust;
-    cli::parameter_string p_in_file;
-    cli::parameter_string p_first_point_file;
-    cli::parameter_double p_nb_low;
-    cli::parameter_double p_nb_high;
-    cli::parameter_double p_e_low;
-    cli::parameter_double p_e_high;
-    cli::parameter_double p_m_low;
-    cli::parameter_double p_m_high;
+    o2scl::cli::parameter_double p_max_time;
+    o2scl::cli::parameter_double p_min_max_mass;
+    o2scl::cli::parameter_double p_step_fac;
+    o2scl::cli::parameter_double p_exit_mass;
+    o2scl::cli::parameter_double p_input_dist_thresh;
+    o2scl::cli::parameter_double p_min_mass;
+    o2scl::cli::parameter_int p_warm_up;
+    o2scl::cli::parameter_int p_user_seed;
+    o2scl::cli::parameter_int p_max_iters;
+    o2scl::cli::parameter_bool p_norm_max;
+    o2scl::cli::parameter_bool p_debug_star;
+    o2scl::cli::parameter_bool p_debug_load;
+    o2scl::cli::parameter_bool p_debug_eos;
+    o2scl::cli::parameter_bool p_output_next;
+    o2scl::cli::parameter_bool p_baryon_density;
+    o2scl::cli::parameter_bool p_use_crust;
+    o2scl::cli::parameter_string p_first_point_file;
+    o2scl::cli::parameter_double p_nb_low;
+    o2scl::cli::parameter_double p_nb_high;
+    o2scl::cli::parameter_double p_e_low;
+    o2scl::cli::parameter_double p_e_high;
+    o2scl::cli::parameter_double p_m_low;
+    o2scl::cli::parameter_double p_m_high;
     //@}
 
     /** \name Histogram limits
@@ -111,9 +111,9 @@ namespace o2scl {
 
     /// \name Grids
     //@{
-    uniform_grid<double> nb_grid;
-    uniform_grid<double> e_grid;
-    uniform_grid<double> m_grid;
+    o2scl::uniform_grid<double> nb_grid;
+    o2scl::uniform_grid<double> e_grid;
+    o2scl::uniform_grid<double> m_grid;
     //@}
 
     /// \name Other parameters accessed by 'set' and 'get'
@@ -164,9 +164,6 @@ namespace o2scl {
     /// Number of warm up steps (successful steps not iterations)
     int n_warm_up;
 
-    /// Input file (default "default.in")
-    std::string in_file;
-
     /** \brief Time in seconds (3600 seconds is one hour, default is
 	86400 seconds or 1 day)
     */
@@ -209,10 +206,13 @@ namespace o2scl {
     /// \name Input data
     //@{
     /// Input probability distributions
-    std::vector<table3d> source_tables;
+    std::vector<o2scl::table3d> source_tables;
 
     /// The names for each source
     std::vector<std::string> source_names;
+
+    /// The names of the table in the data file
+    std::vector<std::string> table_names;
 
     /// File names for each source
     std::vector<std::string> source_fnames;
@@ -221,8 +221,6 @@ namespace o2scl {
     std::vector<std::string> slice_names;
 
     /** \brief The number of sources
-	
-	This is set in \ref read_input() which is called by mcmc().
     */
     size_t nsources;
     //@}
@@ -232,13 +230,19 @@ namespace o2scl {
     entry low, high;
     //@}
 
+    /// Desc
+    ubvector first_point;
+
+    /// Desc
+    std::vector<double> first_mass;
+
     /// \name Other variables
     //@{
     /// The file containing the initial point
     std::string first_point_file;
 
     /// Main data table for Markov chain
-    table_units<> tc;
+    o2scl::table_units<> tc;
     
     /// The number of Metropolis steps which succeeded
     size_t mh_success_cnt;
@@ -251,10 +255,10 @@ namespace o2scl {
 
 #ifdef BAMR_READLINE
     /// Command-line interface
-    cli_readline cl;
+    o2scl::cli_readline cl;
 #else
     /// Command-line interface
-    cli cl;
+    o2scl::cli cl;
 #endif
 
     /// If true, then parameter names have been written to the HDF file
@@ -291,16 +295,16 @@ namespace o2scl {
     model *modp2;
 
     /// Histogram for energy grid
-    hist e_hist;
-
+    o2scl::hist e_hist;
+    
     /// Histogram for gravitational mass grid
-    hist m_hist;
+    o2scl::hist m_hist;
     
     /// Histogram for baryon density grid
-    hist nb_hist;
+    o2scl::hist nb_hist;
 
     /// Random number generator
-    rng_gsl gr;
+    o2scl::rng_gsl gr;
   
     /// The screen output file
     std::ofstream scr_out;
@@ -311,6 +315,10 @@ namespace o2scl {
     /** \brief Set the model for the EOS to use
      */
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
+
+    virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
+
+    virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
     /** \brief Run a MCMC simulation
 
@@ -360,22 +368,22 @@ namespace o2scl {
 	
 	This function is empty by default.
     */
-    virtual void prepare_eos(entry &e, model &modref, tov_solve *tsr, 
+    virtual void prepare_eos(entry &e, model &modref, o2scl::tov_solve *tsr, 
 			     bool &success);
 
     /** \brief Add a measurement
      */
     virtual void add_measurement
-      (entry &e, o2_shared_ptr<table_units<> >::type tab_eos,
-       o2_shared_ptr<table_units<> >::type tab_mvsr,
+      (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
+       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights);
 
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
      */
     virtual void fill_line
-      (entry &e, o2_shared_ptr<table_units<> >::type tab_eos,
-       o2_shared_ptr<table_units<> >::type tab_mvsr,
+      (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
+       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights,
        std::vector<double> &line);
     
@@ -403,46 +411,40 @@ namespace o2scl {
 	Called by mcmc().
     */
     virtual double compute_weight(entry &e, model &modref, 
-				  tov_solve *ts, bool &success,
+				  o2scl::tov_solve *ts, bool &success,
 				  ubvector &wgts, bool warm_up);
     
     /** \brief Tabulate EOS and then use in cold_nstar
 
 	Called by compute_weight().
     */
-    virtual void compute_star(entry &e, model &modref, tov_solve *ts, 
+    virtual void compute_star(entry &e, model &modref, o2scl::tov_solve *ts, 
 			     bool &success);
-
-    /** \brief Read input file with name given in \ref in_file
-
-	Called by mcmc().
-    */
-    virtual void read_input(entry &e_current);
 
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
       (std::string fname_prefix, entry &e_best, double w_best,
-       o2_shared_ptr<table_units<> >::type tab_eos,
-       o2_shared_ptr<table_units<> >::type tab_mvsr,
+       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
+       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
        ubvector &wgts);
     //@}
 
     /// \name TOV solver objects
     //@{
     /// EOS interpolation object for TOV solver
-    tov_interp_eos teos;
+    o2scl::tov_interp_eos teos;
 
     /// Pointer to a TOV solver
-    tov_solve *ts;
+    o2scl::tov_solve *ts;
   
     /// Second pointer to a TOV solver
-    tov_solve *ts2;
+    o2scl::tov_solve *ts2;
 
     /// Default TOV solver
-    tov_solve def_ts;
+    o2scl::tov_solve def_ts;
   
     /// Second default TOV solver
-    tov_solve def_ts2;
+    o2scl::tov_solve def_ts2;
     //@}
 
     /** \brief The arguments sent to the command-line
@@ -451,17 +453,15 @@ namespace o2scl {
 
   public:
 
-    bamr();
+    bamr_class();
 
-    virtual ~bamr();
+    virtual ~bamr_class();
 
     /// Main wrapper for parsing command-line arguments
     virtual void run(int argc, char *argv[]);
 
   };
 
-#ifndef DOXYGEN
 }
-#endif
 
 #endif

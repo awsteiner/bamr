@@ -20,6 +20,9 @@
 
   -------------------------------------------------------------------
 */
+/** \file models.h
+    \brief Definition of EOS models
+*/
 #ifndef MODELS_H
 #define MODELS_H
 
@@ -33,9 +36,7 @@
 #include "misc.h"
 #include "entry.h"
 
-#ifndef DOXYGEN
-namespace o2scl {
-#endif
+namespace bamr {
 
   /** \brief Base class for an EOS parameterization
    */
@@ -74,9 +75,10 @@ namespace o2scl {
     virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out)=0;
 
     /// Compute the M-R curve directly
-    virtual void compute_mr(entry &e, std::ofstream &scr_out,
-			    o2_shared_ptr<table_units<> >::type tab_mvsr,
-			    bool &success) {
+    virtual void compute_mr
+      (entry &e, std::ofstream &scr_out,
+       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+       bool &success) {
       return;
     }
 
@@ -105,13 +107,13 @@ namespace o2scl {
   protected:
 
     /// Low-density EOS
-    schematic_eos se;
+    o2scl::schematic_eos se;
 
     /// Neutron for \ref se
-    fermion neut;
+    o2scl::fermion neut;
 
     /// Proton for \ref se
-    fermion prot;
+    o2scl::fermion prot;
     
     /// The fiducial baryon density
     double nb_n1;
@@ -169,7 +171,7 @@ namespace o2scl {
       e.params[5]=0.576;
       e.params[6]=4.60;
       e.params[7]=1.21;
-     return;
+      return;
     }
 
   };
@@ -217,7 +219,7 @@ namespace o2scl {
       e.params[5]=2.913;
       e.params[6]=4.066;
       e.params[7]=1.80;
-     return;
+      return;
     }
   
   };
@@ -265,7 +267,7 @@ namespace o2scl {
       e.params[5]=0.74;
       e.params[6]=0.60;
       e.params[7]=1.84;
-     return;
+      return;
     }
 
   };
@@ -278,7 +280,9 @@ namespace o2scl {
     /// The bag constant
     double B;
 
-    /// The paramter controlling non-perturbative corrections to \f$ \mu^4 \f$
+    /** \brief The paramter controlling non-perturbative corrections 
+	to \f$ \mu^4 \f$
+    */
     double c;
 
     /// The gap
@@ -288,10 +292,10 @@ namespace o2scl {
     double ms;
 
     /// The solver to find the chemical potential for zero pressure
-    mroot_hybrids<> gmh;
+    o2scl::mroot_hybrids<> gmh;
 
-    /// Desc
-    root_brent_gsl<> grb;
+    /// An alternative root finder
+    o2scl::root_brent_gsl<> grb;
 
     quark_star() {
     }
@@ -434,8 +438,6 @@ namespace o2scl {
 
   };
 
-#ifndef DOXYGEN
 }
-#endif
 
 #endif

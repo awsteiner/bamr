@@ -75,7 +75,7 @@ bamr.o: bamr.cpp
 	$(MPI_CXX) $(FLAGS) -o bamr.o -c bamr.cpp
 
 test:
-	bamr -set warm_up 0 -set in_file default.in -model twop -mcmc x &
+	bamr -run default.in -model twop -mcmc run1 &
 
 # --------------------------------------------------------
 # Plotting targets

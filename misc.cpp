@@ -24,6 +24,7 @@
 
 using namespace std;
 using namespace o2scl;
+using namespace bamr;
 
 int cold_nstar2::calc_eos(double &n1, double &e1, double np_0) {
 
