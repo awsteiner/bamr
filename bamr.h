@@ -54,9 +54,9 @@ namespace bamr {
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits
       after each mcmc() run. 
-      \todo Testing
+      \todo More testing
+      \todo Compute baryonic masses
       \todo Better documentation
-      \todo More .in files
       \todo Help with plots
       \todo Currently warm_up is changed to false only during 
       the first accepted step after <tt>iteration > n_warm_up</tt>,
@@ -80,6 +80,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
     o2scl::cli::parameter_int p_warm_up;
+    o2scl::cli::parameter_int p_hist_size;
     o2scl::cli::parameter_int p_user_seed;
     o2scl::cli::parameter_int p_max_iters;
     o2scl::cli::parameter_bool p_norm_max;
@@ -230,10 +231,10 @@ namespace bamr {
     entry low, high;
     //@}
 
-    /// Desc
+    /// The first point in the parameter space
     ubvector first_point;
 
-    /// Desc
+    /// The initial set of neutron star masses
     std::vector<double> first_mass;
 
     /// \name Other variables
@@ -245,10 +246,13 @@ namespace bamr {
     o2scl::table_units<> tc;
     
     /// The number of Metropolis steps which succeeded
-    size_t mh_success_cnt;
+    size_t mh_success;
 
     /// The number of Metropolis steps which failed
-    size_t mh_failure_cnt;
+    size_t mh_failure;
+
+    /// Total number of mcmc iterations
+    size_t mcmc_iterations;
 
     /// Store the full Markov chain
     std::vector<double> markov_chain;
@@ -265,7 +269,7 @@ namespace bamr {
     bool first_file_update;
 
     /// Number of bins for all histograms (default 100)
-    size_t hist_size;
+    int hist_size;
 
     /// Number of Markov chain segments
     size_t n_chains;
@@ -316,8 +320,12 @@ namespace bamr {
      */
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
 
+    /** \brief Set the first point in the parameter space
+     */
     virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
 
+    /** \brief Add a data distribution to the list
+     */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
     /** \brief Run a MCMC simulation
@@ -344,9 +352,9 @@ namespace bamr {
 
     /** \brief Make any necessary preparations for the mcmc() function
 
-	This is called immediately by \ref mcmc() before anything else
-	is done, and if the return value is non-zero then it is
-	assumed that the calculation fails and mcmc() returns.
+	This is called by \ref mcmc(). If the return value is non-zero
+	then it is assumed that the calculation fails and mcmc()
+	returns.
 
 	This function does nothing and returns zero by default.
     */
@@ -398,7 +406,7 @@ namespace bamr {
     
     /** \brief Set up the 'cli' object
 
-	Adds the three commands and the 'set' parameters
+	This function just adds the four commands and the 'set' parameters
     */
     virtual void setup_cli();
     

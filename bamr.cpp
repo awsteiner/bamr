@@ -144,12 +144,12 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     u+="Msun ";
   }
   if (has_eos) {
-    for(size_t i=0;i<hist_size;i++) {
+    for(int i=0;i<hist_size;i++) {
       s+=((string)"P_")+szttos(i)+" ";
       u+="1/fm^4 ";
     }
   }
-  for(size_t i=0;i<hist_size;i++) {
+  for(int i=0;i<hist_size;i++) {
     s+=((string)"R_")+szttos(i)+" ";
     u+="km ";
     if (has_eos) {
@@ -159,7 +159,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   }
   if (has_eos) {
     if (baryon_density) {
-      for(size_t i=0;i<hist_size;i++) {
+      for(int i=0;i<hist_size;i++) {
 	s+=((string)"Pnb_")+szttos(i)+" ";
 	u+="1/fm^4 ";
 	s+=((string)"EoA_")+szttos(i)+" ";
@@ -193,8 +193,6 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 
 void bamr_class::init_grids_table(entry &low, entry &high) {
   
-  scr_out << "In init()." << std::endl;
-
   if (low.np==0 || high.np==0) {
     O2SCL_ERR("No parameters in bamr_class::init().",gsl_einval);
   }
@@ -282,7 +280,7 @@ void bamr_class::fill_line
     line.push_back(e.mass[i]);
   }
   if (has_eos) {
-    for(size_t i=0;i<hist_size;i++) {
+    for(int i=0;i<hist_size;i++) {
       double eval=e_hist.get_rep_i(i);
       // Make sure the energy density from the grid
       // isn't beyond the table limit
@@ -299,7 +297,7 @@ void bamr_class::fill_line
       }
     }
   }
-  for(size_t i=0;i<hist_size;i++) {
+  for(int i=0;i<hist_size;i++) {
     double mval=m_hist.get_rep_i(i);
     if (mval<mmax) {
       line.push_back(tab_mvsr->interp("gm",mval,"r"));
@@ -315,7 +313,7 @@ void bamr_class::fill_line
   }
   if (has_eos) {
     if (baryon_density) {
-      for(size_t i=0;i<hist_size;i++) {
+      for(int i=0;i<hist_size;i++) {
 	double nbval=nb_hist.get_rep_i(i);
 	if (nbval<nbmax2) {
 	  double pres_temp=tab_eos->interp("nb",nbval,"pr");
@@ -460,10 +458,11 @@ void bamr_class::update_files(string fname_prefix, model &modp,
     first_file_update=true;
   }
 
-  hf.set_szt("mh_success",mh_success_cnt);
-  hf.set_szt("mh_failure",mh_failure_cnt);
+  hf.set_szt("mh_success",mh_success);
+  hf.set_szt("mh_failure",mh_failure);
+  hf.set_szt("mcmc_iterations",mcmc_iterations);
 
-  // Store full Markov chain
+  // Store Markov chain
   if (n_chains==0) n_chains++;
   hf.set_szt("n_chains",n_chains);
   string ch_name="markov_chain"+szttos(n_chains-1);
@@ -492,16 +491,6 @@ void bamr_class::load_mc() {
 
     source_tables.resize(nsources);
     
-    scr_out << "\nInput data files: " << endl;
-    
-    if (norm_max) {
-      scr_out << "Normalizing maximum probability to 1." << endl;
-    } else {
-      scr_out << "Normalizing integral of distribution to 1." << endl;
-    }
-
-    scr_out << "File name total max P(10,1.4)" << endl;
-
 #ifdef BAMR_MPI_LOAD
 
     bool mpi_load_debug=true;
@@ -542,91 +531,14 @@ void bamr_class::load_mc() {
 		<< file << "." << endl;
       }
 
-      // 
-      {
-	hdf_file hf;
-	hf.open(source_fnames[file]);
-	if (table_names[file].length()>0) {
-	  hdf_input(hf,source_tables[file],table_names[file]);
-	} else {
-	  hdf_input(hf,source_tables[file]);
-	}
-	hf.close();
-      }
-      
-      // Update input limits
-      if (file==0) {
-	in_r_min=source_tables[file].get_grid_x(0);
-	in_r_max=source_tables[file].get_grid_x(source_tables[file].get_nx()-1);
-	in_m_min=source_tables[file].get_grid_y(0);
-	in_m_max=source_tables[file].get_grid_y(source_tables[file].get_ny()-1);
+      hdf_file hf;
+      hf.open(source_fnames[file]);
+      if (table_names[file].length()>0) {
+	hdf_input(hf,source_tables[file],table_names[file]);
       } else {
-	if (in_r_min>source_tables[file].get_grid_x(0)) {
-	  in_r_min=source_tables[file].get_grid_x(0);
-	}
-	if (in_r_max<source_tables[file].get_grid_x
-	    (source_tables[file].get_nx()-1)) {
-	  in_r_max=source_tables[file].get_grid_x
-	    (source_tables[file].get_nx()-1);
-	}
-	if (in_m_min>source_tables[file].get_grid_y(0)) {
-	  in_m_min=source_tables[file].get_grid_y(0);
-	}
-	if (in_m_max<source_tables[file].get_grid_y
-	    (source_tables[file].get_ny()-1)) {
-	  in_m_max=source_tables[file].get_grid_y
-	    (source_tables[file].get_ny()-1);
-	}
+	hdf_input(hf,source_tables[file]);
       }
-
-      // Renormalize
-      tot=0.0;
-      max=0.0;
-      for(size_t i=0;i<source_tables[file].get_nx();i++) {
-	for(size_t j=0;j<source_tables[file].get_ny();j++) {
-	  tot+=source_tables[file].get(i,j,slice_names[file]);
-	  if (source_tables[file].get(i,j,slice_names[file])>max) {
-	    max=source_tables[file].get(i,j,slice_names[file]);
-	  }
-	}
-      }
-      for(size_t i=0;i<source_tables[file].get_nx();i++) {
-	for(size_t j=0;j<source_tables[file].get_ny();j++) {
-	  if (norm_max) {
-	    source_tables[file].set
-	      (i,j,slice_names[file],
-	       source_tables[file].get(i,j,slice_names[file])/max);
-	  } else {
-	    source_tables[file].set
-	      (i,j,slice_names[file],
-	       source_tables[file].get(i,j,slice_names[file])/tot);
-	  }
-	}
-      }
-
-      if (debug_load) {
-	cout << source_fnames[file] << endl;
-	for(size_t i=0;i<source_tables[file].get_nx();i++) {
-	  cout << i << " " << source_tables[file].get_grid_x(i) << endl;
-	}
-	for(size_t j=0;j<source_tables[file].get_ny();j++) {
-	  cout << j << " " << source_tables[file].get_grid_y(j) << endl;
-	}
-	for(size_t i=0;i<source_tables[file].get_nx();i++) {
-	  for(size_t j=0;j<source_tables[file].get_ny();j++) {
-	    cout << source_tables[file].get(i,j,slice_names[file]) << " ";
-	  }
-	  cout << endl;
-	}
-      }
-
-      scr_out.setf(ios::left);
-      scr_out.width(25);
-      scr_out << source_fnames[file] << " ";
-      scr_out.width(6);
-      scr_out << source_names[file] << " " << tot << " " << max << " ";
-      scr_out.unsetf(ios::left);
-      scr_out << source_tables[file].interp(10.0,1.4,slice_names[file]) << endl;
+      hf.close();
       
       // Send a message, unless the rank is the last one to read a
       // file.
@@ -643,19 +555,33 @@ void bamr_class::load_mc() {
     }
     
 #else
+    
+    for(size_t k=0;k<nsources;k++) {
+      
+      hdf_file hf;
+      hf.open(source_fnames[k]);
+      if (table_names[k].length()>0) {
+	hdf_input(hf,source_tables[k],table_names[k]);
+      } else {
+	hdf_input(hf,source_tables[k]);
+      }
+      hf.close();
+    }
+    
+#endif
+    
+    scr_out << "\nInput data files: " << endl;
+    
+    if (norm_max) {
+      scr_out << "Normalizing maximum probability to 1." << endl;
+    } else {
+      scr_out << "Normalizing integral of distribution to 1." << endl;
+    }
+    
+    scr_out << "File                      name       total        "
+	    << "max          P(10,1.4)" << endl;
 
     for(size_t k=0;k<nsources;k++) {
-
-      {
-	hdf_file hf;
-	hf.open(source_fnames[k]);
-	if (table_names[k].length()>0) {
-	  hdf_input(hf,source_tables[k],table_names[k]);
-	} else {
-	  hdf_input(hf,source_tables[k]);
-	}
-	hf.close();
-      }
       
       // Update input limits
       if (k==0) {
@@ -722,24 +648,23 @@ void bamr_class::load_mc() {
       scr_out.setf(ios::left);
       scr_out.width(25);
       scr_out << source_fnames[k] << " ";
-      scr_out.width(6);
+      scr_out.width(10);
       scr_out << source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(ios::left);
       scr_out << source_tables[k].interp(10.0,1.4,slice_names[k]) << endl;
-
+      
     }
-
-#endif
-
+    
     scr_out << endl;
   }
-
+  
   if (in_m_min<min_mass) in_m_min=min_mass;
-
+  
   scr_out << "M limits: (" 
 	  << in_m_min << "," << in_m_max << ")" << endl;
   scr_out << "R limits: ("
 	  << in_r_min << "," << in_r_max << ")" << endl;
+  scr_out << endl;
   
   return;
 }
@@ -792,8 +717,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
   }
 
   // If requested, compute the baryon density automatically
-  if (has_eos && baryon_density) {
-
+  if (has_eos && baryon_density && !tab_eos->is_column("nb")) {
+    
     // Obtain the baryon density calibration point from the model
 
     double n1, e1;
@@ -805,12 +730,15 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Compute inverse of gibbs energy density, 'igb'
+
     tab_eos->new_column("igb");
+    tab_eos->set_unit("igb","fm^4");
+
     for(size_t i=0;i<tab_eos->get_nlines();i++) {
 
       if (tab_eos->get("ed",i)+tab_eos->get("pr",i)<=0.0 ||
-	  !gsl_finite(tab_eos->get("ed",i)) ||
-	  !gsl_finite(tab_eos->get("pr",i))) {
+	  !o2scl::is_finite(tab_eos->get("ed",i)) ||
+	  !o2scl::is_finite(tab_eos->get("pr",i))) {
 	scr_out << "Inverse Gibbs not finite." << endl;
 	scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	scr_out << "ed pr" << endl;
@@ -825,11 +753,13 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Compute integral of 'igb' relative to ed='e1', called 'iigb'
+
     tab_eos->new_column("iigb");
+
     for(size_t i=0;i<tab_eos->get_nlines();i++) {
       if (e1<=tab_eos->get("ed",i)) {
 	double val=tab_eos->integ("ed",e1,tab_eos->get("ed",i),"igb");
-	if (!gsl_finite(val)) {
+	if (!o2scl::is_finite(val)) {
 	  scr_out << "Baryon integral not finite." << endl;
 	  scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	  scr_out << "ed pr" << endl;
@@ -843,7 +773,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	tab_eos->set("iigb",i,val);
       } else {
 	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),e1,"igb");
-	if (!gsl_finite(val)) {
+	if (!o2scl::is_finite(val)) {
 	  scr_out << "Baryon integral not finite (2)." << endl;
 	  scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	  scr_out << "ed pr" << endl;
@@ -860,18 +790,13 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     // Compute normalization constant
     double Anb=n1/exp(tab_eos->interp("ed",e1,"iigb"));
-    if (!gsl_finite(Anb) || Anb<0.0) {
+    if (!o2scl::is_finite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << endl;
       success=false;
       return;
     }
 
     // Now compute baryon density
-
-    if (tab_eos->is_column("nb")) {
-      scr_out << "EOS table cannot contain a column named 'nb'." << endl;
-      exit(-1);
-    }
 
     tab_eos->new_column("nb");
     tab_eos->set_unit("nb","1/fm^3");
@@ -889,18 +814,10 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       } else {
 	
 	double nbt=Anb*exp(tab_eos->get("iigb",i));
-	if (!gsl_finite(nbt)) {
-	  scr_out << "Baryon density normalization problem." << endl;
+	if (!o2scl::is_finite(nbt)) {
+	  scr_out << "Baryon density normalization problem (2)." << endl;
 	  success=false;
 	  return;
-	  /*
-	    cout << "Baryon density not finite." << endl;
-	    cout << "i,ed,pr,igb,iigb: " << i << " " << Anb << " "
-	    << tab_eos->get("ed",i) << " "
-	    << tab_eos->get("pr",i) << " " << tab_eos->get("igb",i) << " "
-	    << tab_eos->get("iigb",i) << endl;
-	    exit(-1);
-	  */
 	} 
 	tab_eos->set("nb",i,nbt);
       }
@@ -1321,8 +1238,10 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
 }
 
 int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
+  // We cannot use scr_out here because it isn't set until the call
+  // to mcmc().
   if (sv.size()<2) {
-    cout << "Model name not given." << endl;
+    cerr << "Model name not given." << endl;
     return gsl_efailed;
   }
   model_type=sv[1];
@@ -1340,39 +1259,32 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     nparams=8;
     has_esym=true;
     has_eos=true;
-    // Cannot output to scr_out since scr_out isn't set until mcmc()
-    // is called. 
-    // scr_out << "Selected two polytropes." << endl;
   } else if (sv[1]==((string)"altp")) {
     modp=new alt_polytropes;
     modp2=new alt_polytropes;
     nparams=8;
     has_esym=true;
     has_eos=true;
-    //scr_out << "Selected improved polytropes." << endl;
   } else if (sv[1]==((string)"fixp")) {
     modp=new fixed_pressure;
     modp2=new fixed_pressure;
     nparams=8;
     has_esym=true;
     has_eos=true;
-    //scr_out << "Selected fixed pressure." << endl;
   } else if (sv[1]==((string)"qstar")) {
     modp=new quark_star;
     modp2=new quark_star;
     nparams=4;
     has_esym=false;
     has_eos=true;
-    //scr_out << "Selected strange quark star model." << endl;
   } else if (sv[1]==((string)"genq")) {
     modp=new generic_quarks;
     modp2=new generic_quarks;
     nparams=9;
     has_esym=true;
     has_eos=true;
-    //scr_out << "Selected generic quarks." << endl;
   } else {
-    cout << "Model unknown." << endl;
+    cerr << "Model unknown." << endl;
     nparams=0;
     model_type="";
     has_esym=true;
@@ -1644,8 +1556,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   if (n_warm_up==0) warm_up=false;
 
   // Keep track of successful and failed MH moves
-  mh_success_cnt=0;
-  mh_failure_cnt=0;
+  mh_success=0;
+  mh_failure=0;
   
   // Compute initial weight
   bool suc;
@@ -1667,7 +1579,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     if (warm_up==false) {
       // Add the initial point if there's no warm up
       add_measurement(e_current,tab_eos,tab_mvsr,w_current,true,
-		      mh_success_cnt,wgts);
+		      mh_success,wgts);
     }
     e_best=e_current;
     w_best=w_current;
@@ -1682,7 +1594,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // Keep track of total number of different points in the parameter
   // space that are considered (some of them may not result in TOV
   // calls because, for example, the EOS was acausal).
-  int iteration=0;
+  mcmc_iterations=0;
 
   // Switch between two different Metropolis steps
   bool first_half=true;
@@ -1724,7 +1636,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     // Output the next point
     if (output_next) {
-      scr_out << "Iteration, next: " << iteration << " " << e_next << endl;
+      scr_out << "Iteration, next: " << mcmc_iterations << " " 
+	      << e_next << endl;
     }
       
     // Compute next weight
@@ -1754,6 +1667,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	
     }
 
+    bool force_file_update=false;
+
     // If the new point is still good, compare with
     // the Metropolis algorithm
     if (suc==true) {
@@ -1763,13 +1678,13 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	     << e_next.params[0] << " " << w_next << endl;
       }
       
-      bool accept=make_step(w_current,w_next,debug,warm_up,iteration);
+      bool accept=make_step(w_current,w_next,debug,warm_up,mcmc_iterations);
       
       if (accept) {
 
-	mh_success_cnt++;
+	mh_success++;
 
-	if (iteration>n_warm_up && warm_up==true) {
+	if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
 	  warm_up=false;
 	  scr_out << "Setting warm_up to false. Reset start time." << endl;
 	  if (true) {
@@ -1799,7 +1714,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	// Store results from new point
 	if (!warm_up) {
 	  add_measurement(e_next,tab_eos,tab_mvsr,w_next,true,
-			  mh_success_cnt,wgts);
+			  mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding new: " 
 		 << e_next.params[0] << " " << w_next << " "
@@ -1808,7 +1723,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	}
 
 	// Output the new point
-	scr_out << "MH Acc: " << mh_success_cnt << " " << e_next << " " 
+	scr_out << "MH Acc: " << mh_success << " " << e_next << " " 
 		<< w_next << endl;
 	  
 	// Keep track of best point
@@ -1816,6 +1731,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  e_best=e_next;
 	  w_best=w_next;
 	  output_best(fname_prefix,e_best,w_best,tab_eos,tab_mvsr,wgts);
+	  force_file_update=true;
 	}
 
 	// Prepare for next point
@@ -1830,7 +1746,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	    
 	// Point was rejected
 
-	mh_failure_cnt++;
+	mh_failure++;
 
 	o2_shared_ptr<table_units<> >::type tab_eos;
 	o2_shared_ptr<table_units<> >::type tab_mvsr;
@@ -1848,7 +1764,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	// Repeat measurement of old point
 	if (!warm_up) {
 	  add_measurement(e_current,tab_eos,tab_mvsr,w_current,false,
-			  mh_success_cnt,wgts);
+			  mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding old: " 
 		 << e_current.params[0] << " " << w_current << " "
@@ -1857,7 +1773,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	}
 
 	// Output the old point 
-	scr_out << "MH Rej: " << mh_success_cnt << " " << e_current 
+	scr_out << "MH Rej: " << mh_success << " " << e_current 
 		<< " " << w_current << " " << w_next << endl;
 
 	// Keep track of best point
@@ -1865,8 +1781,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  e_best=e_next;
 	  w_best=w_next;
 	  output_best(fname_prefix,e_best,w_best,tab_eos,tab_mvsr,wgts);
-	  //cerr << "Best point with rejected step?" << endl;
-	  //exit(-1);
+	  force_file_update=true;
+	  scr_out << "Best point with rejected step: " << w_next << " " 
+		  << w_best << endl;
 	}
 
       }
@@ -1874,9 +1791,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       // End of "if (suc==true)"
     }
 
-    bool force_file_update=false;
-
-    if (warm_up==false && iteration%10==9) {
+    if (warm_up==false && mcmc_iterations%10==9) {
     
       if (max_iters==0) {
 
@@ -1897,16 +1812,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
       } else {
 
-	if (iteration+1>max_iters*(((int)block_counter)+1)/20) {
+	if (((int)mcmc_iterations)+1>max_iters*(((int)block_counter)+1)/20) {
 	  force_file_update=true;
 	  block_counter++;
-	  scr_out << "Iteration " << iteration+1 << " of " 
+	  scr_out << "Iteration " << mcmc_iterations+1 << " of " 
 		  << max_iters << ", and finished block " 
 		  << block_counter << " of 20." << endl;
 	}
 
-	if (iteration+1>max_iters) {
-	  scr_out << "Iteration count, " << iteration 
+	if (((int)mcmc_iterations)+1>max_iters) {
+	  scr_out << "Iteration count, " << mcmc_iterations 
 		  << ", exceed maximum number, " << max_iters << "." << endl;
 	  main_done=true;
 	}
@@ -1916,12 +1831,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     }
 
     // Store a copy of measurements in file
-    if (!warm_up && (force_file_update || mh_success_cnt%10==9)) {
+    if (!warm_up && (force_file_update || mh_success%10==9)) {
       update_files(fname_prefix,*modp,e_current);
     }
     
     // Increment iteration counter
-    iteration++;
+    mcmc_iterations++;
 
     // End of main loop
   }
@@ -1942,13 +1857,13 @@ void bamr_class::setup_cli() {
      1,1,"<filename prefix>",((string)"This is the main part of ")+
      "the code which performs the simulation. Make sure to set the "+
      "model first using the 'model' command. "+
-     "The one required argument to mcmc is the prefix for the "+
+     "The required argument to 'mcmc' is the prefix for the "+
      "output files.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
      cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
-     "Typical values are 'twop', 'impp', 'fixp', and 'genq'.",
+     "Typical values are 'twop', 'altp', 'fixp', 'genq', and 'qstar'.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
      cli::comm_option_both},
     {'a',"add-data","Add data source to the list.",
@@ -1956,10 +1871,10 @@ void bamr_class::setup_cli() {
      ((string)"Desc. ")+"Desc2.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
-    {'f',"first-point","Desc.",
+    {'f',"first-point","Set the starting point in the parameter space",
      1,-1,"<>",((string)"Desc. ")+"Desc2.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
-     cli::comm_option_both},
+     cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
 
@@ -1969,6 +1884,10 @@ void bamr_class::setup_cli() {
   p_max_time.d=&max_time;
   p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
   cl.par_list.insert(make_pair("max_time",&p_max_time));
+
+  p_hist_size.i=&hist_size;
+  p_hist_size.help="Histogram size (default 100).";
+  cl.par_list.insert(make_pair("hist_size",&p_hist_size));
 
   p_min_max_mass.d=&min_max_mass;
   p_min_max_mass.help=((string)"Minimum maximum mass ")

@@ -170,15 +170,14 @@
     <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
     set for each column (currently only <tt>1/fm^4</tt> is supported).
 
-    - If \ref bamr::baryon_density is true, then \ref
-    model::compute_eos() should return one baryon density and energy
-    density in \ref model::baryon_density_point(), and no column
-    should be named <tt>"nb"</tt>, since this is reserved by \bm for
-    computing the baryon density.
+    - If \ref bamr::baryon_density is true and the EOS model did not
+    already compute the baryon density in a column named <tt>"nb"</tt>,
+    then \ref model::compute_eos() should return one baryon density
+    and energy density in \ref model::baryon_density_point().
 
     - If the model provides the symmetry energy and its density
     derivative, it should be stored as constants named <tt>"S"</tt>
-    and <tt>"L"</tt> in the table (in MeV).
+    and <tt>"L"</tt> in the table (in \f$ 1/\mathrm{fm} \f$ ).
 
     - Causality is automatically checked in bamr::compute_star(), but
     the \ref model::compute_eos() function should check that the
