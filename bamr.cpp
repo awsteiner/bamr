@@ -39,7 +39,7 @@ bamr_class::bamr_class() {
   nparams=0;
   nsources=0;
   first_file_update=false;
-  hist_size=100;
+  grid_size=100;
   model_type="";
   has_eos=true;
   chain_size=0;
@@ -144,12 +144,12 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     u+="Msun ";
   }
   if (has_eos) {
-    for(int i=0;i<hist_size;i++) {
+    for(int i=0;i<grid_size;i++) {
       s+=((string)"P_")+szttos(i)+" ";
       u+="1/fm^4 ";
     }
   }
-  for(int i=0;i<hist_size;i++) {
+  for(int i=0;i<grid_size;i++) {
     s+=((string)"R_")+szttos(i)+" ";
     u+="km ";
     if (has_eos) {
@@ -159,7 +159,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   }
   if (has_eos) {
     if (baryon_density) {
-      for(int i=0;i<hist_size;i++) {
+      for(int i=0;i<grid_size;i++) {
 	s+=((string)"Pnb_")+szttos(i)+" ";
 	u+="1/fm^4 ";
 	s+=((string)"EoA_")+szttos(i)+" ";
@@ -200,13 +200,9 @@ void bamr_class::init_grids_table(entry &low, entry &high) {
   // -----------------------------------------------------------
   // Make grids
 
-  nb_grid=uniform_grid_end<double>(nb_low,nb_high,hist_size);
-  e_grid=uniform_grid_end<double>(e_low,e_high,hist_size);
-  m_grid=uniform_grid_end<double>(m_low,m_high,hist_size);
-
-  e_hist.set_bin_edges(e_grid);
-  m_hist.set_bin_edges(m_grid);
-  nb_hist.set_bin_edges(nb_grid);
+  nb_grid=uniform_grid_end<double>(nb_low,nb_high,grid_size-1);
+  e_grid=uniform_grid_end<double>(e_low,e_high,grid_size-1);
+  m_grid=uniform_grid_end<double>(m_low,m_high,grid_size-1);
 
   // -----------------------------------------------------------
   // Init table
@@ -280,8 +276,8 @@ void bamr_class::fill_line
     line.push_back(e.mass[i]);
   }
   if (has_eos) {
-    for(int i=0;i<hist_size;i++) {
-      double eval=e_hist.get_rep_i(i);
+    for(int i=0;i<grid_size;i++) {
+      double eval=e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
       double emax2=tab_eos->max("ed");
@@ -297,8 +293,8 @@ void bamr_class::fill_line
       }
     }
   }
-  for(int i=0;i<hist_size;i++) {
-    double mval=m_hist.get_rep_i(i);
+  for(int i=0;i<grid_size;i++) {
+    double mval=m_grid[i];
     if (mval<mmax) {
       line.push_back(tab_mvsr->interp("gm",mval,"r"));
       if (has_eos) {
@@ -313,8 +309,8 @@ void bamr_class::fill_line
   }
   if (has_eos) {
     if (baryon_density) {
-      for(int i=0;i<hist_size;i++) {
-	double nbval=nb_hist.get_rep_i(i);
+      for(int i=0;i<grid_size;i++) {
+	double nbval=nb_grid[i];
 	if (nbval<nbmax2) {
 	  double pres_temp=tab_eos->interp("nb",nbval,"pr");
 	  if (pres_temp<pmax) {
@@ -396,7 +392,7 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.sets_vec("source_fnames",source_fnames);
   hf.sets_vec("slice_names",slice_names);
 
-  hf.set_szt("hist_size",hist_size);
+  hf.set_szt("grid_size",grid_size);
   hf.set_szt("nparams",nparams);
   hf.set_szt("nsources",nsources);
   hf.sets("model",model_type);
@@ -449,7 +445,7 @@ void bamr_class::update_files(string fname_prefix, model &modp,
 
   hdf_file hf;
 
-  // File for parameter histograms
+  // Open main update file
   hf.open_or_create(fname_prefix+"_out");
     
   // First time, output some initial quantities
@@ -1795,7 +1791,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     
       if (max_iters==0) {
 
-	// If necessary, collect a block of histograms
+	// If we've made enough progress, output
 	double elapsed=MPI_Wtime()-mpi_start_time;
 	if (elapsed>max_time/((double)20)*((double)(block_counter+1)) ||
 	    (elapsed>max_time && block_counter==19)) {
@@ -1885,9 +1881,9 @@ void bamr_class::setup_cli() {
   p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
   cl.par_list.insert(make_pair("max_time",&p_max_time));
 
-  p_hist_size.i=&hist_size;
-  p_hist_size.help="Histogram size (default 100).";
-  cl.par_list.insert(make_pair("hist_size",&p_hist_size));
+  p_grid_size.i=&grid_size;
+  p_grid_size.help="Grid size (default 100).";
+  cl.par_list.insert(make_pair("grid_size",&p_grid_size));
 
   p_min_max_mass.d=&min_max_mass;
   p_min_max_mass.help=((string)"Minimum maximum mass ")
@@ -1968,8 +1964,7 @@ void bamr_class::setup_cli() {
 
   p_baryon_density.b=&baryon_density;
   p_baryon_density.help=((string)"If true, compute baryon density ")+
-    "and store histograms with baryon densities "+
-    "(default true).";
+    "and associated profiles (default true).";
   cl.par_list.insert(make_pair("baryon_density",&p_baryon_density));
 
   p_use_crust.b=&use_crust;

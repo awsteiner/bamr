@@ -80,7 +80,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
     o2scl::cli::parameter_int p_warm_up;
-    o2scl::cli::parameter_int p_hist_size;
+    o2scl::cli::parameter_int p_grid_size;
     o2scl::cli::parameter_int p_user_seed;
     o2scl::cli::parameter_int p_max_iters;
     o2scl::cli::parameter_bool p_norm_max;
@@ -269,7 +269,7 @@ namespace bamr {
     bool first_file_update;
 
     /// Number of bins for all histograms (default 100)
-    int hist_size;
+    int grid_size;
 
     /// Number of Markov chain segments
     size_t n_chains;
@@ -297,15 +297,6 @@ namespace bamr {
 
     /// The second copy of the model for the EOS
     model *modp2;
-
-    /// Histogram for energy grid
-    o2scl::hist e_hist;
-    
-    /// Histogram for gravitational mass grid
-    o2scl::hist m_hist;
-    
-    /// Histogram for baryon density grid
-    o2scl::hist nb_hist;
 
     /// Random number generator
     o2scl::rng_gsl gr;
