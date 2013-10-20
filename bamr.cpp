@@ -1868,7 +1868,7 @@ void bamr_class::setup_cli() {
      new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
     {'f',"first-point","Set the starting point in the parameter space",
-     1,-1,"<>",((string)"Desc. ")+"Desc2.",
+     5,-1,"<>",((string)"Desc. ")+"Desc2.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
      cli::comm_option_both}
   };
