@@ -1227,6 +1227,10 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
 
   first_point.resize(sv.size()-1);
   for(size_t i=1;i<sv.size();i++) {
+    // Remove parentheses if present
+    if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
+      sv[i]=sv[i].substr(1,sv[i].length()-2);
+    }
     first_point[i-1]=stod(sv[i]);
   }
 
@@ -1852,9 +1856,8 @@ void bamr_class::setup_cli() {
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      1,1,"<filename prefix>",((string)"This is the main part of ")+
      "the code which performs the simulation. Make sure to set the "+
-     "model first using the 'model' command. "+
-     "The required argument to 'mcmc' is the prefix for the "+
-     "output files.",
+     "model first using the 'model' command. The required argument to "+
+     "mcmc' is the prefix for the output files.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
      cli::comm_option_both},
     {'o',"model","Choose model.",
@@ -1864,11 +1867,18 @@ void bamr_class::setup_cli() {
      cli::comm_option_both},
     {'a',"add-data","Add data source to the list.",
      4,5,"<name> <file> <slice> <initial mass> [obj name]",
-     ((string)"Desc. ")+"Desc2.",
-     new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
+     ((string)"Specify data as a table3d object in a HDF5 file. ")+
+     "The string <name> is the name used, <file> is the filename, "+
+     "<slice> is the name of the slice in the table3d object, "+
+     "<initial mass> is the initial mass for the first point, and "+
+     "[obj name] is the optional name of table3d object in <file>. "+
+     "If [obj name] is not specified, then the first table3d object "+
+     "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
     {'f',"first-point","Set the starting point in the parameter space",
-     5,-1,"<>",((string)"Desc. ")+"Desc2.",
+     1,-1,"<>",((string)"On the command-line, enclose negative values ")+
+     "in quotes and parentheses, i.e. \"(-1.00)\" to ensure they do "+
+     "not get confused with other options.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
      cli::comm_option_both}
   };
@@ -1887,7 +1897,7 @@ void bamr_class::setup_cli() {
 
   p_min_max_mass.d=&min_max_mass;
   p_min_max_mass.help=((string)"Minimum maximum mass ")
-    +"(in solar masses, default 1.66).";
+    +"(in solar masses, default 2.0).";
   cl.par_list.insert(make_pair("min_max_mass",&p_min_max_mass));
 
   p_min_mass.d=&min_mass;
@@ -1923,7 +1933,7 @@ void bamr_class::setup_cli() {
 
   p_warm_up.i=&n_warm_up;
   p_warm_up.help=((string)"Minimum number of warm up iterations ")+
-    "(default 500, can be zero).";
+    "(default 0).";
   cl.par_list.insert(make_pair("warm_up",&p_warm_up));
 
   p_user_seed.i=&user_seed;
@@ -1983,7 +1993,7 @@ void bamr_class::setup_cli() {
   cl.par_list.insert(make_pair("nb_low",&p_nb_low));
 
   p_nb_high.d=&nb_high;
-  p_nb_high.help="Largest baryon density grid point in 1/fm^3 (default 1.04).";
+  p_nb_high.help="Largest baryon density grid point in 1/fm^3 (default 1.24).";
   cl.par_list.insert(make_pair("nb_high",&p_nb_high));
 
   p_e_low.d=&e_low;
