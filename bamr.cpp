@@ -1392,6 +1392,7 @@ void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
 		<< e_current.mass[k] << " " << e_next.mass[k] << " "
 		<< mmax << " " << high.mass[k] << endl;
       }
+      step_count++;
     } while (bad_step && step_count<100);
     if (step_count==100) {
       scr_out << "Too many steps in parameter space failed." << endl;
