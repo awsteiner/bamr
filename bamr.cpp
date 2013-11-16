@@ -194,7 +194,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 void bamr_class::init_grids_table(entry &low, entry &high) {
   
   if (low.np==0 || high.np==0) {
-    O2SCL_ERR("No parameters in bamr_class::init().",gsl_einval);
+    O2SCL_ERR("No parameters in bamr_class::init().",exc_einval);
   }
 
   // -----------------------------------------------------------
@@ -223,7 +223,7 @@ void bamr_class::init_grids_table(entry &low, entry &high) {
     } 
     if (ctr!=tc.get_ncolumns()) {
       O2SCL_ERR("Column/unit alignment in bamr_class::init_grids_table().",
-		gsl_esanity);
+		exc_esanity);
     }
   }
 
@@ -368,7 +368,7 @@ void bamr_class::add_measurement
       for(size_t i=0;i<line.size() && i<tc.get_ncolumns();i++) {
 	scr_out << line[i] << " " << tc.get_column_name(i) << endl;
       }
-      O2SCL_ERR("Alignment problem.",gsl_efailed);
+      O2SCL_ERR("Alignment problem.",exc_efailed);
     }
     tc.line_of_data(line.size(),line);
     
@@ -722,7 +722,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     
     if (n1<=0.0 && e1<=0.0) {
       O2SCL_ERR2("Computing the baryon density requires one ",
-		 "calibration point in bamr_class::compute_star().",gsl_einval);
+		 "calibration point in bamr_class::compute_star().",exc_einval);
     }
 
     // Compute inverse of gibbs energy density, 'igb'
@@ -743,7 +743,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 		  << tab_eos->get("ed",i) << " "
 		  << tab_eos->get("pr",i) << endl;
 	}
-	O2SCL_ERR("Inverse Gibbs not finite.",gsl_efailed);
+	O2SCL_ERR("Inverse Gibbs not finite.",exc_efailed);
       }
       tab_eos->set("igb",i,1.0/(tab_eos->get("ed",i)+tab_eos->get("pr",i)));
     }
@@ -764,7 +764,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 		    << tab_eos->get("ed",i) << " "
 		    << tab_eos->get("pr",i) << endl;
 	  }
-	  O2SCL_ERR("Baryon integral not finite.",gsl_efailed);
+	  O2SCL_ERR("Baryon integral not finite.",exc_efailed);
 	}
 	tab_eos->set("iigb",i,val);
       } else {
@@ -778,7 +778,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 		    << tab_eos->get("ed",i) << " "
 		    << tab_eos->get("pr",i) << endl;
 	  }
-	  O2SCL_ERR("Baryon integral not finite.",gsl_efailed);
+	  O2SCL_ERR("Baryon integral not finite.",exc_efailed);
 	}
 	tab_eos->set("iigb",i,val);
       }
@@ -1011,7 +1011,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	}
 	if (mass_fail || bad_step) {
 	  scr_out << "Failure with new mass update." << endl;
-	  O2SCL_ERR("Failure in new mass update.",gsl_efailed);
+	  O2SCL_ERR("Failure in new mass update.",exc_efailed);
 	}
 	scr_out << "New entry: " << e << endl;
       }
@@ -1199,7 +1199,7 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 
   if (sv.size()<5) {
     cout << "Not enough arguments given to 'add-data'." << endl;
-    return gsl_efailed;
+    return exc_efailed;
   }
 
   source_names.push_back(sv[1]);
@@ -1222,7 +1222,7 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
 
   if (sv.size()<2) {
     cout << "No arguments given to 'first-point'." << endl;
-    return gsl_efailed;
+    return exc_efailed;
   }
 
   first_point.resize(sv.size()-1);
@@ -1242,7 +1242,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   // to mcmc().
   if (sv.size()<2) {
     cerr << "Model name not given." << endl;
-    return gsl_efailed;
+    return exc_efailed;
   }
   model_type=sv[1];
   if (modp!=0) {
@@ -1289,7 +1289,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     model_type="";
     has_esym=true;
     has_eos=true;
-    return gsl_efailed;
+    return exc_efailed;
   }
 
   return 0;
@@ -1370,34 +1370,48 @@ bool bamr_class::make_step(double w_current, double w_next, bool debug,
 }
 
 void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
-		       bool &bad_step) {
+			     bool &bad_step) {
+
+  bad_step=false;
 
   // Step for masses
   for(size_t k=0;k<nsources;k++) {
-    size_t step_count=0;
-    do {
-      bad_step=false;
-      if (e_current.mass[k]<mmax) {
-	e_next.mass[k]=e_current.mass[k]+(gr.random()*2.0-1.0)*
-	  (high.mass[k]-low.mass[k])/step_fac;
+
+    // Normal step
+    e_next.mass[k]=e_current.mass[k]+(gr.random()*2.0-1.0)*
+      (high.mass[k]-low.mass[k])/step_fac;
+
+    // Make sure mass is not too large, correct if necessary
+    if (mmax>high.mass[k]) {
+      if (e_next.mass[k]>high.mass[k]) {
+	double dm=(high.mass[k]-low.mass[k])/step_fac;
+	e_next.mass[k]=high.mass[k]-dm*gr.random();
+      } 
+    } else {
+      if (e_next.mass[k]>mmax) {
+	double dm=(mmax-low.mass[k])/step_fac;
+	e_next.mass[k]=mmax-dm*gr.random();
+      }
+    }
+
+    // Make sure mass is not too small, correct if necessary
+    if (e_next.mass[k]<low.mass[k]) {
+      if (mmax<high.mass[k]) {
+	double dm=(mmax-low.mass[k])/step_fac;
+	e_next.mass[k]=low.mass[k]+dm*gr.random();
       } else {
-	e_next.mass[k]=low.mass[k]+gr.random()*(mmax-low.mass[k]);
+	double dm=(high.mass[k]-low.mass[k])/step_fac;
+	e_next.mass[k]=low.mass[k]+dm*gr.random();
       }
-      if (e_next.mass[k]<low.mass[k] || e_next.mass[k]>high.mass[k] || 
-	  e_next.mass[k]>mmax) {
-	bad_step=true;
-      }
-      if (bad_step) {
-	scr_out << "Bad step: " << k << " " << low.mass[k] << " "
-		<< e_current.mass[k] << " " << e_next.mass[k] << " "
-		<< mmax << " " << high.mass[k] << endl;
-      }
-      step_count++;
-    } while (bad_step && step_count<100);
-    if (step_count==100) {
-      scr_out << "Too many steps in parameter space failed." << endl;
-      bad_step=true;
-      return;
+    }
+
+    // Double-check
+    if (e_next.mass[k]<low.mass[k] || e_next.mass[k]>high.mass[k] || 
+	e_next.mass[k]>mmax) {
+      scr_out << "Sanity in select_mass: " << k << " " << low.mass[k] << " "
+	      << e_current.mass[k] << " " << e_next.mass[k] << " "
+	      << mmax << " " << high.mass[k] << endl;
+      O2SCL_ERR("Sanity check failed in bamr::select_mass().",exc_esanity);
     }
   }
 
@@ -1409,7 +1423,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // User-specified filename prefix
   if (sv.size()<2) {
     cout << "No filename prefix given in bamr_class::mcmc()." << endl;
-    return gsl_efailed;
+    return exc_efailed;
   }
   string fname_prefix=sv[1];
     
@@ -1428,7 +1442,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // Check model
   if (model_type.length()==0 || modp==0 || modp2==0) {
     scr_out << "Model not set." << endl;
-    return gsl_efailed;
+    return exc_efailed;
   }
 
   // Run init() function (have to make sure to do this after opening
@@ -1626,13 +1640,15 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       } while (bad_step && step_count<100);
       if (step_count==1e2) {
 	scr_out << "Too many steps in parameter space failed." << endl;
-	return gsl_efailed;
+	return exc_efailed;
       }
     }
     
     if (nsources>0) {
-      select_mass(e_current,e_next,high.mass[0],bad_step);
-      if (bad_step) return gsl_efailed;
+      // Just use a large value (1.0e6) here since we don't yet
+      // know the maximum mass
+      select_mass(e_current,e_next,1.0e6,bad_step);
+      if (bad_step) return exc_efailed;
     }
 
     // Output the next point

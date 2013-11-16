@@ -31,8 +31,8 @@ int cold_nstar2::calc_eos(double &n1, double &e1, double np_0) {
   int ret;
   
   if (eos_set==false) {
-    O2SCL_ERR("EOS not set in cold_nstar2::calc_eos().",gsl_efailed);
-    return gsl_efailed;
+    O2SCL_ERR("EOS not set in cold_nstar2::calc_eos().",exc_efailed);
+    return exc_efailed;
   }
   
   eost->clear_table();
@@ -79,7 +79,7 @@ int cold_nstar2::calc_eos(double &n1, double &e1, double np_0) {
   }
 
   if (success==false) {
-    O2SCL_ERR_RET("Solving for EOS failed in calc_eos().",gsl_efailed);
+    O2SCL_ERR_RET("Solving for EOS failed in calc_eos().",exc_efailed);
   }
 
   return 0;

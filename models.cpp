@@ -532,7 +532,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Double check that the table is non-empty (we have to do this
   // especially for the size_t index in the for loop below)
   if (tab_eos->get_nlines()==0) {
-    O2SCL_ERR("Table empty in generic quarks.",gsl_efailed);
+    O2SCL_ERR("Table empty in generic quarks.",exc_efailed);
   }
 
   // Determine 1st polytrope coefficient
