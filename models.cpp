@@ -769,8 +769,8 @@ void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
   x[0]=mu_0;
   mm_funct_mfptr<quark_star> fmf(this,&quark_star::pressure);
   gmh.err_nonconv=false;
-  gmh.msolve(1,x,fmf);
-  if (gmh.last_conv!=0) {
+  int ret=gmh.msolve(1,x,fmf);
+  if (ret!=0) {
     scr_out << "Solver failed in qstar." << std::endl;
     fail=true;
     return;
