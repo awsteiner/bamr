@@ -5,21 +5,21 @@
 
 # This variable should include the directories for the o2scl, gsl, and
 # hdf libraries. 
-LIB_DIRS = -L$(HOME)/install/lib -L$(HOME)/install/o2scl-0.914/lib
+LIB_DIRS = -L$(HOME)/install/lib -L$(HOME)/install/o2scl-0.915/lib
 
 # This variable should include the parent directories for the 
 # gsl and o2scl header files as well as the directories for the
 # hdf5 include files
 INC_DIRS = -I$(HOME)/install/include -I$(HOME)/install/include/hdf5 \
-	-I$(HOME)/install/o2scl-0.914/include \
+	-I$(HOME)/install/o2scl-0.915/include \
 	-I$(HOME)/pkgs/Eigen-3.1.3 -I$(HOME)/install/arma/include \
 	-I$(HOME)/pkgs/boost_1_53_0
 
 # Path to MPI C++ compiler
-MPI_CXX = $(HOME)/install/bin/mpic++
+MPI_CXX = $(HOME)/install/bin/mpic++ -std=c++0x
 
 # Path to generic (no MPI necessary) C++ compiler
-CXX = g++
+CXX = g++ -std=c++0x
 
 # Comment out these two variables if you do not have GNU readline or
 # if O2scl was compiled without readline support

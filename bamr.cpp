@@ -1205,7 +1205,7 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
   source_names.push_back(sv[1]);
   source_fnames.push_back(sv[2]);
   slice_names.push_back(sv[3]);
-  first_mass.push_back(stod(sv[4]));
+  first_mass.push_back(o2scl::stod(sv[4]));
   if (sv.size()==6) {
     table_names.push_back(sv[5]);
   } else {
@@ -1231,7 +1231,7 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
     if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
       sv[i]=sv[i].substr(1,sv[i].length()-2);
     }
-    first_point[i-1]=stod(sv[i]);
+    first_point[i-1]=o2scl::stod(sv[i]);
   }
 
   return 0;
