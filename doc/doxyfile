@@ -1682,7 +1682,7 @@ SKIP_FUNCTION_MACROS = YES
 # the path). If a tag file is not located in the directory in which
 # doxygen is run, you must also specify the path to the tagfile here.
 
-TAGFILES = ../../../../../o2scl/doc/o2scl/o2scl.tag=http://o2scl.sourceforge.net/o2scl/html ../../../../../o2scl/doc/o2scl/part/o2scl_part.tag=http://o2scl.sourceforge.net/o2scl/part/html ../../../../../o2scl/doc/o2scl/eos/o2scl_eos.tag=http://o2scl.sourceforge.net/o2scl/eos/html
+TAGFILES = o2scl.tag=http://o2scl.sourceforge.net/o2scl/html o2scl_part.tag=http://o2scl.sourceforge.net/o2scl/part/html o2scl_eos.tag=http://o2scl.sourceforge.net/o2scl/eos/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will
 # create a tag file that is based on the input files it reads.

@@ -18,8 +18,7 @@
     Currently, \bm is dual-hosted as an SVN respostory at
     http://www.sourceforge.net/projects/bamr and a git repository at
     http://www.github.com/awsteiner/bamr . This documentation (when it
-    corresponds to a release) is hosted at http://bamr.sourceforge.net
-    .
+    corresponds to a release) is hosted at http://bamr.sourceforge.net.
 
     If you are considering using this code for your research, I
     encourage you to contact me so that I can help you with the
@@ -103,7 +102,7 @@
     \section infile_sect Data files
 
     The data files are HDF5 files (typically named with a <tt>.o2</tt>
-    extension) which contain one \ref table3d object giving the
+    extension) which contain one \ref o2scl::table3d object giving the
     probability density of a neutron star observation as a slice in
     that table.
 
@@ -124,9 +123,10 @@
     \hline
     \section detail_sect Some Details
 
-    The basic functionality is provided in the \ref bamr class and
-    each Monte Carlo point is an object of type \ref entry. All of the
-    "models" (EOS parameterizations) are children of \ref model class.
+    The basic functionality is provided in the \ref bamr::bamr_class
+    and each Monte Carlo point is an object of type \ref bamr::entry.
+    All of the "models" (EOS parameterizations) are children of \ref
+    bamr::model class.
 
     If the initial guess has no probability, then the code will fail.
     This is indicated by the line \c "Initial weight zero." in
@@ -160,31 +160,62 @@
     \section model_sect EOS Model
 
     Some EOS models are already provided. New models (i.e. new
-    children of the \ref model class) must perform several tasks
+    children of the \ref bamr::model class) must perform several tasks
 
-    - The function \ref model::compute_eos() should use the parameters
-    in the \ref entry argument to compute the EOS and store it in the
-    object returned by \ref cold_nstar::get_eos_results().
+    - The function \ref bamr::model::compute_eos() should use the
+    parameters in the \ref bamr::entry argument to compute the EOS and
+    store it in the object returned by \ref
+    o2scl::cold_nstar::get_eos_results().
 
     - The energy density should be stored in a column named
     <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
     set for each column (currently only <tt>1/fm^4</tt> is supported).
 
-    - If \ref bamr::baryon_density is true and the EOS model did not
-    already compute the baryon density in a column named <tt>"nb"</tt>,
-    then \ref model::compute_eos() should return one baryon density
-    and energy density in \ref model::baryon_density_point().
+    - If \ref bamr::bamr_class::baryon_density is true and the EOS
+    model did not already compute the baryon density in a column named
+    <tt>"nb"</tt>, then \ref bamr::model::compute_eos() should return
+    one baryon density and energy density in \ref
+    bamr::model::baryon_density_point().
 
     - If the model provides the symmetry energy and its density
     derivative, it should be stored as constants named <tt>"S"</tt>
     and <tt>"L"</tt> in the table (in \f$ 1/\mathrm{fm} \f$ ).
 
     - Causality is automatically checked in bamr::compute_star(), but
-    the \ref model::compute_eos() function should check that the
-    pressure is not decreasing. 
+    the \ref bamr::model::compute_eos() function should check that the
+    pressure is not decreasing.
 
     - Finally, it is recommended to set the interpolation type in the
-    \ref table_units object to linear interpolation.
+    \ref o2scl::table_units object to linear interpolation.
+
+    \hline
+    \section func_stack_sect Function call stack
+
+    - \ref bamr::bamr_class::run()
+      - \ref bamr::bamr_class::setup_cli()
+      - Command <tt>"model"</tt>: \ref bamr::bamr_class::set_model()
+      - Command <tt>"add-data"</tt>: \ref bamr::bamr_class::add_data()
+      - Command <tt>"first-point"</tt>: 
+        \ref bamr::bamr_class::set_first_point()
+      - Command <tt>"mcmc"</tt>: \ref bamr::bamr_class::mcmc()
+        - \ref bamr::bamr_class::mcmc_init()
+        - \ref bamr::bamr_class::load_mc()
+        - \ref bamr::bamr_class::init_grids_table()
+          - \ref bamr::bamr_class::table_names_units()
+        - \ref bamr::bamr_class::compute_weight()
+          - \ref bamr::bamr_class::compute_star()
+            - If the model has an EOS: 
+              - \ref bamr::model::compute_eos()
+              - \ref bamr::bamr_class::prepare_eos()
+              - \ref o2scl::tov_solve::mvsr()
+            - Otherwise: \ref bamr::model::compute_mr()
+        - \ref bamr::bamr_class::add_measurement()
+          - \ref bamr::bamr_class::fill_line()
+        - \ref bamr::bamr_class::select_mass()
+        - \ref bamr::bamr_class::make_step()
+        - \ref bamr::bamr_class::output_best()
+        - \ref bamr::bamr_class::update_files()
+          - \ref bamr::bamr_class::first_update()
 
     \comment
     \hline

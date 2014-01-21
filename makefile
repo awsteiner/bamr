@@ -124,8 +124,14 @@ sf-web:
 	cd doc/html; rsync -Cavzu * \
 		awsteiner,bamr@web.sourceforge.net:htdocs
 
+update_tag:
+	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
+
 doc: empty
 	cd doc; doxygen doxyfile
+	cat doc/doxygen.log
 #	cd doc; perl rep.perl < html/search/search.css > temp.css
 #	cd doc; mv temp.css html/search/search.css
 

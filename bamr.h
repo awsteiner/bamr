@@ -47,6 +47,12 @@
 #include "entry.h"
 #include "models.h"
 
+/** \brief Main namespace
+    
+    The Bamr namespace which holds all classes and functions.
+
+    This file is documented in bamr.h .
+ */
 namespace bamr {
 
   /** \brief Statistical analysis of EOS from M and R constraints
@@ -405,7 +411,7 @@ namespace bamr {
      */
     virtual void load_mc();
   
-    /** \brief Compute P(M|D) from parameters in entry \c e
+    /** \brief Compute \f$ P(M|D) \f$ from parameters in entry \c e
 	
 	Called by mcmc().
     */

@@ -48,7 +48,7 @@ namespace bamr {
       
       This simplified version only computes the energy density and 
       pressure rather than the \o2 version which computes several
-      extra quantities. This class is part of \ref model.
+      extra quantities. This class is part of \ref bamr::model.
   */
   class cold_nstar2 : public o2scl::cold_nstar {
 
