@@ -76,6 +76,7 @@ bamr_class::bamr_class() {
   use_crust=true;
   user_seed=0;
   best_detail=false;
+  inc_baryon_mass=false;
   max_iters=0;
   norm_max=true;
 
@@ -411,6 +412,7 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.seti("debug_eos",debug_eos);
   hf.seti("debug_star",debug_star);
   hf.seti("best_detail",best_detail);
+  hf.seti("inc_baryon_mass",inc_baryon_mass);
   hf.seti("output_next",output_next);
   hf.setd("nb_low",nb_low);
   hf.setd("nb_high",nb_high);
@@ -832,12 +834,17 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       return;
     }
 
-    // Read the EOS into the tov_eos object. We don't specify a baryon
-    // number density column here, even though it might be provided,
-    // just to make the TOV solver a bit faster.
-    tab_eos->set_unit("ed","1/fm^4");
-    tab_eos->set_unit("pr","1/fm^4");
-    teos.read_table(*tab_eos,"ed","pr");
+    // Read the EOS into the tov_eos object.
+    if (baryon_density && inc_baryon_mass) {
+      tab_eos->set_unit("ed","1/fm^4");
+      tab_eos->set_unit("pr","1/fm^4");
+      tab_eos->set_unit("nb","1/fm^3");
+      teos.read_table(*tab_eos,"ed","pr","nb");
+    } else {
+      tab_eos->set_unit("ed","1/fm^4");
+      tab_eos->set_unit("pr","1/fm^4");
+      teos.read_table(*tab_eos,"ed","pr");
+    }
     
     if (use_crust) {
     

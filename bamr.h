@@ -179,6 +179,11 @@ namespace bamr {
 	best point
     */
     bool best_detail;
+    
+    /** \brief If true, output information about the baryon mass
+	as well as the gravitational mass
+     */
+    bool inc_baryon_mass;
     //@}
 
     /** \name Limits on mass and radius from source data files
