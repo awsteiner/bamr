@@ -31,7 +31,6 @@
 #include <o2scl/cold_nstar.h>
 #include <o2scl/schematic_eos.h>
 #include <o2scl/root_brent_gsl.h>
-#include <o2scl/prob_dens_func.h>
 
 #include "misc.h"
 #include "entry.h"
@@ -162,17 +161,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e) {
-      e.params[0]=1.0;
-      e.params[1]=-3.0;
-      e.params[2]=0.165;
-      e.params[3]=0.644;
-      e.params[4]=1.51;
-      e.params[5]=0.576;
-      e.params[6]=4.60;
-      e.params[7]=1.21;
-      return;
-    }
+    virtual void first_point(entry &e);
 
   };
 
@@ -210,17 +199,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e) {
-      e.params[0]=1.0;
-      e.params[1]=-2.66;
-      e.params[2]=0.165;
-      e.params[3]=0.66;
-      e.params[4]=1.48;
-      e.params[5]=2.913;
-      e.params[6]=4.066;
-      e.params[7]=1.80;
-      return;
-    }
+    virtual void first_point(entry &e);
   
   };
 
@@ -258,87 +237,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e) {
-      e.params[0]=1.0;
-      e.params[1]=-2.5;
-      e.params[2]=0.165;
-      e.params[3]=0.8;
-      e.params[4]=0.024;
-      e.params[5]=0.74;
-      e.params[6]=0.60;
-      e.params[7]=1.84;
-      return;
-    }
-
-  };
-
-  /// A strange quark star model
-  class quark_star : public two_polytropes {
-  
-  public:
-
-    /// The bag constant
-    double B;
-
-    /** \brief The paramter controlling non-perturbative corrections 
-	to \f$ \mu^4 \f$
-    */
-    double c;
-
-    /// The gap
-    double Delta;
-
-    /// The strange quark mass
-    double ms;
-
-    /// The solver to find the chemical potential for zero pressure
-    o2scl::mroot_hybrids<o2scl::mm_funct<>,ubvector,ubmatrix,
-      o2scl::jac_funct<> > gmh;
-    
-    /// An alternative root finder
-    o2scl::root_brent_gsl<> grb;
-
-    quark_star() {
-    }
-
-    virtual ~quark_star() {}
-  
-    /// Compute the pressure as a function of the chemical potential
-    int pressure(size_t nv, const ubvector &x, ubvector &y);
-
-    /// Compute the pressure as a function of the chemical potential
-    double pressure2(double mu);
-
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-  
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-  
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-  
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-
-    /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
-    */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
-
-    /** \brief Function to compute the initial guess
-     */
-    virtual void first_point(entry &e) {
-      e.params[0]=0.2446;
-      e.params[1]=0.0740;
-      e.params[2]=0.00289;
-      e.params[3]=0.0754;
-      return;
-    }
+    virtual void first_point(entry &e);
 
   };
 
@@ -424,18 +323,71 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e) {
-      e.params[0]=1.19;
-      e.params[1]=-2.52;
-      e.params[2]=0.188;
-      e.params[3]=0.357;
-      e.params[4]=1.86;
-      e.params[5]=5.70;
-      e.params[6]=2.29;
-      e.params[7]=0.1907;
-      e.params[8]=0.0796;
-      return;
+    virtual void first_point(entry &e);
+
+  };
+
+  /// A strange quark star model
+  class quark_star : public two_polytropes {
+  
+  public:
+
+    /// The bag constant
+    double B;
+
+    /** \brief The paramter controlling non-perturbative corrections 
+	to \f$ \mu^4 \f$
+    */
+    double c;
+
+    /// The gap
+    double Delta;
+
+    /// The strange quark mass
+    double ms;
+
+    /// The solver to find the chemical potential for zero pressure
+    o2scl::mroot_hybrids<o2scl::mm_funct<>,ubvector,ubmatrix,
+      o2scl::jac_funct<> > gmh;
+    
+    /// An alternative root finder
+    o2scl::root_brent_gsl<> grb;
+
+    quark_star() {
     }
+
+    virtual ~quark_star() {}
+  
+    /// Compute the pressure as a function of the chemical potential
+    int pressure(size_t nv, const ubvector &x, ubvector &y);
+
+    /// Compute the pressure as a function of the chemical potential
+    double pressure2(double mu);
+
+    /** \brief Set the lower boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void low_limits(entry &e);
+  
+    /** \brief Set the upper boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void high_limits(entry &e);
+  
+    /// Return the name of parameter with index \c i
+    virtual std::string param_name(size_t i);
+  
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i);
+
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e);
 
   };
 

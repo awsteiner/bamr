@@ -33,9 +33,6 @@
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 
 #include <o2scl/cold_nstar.h>
-#include <o2scl/hist.h>
-#include <o2scl/hist_2d.h>
-#include <o2scl/expval.h>
 
 namespace bamr {
 

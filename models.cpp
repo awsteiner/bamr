@@ -100,6 +100,18 @@ string two_polytropes::param_unit(size_t i) {
   return ".";
 }
 
+void two_polytropes::first_point(entry &e) {
+  e.params[0]=1.0;
+  e.params[1]=-3.0;
+  e.params[2]=0.165;
+  e.params[3]=0.644;
+  e.params[4]=1.51;
+  e.params[5]=0.576;
+  e.params[6]=4.60;
+  e.params[7]=1.21;
+  return;
+}
+
 void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
 
   fail=false;
@@ -229,6 +241,18 @@ string alt_polytropes::param_unit(size_t i) {
   if (i==5) return ".";
   else if (i==7) return ".";
   return two_polytropes::param_unit(i);
+}
+
+void alt_polytropes::first_point(entry &e) {
+  e.params[0]=1.0;
+  e.params[1]=-2.66;
+  e.params[2]=0.165;
+  e.params[3]=0.66;
+  e.params[4]=1.48;
+  e.params[5]=2.913;
+  e.params[6]=4.066;
+  e.params[7]=1.80;
+  return;
 }
 
 void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
@@ -373,6 +397,18 @@ string fixed_pressure::param_unit(size_t i) {
   return two_polytropes::param_unit(i);
 }
 
+void fixed_pressure::first_point(entry &e) {
+  e.params[0]=1.0;
+  e.params[1]=-2.5;
+  e.params[2]=0.165;
+  e.params[3]=0.8;
+  e.params[4]=0.024;
+  e.params[5]=0.74;
+  e.params[6]=0.60;
+  e.params[7]=1.84;
+  return;
+}
+
 void fixed_pressure::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
 
   fail=false;
@@ -503,6 +539,19 @@ string generic_quarks::param_unit(size_t i) {
   else if (i==6) return "1/fm^4";
   else if (i==7) return "1/fm^2";
   return ".";
+}
+
+void generic_quarks::first_point(entry &e) {
+  e.params[0]=1.19;
+  e.params[1]=-2.52;
+  e.params[2]=0.188;
+  e.params[3]=0.357;
+  e.params[4]=1.86;
+  e.params[5]=5.70;
+  e.params[6]=2.29;
+  e.params[7]=0.1907;
+  e.params[8]=0.0796;
+  return;
 }
 
 void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
@@ -728,6 +777,14 @@ std::string quark_star::param_unit(size_t i) {
   return "1/fm";
 }
   
+void quark_star::first_point(entry &e) {
+  e.params[0]=0.2446;
+  e.params[1]=0.0740;
+  e.params[2]=0.00289;
+  e.params[3]=0.0754;
+  return;
+}
+
 void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
   
   fail=false;

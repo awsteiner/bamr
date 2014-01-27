@@ -20,11 +20,12 @@
 
   -------------------------------------------------------------------
 */
+#include "bamr.h"
+
 #include <mpi.h>
 
 #include <o2scl/vector.h>
-
-#include "bamr.h"
+#include <o2scl/hdf_io.h>
 
 using namespace std;
 using namespace o2scl;
