@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2013, Andrew W. Steiner
+  Copyright (C) 2012-2014, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -357,7 +357,6 @@ void bamr_class::add_measurement
   // Test to see if we need to add a new line of data or
   // increment the weight on the previous line
   if (tc.get_nlines()==0 || new_meas==true) {
-    // weight!=tc.get("weight",tc.get_nlines()-1)) {
     
     std::vector<double> line;
     fill_line(e,tab_eos,tab_mvsr,weight,new_meas,n_meas,wgts,line);
@@ -667,12 +666,12 @@ void bamr_class::load_mc() {
 }
   
 void bamr_class::prepare_eos(entry &e, model &modref, tov_solve *tsr, 
-		       bool &success) {
+			     bool &success) {
   return;
 }
 
 void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr, 
-			bool &success) {
+			      bool &success) {
   
   success=true;
 
@@ -1100,7 +1099,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 }
 
 double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr, 
-			    bool &success, ubvector &wgts, bool warm_up) {
+				  bool &success, ubvector &wgts, bool warm_up) {
 			     
   // Compute the M vs R curve and return if it failed
   bool compute_star_success;
@@ -1297,24 +1296,12 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 }
 
 void bamr_class::output_best(string fname_prefix, entry &e_best, double w_best,
-		       o2_shared_ptr<table_units<> >::type tab_eos,
-		       o2_shared_ptr<table_units<> >::type tab_mvsr,
-		       ubvector &wgts) {
+			     o2_shared_ptr<table_units<> >::type tab_eos,
+			     o2_shared_ptr<table_units<> >::type tab_mvsr,
+			     ubvector &wgts) {
   
   scr_out << "Best: " << e_best << " " << w_best << endl;
 
-  // "Best" point in parameter space and its associated weight
-  string fname_best=fname_prefix+"_best";
-  ofstream fout(fname_best.c_str(),ios::app);
-  fout.setf(ios::scientific);
-  fout.precision(12);
-  fout << "Best: " << e_best << " Weights: ";
-  for(size_t i=0;i<nsources;i++) {
-    fout << wgts[i] << " ";
-  }
-  fout << w_best << endl;
-  fout.close();
-  
   string fname_best_out=fname_prefix+"_out";
   hdf_file hf;
   hf.open_or_create(fname_best_out);
@@ -1327,23 +1314,18 @@ void bamr_class::output_best(string fname_prefix, entry &e_best, double w_best,
   }
   best_point.push_back(w_best);
   hf.setd_vec("best_point",best_point);
-  hf.close();
 
   if (best_detail) {
 
     // "Best" EOS
-    string fname_best_eos=fname_prefix+"_best_eos";
-    hdf_file hf;
-    hf.open_or_create(fname_best_eos);
     hdf_output(hf,*tab_eos,"best_eos");
-    hf.close();
     
     // "Best" M vs. R curve
-    string fname_best_mvsr=fname_prefix+"_best_mvsr";
-    hf.open_or_create(fname_best_mvsr);
     hdf_output(hf,*tab_mvsr,"best_mvsr");
-    hf.close();
+
   }
+
+  hf.close();
 
   return;
 }
@@ -1353,7 +1335,7 @@ int bamr_class::mcmc_init() {
 }
 
 bool bamr_class::make_step(double w_current, double w_next, bool debug,
-		     bool warm_up, int iteration) {
+			   bool warm_up, int iteration) {
   
   double r=gr.random();
 
@@ -1487,27 +1469,49 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // First MC point
   entry e_current(nparams,nsources);
   
-  // Determine first point in parameter space
   if (first_point_file.length()>0) {
+
+    if (first_point.size()>0) {
+      scr_out << "Cannot use 'first_point_file' with 'first_point'." << endl;
+      return exc_efailed;
+    }
     
-    // If necessary, read initial guess from file
-    std::vector<double> best_point;
-    hdf_file hf;
-    hf.open(first_point_file);
-    hf.getd_vec("best_point",best_point);
-    hf.close();
+    // Read file 
     scr_out << "Reading best point from file '" << first_point_file
 	    << "'." << endl;
+    hdf_file hf;
+    hf.open(first_point_file);
+
+    // Read table
+    size_t file_n_chains;
+    hf.get_szt("n_chains",file_n_chains);
+    std::string chain_name=std::string("markov_chain")+
+      o2scl::szttos(file_n_chains-1);
+    table_units<> file_tab;
+    hdf_input(hf,file_tab,chain_name);
+    size_t last_line=file_tab.get_nlines()-1;
+
+    // Get parameters
     for(size_t i=0;i<nparams;i++) {
-      e_current.params[i]=best_point[i];
-      scr_out << e_current.params[i] << endl;
+      string pname=((string)"param_")+modp->param_name(i);
+      e_current.params[i]=file_tab.get(pname,last_line);
+      scr_out << "Parameter named " << modp->param_name(i) << " " 
+	      << e_current.params[i] << endl;
     }
-    scr_out << endl;
-    for(size_t i=nparams;i<nsources+nparams;i++) {
-      e_current.mass[i-nparams]=best_point[i];
-      scr_out << e_current.mass[i-nparams] << endl;
+
+    // Get masses
+    if (nsources>0) {
+      for(size_t i=0;i<nsources;i++) {
+	string obj_name=((string)"M_")+source_names[i];
+	e_current.mass[i]=file_tab.get(obj_name,last_line);
+	scr_out << "Mass for " << source_names[i] << " " 
+		<< e_current.mass[i] << endl;
+      }
     }
+
+    // Finish up
     scr_out << endl;
+    hf.close();
 
   } else if (first_point.size()>0) {
     

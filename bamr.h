@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2013, Andrew W. Steiner
+  Copyright (C) 2012-2014, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -68,7 +68,6 @@ namespace bamr {
       file is updated (currently every 10 successful MH steps or 
       when a block is finished)
       \future Allow non-tabulated data specified as a function
-      \future Get rid of the 'best' file
   */
   class bamr_class {
     
