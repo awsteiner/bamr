@@ -189,8 +189,9 @@
     \ref o2scl::table_units object to linear interpolation.
 
     \hline
-    \section func_stack_sect Function call stack
+    \section func_stack_sect Partial function call stack
 
+    The top-level functions in the call stack are:
     - \ref bamr::bamr_class::run()
       - \ref bamr::bamr_class::setup_cli()
       - Command <tt>"model"</tt>: \ref bamr::bamr_class::set_model()
@@ -202,20 +203,41 @@
         - \ref bamr::bamr_class::load_mc()
         - \ref bamr::bamr_class::init_grids_table()
           - \ref bamr::bamr_class::table_names_units()
-        - \ref bamr::bamr_class::compute_weight()
-          - \ref bamr::bamr_class::compute_star()
-            - If the model has an EOS: 
-              - \ref bamr::model::compute_eos()
-              - \ref bamr::bamr_class::prepare_eos()
-              - \ref o2scl::tov_solve::mvsr()
-            - Otherwise: \ref bamr::model::compute_mr()
-        - \ref bamr::bamr_class::add_measurement()
-          - \ref bamr::bamr_class::fill_line()
-        - \ref bamr::bamr_class::select_mass()
-        - \ref bamr::bamr_class::make_step()
-        - \ref bamr::bamr_class::output_best()
-        - \ref bamr::bamr_class::update_files()
-          - \ref bamr::bamr_class::first_update()
+        - Run initial point:
+          - \ref bamr::bamr_class::compute_weight() (see below)
+          - \ref bamr::bamr_class::add_measurement()
+            - \ref bamr::bamr_class::fill_line()
+          - \ref bamr::bamr_class::output_best()
+        - Main MCMC loop: 
+          - If at least one source: \ref bamr::bamr_class::select_mass()
+          - \ref bamr::bamr_class::compute_weight() (see below)
+          - \ref bamr::bamr_class::make_step()
+          - \ref bamr::bamr_class::add_measurement()
+            - \ref bamr::bamr_class::fill_line()
+          - \ref bamr::bamr_class::output_best()
+          - \ref bamr::bamr_class::update_files()
+            - If first file update: \ref bamr::bamr_class::first_update()
+      - Done with <tt>"mcmc"</tt> command. 
+
+    The operation of \ref bamr::bamr_class::compute_weight() can
+    be summarized with:
+    - \ref bamr::bamr_class::compute_weight()
+      - \ref bamr::bamr_class::compute_star()
+        - If the model has an EOS: 
+          - \ref bamr::model::compute_eos() to compute the EOS
+          - Check pressure is increasing everywhere
+          - Compute baryon density if necessary
+          - Call \ref bamr::bamr_class::prepare_eos()
+          - Compute crust if necessary
+          - \ref o2scl::tov_solve::mvsr() to compute the mass-radius curve
+          - Check maximum mass
+          - If some masses are too large: \ref bamr::bamr_class::select_mass() 
+        - Otherwise if there's no EOS: \ref bamr::model::compute_mr()
+
+    \comment
+    Note that doxygen gets unhappy if the lists above are made with
+    tabs instead of spaces. 
+    \endcomment
 
     \comment
     \hline

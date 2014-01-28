@@ -172,8 +172,8 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
       s+="S L ";
       u+="MeV MeV ";
     }
-    s+="M_max P_max e_max ";
-    u+="Msun 1/fm^4 1/fm^4 ";
+    s+="R_max M_max P_max e_max ";
+    u+="km Msun 1/fm^4 1/fm^4 ";
     if (baryon_density) {
       s+="nb_max ";
       u+="1/fm^3 ";
@@ -238,7 +238,7 @@ void bamr_class::fill_line
  double weight, bool new_meas, size_t n_meas, ubvector &wgts,
  std::vector<double> &line) {
 
-  double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0;
+  double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
   if (has_eos) {
 
@@ -250,7 +250,9 @@ void bamr_class::fill_line
     pmax=tab_mvsr->max("pr");
     // The maximum mass
     mmax=tab_mvsr->max("gm");
-
+    // The radius of the maximum mass star
+    rmax=tab_mvsr->get("r",tab_mvsr->lookup("gm",mmax));
+    
     if (baryon_density) {
       // The central baryon density in the maximum mass configuration
       nbmax=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
@@ -333,6 +335,7 @@ void bamr_class::fill_line
       line.push_back(tab_eos->get_constant("S"));
       line.push_back(tab_eos->get_constant("L"));
     }
+    line.push_back(rmax);
     line.push_back(mmax);
     line.push_back(pmax);
     line.push_back(emax);
@@ -2014,6 +2017,10 @@ void bamr_class::setup_cli() {
   p_first_point_file.str=&first_point_file;
   p_first_point_file.help="First point file name (default \"\").";
   cl.par_list.insert(make_pair("first_point_file",&p_first_point_file));
+
+  p_inc_baryon_mass.b=&inc_baryon_mass;
+  p_inc_baryon_mass.help="";
+  cl.par_list.insert(make_pair("inc_baryon_mass",&p_inc_baryon_mass));
 
   // --------------------------------------------------------
 

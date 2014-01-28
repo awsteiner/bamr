@@ -92,6 +92,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_output_next;
     o2scl::cli::parameter_bool p_baryon_density;
     o2scl::cli::parameter_bool p_use_crust;
+    o2scl::cli::parameter_bool p_inc_baryon_mass;
     o2scl::cli::parameter_string p_first_point_file;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
