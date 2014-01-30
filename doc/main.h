@@ -233,6 +233,7 @@
           - Check maximum mass
           - If some masses are too large: \ref bamr::bamr_class::select_mass() 
         - Otherwise if there's no EOS: \ref bamr::model::compute_mr()
+        - Test for causality
 
     \comment
     Note that doxygen gets unhappy if the lists above are made with

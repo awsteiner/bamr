@@ -343,8 +343,7 @@ namespace bamr {
     /// \name Internal functions 
     //@{
     /// The function which selects the next neutron star masses
-    virtual void select_mass(entry &e_current, entry &e_next, double mmax,
-			     bool &bad_step);
+    virtual void select_mass(entry &e_current, entry &e_next, double mmax);
 
     /// Setup column names and units for data table
     virtual void table_names_units(std::string &s, std::string &u);

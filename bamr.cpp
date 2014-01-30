@@ -1009,28 +1009,13 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     for(size_t i=0;i<nsources;i++) {
       if (e.mass[i]>mmax) mass_fail=true;
     }
-    if (true) {
-      if (mass_fail==true) {
-	bool bad_step;
-	scr_out << "Adjusting masses for M_{max} = " << mmax << endl;
-	scr_out << "Old entry: " << e << endl;
-	select_mass(e,e,mmax,bad_step);
-	mass_fail=false;
-	for(size_t i=0;i<nsources;i++) {
-	  if (e.mass[i]>mmax) mass_fail=true;
-	}
-	if (mass_fail || bad_step) {
-	  scr_out << "Failure with new mass update." << endl;
-	  O2SCL_ERR("Failure in new mass update.",exc_efailed);
-	}
-	scr_out << "New entry: " << e << endl;
-      }
-    } else {
-      if (mass_fail==true) {
-	scr_out << "Rejected: Mass of object larger than maximum. " << endl;
-	success=false;
-	return;
-      }
+
+    // If a star is too massive, readjust it's mass accordingly
+    if (mass_fail==true) {
+      scr_out << "Adjusting masses for M_{max} = " << mmax << endl;
+      scr_out << "Old entry: " << e << endl;
+      select_mass(e,e,mmax);
+      scr_out << "New entry: " << e << endl;
     }
 
     // Remove table entries with pressures above the maximum pressure
@@ -1362,10 +1347,7 @@ bool bamr_class::make_step(double w_current, double w_next, bool debug,
   return accept;
 }
 
-void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
-			     bool &bad_step) {
-
-  bad_step=false;
+void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax) {
 
   // Step for masses
   for(size_t k=0;k<nsources;k++) {
@@ -1374,7 +1356,8 @@ void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
     e_next.mass[k]=e_current.mass[k]+(gr.random()*2.0-1.0)*
       (high.mass[k]-low.mass[k])/step_fac;
 
-    // Make sure mass is not too large, correct if necessary
+    // Make sure the mass is smaller than the minimum of mmax and
+    // high.mass[k]
     if (mmax>high.mass[k]) {
       if (e_next.mass[k]>high.mass[k]) {
 	double dm=(high.mass[k]-low.mass[k])/step_fac;
@@ -1387,7 +1370,8 @@ void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax,
       }
     }
 
-    // Make sure mass is not too small, correct if necessary
+    // Make sure mass is larger than low.mass[k], making sure the 
+    // new mass is not higher than either mmax or high.mass[k]
     if (e_next.mass[k]<low.mass[k]) {
       if (mmax<high.mass[k]) {
 	double dm=(mmax-low.mass[k])/step_fac;
@@ -1436,6 +1420,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   if (model_type.length()==0 || modp==0 || modp2==0) {
     scr_out << "Model not set." << endl;
     return exc_efailed;
+  }
+
+  // Fix step_fac if it's too small
+  if (step_fac<1.0) {
+    step_fac=1.0;
+    scr_out << "Fixed step_fac to 1.0." << endl;
   }
 
   // Run init() function (have to make sure to do this after opening
@@ -1636,34 +1626,30 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     // Make a step, ensure that we're in bounds and that
     // the masses are not too large
-    bool bad_step;
     for(size_t k=0;k<e_next.np;k++) {
-      size_t step_count=0;
-      do {
-	bad_step=false;
-	e_next.params[k]=e_current.params[k]+(gr.random()*2.0-1.0)*
+
+      e_next.params[k]=e_current.params[k]+(gr.random()*2.0-1.0)*
+	(high.params[k]-low.params[k])/step_fac;
+
+      // If it's out of range, redo step near boundary
+      if (e_next.params[k]<low.params[k]) {
+	e_next.params[k]=low.params[k]+gr.random()*
 	  (high.params[k]-low.params[k])/step_fac;
-	if (e_next.params[k]<low.params[k] || 
-	    e_next.params[k]>high.params[k]) {
-	  bad_step=true;
-	}
-	if (bad_step) {
-	  scr_out << "Bad step: " << k << " " << low.params[k] << " "
-		  << e_current.params[k] << " " << e_next.params[k] << " "
-		  << high.params[k] << endl;
-	}
-      } while (bad_step && step_count<100);
-      if (step_count==1e2) {
-	scr_out << "Too many steps in parameter space failed." << endl;
-	return exc_efailed;
+      } else if (e_next.params[k]>high.params[k]) {
+	e_next.params[k]=high.params[k]-gr.random()*
+	  (high.params[k]-low.params[k])/step_fac;
+      }
+
+      if (e_next.params[k]<low.params[k] || 
+	  e_next.params[k]>high.params[k]) {
+	O2SCL_ERR("Sanity check in parameter step.",exc_esanity);
       }
     }
     
     if (nsources>0) {
       // Just use a large value (1.0e6) here since we don't yet
       // know the maximum mass
-      select_mass(e_current,e_next,1.0e6,bad_step);
-      if (bad_step) return exc_efailed;
+      select_mass(e_current,e_next,1.0e6);
     }
 
     // Output the next point
@@ -1942,7 +1928,8 @@ void bamr_class::setup_cli() {
     "variable is taken as the difference between the high and low "+
     "limits divided by this factor (default 15.0). This factor can "+
     "be increased if the acceptance rate is too small, but care must "+
-    "be taken, e.g. if the conditional probability is multimodal.";
+    "be taken, e.g. if the conditional probability is multimodal. If "+
+    "this step size is smaller than 1.0, it is reset to 1.0 .";
   cl.par_list.insert(make_pair("step_fac",&p_step_fac));
 
   p_exit_mass.d=&exit_mass;
