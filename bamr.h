@@ -62,8 +62,8 @@ namespace bamr {
       \todo Better documentation
       \todo Help with plots
       \todo Currently warm_up is changed to false only during 
-      the first accepted step after <tt>iteration > warm_up</tt>,
-      not immediately after <tt>iteration > warm_up</tt>.
+      the first accepted step after <tt>iteration > n_warm_up</tt>,
+      not immediately after <tt>iteration > n_warm_up</tt>.
       \future Allow the user to control how often the output 
       file is updated (currently every 10 successful MH steps or 
       when a block is finished)
@@ -81,7 +81,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_exit_mass;
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
-    o2scl::cli::parameter_int p_warm_up;
+    o2scl::cli::parameter_int p_n_warm_up;
     o2scl::cli::parameter_int p_grid_size;
     o2scl::cli::parameter_int p_user_seed;
     o2scl::cli::parameter_int p_max_iters;
@@ -165,8 +165,12 @@ namespace bamr {
     /// Minimum allowed maximum mass
     double min_max_mass;
 
-    /// Number of warm up steps (successful steps not iterations)
-    int warm_up;
+    /** \brief Number of warm up steps (successful steps not iterations)
+
+	\note Not to be confused with \ref warm_up, which is 
+	a boolean local variable in some functions not an int.
+    */
+    int n_warm_up;
 
     /** \brief Time in seconds (3600 seconds is one hour, default is
 	86400 seconds or 1 day)
