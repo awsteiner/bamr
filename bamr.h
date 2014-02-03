@@ -62,8 +62,8 @@ namespace bamr {
       \todo Better documentation
       \todo Help with plots
       \todo Currently warm_up is changed to false only during 
-      the first accepted step after <tt>iteration > n_warm_up</tt>,
-      not immediately after <tt>iteration > n_warm_up</tt>.
+      the first accepted step after <tt>iteration > warm_up</tt>,
+      not immediately after <tt>iteration > warm_up</tt>.
       \future Allow the user to control how often the output 
       file is updated (currently every 10 successful MH steps or 
       when a block is finished)
@@ -166,7 +166,7 @@ namespace bamr {
     double min_max_mass;
 
     /// Number of warm up steps (successful steps not iterations)
-    int n_warm_up;
+    int warm_up;
 
     /** \brief Time in seconds (3600 seconds is one hour, default is
 	86400 seconds or 1 day)

@@ -62,7 +62,7 @@ bamr_class::bamr_class() {
   step_fac=15.0;
   // Default to 24 hours
   max_time=3.6e3*24;
-  n_warm_up=0;
+  warm_up=0;
   // Minimum allowed maximum mass
   min_max_mass=2.0;
   // Minimum neutron star mass
@@ -402,7 +402,7 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.sets("model",model_type);
   hf.setd("max_time",max_time);
   hf.seti("user_seed",user_seed);
-  hf.seti("n_warm_up",n_warm_up);
+  hf.seti("warm_up",warm_up);
   hf.setd("min_mass",min_mass);
   hf.setd("exit_mass",exit_mass);
   hf.setd("min_max_mass",min_max_mass);
@@ -1573,7 +1573,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // Warm-up flag
   bool warm_up=true;
-  if (n_warm_up==0) warm_up=false;
+  if (warm_up==0) warm_up=false;
 
   // Keep track of successful and failed MH moves
   mh_success=0;
@@ -1702,7 +1702,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	mh_success++;
 
-	if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
+	if (((int)mcmc_iterations)>warm_up && warm_up==true) {
 	  warm_up=false;
 	  scr_out << "Setting warm_up to false. Reset start time." << endl;
 	  if (true) {
@@ -1950,7 +1950,7 @@ void bamr_class::setup_cli() {
     "data files. The default is 0.";
   cl.par_list.insert(make_pair("input_dist_thresh",&p_input_dist_thresh));
 
-  p_warm_up.i=&n_warm_up;
+  p_warm_up.i=&warm_up;
   p_warm_up.help=((string)"Minimum number of warm up iterations ")+
     "(default 0).";
   cl.par_list.insert(make_pair("warm_up",&p_warm_up));
