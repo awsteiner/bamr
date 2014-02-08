@@ -46,10 +46,10 @@
 
 /** \brief Main namespace
     
-    The Bamr namespace which holds all classes and functions.
-
+    The bamr namespace which holds all classes and functions.
+    
     This file is documented in bamr.h .
- */
+*/
 namespace bamr {
 
   /** \brief Statistical analysis of EOS from M and R constraints
@@ -57,17 +57,13 @@ namespace bamr {
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits
       after each mcmc() run. 
+      \todo Fix issue of block_counter giving confusing output if
+      there are too few MCMC points between each block. 
       \todo More testing
-      \todo Compute baryonic masses
       \todo Better documentation
       \todo Help with plots
-      \todo Currently warm_up is changed to false only during 
-      the first accepted step after <tt>iteration > n_warm_up</tt>,
-      not immediately after <tt>iteration > n_warm_up</tt>.
-      \future Allow the user to control how often the output 
-      file is updated (currently every 10 successful MH steps or 
-      when a block is finished)
-      \future Allow non-tabulated data specified as a function
+
+      \future Allow non-tabulated data specified as a function?
   */
   class bamr_class {
     
@@ -85,6 +81,7 @@ namespace bamr {
     o2scl::cli::parameter_int p_grid_size;
     o2scl::cli::parameter_int p_user_seed;
     o2scl::cli::parameter_int p_max_iters;
+    o2scl::cli::parameter_int p_file_update_iters;
     o2scl::cli::parameter_bool p_norm_max;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_load;
@@ -93,7 +90,6 @@ namespace bamr {
     o2scl::cli::parameter_bool p_baryon_density;
     o2scl::cli::parameter_bool p_use_crust;
     o2scl::cli::parameter_bool p_inc_baryon_mass;
-    o2scl::cli::parameter_string p_first_point_file;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
     o2scl::cli::parameter_double p_e_low;
@@ -122,6 +118,10 @@ namespace bamr {
 
     /// \name Other parameters accessed by 'set' and 'get'
     //@{
+    /** \brief The number of MCMC successes between file updates
+     */
+    int file_update_iters;
+
     /** \brief If true, output debug information about the input data 
 	files (default false)
     */
@@ -216,7 +216,7 @@ namespace bamr {
     double mpi_start_time;
     //@}
     
-    /// \name Input data
+    /// \name Input neutron star data
     //@{
     /// Input probability distributions
     std::vector<o2scl::table3d> source_tables;
@@ -236,6 +236,9 @@ namespace bamr {
     /** \brief The number of sources
     */
     size_t nsources;
+
+    /// The initial set of neutron star masses
+    std::vector<double> first_mass;
     //@}
 
     /// \name Parameter limits
@@ -243,16 +246,21 @@ namespace bamr {
     entry low, high;
     //@}
 
-    /// The first point in the parameter space
-    ubvector first_point;
-
-    /// The initial set of neutron star masses
-    std::vector<double> first_mass;
-
     /// \name Other variables
     //@{
+    /// The first point in the parameter space
+    ubvector first_point;
+    
     /// The file containing the initial point
     std::string first_point_file;
+
+    /// \name Integer designating how to set the initial point
+    //@{
+    int first_point_type;
+    int fp_unspecified=-1;
+    int fp_last=-2;
+    int fp_best=-3;
+    //@}
 
     /// Main data table for Markov chain
     o2scl::table_units<> tc;
@@ -277,7 +285,7 @@ namespace bamr {
     o2scl::cli cl;
 #endif
 
-    /// If true, then parameter names have been written to the HDF file
+    /// If true, then \ref first_update() has been called
     bool first_file_update;
 
     /// Number of bins for all histograms (default 100)

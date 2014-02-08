@@ -40,7 +40,6 @@ bamr_class::bamr_class() {
   nparams=0;
   nsources=0;
   first_file_update=false;
-  grid_size=100;
   model_type="";
   has_eos=true;
   chain_size=0;
@@ -57,7 +56,10 @@ bamr_class::bamr_class() {
   
   // Default parameter values
 
+  grid_size=100;
+  file_update_iters=10;
   first_point_file="";
+  first_point_type=fp_unspecified;
   debug_load=false;
   step_fac=15.0;
   // Default to 24 hours
@@ -415,6 +417,7 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.seti("debug_eos",debug_eos);
   hf.seti("debug_star",debug_star);
   hf.seti("best_detail",best_detail);
+  hf.seti("file_update_iters",file_update_iters);
   hf.seti("inc_baryon_mass",inc_baryon_mass);
   hf.seti("output_next",output_next);
   hf.setd("nb_low",nb_low);
@@ -423,6 +426,9 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.setd("e_high",e_high);
   hf.setd("m_low",m_low);
   hf.setd("m_high",m_high);
+  hf.seti("first_point_type",first_point_type);
+  hf.sets("first_point_file",first_point_file);
+  hf.setd_vec_copy("first_point",first_point);
     
   std::vector<double> low_vec, high_vec;
   for(size_t i=0;i<nparams;i++) {
@@ -1220,13 +1226,25 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
     return exc_efailed;
   }
 
-  first_point.resize(sv.size()-1);
-  for(size_t i=1;i<sv.size();i++) {
-    // Remove parentheses if present
-    if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
-      sv[i]=sv[i].substr(1,sv[i].length()-2);
+  if (sv[1]==((string)"values")) {
+    first_point.resize(sv.size()-1);
+    for(size_t i=1;i<sv.size();i++) {
+      // Remove parentheses if present
+      if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
+	sv[i]=sv[i].substr(1,sv[i].length()-2);
+      }
+      first_point[i-1]=o2scl::stod(sv[i]);
     }
-    first_point[i-1]=o2scl::stod(sv[i]);
+    first_point_type=fp_unspecified;
+  } else if (sv[1]==((string)"last")) {
+    first_point_type=fp_last;
+    first_point_file=sv[2];
+  } else if (sv[1]==((string)"best")) {
+    first_point_type=fp_best;
+    first_point_file=sv[2];
+  } else if (sv[1]==((string)"N")) {
+    first_point_type=o2scl::stoi(sv[2]);
+    first_point_file=sv[3];
   }
 
   return 0;
@@ -1403,7 +1421,10 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     return exc_efailed;
   }
   string fname_prefix=sv[1];
-    
+
+  // Make sure that first_update() is called when necessary
+  first_file_update=false;
+
   // Get MPI rank, etc.
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
@@ -1422,10 +1443,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     return exc_efailed;
   }
 
+  // Fix file_update_iters if necessary
+  if (file_update_iters<1) {
+    scr_out << "Fixed 'file_update_iters' to 1." << endl;
+    file_update_iters=1;
+  }
+
   // Fix step_fac if it's too small
   if (step_fac<1.0) {
     step_fac=1.0;
-    scr_out << "Fixed step_fac to 1.0." << endl;
+    scr_out << "Fixed 'step_fac' to 1.0." << endl;
   }
 
   // Run init() function (have to make sure to do this after opening
@@ -1471,47 +1498,116 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
   if (first_point_file.length()>0) {
 
-    if (first_point.size()>0) {
-      scr_out << "Cannot use 'first_point_file' with 'first_point'." << endl;
-      return exc_efailed;
-    }
-    
-    // Read file 
-    scr_out << "Reading best point from file '" << first_point_file
-	    << "'." << endl;
-    hdf_file hf;
-    hf.open(first_point_file);
+    if (first_point_type==fp_last) {
 
-    // Read table
-    size_t file_n_chains;
-    hf.get_szt("n_chains",file_n_chains);
-    std::string chain_name=std::string("markov_chain")+
-      o2scl::szttos(file_n_chains-1);
-    table_units<> file_tab;
-    hdf_input(hf,file_tab,chain_name);
-    size_t last_line=file_tab.get_nlines()-1;
-
-    // Get parameters
-    for(size_t i=0;i<nparams;i++) {
-      string pname=((string)"param_")+modp->param_name(i);
-      e_current.params[i]=file_tab.get(pname,last_line);
-      scr_out << "Parameter named " << modp->param_name(i) << " " 
-	      << e_current.params[i] << endl;
-    }
-
-    // Get masses
-    if (nsources>0) {
-      for(size_t i=0;i<nsources;i++) {
-	string obj_name=((string)"M_")+source_names[i];
-	e_current.mass[i]=file_tab.get(obj_name,last_line);
-	scr_out << "Mass for " << source_names[i] << " " 
-		<< e_current.mass[i] << endl;
+      // Read file 
+      scr_out << "Reading last point from file '" << first_point_file
+	      << "'." << endl;
+      hdf_file hf;
+      hf.open(first_point_file);
+      
+      // Read table
+      size_t file_n_chains;
+      hf.get_szt("n_chains",file_n_chains);
+      std::string chain_name=std::string("markov_chain")+
+	o2scl::szttos(file_n_chains-1);
+      table_units<> file_tab;
+      hdf_input(hf,file_tab,chain_name);
+      size_t last_line=file_tab.get_nlines()-1;
+      
+      // Get parameters
+      for(size_t i=0;i<nparams;i++) {
+	string pname=((string)"param_")+modp->param_name(i);
+	e_current.params[i]=file_tab.get(pname,last_line);
+	scr_out << "Parameter named " << modp->param_name(i) << " " 
+		<< e_current.params[i] << endl;
       }
-    }
+      
+      // Get masses
+      if (nsources>0) {
+	for(size_t i=0;i<nsources;i++) {
+	  string obj_name=((string)"M_")+source_names[i];
+	  e_current.mass[i]=file_tab.get(obj_name,last_line);
+	  scr_out << "Mass for " << source_names[i] << " " 
+		  << e_current.mass[i] << endl;
+	}
+      }
+      
+      // Finish up
+      scr_out << endl;
+      hf.close();
 
-    // Finish up
-    scr_out << endl;
-    hf.close();
+    } else if (first_point_type==fp_best) {
+
+      std::vector<double> best_point;
+      hdf_file hf;
+      hf.open(first_point_file);
+      hf.getd_vec("best_point",best_point);
+      hf.close();
+      scr_out << "Reading best point from file '" << first_point_file
+	      << "'." << endl;
+      for(size_t i=0;i<nparams;i++) {
+	e_current.params[i]=best_point[i];
+	scr_out << e_current.params[i] << endl;
+      }
+      scr_out << endl;
+      for(size_t i=nparams;i<nsources+nparams;i++) {
+	e_current.mass[i-nparams]=best_point[i];
+	scr_out << e_current.mass[i-nparams] << endl;
+      }
+      scr_out << endl;
+
+    } else {
+
+      // Read file 
+      scr_out << "Reading " << first_point_type << "th point from file '" 
+	      << first_point_file
+	      << "'." << endl;
+      hdf_file hf;
+      hf.open(first_point_file);
+      
+      // Read table
+      size_t file_n_chains, row=first_point_type;
+      hf.get_szt("n_chains",file_n_chains);
+      
+      table_units<> file_tab;
+      for(size_t k=0;k<file_n_chains;k++) {
+	std::string chain_name=std::string("markov_chain")+o2scl::szttos(k);
+	hdf_input(hf,file_tab,chain_name);
+	if (file_tab.get_nlines()>row) {
+	  k=file_n_chains;
+	} else {
+	  row-=file_tab.get_nlines();
+	}
+      }
+      if (row>=file_tab.get_nlines()) {
+	scr_out << "Couldn't find point " << first_point_type 
+		<< " in file. Using last point." << endl;
+	row=file_tab.get_nlines()-1;
+      }
+      
+      // Get parameters
+      for(size_t i=0;i<nparams;i++) {
+	string pname=((string)"param_")+modp->param_name(i);
+	e_current.params[i]=file_tab.get(pname,row);
+	scr_out << "Parameter named " << modp->param_name(i) << " " 
+		<< e_current.params[i] << endl;
+      }
+      
+      // Get masses
+      if (nsources>0) {
+	for(size_t i=0;i<nsources;i++) {
+	  string obj_name=((string)"M_")+source_names[i];
+	  e_current.mass[i]=file_tab.get(obj_name,row);
+	  scr_out << "Mass for " << source_names[i] << " " 
+		  << e_current.mass[i] << endl;
+	}
+      }
+      
+      // Finish up
+      scr_out << endl;
+      hf.close();
+    }
 
   } else if (first_point.size()>0) {
     
@@ -1622,7 +1718,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // Main loop
   bool main_done=false;
+
+  // The MCMC is arbitrarily broken up into 20 'blocks', making
+  // it easier to keep track of progress and ensure file updates
   size_t block_counter=0;
+
   while (!main_done) {
 
     // Make a step, ensure that we're in bounds and that
@@ -1703,19 +1803,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	mh_success++;
 
-	if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
-	  warm_up=false;
-	  scr_out << "Setting warm_up to false. Reset start time." << endl;
-	  if (true) {
-	    max_time-=MPI_Wtime()-mpi_start_time;
-	    scr_out << "Resetting max_time to : " << max_time << endl;
-	  }
-	  mpi_start_time=MPI_Wtime();
-	  scr_out.precision(12);
-	  scr_out << " Start time: " << mpi_start_time << endl;
-	  scr_out.precision(6);
-	}
-	    
 	// Add measurement from new point
 	o2_shared_ptr<table_units<> >::type tab_eos;
 	o2_shared_ptr<table_units<> >::type tab_mvsr;
@@ -1809,11 +1896,13 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  
       // End of "if (suc==true)"
     }
-
-    if (warm_up==false && mcmc_iterations%10==9) {
+    
+    // Note that the value of mcmc_iterations isn't incremented 
+    // until later
+    if (warm_up==false && (mcmc_iterations+1)%10==0) {
     
       if (max_iters==0) {
-
+	
 	// If we've made enough progress, force an update of the file
 	double elapsed=MPI_Wtime()-mpi_start_time;
 	if (elapsed>max_time/((double)20)*((double)(block_counter+1)) ||
@@ -1849,14 +1938,30 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
      
     }
 
-    // Store a copy of measurements in file
-    if (!warm_up && (force_file_update || mh_success%10==9)) {
+    // Store a copy of measurements in file. By default file_default_iters
+    // is 10 and so the files are updated for every 10 MCMC successes
+    if (!warm_up && (force_file_update || 
+		     (mh_success+1)%file_update_iters==0)) {
       update_files(fname_prefix,*modp,e_current);
     }
     
     // Increment iteration counter
     mcmc_iterations++;
 
+    // Leave warm_up mode if necessary
+    if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
+      warm_up=false;
+      scr_out << "Setting warm_up to false. Reset start time." << endl;
+      if (true) {
+	max_time-=MPI_Wtime()-mpi_start_time;
+	scr_out << "Resetting max_time to : " << max_time << endl;
+      }
+      mpi_start_time=MPI_Wtime();
+      scr_out.precision(12);
+      scr_out << " Start time: " << mpi_start_time << endl;
+      scr_out.precision(6);
+    }
+    
     // End of main loop
   }
    
@@ -1895,7 +2000,15 @@ void bamr_class::setup_cli() {
      "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
     {'f',"first-point","Set the starting point in the parameter space",
-     1,-1,"<>",((string)"On the command-line, enclose negative values ")+
+     1,-1,"<mode> [...]",
+     ((string)"Mode can be one of 'best', 'last', 'N', or 'values'.")+
+     "If mode is 'best', then it uses the best point and the second argument "+
+     "specifies the file. If mode is 'last' then it uses the last point and "+
+     "the second argument specifies the file. If mode is 'N' then it uses "+
+     "the Nth point, the second argument specifies N and the third "+
+     "argument specifies the file. If mode is 'values', then the remaining "+
+     "arguments specify all the parameter values. On the command-line, "+
+     "enclose negative values "+
      "in quotes and parentheses, i.e. \"(-1.00)\" to ensure they do "+
      "not get confused with other options.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
@@ -1956,6 +2069,11 @@ void bamr_class::setup_cli() {
     "(default 0).";
   cl.par_list.insert(make_pair("n_warm_up",&p_n_warm_up));
 
+  p_file_update_iters.i=&file_update_iters;
+  p_file_update_iters.help=((string)"Number of MCMC successes between ")+
+    "file upates (default 10, minimum value 1).";
+  cl.par_list.insert(make_pair("file_update_iters",&p_file_update_iters));
+
   p_user_seed.i=&user_seed;
   p_user_seed.help=((string)"Seed for multiplier for random number ")+
     "generator. If zero is given (the default), then mcmc() uses "+
@@ -2001,10 +2119,6 @@ void bamr_class::setup_cli() {
   p_use_crust.help=((string)"If true, use the default crust (default ")+
     "true).";
   cl.par_list.insert(make_pair("use_crust",&p_use_crust));
-
-  p_first_point_file.str=&first_point_file;
-  p_first_point_file.help="First point file name (default \"\").";
-  cl.par_list.insert(make_pair("first_point_file",&p_first_point_file));
 
   p_inc_baryon_mass.b=&inc_baryon_mass;
   p_inc_baryon_mass.help="";

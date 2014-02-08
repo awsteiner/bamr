@@ -113,8 +113,8 @@
     argument to the \c mcmc command, one set of files
     for each processor. Output includes files with the 
     following suffixes (where X is the processor index):
-    - \c _X_best: "Best" point found during run
-    - \c _X_out: Ensemble of histograms of EOS relative to SLy4
+    - \c _X_out: Main output file containing full Markov chain
+    and most of the parameter values
     - \c _X_scr: Running output of entire simulation
 
     If the executable is run directly (without <tt>mpirun</tt>)
@@ -133,28 +133,10 @@
     the \c _scr file. The easiest fix is just to change the initial 
     guess.
 
-    \comment
-    While the current code available is designed to minimize crashes,
-    they do occasionally occur. The TOV solver cannot handle equations
-    of state which diverge or are strongly discontinuous. Errors 
-    of the form
-    \verbatim
-    terminate called after throwing an instance of
-    'o2scl::exc_overflow_error'
-    what():  Error ezerodiv in file tridiag.c at line 117.
-    matrix must be positive definite
-    \endverbatim
-    usually come from the interpolation routine that the TOV solver is
-    using to interpolate the EOS. (This particular error is actually a
-    C++ exception thrown inside GSL error since O2scl has replaced the
-    default GSL error handler.) The best way to debug this is to
-    examine the \c _scr file to find the last parameter set which the
-    TOV solver tried to evaluate and examine the EOS. One can often do
-    this by using the potentially difficult parameter set as the
-    initial guess in the input file (i.e. \c default.in) 
-    and setting \c debug_eos to \c 1 (true) to force the
-    program to output the EOS which it is sending to the TOV solver.
-    \endcomment
+    In order to make the output more efficient, the table 
+    representing the full Markov chain is divided up into 
+    tables with about 10,000 rows each. The total number of
+    tables is stored in <tt>n_chains</tt>.
 
     \hline
     \section model_sect EOS Model
