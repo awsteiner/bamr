@@ -844,8 +844,6 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Read the EOS into the tov_eos object.
-    cout.setf(ios::scientific);
-    teos.verbose=2;
     if (baryon_density && inc_baryon_mass) {
       tab_eos->set_unit("ed","1/fm^4");
       tab_eos->set_unit("pr","1/fm^4");
@@ -857,12 +855,6 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       teos.read_table(*tab_eos,"ed","pr");
     }
     
-    cout << endl;
-    for(size_t i=0;i<teos.full_nlines;i++) {
-      cout << teos.full_vece[i] << " " << teos.full_vecp[i] << endl;
-    }
-    cout << endl;
-
     if (use_crust) {
     
       double ed_last=0.0;
@@ -871,8 +863,6 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	double ed, nb;
 	teos.get_eden(pr,ed,nb);
-	cout << pr << " " << ed << endl;
-	exit(-1);
 	if (ed_last>1.0e-20 && ed<ed_last) {
 	  scr_out << "Stability problem near crust-core transition." << endl;
 	  if (has_esym) {

@@ -257,9 +257,9 @@ namespace bamr {
     /// \name Integer designating how to set the initial point
     //@{
     int first_point_type;
-    int fp_unspecified=-1;
-    int fp_last=-2;
-    int fp_best=-3;
+    static const int fp_unspecified=-1;
+    static const int fp_last=-2;
+    static const int fp_best=-3;
     //@}
 
     /// Main data table for Markov chain
