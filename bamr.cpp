@@ -844,6 +844,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Read the EOS into the tov_eos object.
+    cout.setf(ios::scientific);
+    teos.verbose=2;
     if (baryon_density && inc_baryon_mass) {
       tab_eos->set_unit("ed","1/fm^4");
       tab_eos->set_unit("pr","1/fm^4");
@@ -855,60 +857,22 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       teos.read_table(*tab_eos,"ed","pr");
     }
     
+    cout << endl;
+    for(size_t i=0;i<teos.full_nlines;i++) {
+      cout << teos.full_vece[i] << " " << teos.full_vecp[i] << endl;
+    }
+    cout << endl;
+
     if (use_crust) {
     
-      if (false) {
-      
-	scr_out << "Checking crust-core: " << endl;
-      
-	double plo, pt, phi;
-	teos.get_transition(plo,pt,phi);
-      
-	double ed_last=0.0;
-	for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	  scr_out << pr << " ";
-	
-	  if (pr<plo) {
-	    double edlo,nblo;
-	    teos.get_eden_low(pr,edlo,nblo);
-	    scr_out << edlo << " ";
-	  } else {
-	    scr_out << 0.0 << " ";
-	  }
-	
-	  double ed, nb;
-	  int ip=teos.get_eden_full(pr,ed,nb);
-	  scr_out << ed << " ";
-	  if (ip==tov_interp_eos::itrans) {
-	    scr_out << "0 ";
-	  } else if (ip==tov_interp_eos::icrust) {
-	    scr_out << "- ";
-	  } else {
-	    scr_out << "+ ";
-	  }
-	
-	  if (pr>phi) {
-	    double edhi,nbhi;
-	    teos.get_eden_high(pr,edhi,nbhi);
-	    scr_out << edhi << " ";
-	  } else {
-	    scr_out << 0.0 << " ";
-	  }
-	
-	  if (baryon_density) {
-	    scr_out << tab_eos->interp("pr",pr,"nb");
-	  }
-	  scr_out << endl;
-	}
-	scr_out << endl;
-      }
-
       double ed_last=0.0;
       // This range corresponds to between about n_B=0.01 and 0.17
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	double ed, nb;
-	teos.get_eden_full(pr,ed,nb);
+	teos.get_eden(pr,ed,nb);
+	cout << pr << " " << ed << endl;
+	exit(-1);
 	if (ed_last>1.0e-20 && ed<ed_last) {
 	  scr_out << "Stability problem near crust-core transition." << endl;
 	  if (has_esym) {
@@ -918,14 +882,10 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	  scr_out << "ed_last,pr,ed: " << ed_last << " " << pr 
 		  << " " << ed << endl;
 	  scr_out << endl;
-	  scr_out << "pr ed phase edlo edhi" << endl;
-	  double edlo, edhi;
+	  scr_out << "pr ed" << endl;
 	  for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	    int ip=teos.get_eden_full(pr,ed,nb);
-	    teos.get_eden_low(pr,edlo,nb);
-	    teos.get_eden_high(pr,edhi,nb);
-	    scr_out << pr << " " << ed;
-	    scr_out << " " << ip << " " << edlo << " " << edhi << endl;
+	    teos.get_eden(pr,ed,nb);
+	    scr_out << pr << " " << ed << endl;
 	  }
 	  scr_out << endl;
 	  success=false;
@@ -955,7 +915,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       full_eos.set_unit("pr","1/fm^4");
       for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
 	double ed, nb;
-	teos.get_eden_full(pr,ed,nb);
+	teos.get_eden_user(pr,ed,nb);
 	double line[2]={ed,pr};
 	full_eos.line_of_data(2,line);
 	if (pr<1.0e-4) pr*=1.2;
@@ -1465,8 +1425,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     teos.default_low_dens_eos();
 
     // Get the transition density from the crust
-    double plo, pt, phi;
-    teos.get_transition(plo,pt,phi);
+    double pt, pw;
+    teos.get_transition(pt,pw);
     // We set the transition density a bit lower (because by default
     // it's the largest density in the crust EOS) and then add a 
     // small width
