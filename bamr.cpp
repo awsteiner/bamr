@@ -1420,7 +1420,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // We set the transition density a bit lower (because by default
     // it's the largest density in the crust EOS) and then add a 
     // small width
-    teos.transition_mode=tov_interp_eos::smooth_trans;
+    teos.transition_mode=tov_new_eos::smooth_trans;
     teos.set_transition(pt/1.2,1.2);
 
   } else {
