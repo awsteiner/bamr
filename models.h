@@ -77,7 +77,7 @@ namespace bamr {
     virtual void compute_mr
       (entry &e, std::ofstream &scr_out,
        o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
-       bool &success) {
+       int &success) {
       return;
     }
 

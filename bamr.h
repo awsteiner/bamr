@@ -387,7 +387,7 @@ namespace bamr {
 	This function is empty by default.
     */
     virtual void prepare_eos(entry &e, model &modref, o2scl::tov_solve *tsr, 
-			     bool &success);
+			     int &success);
 
     /** \brief Add a measurement
      */
@@ -429,7 +429,7 @@ namespace bamr {
 	Called by mcmc().
     */
     virtual double compute_weight(entry &e, model &modref, 
-				  o2scl::tov_solve *ts, bool &success,
+				  o2scl::tov_solve *ts, int &success,
 				  ubvector &wgts, bool warm_up);
     
     /** \brief Tabulate EOS and then use in cold_nstar
@@ -437,7 +437,7 @@ namespace bamr {
 	Called by compute_weight().
     */
     virtual void compute_star(entry &e, model &modref, o2scl::tov_solve *ts, 
-			     bool &success);
+			      int &success);
 
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
@@ -477,6 +477,27 @@ namespace bamr {
 
     /// Main wrapper for parsing command-line arguments
     virtual void run(int argc, char *argv[]);
+
+    /// \name Return codes for each point
+    //@{
+    std::vector<int> ret_codes;
+    static const int ix_success=0;
+    static const int ix_mr_outside=1;
+    static const int ix_r_outside=2;
+    static const int ix_zero_wgt=3;
+    static const int ix_press_dec=4;
+    static const int ix_eos_fail=5;
+    static const int ix_nb_problem=6;
+    static const int ix_nb_problem2=7;
+    static const int ix_crust_unstable=8;
+    static const int ix_mvsr_failed=9;
+    static const int ix_tov_failure=10;
+    static const int ix_small_max=11;
+    static const int ix_tov_conv=12;
+    static const int ix_mvsr_table=13;
+    static const int ix_acausal=14;
+    static const int ix_acausal_mr=15;
+    //@}
 
   };
 

@@ -110,6 +110,9 @@ bamr_class::bamr_class() {
   def_ts2.set_eos(teos);
   def_ts2.err_nonconv=false;
   ts2=&def_ts2;
+
+  ret_codes.resize(100);
+  for(size_t i=0;i<100;i++) ret_codes[i]=0;
 }
 
 bamr_class::~bamr_class() {
@@ -468,6 +471,7 @@ void bamr_class::update_files(string fname_prefix, model &modp,
   hf.set_szt("mh_success",mh_success);
   hf.set_szt("mh_failure",mh_failure);
   hf.set_szt("mcmc_iterations",mcmc_iterations);
+  hf.seti_vec("ret_codes",ret_codes);
 
   // Store Markov chain
   if (n_chains==0) n_chains++;
@@ -677,14 +681,14 @@ void bamr_class::load_mc() {
 }
   
 void bamr_class::prepare_eos(entry &e, model &modref, tov_solve *tsr, 
-			     bool &success) {
+			     int &success) {
   return;
 }
 
 void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr, 
-			      bool &success) {
+			      int &success) {
   
-  success=true;
+  success=ix_success;
 
   // Compute the EOS first
   bool test_eos_fail=false;
@@ -711,7 +715,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 		<< " pr=" << tab_eos->get("pr",i) << endl;
 	scr_out << "ed=" << tab_eos->get("ed",i+1) 
 		<< " pr=" << tab_eos->get("pr",i+1) << endl;
-	success=false;
+	success=ix_press_dec;
 	return;
       }
     }
@@ -719,7 +723,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
   // If it failed, stop
   if (test_eos_fail==true) {
-    success=false;
+    success=ix_eos_fail;
     return;
   }
 
@@ -799,7 +803,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     double Anb=n1/exp(tab_eos->interp("ed",e1,"iigb"));
     if (!o2scl::is_finite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << endl;
-      success=false;
+      success=ix_nb_problem;
       return;
     }
 
@@ -823,7 +827,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	double nbt=Anb*exp(tab_eos->get("iigb",i));
 	if (!o2scl::is_finite(nbt)) {
 	  scr_out << "Baryon density normalization problem (2)." << endl;
-	  success=false;
+	  success=ix_nb_problem2;
 	  return;
 	} 
 	tab_eos->set("nb",i,nbt);
@@ -839,7 +843,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     // Perform any additional necessary EOS preparations
     prepare_eos(e,modref,tsr,success);
-    if (success==false) {
+    if (success!=ix_success) {
       return;
     }
 
@@ -878,7 +882,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	    scr_out << pr << " " << ed << endl;
 	  }
 	  scr_out << endl;
-	  success=false;
+	  success=ix_crust_unstable;
 	  return;
 	}
 	ed_last=ed;
@@ -923,7 +927,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     int ret=tsr->mvsr();
     if (ret!=0) {
       scr_out << "M vs. R failed." << endl;
-      success=false;
+      success=ix_mvsr_failed;
       return;
     }
     tab_mvsr=tsr->get_results();
@@ -938,7 +942,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     if ((*tab_mvsr)["gm"][ir]<1.0e-10 ||
 	(*tab_mvsr)["gm"][ir-1]<1.0e-10) {
       scr_out << "TOV failure fix." << endl;
-      success=false;
+      success=ix_tov_failure;
       return;
     }
 
@@ -947,7 +951,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     if (mmax<min_max_mass) {
       scr_out << "Maximum mass too small: " << mmax << " < "
 	      << min_max_mass << "." << endl;
-      success=false;
+      success=ix_small_max;
       return;
     }
 
@@ -955,7 +959,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     size_t ix_max=tab_mvsr->lookup("gm",mmax);
     if (tab_mvsr->get("r",ix_max)>1.0e4) {
       scr_out << "TOV convergence problem: " << endl;
-      success=false;
+      success=ix_tov_conv;
       return;
     }
 
@@ -983,7 +987,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     // is not typically an issue.
     if (tab_mvsr->get_nlines()<10) {
       scr_out << "M vs. R failed to generate lines." << endl;
-      success=false;
+      success=ix_mvsr_table;
       return;
     }
 
@@ -995,7 +999,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     // If there's no EOS, then the model object gives the M-R curve
     tab_mvsr=tsr->get_results();
     modref.compute_mr(e,scr_out,tab_mvsr,success);
-    if (success==false) {
+    if (success!=ix_success) {
       return;
     }
 
@@ -1029,7 +1033,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 		<< tab_mvsr->max("pr") << " pr_bad=" 
 		<< (*tab_mvsr)["pr"][i] << endl;
 	scr_out.precision(6);
-	success=false;
+	success=ix_acausal;
 	return;
       }
     }
@@ -1039,7 +1043,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     for(size_t i=0;i<nsources;i++) {
       if (e.rad[i]<2.94*schwarz_km/2.0*e.mass[i]) {
 	scr_out << "Source " << source_names[i] << " acausal." << endl;
-	success=false;
+	success=ix_acausal_mr;
 	return;
       }
     }
@@ -1050,13 +1054,11 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 }
 
 double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr, 
-				  bool &success, ubvector &wgts, bool warm_up) {
+				  int &success, ubvector &wgts, bool warm_up) {
 			     
   // Compute the M vs R curve and return if it failed
-  bool compute_star_success;
-  compute_star(e,modref,tsr,compute_star_success);
-  if (compute_star_success==false) {
-    success=false;
+  compute_star(e,modref,tsr,success);
+  if (success!=ix_success) {
     return 0.0;
   }
     
@@ -1084,11 +1086,11 @@ double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr,
       scr_out.precision(6);
       scr_out.unsetf(ios::showpos);
     }
-    success=false;
+    success=ix_mr_outside;
     return 0.0;
   }
 
-  success=true;
+  success=ix_success;
   double ret=1.0;
 
   o2_shared_ptr<table_units<> >::type tab_mvsr=tsr->get_results();
@@ -1627,8 +1629,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   mh_failure=0;
   
   // Compute initial weight
-  bool suc;
+  int suc;
   w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
+  ret_codes[suc]++;
   scr_out << "Initial weight: " << w_current << endl;
   if (w_current<=0.0) {
     for(size_t i=0;i<nsources;i++) {
@@ -1715,15 +1718,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     } else {
       w_next=compute_weight(e_next,*modp,ts,suc,wgts,warm_up);
     }
+    ret_codes[suc]++;
       
     // Test to ensure new point is good
-    if (suc==true) {
+    if (suc==ix_success) {
 
       // Test radii
       for(size_t i=0;i<nsources;i++) {
 	if (e_next.rad[i]>high.rad[i] || e_next.rad[i]<low.rad[i]) {
 	  scr_out << "Rejected: Radius out of range." << endl;
-	  suc=false;
+	  suc=ix_r_outside;
 	  i=nsources;
 	}
       }
@@ -1731,7 +1735,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       // Ensure non-zero weight
       if (w_next==0.0) {
 	scr_out << "Rejected: Zero weight." << endl;
-	suc=false;
+	suc=ix_zero_wgt;
       }
 	
     }
@@ -1740,7 +1744,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     // If the new point is still good, compare with
     // the Metropolis algorithm
-    if (suc==true) {
+    if (suc==ix_success) {
 
       if (debug) {
 	cout << first_half << " Next: " 
@@ -1844,7 +1848,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
       }
 	  
-      // End of "if (suc==true)"
+      // End of "if (suc==ix_success)"
     }
     
     // Note that the value of mcmc_iterations isn't incremented 
