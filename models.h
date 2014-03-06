@@ -99,7 +99,8 @@ namespace bamr {
 
   /** \brief Two polytropes
 
-      Based on the model from \ref Steiner10.
+      Based on the model from \ref Steiner10. The original limits on
+      the parameters are maintained here.
   */
   class two_polytropes : public model {
 
@@ -167,8 +168,14 @@ namespace bamr {
 
   /** \brief Alternate polytropes
 
+      Referred to as Model B in \ref Steiner13. 
+
       As in \ref two_polytropes, but in terms of the exponents instead
-      of the polytropic indices.
+      of the polytropic indices. The lower limit on 'exp1' is 1.5, as
+      in \ref Steiner13, but softer EOSs could be allowed by setting
+      this to zero. This doesn't matter much for the final results in
+      \ref Steiner13, because the lowest pressure EOSs came from \ref
+      bamr::fixed_pressure anyway.
   */
   class alt_polytropes : public two_polytropes {
 
@@ -205,6 +212,8 @@ namespace bamr {
 
   /** \brief Fixed pressures
     
+      Referred to as Model C in \ref Steiner13. 
+
       Instead of polytropes, linearly interpolate pressures on a fixed
       grid of energy densities.
   */
@@ -242,6 +251,8 @@ namespace bamr {
   };
 
   /** \brief Generic quark model
+
+      Referred to as Model D in \ref Steiner13. 
 
       Alford et al. 2005 parameterizes quark matter with
       \f[
@@ -327,7 +338,10 @@ namespace bamr {
 
   };
 
-  /// A strange quark star model
+  /** \brief A strange quark star model
+
+      Referred to as Model E in \ref Steiner13. 
+   */
   class quark_star : public two_polytropes {
   
   public:

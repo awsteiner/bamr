@@ -219,7 +219,7 @@ void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
 
 void alt_polytropes::low_limits(entry &e) {
   two_polytropes::low_limits(e);
-  e.params[5]=0.0;
+  e.params[5]=1.5;
   e.params[7]=0.0;
   return;
 }
