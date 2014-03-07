@@ -71,7 +71,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out)=0;
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out)=0;
 
     /// Compute the M-R curve directly
     virtual void compute_mr
@@ -158,7 +158,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -202,7 +202,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -215,7 +215,19 @@ namespace bamr {
       Referred to as Model C in \ref Steiner13. 
 
       Instead of polytropes, linearly interpolate pressures on a fixed
-      grid of energy densities.
+      grid of energy densities. The schematic EOS is used up to an
+      energy density of \f$ 1~\mathrm{fm^{-4}} \f$. The last four
+      parameters are pressures named <tt>pres1</tt> through
+      <tt>pres4</tt>. Then the line segments are defined by the points
+      \f{eqnarray*}
+      P(2~\mathrm{fm}^{-4}) - P(1~\mathrm{fm}^{-4}) = \mathrm{pres1}
+      P(3~\mathrm{fm}^{-4}) - P(2~\mathrm{fm}^{-4}) = \mathrm{pres2}
+      P(5~\mathrm{fm}^{-4}) - P(3~\mathrm{fm}^{-4}) = \mathrm{pres3}
+      P(7~\mathrm{fm}^{-4}) - P(5~\mathrm{fm}^{-4}) = \mathrm{pres4}
+      \f}
+      The final line segment is extrapolated up to 
+      \f$ \varepsilon = 10~\mathrm{fm^{-4}} \f$
+
   */
   class fixed_pressure : public two_polytropes {
 
@@ -242,7 +254,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);  
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);  
 
     /** \brief Function to compute the initial guess
      */
@@ -330,7 +342,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -397,7 +409,7 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, bool &fail, std::ofstream &scr_out);
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */

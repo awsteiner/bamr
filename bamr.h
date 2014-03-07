@@ -486,17 +486,20 @@ namespace bamr {
     static const int ix_r_outside=2;
     static const int ix_zero_wgt=3;
     static const int ix_press_dec=4;
-    static const int ix_eos_fail=5;
-    static const int ix_nb_problem=6;
-    static const int ix_nb_problem2=7;
-    static const int ix_crust_unstable=8;
-    static const int ix_mvsr_failed=9;
-    static const int ix_tov_failure=10;
-    static const int ix_small_max=11;
-    static const int ix_tov_conv=12;
-    static const int ix_mvsr_table=13;
-    static const int ix_acausal=14;
-    static const int ix_acausal_mr=15;
+    static const int ix_nb_problem=5;
+    static const int ix_nb_problem2=6;
+    static const int ix_crust_unstable=7;
+    static const int ix_mvsr_failed=8;
+    static const int ix_tov_failure=9;
+    static const int ix_small_max=10;
+    static const int ix_tov_conv=11;
+    static const int ix_mvsr_table=12;
+    static const int ix_acausal=13;
+    static const int ix_acausal_mr=14;
+    static const int ix_param_mismatch=15;
+    static const int ix_neg_pressure=16;
+    static const int ix_no_eos_table=17;
+    static const int ix_eos_solve_failed=18;
     //@}
 
   };

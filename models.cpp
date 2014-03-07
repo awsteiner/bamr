@@ -22,6 +22,8 @@
 */
 #include "models.h"
 
+#include "bamr.h"
+
 using namespace std;
 using namespace o2scl;
 using namespace o2scl_hdf;
@@ -112,12 +114,12 @@ void two_polytropes::first_point(entry &e) {
   return;
 }
 
-void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
+void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
-  fail=false;
+  success=bamr_class::ix_success;
   if (e.params[4]>e.params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    fail=true;
+    success=bamr_class::ix_param_mismatch;
     return;
   }
 
@@ -155,7 +157,7 @@ void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_neg_pressure;
     return;
   }
 
@@ -178,7 +180,7 @@ void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -193,7 +195,7 @@ void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -204,7 +206,7 @@ void two_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    fail=true;
+    success=bamr_class::ix_neg_pressure;
     return;
   }
 
@@ -255,12 +257,12 @@ void alt_polytropes::first_point(entry &e) {
   return;
 }
 
-void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
+void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   
-  fail=false;
+  success=bamr_class::ix_success;
   if (e.params[4]>e.params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    fail=true;
+    success=bamr_class::ix_param_mismatch;
     return;
   }
 
@@ -301,7 +303,7 @@ void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_neg_pressure;
     return;
   }
 
@@ -324,7 +326,7 @@ void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -339,7 +341,7 @@ void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -350,7 +352,7 @@ void alt_polytropes::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    fail=true;
+    success=bamr_class::ix_neg_pressure;
     return;
   }
 
@@ -409,9 +411,9 @@ void fixed_pressure::first_point(entry &e) {
   return;
 }
 
-void fixed_pressure::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
+void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
-  fail=false;
+  success=bamr_class::ix_success;
 
   schematic_eos &se=this->se;
   cold_nstar2 &cns=this->cns;
@@ -554,9 +556,9 @@ void generic_quarks::first_point(entry &e) {
   return;
 }
 
-void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
+void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
-  fail=false;
+  success=bamr_class::ix_success;
 
   schematic_eos &se=this->se;
   cold_nstar2 &cns=this->cns;
@@ -599,7 +601,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_neg_pressure;
     return;
   }
 
@@ -622,7 +624,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -635,7 +637,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    fail=true;
+    success=bamr_class::ix_no_eos_table;
     return;
   }
 
@@ -671,7 +673,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
       mu_start=sqrt(musq2);
     } else {
       scr_out << "Rejected: Neither mu^2 is positive." << endl;
-      fail=true;
+      success=bamr_class::ix_eos_solve_failed;
       return;
     }
   }
@@ -694,7 +696,7 @@ void generic_quarks::compute_eos(entry &e, bool &fail, ofstream &scr_out) {
     double dPde=(a2+2.0*a4*musq)/(a2+6.0*a4*musq);
     if (dPde<0.0) {
       scr_out << "Rejected: dPdeps<0.0 in quarks." << endl;
-      fail=true;
+      success=bamr_class::ix_acausal;
       return;
     }
       
@@ -785,9 +787,9 @@ void quark_star::first_point(entry &e) {
   return;
 }
 
-void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
+void quark_star::compute_eos(entry &e, int &success, std::ofstream &scr_out) {
   
-  fail=false;
+  success=bamr_class::ix_success;
 
   B=e.params[0];
   c=e.params[1];
@@ -817,7 +819,7 @@ void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
   }
 
   if (mu_0<dmu+1.0e-6) {
-    fail=true;
+    success=bamr_class::ix_eos_solve_failed;
     scr_out << "No zero pressure solution." << std::endl;
     return;
   }
@@ -829,7 +831,7 @@ void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
   int ret=gmh.msolve(1,x,fmf);
   if (ret!=0) {
     scr_out << "Solver failed in qstar." << std::endl;
-    fail=true;
+    success=bamr_class::ix_eos_solve_failed;
     return;
   }
   mu_0=x[0];
@@ -864,7 +866,7 @@ void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
     // Check that energy density is increasing
     if (ed<ed_last) {
       scr_out << "Energy density decreasing in quark_star." << std::endl;
-      fail=true;
+      success=bamr_class::ix_acausal;
       return;
     }
 
@@ -879,7 +881,7 @@ void quark_star::compute_eos(entry &e, bool &fail, std::ofstream &scr_out) {
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
 	scr_out << "Not absolutely stable." << std::endl;
-	fail=true;
+	success=bamr_class::ix_param_mismatch;
 	return;
       }
 

@@ -589,7 +589,7 @@ void bamr_class::load_mc() {
       scr_out << "Normalizing integral of distribution to 1." << endl;
     }
     
-    scr_out << "File                      name       total        "
+    scr_out << "File                          name   total        "
 	    << "max          P(10,1.4)" << endl;
 
     for(size_t k=0;k<nsources;k++) {
@@ -657,9 +657,9 @@ void bamr_class::load_mc() {
       }
 
       scr_out.setf(ios::left);
-      scr_out.width(25);
+      scr_out.width(29);
       scr_out << source_fnames[k] << " ";
-      scr_out.width(10);
+      scr_out.width(6);
       scr_out << source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(ios::left);
       scr_out << source_tables[k].interp(10.0,1.4,slice_names[k]) << endl;
@@ -691,9 +691,9 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
   success=ix_success;
 
   // Compute the EOS first
-  bool test_eos_fail=false;
   if (has_eos) {
-    modref.compute_eos(e,test_eos_fail,scr_out);
+    modref.compute_eos(e,success,scr_out);
+    if (success!=ix_success) return;
   }
 
   // Ensure we're using linear interpolation
@@ -719,12 +719,6 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	return;
       }
     }
-  }
-
-  // If it failed, stop
-  if (test_eos_fail==true) {
-    success=ix_eos_fail;
-    return;
   }
 
   // If requested, compute the baryon density automatically
@@ -873,9 +867,10 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	    scr_out << "S=" << tab_eos->get_constant("S")*hc_mev_fm 
 		    << " L=" << tab_eos->get_constant("L")*hc_mev_fm << endl;
 	  }
-	  scr_out << "ed_last,pr,ed: " << ed_last << " " << pr 
-		  << " " << ed << endl;
+	  scr_out << "Energy decreased with increasing pressure "
+		  << "at pr=" << pr << endl;
 	  scr_out << endl;
+	  scr_out << "Full EOS near transition: " << endl;
 	  scr_out << "pr ed" << endl;
 	  for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	    teos.get_eden(pr,ed,nb);
