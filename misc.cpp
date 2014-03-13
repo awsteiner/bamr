@@ -34,6 +34,11 @@ int cold_nstar2::calc_eos(double &n1, double &e1, double np_0) {
     O2SCL_ERR("EOS not set in cold_nstar2::calc_eos().",exc_efailed);
     return exc_efailed;
   }
+
+  if (nb_end<0.16) {
+    O2SCL_ERR("cold_nstar2 doesn't support small nb_ends.",exc_efailed);
+    return exc_efailed;
+  }
   
   eost->clear_table();
   eost->line_of_names("ed pr");
@@ -70,7 +75,7 @@ int cold_nstar2::calc_eos(double &n1, double &e1, double np_0) {
     
     // Set calibration for baryon density near the
     // nuclear saturation density
-    if (np->n+pp->n>=0.16 && n1_set==false) {
+    if (np->n+pp->n>=0.01599 && n1_set==false) {
       n1=np->n+pp->n;
       e1=h.ed;
       n1_set=true;
