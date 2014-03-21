@@ -432,6 +432,10 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.seti("first_point_type",first_point_type);
   hf.sets("first_point_file",first_point_file);
   hf.setd_vec_copy("first_point",first_point);
+
+  hdf_output(hf,nb_grid,"nb_grid");
+  hdf_output(hf,e_grid,"e_grid");
+  hdf_output(hf,m_grid,"m_grid");
     
   std::vector<double> low_vec, high_vec;
   for(size_t i=0;i<nparams;i++) {
