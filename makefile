@@ -31,21 +31,6 @@ READLINE_LIBS = -lreadline -lncurses
 COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
 	-DBAMR_MPI_LOAD
 
-# The root include directory (only necessary if you're using the 
-# plotting code, otherwise can be blank)
-ROOT_INC = -I$(HOME)/root/include -I/usr/include/root
-
-# The root library directory (only necessary if you're using the 
-# plotting code, otherwise can be blank)
-ROOT_LIB = -L$(HOME)/root/lib \
-	-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d \
-	-lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics \
-	-lMathCore -lThread -lz -pthread -ldl
-
-# The location of graph.cpp (only necessary if you're using the 
-# plotting code, otherwise can be blank)
-GRAPH_CPP_DIR = $(HOME)/o2scl/src/other
-
 # --------------------------------------------------------
 # Basic bamr targets
 # --------------------------------------------------------
@@ -76,27 +61,6 @@ bamr.o: bamr.cpp
 
 test:
 	bamr -run default.in -model twop -mcmc run1 &
-
-# --------------------------------------------------------
-# Plotting targets
-# --------------------------------------------------------
-
-$(GRAPH_CPP_DIR)/graph.o: $(GRAPH_CPP_DIR)/graph.cpp
-	cd $(GRAPH_CPP_DIR); $(CXX) $(FLAGS) $(ROOT_INC) -c graph.cpp
-
-plot.o: plot.cpp 
-	$(CXX) $(FLAGS) $(ROOT_INC) -c plot.cpp
-
-plot: plot.o $(GRAPH_CPP_DIR)/graph.o
-	$(CXX) $(FLAGS) -o plot plot.o $(GRAPH_CPP_DIR)/graph.o\
-		$(ROOT_LIB) $(LIB_DIRS) $(LIB) 
-
-plot2d.o: plot2d.cpp 
-	$(CXX) $(FLAGS) $(ROOT_INC) -c plot2d.cpp
-
-plot2d: plot2d.o $(GRAPH_CPP_DIR)/graph.o
-	$(CXX) $(FLAGS) -o plot2d plot2d.o $(GRAPH_CPP_DIR)/graph.o\
-		$(ROOT_LIB) $(LIB_DIRS) $(LIB) 
 
 # --------------------------------------------------------
 # Internal 
@@ -139,6 +103,6 @@ docp: empty
 	cd doc/latex; $(MAKE)
 
 clean:
-	rm -f *.o bamr plot plot2d
+	rm -f *.o bamr
 
 

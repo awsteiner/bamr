@@ -61,10 +61,7 @@
     \hline
     \section dl_sect Download
 
-    The most recent .tar.gz file can be obtained from
-    http://sourceforge.net/projects/bamr/files/latest/download
-    or you may check out the most recent release version
-    from the SVN repository using
+    The most recent release version can be obtained from
     \verbatim
     svn checkout svn://svn.code.sf.net/p/bamr/code/trunk bamr
     \endverbatim
