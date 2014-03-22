@@ -17,8 +17,8 @@
 
     Currently, \bm is dual-hosted as an SVN respostory at
     http://www.sourceforge.net/projects/bamr and a git repository at
-    http://www.github.com/awsteiner/bamr . This documentation (when it
-    corresponds to a release) is hosted at http://bamr.sourceforge.net.
+    http://www.github.com/awsteiner/bamr . This HTML documentation 
+    is hosted at http://bamr.sourceforge.net.
 
     If you are considering using this code for your research, I
     encourage you to contact me so that I can help you with the
@@ -61,9 +61,11 @@
     \hline
     \section dl_sect Download
 
-    The most recent release version can be obtained from
+    The most recent release version can be obtained from either
+    of the following:
     \verbatim
     svn checkout svn://svn.code.sf.net/p/bamr/code/trunk bamr
+    git clone https://github.com/awsteiner/bamr.git
     \endverbatim
 
     \hline

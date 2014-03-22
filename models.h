@@ -32,7 +32,7 @@
 #include <o2scl/schematic_eos.h>
 #include <o2scl/root_brent_gsl.h>
 
-#include "misc.h"
+#include "cold_nstar2.h"
 #include "entry.h"
 
 namespace bamr {

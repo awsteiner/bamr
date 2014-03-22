@@ -20,7 +20,7 @@
 
   -------------------------------------------------------------------
 */
-#include "misc.h"
+#include "cold_nstar2.h"
 
 using namespace std;
 using namespace o2scl;

@@ -40,7 +40,7 @@
 #include <o2scl/cli.h>
 #endif
 
-#include "misc.h"
+#include "cold_nstar2.h"
 #include "entry.h"
 #include "models.h"
 
