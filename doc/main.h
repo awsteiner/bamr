@@ -1,7 +1,9 @@
 /** \file main.h
     \brief File containing user's guide documentation
 */
-/** \mainpage User's Guide
+/** \mainpage 
+
+    \section ug_section User's Guide
     
     This document describes the open-source MPI implementation of a
     Bayesian analysis of mass and radius data to determine the mass
@@ -49,7 +51,12 @@
     <a href="http://www.hdfgroup.org">HDF5</a> 
     (versions 1.8.4 and later), 
     \htmlonly
-    <a href="http://o2scl.sourceforge.net">O<span style='position: relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> (version 0.913 only), 
+    the current development version of
+    <a href="http://o2scl.sourceforge.net">O<span style='position:
+    relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> (in the
+    <tt>branches/dev</tt> folder of the 
+    <a href="http://o2scl.sourceforge.net">O<span style='position:
+    relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> distribution),
     \endhtmlonly
     \latexonly
     O$_2$scl
@@ -98,7 +105,7 @@
     relevant functions and parameters. 
 
     \hline
-    \section infile_sect Data files
+    \section infile_sect Data Files
 
     The data files are HDF5 files (typically named with a <tt>.o2</tt>
     extension) which contain one \ref o2scl::table3d object giving the
@@ -170,7 +177,7 @@
     \ref o2scl::table_units object to linear interpolation.
 
     \hline
-    \section func_stack_sect Partial function call stack
+    \section func_stack_sect Partial Function Call Stack
 
     The top-level functions in the call stack are:
     - \ref bamr::bamr_class::run()
@@ -244,14 +251,16 @@
     Some of the references which contain links should direct you to
     the work referred to using its DOI identifer.
     
-    \anchor Lattimer13 Lattimer13:
+    \anchor Lattimer14b Lattimer14b:
     \htmlonly
-    <a href="http://arxiv.org/abs/">
+    <a href="http://dx.doi.org/10.1088/0004-637X/784/2/123">
     J.M. Lattimer and A.W. Steiner</a>,
     \endhtmlonly
     \latexonly
+    \href{http://dx.doi.org/10.1088/0004-637X/784/2/123}{
+    J.~M. Lattimer and A.~W. Steiner},
     \endlatexonly
-    Astrophys. J., submitted (2013).
+    Astrophys. J. \b 784 (2014) 123.
 
     \anchor Steiner10 Steiner10:
     \htmlonly

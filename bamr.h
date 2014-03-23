@@ -167,7 +167,7 @@ namespace bamr {
 
     /** \brief Number of warm up steps (successful steps not iterations)
 
-	\note Not to be confused with \ref warm_up, which is 
+	\note Not to be confused with <tt>warm_up</tt>, which is 
 	a boolean local variable in some functions not an int.
     */
     int n_warm_up;

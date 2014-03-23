@@ -703,7 +703,7 @@ WARN_LOGFILE = doxygen.log
 # "myfile.cpp" or directories like "/usr/src/myproject". Separate the
 # files or directories with spaces.
 
-INPUT = ../bamr.h ../entry.h ../models.h ../misc.h main.h
+INPUT = ../bamr.h ../entry.h ../models.h ../cold_nstar2.h main.h
 
 # This tag can be used to specify the character encoding of the source
 # files that doxygen parses. Internally doxygen uses the UTF-8
