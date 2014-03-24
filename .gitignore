@@ -15,4 +15,8 @@ doc/latex/doxygen.sty
 doc/latex/refman.*
 doc/bamr.tag
 doc/doxygen.log
+data/.svn/*
+data/*/.svn/*
+old_rel/.svn/*
+
 
