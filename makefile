@@ -3,20 +3,18 @@
 # will probably not work on your system.
 # --------------------------------------------------------
 
-# This variable should include the directories for the o2scl, gsl, and
-# hdf libraries. 
-LIB_DIRS = -L$(HOME)/install/lib -L$(HOME)/install/o2scl-0.915/lib
+# This variable should include the directories for the o2scl, gsl,
+# boost, and hdf libraries.
+LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB) -L$(BOOST_LIB) -L$(GSL_LIB)
 
 # This variable should include the parent directories for the 
 # gsl and o2scl header files as well as the directories for the
 # hdf5 include files
-INC_DIRS = -I$(HOME)/install/include -I$(HOME)/install/include/hdf5 \
-	-I$(HOME)/install/o2scl-0.915/include \
-	-I$(HOME)/pkgs/Eigen-3.1.3 -I$(HOME)/install/arma/include \
-	-I$(HOME)/pkgs/boost_1_53_0
+INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC) -I$(BOOST_INC) -I$(GSL_INC) \
+	-I$(EIGEN_INC) -I$(ARMA_INC)
 
 # Path to MPI C++ compiler
-MPI_CXX = $(HOME)/install/bin/mpic++ -std=c++0x
+MPI_CXX = mpic++ -std=c++0x
 
 # Path to generic (no MPI necessary) C++ compiler
 CXX = g++ -std=c++0x
@@ -29,7 +27,7 @@ READLINE_LIBS = -lreadline -lncurses
 
 # Some basic warning and optimization flags
 COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
-	-DBAMR_MPI_LOAD
+	-DBAMR_MPI_LOAD -DO2SCL_NO_TR1_MEMORY
 
 # --------------------------------------------------------
 # Basic bamr targets
