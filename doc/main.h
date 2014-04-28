@@ -273,7 +273,7 @@
     \endlatexonly
     Astrophys. J. \b 722 (2010) 33.
 
-    \anchor Steiner12 Steiner12:
+    \anchor Steiner12_sg Steiner12:
     \htmlonly
     <a href="http://dx.doi.org/10.1103/PhysRevLett.108.081102">
     A.W. Steiner and S. Gandolfi</a>,
