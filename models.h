@@ -28,11 +28,11 @@
 
 #include <iostream>
 
-#include <o2scl/cold_nstar.h>
-#include <o2scl/schematic_eos.h>
+#include <o2scl/nstar_cold.h>
+#include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
 
-#include "cold_nstar2.h"
+#include "nstar_cold2.h"
 #include "entry.h"
 
 namespace bamr {
@@ -44,7 +44,7 @@ namespace bamr {
   public:
 
     /// TOV solver and storage for the EOS table
-    cold_nstar2 cns;
+    nstar_cold2 cns;
 
     model() {
       cns.nb_start=0.01;
@@ -107,7 +107,7 @@ namespace bamr {
   protected:
 
     /// Low-density EOS
-    o2scl::schematic_eos se;
+    o2scl::eos_had_schematic se;
 
     /// Neutron for \ref se
     o2scl::fermion neut;

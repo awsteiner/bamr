@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#include "cold_nstar2.h"
+#include "nstar_cold2.h"
 
 namespace bamr {
 

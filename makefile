@@ -41,15 +41,15 @@ FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR)
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
 
-bamr: bamr.o entry.o models.o cold_nstar2.o main.o
-	$(MPI_CXX) $(FLAGS) $(LIB_DIRS) -o bamr main.o cold_nstar2.o \
+bamr: bamr.o entry.o models.o nstar_cold2.o main.o
+	$(MPI_CXX) $(FLAGS) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
 		entry.o models.o bamr.o $(LIB) 
 
 main.o: main.cpp 
 	$(MPI_CXX) $(FLAGS) -o main.o -c main.cpp
 
-cold_nstar2.o: cold_nstar2.cpp 
-	$(MPI_CXX) $(FLAGS) -o cold_nstar2.o -c cold_nstar2.cpp
+nstar_cold2.o: nstar_cold2.cpp 
+	$(MPI_CXX) $(FLAGS) -o nstar_cold2.o -c nstar_cold2.cpp
 
 models.o: models.cpp 
 	$(MPI_CXX) $(FLAGS) -o models.o -c models.cpp

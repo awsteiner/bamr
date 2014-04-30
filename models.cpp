@@ -266,8 +266,8 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
     return;
   }
 
-  schematic_eos &se=this->se;
-  cold_nstar2 &cns=this->cns;
+  eos_had_schematic &se=this->se;
+  nstar_cold2 &cns=this->cns;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
@@ -415,8 +415,8 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
 
-  schematic_eos &se=this->se;
-  cold_nstar2 &cns=this->cns;
+  eos_had_schematic &se=this->se;
+  nstar_cold2 &cns=this->cns;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
@@ -560,8 +560,8 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
 
-  schematic_eos &se=this->se;
-  cold_nstar2 &cns=this->cns;
+  eos_had_schematic &se=this->se;
+  nstar_cold2 &cns=this->cns;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
