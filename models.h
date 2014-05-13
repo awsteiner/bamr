@@ -186,6 +186,17 @@ namespace bamr {
       this to zero. This doesn't matter much for the final results in
       \ref Steiner13, because the lowest pressure EOSs came from \ref
       bamr::fixed_pressure anyway.
+
+      For a polytrope \f$ P = K \varepsilon^{\Gamma} \f$
+      beginning at a pressure of \f$ P_1 \f$, an energy
+      density of \f$ \varepsilon_1 \f$ and a baryon density 
+      of \f$ n_{B,1} \f$, the baryon density along the polytrope
+      is 
+      \f[
+      n_B = n_{B,1} \left(\frac{\varepsilon}{\varepsilon_1}
+      \right)^{\Gamma/(\Gamma-1)} \left(\frac{\varepsilon+P}
+      {\varepsilon_1+P_1}\right)^{1/(1-\Gamma)}
+      \f]
   */
   class alt_polytropes : public two_polytropes {
 
@@ -230,13 +241,26 @@ namespace bamr {
       parameters are pressures named <tt>pres1</tt> through
       <tt>pres4</tt>. Then the line segments are defined by the points
       \f{eqnarray*}
-      P(2~\mathrm{fm}^{-4}) - P(1~\mathrm{fm}^{-4}) = \mathrm{pres1}
-      P(3~\mathrm{fm}^{-4}) - P(2~\mathrm{fm}^{-4}) = \mathrm{pres2}
-      P(5~\mathrm{fm}^{-4}) - P(3~\mathrm{fm}^{-4}) = \mathrm{pres3}
+      P(2~\mathrm{fm}^{-4}) - P(1~\mathrm{fm}^{-4}) = \mathrm{pres1};
+      \quad
+      P(3~\mathrm{fm}^{-4}) - P(2~\mathrm{fm}^{-4}) = \mathrm{pres2};
+      \quad
+      P(5~\mathrm{fm}^{-4}) - P(3~\mathrm{fm}^{-4}) = \mathrm{pres3};
+      \quad
       P(7~\mathrm{fm}^{-4}) - P(5~\mathrm{fm}^{-4}) = \mathrm{pres4}
       \f}
       The final line segment is extrapolated up to 
       \f$ \varepsilon = 10~\mathrm{fm^{-4}} \f$
+
+      For a linear EOS, \f$ P = P_1 + c_s^2
+      (\varepsilon-\varepsilon_1) \f$ , beginning at a pressure of \f$
+      P_1 \f$ , an energy density of \f$ \varepsilon_1 \f$ and a
+      baryon density of \f$ n_{B,1} \f$, the baryon density is
+      \f[
+      n_B = n_{B,1} \left\{ \frac{\left[\varepsilon+
+      P_1+c_s^2(\varepsilon-\varepsilon_1)\right]}
+      {\varepsilon_1+P_1} \right\}^{1/(1+c_s^2)}
+      \f]
 
   */
   class fixed_pressure : public two_polytropes {
