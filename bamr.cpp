@@ -832,7 +832,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       }
     }
 
-    // End of loop 'if (has_eos && baryon_density) {' 
+    // End of loop 'if (has_eos && baryon_density && 
+    // !tab_eos->is_column("nb")) {' 
   }
 
   o2_shared_ptr<table_units<> >::type tab_mvsr;
@@ -1421,7 +1422,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // We set the transition density a bit lower (because by default
     // it's the largest density in the crust EOS) and then add a 
     // small width
-    teos.transition_mode=tov_new_eos::smooth_trans;
+    teos.transition_mode=eos_tov_interp::smooth_trans;
     teos.set_transition(pt/1.2,1.2);
 
   } else {

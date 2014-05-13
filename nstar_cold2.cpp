@@ -26,7 +26,7 @@ using namespace std;
 using namespace o2scl;
 using namespace bamr;
 
-int nstar_cold2::calc_eos(double &n1, double &e1, double np_0) {
+int nstar_cold2::calc_eos(double np_0) {
 
   int ret;
   
@@ -35,15 +35,21 @@ int nstar_cold2::calc_eos(double &n1, double &e1, double np_0) {
     return exc_efailed;
   }
 
+  /* This code was in because saturation was used to calibrate the nb
+     calculation. The nb calculation is now in the table, so there's
+     probably no need for this exception here, but we leave it for now
+     just in case.
+  */
   if (nb_end<0.16) {
     O2SCL_ERR("nstar_cold2 doesn't support small nb_ends.",exc_efailed);
     return exc_efailed;
   }
   
   eost->clear_table();
-  eost->line_of_names("ed pr");
+  eost->line_of_names("ed pr nb");
   eost->set_unit("ed","1/fm^4");
   eost->set_unit("pr","1/fm^4");
+  eost->set_unit("nb","1/fm^3");
   
   double x;
   // Initial guess for proton number density
@@ -70,21 +76,13 @@ int nstar_cold2::calc_eos(double &n1, double &e1, double np_0) {
       h=hb+e;
     }
     
-    double line[2]={h.ed,h.pr};
-    eost->line_of_data(2,line);
-    
-    // Set calibration for baryon density near the
-    // nuclear saturation density
-    if (np->n+pp->n>=0.01599 && n1_set==false) {
-      n1=np->n+pp->n;
-      e1=h.ed;
-      n1_set=true;
-    }
+    double line[3]={h.ed,h.pr,barn};
+    eost->line_of_data(3,line);
 
   }
 
   if (success==false) {
-    O2SCL_ERR_RET("Solving for EOS failed in calc_eos().",exc_efailed);
+    O2SCL_ERR("Solving for EOS failed in calc_eos().",exc_efailed);
   }
 
   return 0;

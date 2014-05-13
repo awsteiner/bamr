@@ -52,7 +52,7 @@ namespace bamr {
   public:
 
     /// Compute the core EOS 
-    int calc_eos(double &n1, double &e1, double np_0=0.0);
+    int calc_eos(double np_0=0.0);
 
   };
 

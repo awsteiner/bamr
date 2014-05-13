@@ -450,7 +450,7 @@ namespace bamr {
     /// \name TOV solver objects
     //@{
     /// EOS interpolation object for TOV solver
-    o2scl::tov_new_eos teos;
+    o2scl::eos_tov_interp teos;
 
     /// Pointer to a TOV solver
     o2scl::tov_solve *ts;

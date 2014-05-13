@@ -133,26 +133,23 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos(nb_n1,nb_e1);
+  cns.calc_eos();
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
 
-  // What does this do? 1/31/11 - It appears not to 
-  // get called frequently
-  size_t nl=tab_eos->get_nlines();
-  for(size_t i=0;nl>0 && i<nl-1;i++) {
-    if ((*tab_eos)["ed"][i]>(*tab_eos)["ed"][i+1]) {
-      tab_eos->set("ed",i+1,(*tab_eos)["ed"][i]*2.0);
-      scr_out << "Pressure grid fix." << endl;
-    }
-  }
+  double ed1=e.params[4];
+  double ed2=e.params[6];
+
+  // Boundary baryon density and pressure by interpolating
+  // the table
+  double nb1=tab_eos->interp("ed",ed1,"nb");
+  double pr1=tab_eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
-  double pr1=tab_eos->interp("ed",e.params[4],"pr");
-  double coeff1=pr1/pow(e.params[4],1.0+1.0/e.params[5]);
+  double coeff1=pr1/pow(ed1,1.0+1.0/e.params[5]);
 
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -164,14 +161,14 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
   double ed_last=tab_eos->max("ed");
-  if (ed_last<e.params[4]) {
+  if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope " << endl;
-    exit(-1);
+    O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
   for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>e.params[4]) {
+    if ((*tab_eos)["ed"][i]>ed1) {
       tab_eos->delete_row(i);
       i=0;
     }
@@ -187,9 +184,12 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Add first polytrope to table. The shift of 0.001 is
   // important to ensure that we don't have two points
   // at the same energy density
-  for(double ed=e.params[4];ed<e.params[6]-0.001;ed+=0.05) {
-    double line[2]={ed,coeff1*pow(ed,1.0+1.0/e.params[5])};
-    tab_eos->line_of_data(2,line);
+  for(double ed=ed1;ed<ed2-0.001;ed+=0.05) {
+    double pr=coeff1*pow(ed,1.0+1.0/e.params[5]);
+    double nb=nb1*pow(ed/ed1,1.0+e.params[5])/
+      pow((ed+pr)/(ed1+pr1),e.params[5]);
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
@@ -198,10 +198,12 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
     success=bamr_class::ix_no_eos_table;
     return;
   }
-
+  
   // Determine 2nd polytrope coefficient
-  double pr2=tab_eos->interp("ed",e.params[6],"pr");
-  double coeff2=pr2/pow(e.params[6],1.0+1.0/e.params[7]);
+  double pr2=coeff1*pow(ed2,1.0+1.0/e.params[5]);
+  double nb2=nb1*pow(ed2/ed1,1.0+e.params[5])/
+    pow((ed2+pr2)/(ed1+pr1),e.params[5]);
+  double coeff2=pr2/pow(ed2,1.0+1.0/e.params[7]);
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -211,11 +213,14 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Add second polytrope to table
-  for(double ed=e.params[6];ed<=10.0;ed+=0.05) {
-    double line[2]={ed,coeff2*pow(ed,1.0+1.0/e.params[7])};
-    tab_eos->line_of_data(2,line);
+  for(double ed=ed2;ed<=10.0;ed+=0.05) {
+    double pr=coeff2*pow(ed,1.0+1.0/e.params[7]);
+    double nb=nb2*pow(ed/ed2,1.0+e.params[7])/
+      pow((ed+pr)/(ed2+pr2),e.params[7]);
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
-
+  
   return;
 }
 
@@ -279,22 +284,12 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos(nb_n1,nb_e1);
+  cns.calc_eos();
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
-
-  // What does this do? 1/31/11 - It appears not to 
-  // get called frequently
-  size_t nl=tab_eos->get_nlines();
-  for(size_t i=0;nl>0 && i<nl-1;i++) {
-    if ((*tab_eos)["ed"][i]>(*tab_eos)["ed"][i+1]) {
-      tab_eos->set("ed",i+1,(*tab_eos)["ed"][i]*2.0);
-      scr_out << "Pressure grid fix." << endl;
-    }
-  }
 
   // Determine 1st polytrope coefficient
   double pr1=tab_eos->interp("ed",e.params[4],"pr");
@@ -428,7 +423,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos(nb_n1,nb_e1);
+  cns.calc_eos();//nb_n1,nb_e1);
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
@@ -573,7 +568,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos(nb_n1,nb_e1);
+  cns.calc_eos();//nb_n1,nb_e1);
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
@@ -587,12 +582,6 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Determine 1st polytrope coefficient
-  for(size_t i=0;i<tab_eos->get_nlines()-1;i++) {
-    if ((*tab_eos)["ed"][i]>(*tab_eos)["ed"][i+1]) {
-      tab_eos->set("ed",i+1,(*tab_eos)["ed"][i]*2.0);
-      scr_out << "Pressure grid fix." << flush;
-    }
-  }
   double pr1=tab_eos->interp("ed",e.params[4],"pr");
   double coeff1=pr1/pow(e.params[4],e.params[5]);
   

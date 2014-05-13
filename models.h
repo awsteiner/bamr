@@ -101,6 +101,16 @@ namespace bamr {
 
       Based on the model from \ref Steiner10. The original limits on
       the parameters are maintained here.
+
+      For a polytrope \f$ P = K \varepsilon^{1+1/n} \f$
+      beginning at a pressure of \f$ P_1 \f$, an energy
+      density of \f$ \varepsilon_1 \f$ and a baryon density 
+      of \f$ n_{B,1} \f$, the baryon density along the polytrope
+      is 
+      \f[
+      n_B = n_{B,1} \left(\frac{\varepsilon}{\varepsilon_1}\right)^{1+n} 
+      \left(\frac{\varepsilon+P}{\varepsilon_1+P_1}\right)^{-n}
+      \f]
   */
   class two_polytropes : public model {
 
