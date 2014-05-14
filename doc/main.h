@@ -80,7 +80,7 @@
     
     The basic usage is something like
     \verbatim
-    mpirun -np 4 ./bamr -model twop -run default.in -mcmc run1
+    ./bamr -model twop -run default.in -mcmc run1
     \endverbatim
     to perform a one day run with model \c twop with the input
     file in \c default.in. 

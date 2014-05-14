@@ -671,7 +671,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double pr_trans=coeff1*pow(ed_trans,e.params[5]);
   double nb_trans=nb1*pow(ed_trans/ed1,e.params[5]/(e.params[5]-1.0))*
     pow((ed_trans+pr_trans)/(ed1+pr1),1.0/(1.0-e.params[5]));
-  
+
   // Store the transition pressure for later use
   tab_eos->add_constant("pr_q",pr_trans);
 
@@ -731,6 +731,16 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double musq=mu_start*mu_start;
   double bag=ed_trans-a2*musq-3.0*a4*musq*musq;
 
+  // Correction factor for baryon density. Selecting a curve which is
+  // continuous in pressure and energy density isn't enough because
+  // that only specifies the baryon density up to an arbitrary scale.
+  // We need to select the EOS which has the right baryon density to
+  // match with the rest of the EOS above. Instead of doing this, we
+  // simply renormalize the baryon density after the fact, using the
+  // baryon density from the polytrope at the transition between the
+  // polytrope and the quark matter EOS.
+  double nb_corr=nb_trans/((2.0*a2*mu_start+4.0*a4*mu_start*musq)/3.0);
+
   // Loop through quark EOS. We ensure to start slightly larger mu
   // than delta_mu to ensure we don't get two grid points with the
   // same energy density (this causes problems with interpolation
@@ -749,7 +759,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
     double ed=bag+a2*musq+3.0*a4*musq*musq;
     double pr=-bag+a2*musq+a4*musq*musq;
-    double nb=(2.0*a2*mu+4.0*a4*mu*musq)/3.0;
+    double nb=(2.0*a2*mu+4.0*a4*mu*musq)/3.0*nb_corr;
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
