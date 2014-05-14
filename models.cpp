@@ -140,6 +140,7 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
 
+  // Transition densities
   double ed1=e.params[4];
   double ed2=e.params[6];
 
@@ -199,10 +200,12 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
     return;
   }
   
-  // Determine 2nd polytrope coefficient
+  // Boundary baryon density and pressure
   double pr2=coeff1*pow(ed2,1.0+1.0/e.params[5]);
   double nb2=nb1*pow(ed2/ed1,1.0+e.params[5])/
     pow((ed2+pr2)/(ed1+pr1),e.params[5]);
+
+  // Determine 2nd polytrope coefficient
   double coeff2=pr2/pow(ed2,1.0+1.0/e.params[7]);
 
   if (coeff2<0.0 || pr2<0.0) {
@@ -291,9 +294,17 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
 
+  // Transition densities
+  double ed1=e.params[4];
+  double ed2=e.params[6];
+
+  // Boundary baryon density and pressure by interpolating
+  // the table
+  double nb1=tab_eos->interp("ed",ed1,"nb");
+  double pr1=tab_eos->interp("ed",ed1,"pr");
+
   // Determine 1st polytrope coefficient
-  double pr1=tab_eos->interp("ed",e.params[4],"pr");
-  double coeff1=pr1/pow(e.params[4],e.params[5]);
+  double coeff1=pr1/pow(ed1,e.params[5]);
     
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -305,14 +316,14 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
   double ed_last=tab_eos->max("ed");
-  if (ed_last<e.params[4]) {
+  if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope. " << endl;
-    exit(-1);
+    O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
   for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>e.params[4]) {
+    if ((*tab_eos)["ed"][i]>ed1) {
       tab_eos->delete_row(i);
       i=0;
     }
@@ -328,9 +339,12 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Add first polytrope to table. The shift of 0.001 is
   // important to ensure that we don't have two points
   // at the same energy density
-  for(double ed=e.params[4];ed<e.params[6]-0.001;ed+=0.05) {
-    double line[2]={ed,coeff1*pow(ed,e.params[5])};
-    tab_eos->line_of_data(2,line);
+  for(double ed=ed1;ed<ed2-0.001;ed+=0.05) {
+    double pr=coeff1*pow(ed,e.params[5]);
+    double nb=nb1*pow(ed/ed1,e.params[5]/(e.params[5]-1.0))*
+      pow((ed+pr)/(ed1+pr1),1.0/(1.0-e.params[5]));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
@@ -340,9 +354,13 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
     return;
   }
 
+  // Boundary baryon density and pressure
+  double pr2=coeff1*pow(ed2,e.params[5]);
+  double nb2=nb1*pow(ed2/ed1,e.params[5]/(e.params[5]-1.0))*
+    pow((ed2+pr2)/(ed1+pr1),1.0/(1.0-e.params[5]));
+  
   // Determine 2nd polytrope coefficient
-  double pr2=tab_eos->interp("ed",e.params[6],"pr");
-  double coeff2=pr2/pow(e.params[6],e.params[7]);
+  double coeff2=pr2/pow(ed2,e.params[7]);
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -352,9 +370,12 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Add second polytrope to table
-  for(double ed=e.params[6];ed<=10.0;ed+=0.05) {
-    double line[2]={ed,coeff2*pow(ed,e.params[7])};
-    tab_eos->line_of_data(2,line);
+  for(double ed=ed2;ed<=10.0;ed+=0.05) {
+    double pr=coeff2*pow(ed,e.params[7]);
+    double nb=nb2*pow(ed/ed2,e.params[7]/(e.params[7]-1.0))*
+      pow((ed+pr)/(ed2+pr2),1.0/(1.0-e.params[7]));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   return;
@@ -423,15 +444,16 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos();//nb_n1,nb_e1);
+  cns.calc_eos();
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
-
-  // Compute boundary energy density and pressure
+  
+  // Compute boundary energy density, baryon density and pressure
   double ed_last=1.0;
+  double nb_last=tab_eos->interp("ed",1.0,"nb");
   double pr_last=tab_eos->interp("ed",1.0,"pr");
     
   // Remove extra rows from EOS near saturation
@@ -447,28 +469,47 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double p3=p2+e.params[5];
   double p5=p3+e.params[6];
 
+  // Computes slopes (squared sound speeds)
+  double cs2_1=e.params[4]/(2.0-1.0);
+  double cs2_2=e.params[5]/(3.0-2.0);
+  double cs2_3=e.params[6]/(5.0-3.0);
+  double cs2_4=e.params[7]/(7.0-5.0);
+
   // Add 1st high-density EOS
   for(double ed=1.0;ed<2.0-1.0e-4;ed+=0.1) {
-    double line[2]={ed,pr_last+e.params[4]*(ed-1.0)/(2.0-1.0)};
-    tab_eos->line_of_data(2,line);
+    double pr=pr_last+e.params[4]*(ed-1.0)/(2.0-1.0);
+    double nb=nb_last*pow((ed+pr_last+cs2_1*(ed-ed_last))/
+			  (ed_last+pr_last),1.0/(1.0+cs2_1));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
-
+  double nb2=nb_last*pow((2.0+pr_last+cs2_1*(2.0-ed_last))/
+			 (ed_last+pr_last),1.0/(1.0+cs2_1));
+  
   // Add 2nd high-density EOS
   for(double ed=2.0;ed<3.0-1.0e-4;ed+=0.1) {
-    double line[2]={ed,p2+e.params[5]*(ed-2.0)/(3.0-2.0)};
-    tab_eos->line_of_data(2,line);
+    double pr=p2+e.params[5]*(ed-2.0)/(3.0-2.0);
+    double nb=nb2*pow((ed+p2+cs2_2*(ed-2.0))/(2.0+p2),1.0/(1.0+cs2_2));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
+  double nb3=nb2*pow((3.0+p2+cs2_2*(3.0-2.0))/(2.0+p2),1.0/(1.0+cs2_2));
 
   // Add 3rd high-density EOS
   for(double ed=3.0;ed<5.0-1.0e-4;ed+=0.1) {
-    double line[2]={ed,p3+e.params[6]*(ed-3.0)/(5.0-3.0)};
-    tab_eos->line_of_data(2,line);
+    double pr=p3+e.params[6]*(ed-3.0)/(5.0-3.0);
+    double nb=nb3*pow((ed+p3+cs2_3*(ed-3.0))/(3.0+p3),1.0/(1.0+cs2_3));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
+  double nb5=nb3*pow((5.0+p3+cs2_3*(5.0-3.0))/(3.0+p3),1.0/(1.0+cs2_3));
 
   // Add 4th high-density EOS
   for(double ed=5.0;ed<10.0-1.0e-4;ed+=0.2) {
-    double line[2]={ed,p5+e.params[7]*(ed-5.0)/(7.0-5.0)};
-    tab_eos->line_of_data(2,line);
+    double pr=p5+e.params[7]*(ed-5.0)/(7.0-5.0);
+    double nb=nb5*pow((ed+p5+cs2_4*(ed-5.0))/(5.0+p5),1.0/(1.0+cs2_4));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   return;
@@ -568,7 +609,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cns.calc_eos();//nb_n1,nb_e1);
+  cns.calc_eos();
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
@@ -581,10 +622,18 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
     O2SCL_ERR("Table empty in generic quarks.",exc_efailed);
   }
 
+  // Transition between nuclear part and polytrope
+  double ed1=e.params[4];
+
+  // Boundary baryon density and pressure by interpolating
+  // the table
+  double nb1=tab_eos->interp("ed",ed1,"nb");
+  double pr1=tab_eos->interp("ed",ed1,"pr");
+
   // Determine 1st polytrope coefficient
-  double pr1=tab_eos->interp("ed",e.params[4],"pr");
-  double coeff1=pr1/pow(e.params[4],e.params[5]);
+  double coeff1=pr1/pow(ed1,e.params[5]);
   
+  // Store the transition pressure for later use
   tab_eos->add_constant("pr_pt",pr1);
   
   if (coeff1<0.0 || pr1<0.0) {
@@ -597,14 +646,14 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
   double ed_last=tab_eos->max("ed");
-  if (ed_last<e.params[4]) {
+  if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope. " << endl;
-    exit(-1);
+    O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
   for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>e.params[4]) {
+    if ((*tab_eos)["ed"][i]>ed1) {
       tab_eos->delete_row(i);
       i=0;
     }
@@ -616,11 +665,23 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
     success=bamr_class::ix_no_eos_table;
     return;
   }
+  
+  // Transition between polytrope and quarks
+  double ed_trans=e.params[6];
+  double pr_trans=coeff1*pow(ed_trans,e.params[5]);
+  double nb_trans=nb1*pow(ed_trans/ed1,e.params[5]/(e.params[5]-1.0))*
+    pow((ed_trans+pr_trans)/(ed1+pr1),1.0/(1.0-e.params[5]));
+  
+  // Store the transition pressure for later use
+  tab_eos->add_constant("pr_q",pr_trans);
 
   // Add first polytrope to table
-  for(double ed=e.params[4];ed<=e.params[6];ed+=0.05) {
-    double line[2]={ed,coeff1*pow(ed,e.params[5])};
-    tab_eos->line_of_data(2,line);
+  for(double ed=ed1;ed<=ed_trans;ed+=0.05) {
+    double pr=coeff1*pow(ed,e.params[5]);
+    double nb=nb1*pow(ed/ed1,e.params[5]/(e.params[5]-1.0))*
+      pow((ed+pr)/(ed1+pr1),1.0/(1.0-e.params[5]));
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
@@ -630,13 +691,10 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
     return;
   }
 
+  // Quark EOS parameters
   double a2=e.params[7];
   double a4=e.params[8];
-  double ed_trans=e.params[6];
-  double pr_trans=coeff1*pow(ed_trans,e.params[5]);
-
-  tab_eos->add_constant("pr_q",pr_trans);
-
+  
   // Coefficients of quadratic
   double quad_b=a2/2.0/a4;
   double quad_c=-(ed_trans+pr_trans)/4.0/a4;
@@ -688,10 +746,12 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
       success=bamr_class::ix_acausal;
       return;
     }
-      
-    double line[2]={bag+a2*musq+3.0*a4*musq*musq,
-		    -bag+a2*musq+a4*musq*musq};
-    tab_eos->line_of_data(2,line);
+
+    double ed=bag+a2*musq+3.0*a4*musq*musq;
+    double pr=-bag+a2*musq+a4*musq*musq;
+    double nb=(2.0*a2*mu+4.0*a4*mu*musq)/3.0;
+    double line[3]={ed,pr,nb};
+    tab_eos->line_of_data(3,line);
   }
 
   return;

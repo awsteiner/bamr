@@ -300,6 +300,11 @@ namespace bamr {
 
       Referred to as Model D in \ref Steiner13. 
 
+      This model uses \ref o2scl::schematic_eos near saturation,
+      a polytrope (with a uniform prior in the exponent like
+      \ref alt_polytropes) and then a generic quark matter EOS
+      at high densities. 
+
       Alford et al. 2005 parameterizes quark matter with
       \f[
       P = \frac{3 b_4}{4 \pi^2} \mu^4 - \frac{3 b_2}{4 \pi^2} \mu^2 -B 
@@ -308,6 +313,11 @@ namespace bamr {
       can be parameterized by expressing \f$ b_4 \equiv 1-c \f$ , 
       and values of \f$ c \f$ up to 0.4 (or maybe even larger) are
       reasonable (see discussion after Eq. 4 in Alford et al. (2005)).
+      Note that, in charge-neutral matter in beta equilibrium, 
+      \f$ \sum_{i=u,d,s,e} n_i \mu_i = \mu_B n_B = \mu n_Q \f$.
+      where \f$ \mu_B \f$ and \f$ n_B \f$ are the baryon chemical
+      potential and baryon density and \f$ n_Q \f$ is the number
+      density of quarks.
 
       The parameter \f$ b_2 = m_s^2 - 4 \Delta^2 \f$ for CFL quark
       matter, and can thus be positive or negative. A largest possible
@@ -347,7 +357,7 @@ namespace bamr {
     
       Note that 
       \f{eqnarray*}
-      \frac{dP}{d \mu} &=& 2 a_2 \mu + 4 a_4 \mu^3 \nonumber \\ 
+      \frac{dP}{d \mu} &=& 2 a_2 \mu + 4 a_4 \mu^3 = n_Q \nonumber \\ 
       \frac{d\varepsilon}{d \mu} &=& 2 a_2 \mu + 12 a_4 \mu^3
       \f}
   */

@@ -726,12 +726,14 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
   }
 
   // If requested, compute the baryon density automatically
-  if (has_eos && baryon_density && !tab_eos->is_column("nb")) {
+  if (true || (has_eos && baryon_density && !tab_eos->is_column("nb"))) {
     
     // Obtain the baryon density calibration point from the model
 
     double n1, e1;
-    modref.baryon_density_point(n1,e1);
+    //modref.baryon_density_point(n1,e1);
+    n1=0.16;
+    e1=tab_eos->interp("nb",0.16,"ed");
     
     if (n1<=0.0 && e1<=0.0) {
       O2SCL_ERR2("Computing the baryon density requires one ",
@@ -807,8 +809,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     // Now compute baryon density
 
-    tab_eos->new_column("nb");
-    tab_eos->set_unit("nb","1/fm^3");
+    tab_eos->new_column("nb2");
+    tab_eos->set_unit("nb2","1/fm^3");
 
     for(size_t i=0;i<tab_eos->get_nlines();i++) {      
 
@@ -818,7 +820,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
       if (use_crust==false && tab_eos->get("pr",i)<1.0e-5) {
 
-	tab_eos->set("nb",i,0.0);
+	tab_eos->set("nb2",i,0.0);
 
       } else {
 	
@@ -828,9 +830,17 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	  success=ix_nb_problem2;
 	  return;
 	} 
-	tab_eos->set("nb",i,nbt);
+	tab_eos->set("nb2",i,nbt);
       }
     }
+
+    cout.setf(ios::scientific);
+    for(size_t i=0;i<tab_eos->get_nlines();i++) {
+      cout << tab_eos->get("ed",i) << " ";
+      cout << tab_eos->get("nb",i) << " ";
+      cout << tab_eos->get("nb2",i) << endl;
+    }
+    exit(-1);
 
     // End of loop 'if (has_eos && baryon_density && 
     // !tab_eos->is_column("nb")) {' 
