@@ -109,13 +109,25 @@ namespace bamr {
       is 
       \f[
       n_B = n_{B,1} \left(\frac{\varepsilon}{\varepsilon_1}\right)^{1+n} 
-      \left(\frac{\varepsilon_1+P_1}{\varepsilon+P}\right)^{n}
+      \left(\frac{\varepsilon_1+P_1}{\varepsilon+P}\right)^{n} \, .
       \f]
-      Sometimes the baryon susceptibility is also useful,
+      Similarly, the chemical potential is
+      \f[
+      \mu_B = \mu_{B,1} \left(1 + \frac{P_1}{\varepsilon_1}\right)^{1+n}
+      \left(1 + \frac{P}{\varepsilon}\right)^{-(1+n)} \, .
+      \f]
+      The expression for the 
+      baryon density can be inverted to determine \f$ \varepsilon(n_B) \f$
+      \f[
+      \varepsilon(n_B) = \left[ \left(\frac{n_{B,1}}
+      {n_B \varepsilon_1} \right)^{1/n}
+      \left(1+\frac{P_1}{\varepsilon_1}\right)-K\right]^{-n} \, .
+      \f]
+      Sometimes the baryon susceptibility is also useful 
       \f[
       \frac{d \mu_B}{d n_B} = \left(1+1/n\right)
       \left( \frac{P}{\varepsilon}\right)
-      \left( \frac{\mu_B}{n_B}\right)
+      \left( \frac{\mu_B}{n_B}\right) \, .
       \f]
   */
   class two_polytropes : public model {
