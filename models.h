@@ -109,7 +109,13 @@ namespace bamr {
       is 
       \f[
       n_B = n_{B,1} \left(\frac{\varepsilon}{\varepsilon_1}\right)^{1+n} 
-      \left(\frac{\varepsilon+P}{\varepsilon_1+P_1}\right)^{-n}
+      \left(\frac{\varepsilon_1+P_1}{\varepsilon+P}\right)^{n}
+      \f]
+      Sometimes the baryon susceptibility is also useful,
+      \f[
+      \frac{d \mu_B}{d n_B} = \left(1+1/n\right)
+      \left( \frac{P}{\varepsilon}\right)
+      \left( \frac{\mu_B}{n_B}\right)
       \f]
   */
   class two_polytropes : public model {
