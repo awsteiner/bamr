@@ -885,7 +885,10 @@ void quark_star::compute_eos(entry &e, int &success, std::ofstream &scr_out) {
 
   // Then call the root finder
   x[0]=mu_0;
-  mm_funct_mfptr<quark_star> fmf(this,&quark_star::pressure);
+  mm_funct11 fmf=std::bind(std::mem_fn<int(size_t,const ubvector &,ubvector &)>
+			   (&quark_star::pressure),
+			   this,std::placeholders::_1,std::placeholders::_2,
+			   std::placeholders::_3);
   gmh.err_nonconv=false;
   int ret=gmh.msolve(1,x,fmf);
   if (ret!=0) {

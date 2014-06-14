@@ -435,8 +435,7 @@ namespace bamr {
     double ms;
 
     /// The solver to find the chemical potential for zero pressure
-    o2scl::mroot_hybrids<o2scl::mm_funct<>,ubvector,ubmatrix,
-      o2scl::jac_funct<> > gmh;
+    o2scl::mroot_hybrids<> gmh;
     
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
