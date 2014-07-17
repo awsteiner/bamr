@@ -1179,12 +1179,12 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
 
   if (sv[1]==((string)"values")) {
     first_point.resize(sv.size()-1);
-    for(size_t i=1;i<sv.size();i++) {
+    for(size_t i=2;i<sv.size();i++) {
       // Remove parentheses if present
       if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
 	sv[i]=sv[i].substr(1,sv[i].length()-2);
       }
-      first_point[i-1]=o2scl::stod(sv[i]);
+      first_point[i-2]=o2scl::stod(sv[i]);
     }
     first_point_type=fp_unspecified;
   } else if (sv[1]==((string)"last")) {
