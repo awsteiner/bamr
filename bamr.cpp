@@ -923,9 +923,9 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Solve for M vs. R curve
-    int ret=tsr->mvsr();
-    if (ret!=0) {
-      scr_out << "M vs. R failed." << endl;
+    int info=tsr->mvsr();
+    if (info!=0) {
+      scr_out << "M vs. R failed: info=" << info << endl;
       success=ix_mvsr_failed;
       return;
     }
