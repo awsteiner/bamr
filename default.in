@@ -1,8 +1,8 @@
-add-data 1608 data/slb13/1608.dat total 1.40
-add-data 1731 data/slb13/1731.dat total 1.30
-add-data 1745 data/slb13/1745.dat total 1.60
-add-data 1748 data/slb13/1748.dat total 1.60
-add-data 1820 data/slb13/1820.dat total 1.72
+add-data 1608 data/slb13/1608_mc.o2 total 1.40
+add-data 1731 data/slb13/1731_mc.o2 total 1.30
+add-data 1745 data/slb13/1745_mc.o2 total 1.60
+add-data 1748 data/slb13/1748_mc.o2 total 1.60
+add-data 1820 data/slb13/1820_mc.o2 total 1.72
 add-data wcen data/ls14/wcen_H10_H10_He.o2 weight 1.9
 add-data m13 data/ls14/m13_H10_H10_He.o2 weight 1.4
 add-data m28 data/ls14/m28_H10_H10_He.o2 weight 1.4

@@ -254,7 +254,8 @@ void bamr_class::fill_line
     // The central pressure in the maximum mass configuration
     pmax=tab_mvsr->max("pr");
     // The maximum mass
-    mmax=tab_mvsr->max("gm");
+    //mmax=tab_mvsr->max("gm");
+    mmax=tab_mvsr->get_constant("new_max");
     // The radius of the maximum mass star
     rmax=tab_mvsr->get("r",tab_mvsr->lookup("gm",mmax));
     
@@ -976,6 +977,10 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       select_mass(e,e,mmax);
       scr_out << "New entry: " << e << endl;
     }
+    
+    tab_mvsr->add_constant
+      ("new_max",vector_max_quad<vector<double>,double>
+       (tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]));
 
     // Remove table entries with pressures above the maximum pressure
     double prmax=tab_mvsr->get("pr",

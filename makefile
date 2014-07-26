@@ -61,7 +61,7 @@ bamr.o: bamr.cpp
 	$(MPI_CXX) $(FLAGS) -o bamr.o -c bamr.cpp
 
 test:
-	bamr -run default.in -model twop -mcmc run1 &
+	bamr -run default.in -model twop -mcmc run1
 
 # --------------------------------------------------------
 # Internal 
