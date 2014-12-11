@@ -54,13 +54,23 @@ namespace bamr {
 
   /** \brief Statistical analysis of EOS from M and R constraints
 
+      \todo Right now the EOS is rejected if the pressure decreases
+      at any density, when in reality, it should only check if 
+      the pressure decreases at a density below that of the central
+      density of the maximum mass star. This isn't a problem for
+      current EOSs, but could be a problem in the future.
+
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits
       after each mcmc() run. 
+
       \todo Fix issue of block_counter giving confusing output if
       there are too few MCMC points between each block. 
+
       \todo More testing
+
       \todo Better documentation
+
       \todo Help with plots
 
       \future Allow non-tabulated data specified as a function?

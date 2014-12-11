@@ -260,7 +260,7 @@ void bamr_class::fill_line
     
     if (baryon_density) {
       // The central baryon density in the maximum mass configuration
-      nbmax=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
+      nbmax=tab_mvsr->get_constant("new_nb_max");
     }
 
   } else {
@@ -985,6 +985,12 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       ("new_r_max",vector_max_quad_loc<vector<double>,double>
        (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
 
+    if (baryon_density) {
+      tab_mvsr->add_constant
+	("new_nb_max",vector_max_quad_loc<vector<double>,double>
+	 (tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]));
+    }
+      
     // Remove table entries with pressures above the maximum pressure
     double prmax=tab_mvsr->get("pr",
 			       tab_mvsr->lookup("gm",tab_mvsr->max("gm")));
