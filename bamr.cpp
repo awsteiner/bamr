@@ -986,9 +986,13 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
        (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
 
     if (baryon_density) {
+      
       tab_mvsr->add_constant
-	("new_nb_max",vector_max_quad_loc<vector<double>,double>
-	 (tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]));
+	("new_nb_max",tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax)));
+      //vector_max_quad_loc<vector<double>,double>
+      //(tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]));
+      //scr_out << "new_nb_max: " 
+      //<< tab_mvsr->get_constant("new_nb_max") << endl;
     }
       
     // Remove table entries with pressures above the maximum pressure
@@ -1154,7 +1158,9 @@ double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr,
     scr_out << "Exiting because maximum mass (" << m_max_current 
 	    << ") larger than exit_mass (" << exit_mass << ")." 
 	    << endl;
+    scr_out.precision(12);
     scr_out << "e,ret: " << e << " " << ret << endl;
+    scr_out.precision(6);
     exit(-1);
   }
 
