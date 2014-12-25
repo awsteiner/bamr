@@ -987,12 +987,18 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     if (baryon_density) {
       
-      tab_mvsr->add_constant
-	("new_nb_max",tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax)));
-      //vector_max_quad_loc<vector<double>,double>
-      //(tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]));
-      //scr_out << "new_nb_max: " 
-      //<< tab_mvsr->get_constant("new_nb_max") << endl;
+      double nb1=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
+      double nb2=vector_max_quad_loc<vector<double>,double>
+	(tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]);
+      tab_mvsr->add_constant("new_nb_max",nb2);
+      if (nb2>5.0) {
+	scr_out << "nb_check: " << nb2 << " " << nb1 << endl;
+	for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
+	  scr_out << i << " " << tab_mvsr->get("gm",i) << " "
+		  << tab_mvsr->get("r",i) << " " 
+		  << tab_mvsr->get("nb",i) << endl;
+	}
+      }
     }
       
     // Remove table entries with pressures above the maximum pressure
