@@ -980,6 +980,21 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     tab_mvsr->add_constant
       ("new_max",vector_max_quad<vector<double>,double>
        (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
+    if (true) {
+      size_t ix=vector_max_index<vector<double>,double>
+	(tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]);
+      if (ix!=0 && ix<tab_mvsr->get_nlines()-1) {
+	scr_out << tab_mvsr->get("gm",ix-1) << " ";
+	scr_out << tab_mvsr->get("r",ix-1) << " ";
+	scr_out << tab_mvsr->get("nb",ix-1) << endl;
+	scr_out << tab_mvsr->get("gm",ix) << " ";
+	scr_out << tab_mvsr->get("r",ix) << " ";
+	scr_out << tab_mvsr->get("nb",ix) << endl;
+	scr_out << tab_mvsr->get("gm",ix+1) << " ";
+	scr_out << tab_mvsr->get("r",ix+1) << " ";
+	scr_out << tab_mvsr->get("nb",ix+1) << endl;
+      }
+    }
     
     tab_mvsr->add_constant
       ("new_r_max",vector_max_quad_loc<vector<double>,double>
@@ -988,16 +1003,20 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     if (baryon_density) {
       
       double nb1=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
-      double nb2=vector_max_quad_loc<vector<double>,double>
-	(tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]);
-      tab_mvsr->add_constant("new_nb_max",nb2);
-      if (nb2>5.0) {
-	scr_out << "nb_check: " << nb2 << " " << nb1 << endl;
-	for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
-	  scr_out << i << " " << tab_mvsr->get("gm",i) << " "
-		  << tab_mvsr->get("r",i) << " " 
-		  << tab_mvsr->get("nb",i) << endl;
+      if (nb1>0.01) {
+	double nb2=vector_max_quad_loc<vector<double>,double>
+	  (tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]);
+	tab_mvsr->add_constant("new_nb_max",nb2);
+	if (nb2>5.0) {
+	  scr_out << "nb_check: " << nb2 << " " << nb1 << endl;
+	  for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
+	    scr_out << i << " " << tab_mvsr->get("gm",i) << " "
+		    << tab_mvsr->get("r",i) << " " 
+		    << tab_mvsr->get("nb",i) << endl;
+	  }
 	}
+      } else {
+	tab_mvsr->add_constant("new_nb_max",nb1);
       }
     }
       
