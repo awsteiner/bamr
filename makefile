@@ -89,7 +89,7 @@ sf-web:
 	cd doc/html; rsync -Cavzu * \
 		awsteiner,bamr@web.sourceforge.net:htdocs
 
-update_tag:
+update-tags:
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
 	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
 	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
