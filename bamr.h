@@ -441,14 +441,20 @@ namespace bamr {
     virtual double compute_weight(entry &e, model &modref, 
 				  o2scl::tov_solve *ts, int &success,
 				  ubvector &wgts, bool warm_up);
+
+  public:
     
     /** \brief Tabulate EOS and then use in cold_nstar
-
+	
 	Called by compute_weight().
+
+	\todo Temporarily made public for drdp project hack
     */
     virtual void compute_star(entry &e, model &modref, o2scl::tov_solve *ts, 
 			      int &success);
-
+    
+  protected:
+    
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
       (std::string fname_prefix, entry &e_best, double w_best,
