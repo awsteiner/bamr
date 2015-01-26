@@ -980,21 +980,23 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     tab_mvsr->add_constant
       ("new_max",vector_max_quad<vector<double>,double>
        (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
-    if (true) {
+    /*
+      if (true) {
       size_t ix=vector_max_index<vector<double>,double>
-	(tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]);
+      (tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]);
       if (ix!=0 && ix<tab_mvsr->get_nlines()-1) {
-	scr_out << tab_mvsr->get("gm",ix-1) << " ";
-	scr_out << tab_mvsr->get("r",ix-1) << " ";
-	scr_out << tab_mvsr->get("nb",ix-1) << endl;
-	scr_out << tab_mvsr->get("gm",ix) << " ";
-	scr_out << tab_mvsr->get("r",ix) << " ";
-	scr_out << tab_mvsr->get("nb",ix) << endl;
-	scr_out << tab_mvsr->get("gm",ix+1) << " ";
-	scr_out << tab_mvsr->get("r",ix+1) << " ";
-	scr_out << tab_mvsr->get("nb",ix+1) << endl;
+      scr_out << tab_mvsr->get("gm",ix-1) << " ";
+      scr_out << tab_mvsr->get("r",ix-1) << " ";
+      scr_out << tab_mvsr->get("nb",ix-1) << endl;
+      scr_out << tab_mvsr->get("gm",ix) << " ";
+      scr_out << tab_mvsr->get("r",ix) << " ";
+      scr_out << tab_mvsr->get("nb",ix) << endl;
+      scr_out << tab_mvsr->get("gm",ix+1) << " ";
+      scr_out << tab_mvsr->get("r",ix+1) << " ";
+      scr_out << tab_mvsr->get("nb",ix+1) << endl;
       }
-    }
+      }
+    */
     
     tab_mvsr->add_constant
       ("new_r_max",vector_max_quad_loc<vector<double>,double>
