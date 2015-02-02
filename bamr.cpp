@@ -22,7 +22,9 @@
 */
 #include "bamr.h"
 
+#ifndef BAMR_NO_MPI
 #include <mpi.h>
+#endif
 
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
@@ -113,6 +115,9 @@ bamr_class::bamr_class() {
 
   ret_codes.resize(100);
   for(size_t i=0;i<100;i++) ret_codes[i]=0;
+
+  mpi_nprocs=1;
+  mpi_rank=0;
 }
 
 bamr_class::~bamr_class() {
@@ -505,7 +510,7 @@ void bamr_class::load_mc() {
   if (nsources>0) {
 
     source_tables.resize(nsources);
-    
+
 #ifdef BAMR_MPI_LOAD
 
     bool mpi_load_debug=true;
@@ -1423,10 +1428,14 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // Make sure that first_update() is called when necessary
   first_file_update=false;
 
+#ifndef BAMR_NO_MPI
   // Get MPI rank, etc.
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
   mpi_start_time=MPI_Wtime();
+#else
+  mpi_start_time=time(0);
+#endif
 
   // Update filename with processor rank
   fname_prefix+=((string)"_")+itos(mpi_rank);
@@ -1904,7 +1913,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       if (max_iters==0) {
 	
 	// If we've made enough progress, force an update of the file
+#ifndef BAMR_NO_MPI
 	double elapsed=MPI_Wtime()-mpi_start_time;
+#else
+	double elapsed=time(0)-mpi_start_time;
+#endif
 	if (elapsed>max_time/((double)20)*((double)(block_counter+1)) ||
 	    (elapsed>max_time && block_counter==19)) {
 	  force_file_update=true;
@@ -1952,11 +1965,19 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
       warm_up=false;
       scr_out << "Setting warm_up to false. Reset start time." << endl;
+#ifndef BAMR_NO_MPI
       if (true) {
 	max_time-=MPI_Wtime()-mpi_start_time;
 	scr_out << "Resetting max_time to : " << max_time << endl;
       }
       mpi_start_time=MPI_Wtime();
+#else
+      if (true) {
+	max_time-=time(0)-mpi_start_time;
+	scr_out << "Resetting max_time to : " << max_time << endl;
+      }
+      mpi_start_time=time(0);
+#endif
       scr_out.precision(12);
       scr_out << " Start time: " << mpi_start_time << endl;
       scr_out.precision(6);

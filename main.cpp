@@ -20,7 +20,9 @@
 
   -------------------------------------------------------------------
 */
+#ifndef BAMR_NO_MPI
 #include <mpi.h>
+#endif
 
 #include "bamr.h"
 
@@ -29,7 +31,9 @@ int main(int argc, char *argv[]) {
   // ---------------------------------------
   // Init MPI
   
+#ifndef BAMR_NO_MPI
   MPI_Init(&argc,&argv);
+#endif
 
   // ---------------------------------------
   // Main bamr object 
@@ -40,7 +44,9 @@ int main(int argc, char *argv[]) {
   // ---------------------------------------
   // Finalize MPI
 
+#ifndef BAMR_NO_MPI
   MPI_Finalize();
+#endif
 
   return 0;
 }

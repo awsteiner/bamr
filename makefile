@@ -20,7 +20,7 @@ INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC) -I$(BOOST_INC) -I$(GSL_INC) \
 MPI_CXX = mpic++ 
 
 # Generic (no MPI necessary) C++ compiler
-CXX = g++
+CXX = g++-4.9
 
 # Comment out these two variables if you do not have GNU readline or
 # if O2scl was compiled without readline support
@@ -30,13 +30,14 @@ READLINE_LIBS = -lreadline -lncurses
 
 # Some basic warning and optimization flags
 COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
-	-DBAMR_MPI_LOAD -DO2SCL_NO_TR1_MEMORY -std=c++0x
+	-DO2SCL_NO_TR1_MEMORY -std=c++0x
 
 # --------------------------------------------------------
 # Basic bamr targets
 # --------------------------------------------------------
 
-FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR)
+FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
+FLAGS2 = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
@@ -59,6 +60,27 @@ entry.o: entry.cpp
 
 bamr.o: bamr.cpp 
 	$(MPI_CXX) $(FLAGS) -o bamr.o -c bamr.cpp
+
+bamr_nompi: bamr_nompi.o entry_nompi.o models_nompi.o \
+		nstar_cold2_nompi.o main_nompi.o
+	$(CXX) $(FLAGS2) $(LIB_DIRS) -o bamr_nompi main_nompi.o \
+		nstar_cold2_nompi.o entry_nompi.o models_nompi.o \
+		bamr_nompi.o $(LIB) 
+
+main_nompi.o: main.cpp 
+	$(CXX) $(FLAGS2) -o main_nompi.o -c main.cpp
+
+nstar_cold2_nompi.o: nstar_cold2.cpp 
+	$(CXX) $(FLAGS2) -o nstar_cold2_nompi.o -c nstar_cold2.cpp
+
+models_nompi.o: models.cpp 
+	$(CXX) $(FLAGS2) -o models_nompi.o -c models.cpp
+
+entry_nompi.o: entry.cpp 
+	$(CXX) $(FLAGS2) -o entry_nompi.o -c entry.cpp
+
+bamr_nompi.o: bamr.cpp 
+	$(CXX) $(FLAGS2) -o bamr_nompi.o -c bamr.cpp
 
 test:
 	bamr -run default.in -model twop -mcmc run1
@@ -104,6 +126,6 @@ docp: empty
 	cd doc/latex; $(MAKE)
 
 clean:
-	rm -f *.o bamr
+	rm -f *.o bamr bamr_nompi
 
 
