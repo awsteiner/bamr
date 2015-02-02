@@ -1955,7 +1955,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // is 10 and so the files are updated for every 10 MCMC successes
     if (!warm_up && (force_file_update || 
 		     (mh_success+1)%file_update_iters==0)) {
+      scr_out << "Updating files." << endl;
       update_files(fname_prefix,*modp,e_current);
+      scr_out << "Done updating files." << endl;
     }
     
     // Increment iteration counter
