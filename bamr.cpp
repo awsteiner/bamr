@@ -869,7 +869,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	double ed, nb;
-	teos.get_eden(pr,ed,nb);
+	teos.ed_nb_from_pr(pr,ed,nb);
 	if (ed_last>1.0e-20 && ed<ed_last) {
 	  scr_out << "Stability problem near crust-core transition." << endl;
 	  if (has_esym) {
@@ -882,7 +882,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	  scr_out << "Full EOS near transition: " << endl;
 	  scr_out << "pr ed" << endl;
 	  for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	    teos.get_eden(pr,ed,nb);
+	    teos.ed_nb_from_pr(pr,ed,nb);
 	    scr_out << pr << " " << ed << endl;
 	  }
 	  scr_out << endl;
