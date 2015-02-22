@@ -2181,6 +2181,11 @@ void bamr_class::setup_cli() {
 void bamr_class::run(int argc, char *argv[]) {
   
   // ---------------------------------------
+  // Set error handler for this thread
+  
+  o2scl::err_hnd=&ee;
+  
+  // ---------------------------------------
   // Process command-line arguments and run
   
   setup_cli();

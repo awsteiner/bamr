@@ -33,6 +33,7 @@
 #include <o2scl/uniform_grid.h>
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_file.h>
+#include <o2scl/exception.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -78,6 +79,10 @@ namespace bamr {
   class bamr_class {
     
   protected:
+
+    /** \brief Error handler for each thread
+     */
+    o2scl::err_hnd_cpp ee;
 
     /// \name Parameter objects for the 'set' command
     //@{
