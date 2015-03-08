@@ -750,8 +750,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     for(size_t i=0;i<tab_eos->get_nlines();i++) {
 
       if (tab_eos->get("ed",i)+tab_eos->get("pr",i)<=0.0 ||
-	  !o2scl::is_finite(tab_eos->get("ed",i)) ||
-	  !o2scl::is_finite(tab_eos->get("pr",i))) {
+	  !std::isfinite(tab_eos->get("ed",i)) ||
+	  !std::isfinite(tab_eos->get("pr",i))) {
 	scr_out << "Inverse Gibbs not finite." << endl;
 	scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	scr_out << "ed pr" << endl;
@@ -772,7 +772,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     for(size_t i=0;i<tab_eos->get_nlines();i++) {
       if (e1<=tab_eos->get("ed",i)) {
 	double val=tab_eos->integ("ed",e1,tab_eos->get("ed",i),"igb");
-	if (!o2scl::is_finite(val)) {
+	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite." << endl;
 	  scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	  scr_out << "ed pr" << endl;
@@ -786,7 +786,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 	tab_eos->set("iigb",i,val);
       } else {
 	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),e1,"igb");
-	if (!o2scl::is_finite(val)) {
+	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite (2)." << endl;
 	  scr_out << "n1=" << n1 << " e1=" << e1 << endl;
 	  scr_out << "ed pr" << endl;
@@ -803,7 +803,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
     // Compute normalization constant
     double Anb=n1/exp(tab_eos->interp("ed",e1,"iigb"));
-    if (!o2scl::is_finite(Anb) || Anb<0.0) {
+    if (!std::isfinite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << endl;
       success=ix_nb_problem;
       return;
@@ -827,7 +827,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
       } else {
 	
 	double nbt=Anb*exp(tab_eos->get("iigb",i));
-	if (!o2scl::is_finite(nbt)) {
+	if (!std::isfinite(nbt)) {
 	  scr_out << "Baryon density normalization problem (2)." << endl;
 	  success=ix_nb_problem2;
 	  return;
