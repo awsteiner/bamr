@@ -147,6 +147,11 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     s+=((string)"param_")+modp->param_name(i)+" ";
     u+=modp->param_unit(i)+" ";
   }
+
+  // It is important here that all of these columns which store values
+  // over a grid are either always positive or always negative,
+  // because the code reports zero in the fill_line() function for
+  // values beyond the end of the EOS or the M-R curve. 
   for(size_t i=0;i<nsources;i++) {
     s+=((string)"R_")+source_names[i]+" ";
     u+="km ";
@@ -307,6 +312,11 @@ void bamr_class::fill_line
       }
     }
   }
+
+  // It is important here that all of these columns which store values
+  // over a grid are either always positive or always negative,
+  // because the code reports zero in the fill_line() function for
+  // values beyond the end of the EOS or the M-R curve. 
   for(int i=0;i<grid_size;i++) {
     double mval=m_grid[i];
     if (mval<mmax) {
