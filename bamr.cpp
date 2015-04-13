@@ -1272,6 +1272,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   }
   model_type=sv[1];
   if (modp!=0) {
+    modp->remove_params(cl);
     delete modp;
     modp=0;
   }
@@ -1317,6 +1318,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     has_eos=true;
     return exc_efailed;
   }
+  modp->setup_params(cl);
 
   return 0;
 }

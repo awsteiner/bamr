@@ -31,6 +31,7 @@
 #include <o2scl/nstar_cold.h>
 #include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
+#include <o2scl/cli.h>
 
 #include "nstar_cold2.h"
 #include "entry.h"
@@ -51,6 +52,16 @@ namespace bamr {
     }
 
     virtual ~model() {}
+
+    /** \brief Setup new parameters */
+    virtual void setup_params(o2scl::cli &cl) {
+      return;
+    }
+
+    /** \brief Remove model-specific parameters */
+    virtual void remove_params(o2scl::cli &cl) {
+      return;
+    }
 
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
@@ -134,6 +145,12 @@ namespace bamr {
 
   protected:
 
+    /// Parameter for kinetic part of symmetry energy
+    o2scl::cli::parameter_double p_kin_sym;
+
+    /// Kinetic part of symmetry energy
+    double kin_sym;
+
     /// Low-density EOS
     o2scl::eos_had_schematic se;
 
@@ -150,6 +167,12 @@ namespace bamr {
     double nb_e1;
 
   public:
+
+    /** \brief Setup new model parameters */
+    virtual void setup_params(o2scl::cli &cl);
+
+    /** \brief Remove model-specific parameters */
+    virtual void remove_params(o2scl::cli &cl);
 
     /** \brief A point to calibrate the baryon density with
 
@@ -419,6 +442,16 @@ namespace bamr {
   class quark_star : public two_polytropes {
   
   public:
+
+    /** \brief Setup new parameters */
+    virtual void setup_params(o2scl::cli &cl) {
+      return;
+    }
+
+    /** \brief Remove model-specific parameters */
+    virtual void remove_params(o2scl::cli &cl) {
+      return;
+    }
 
     /// The bag constant
     double B;
