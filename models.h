@@ -148,9 +148,6 @@ namespace bamr {
     /// Parameter for kinetic part of symmetry energy
     o2scl::cli::parameter_double p_kin_sym;
 
-    /// Kinetic part of symmetry energy
-    double kin_sym;
-
     /// Low-density EOS
     o2scl::eos_had_schematic se;
 
@@ -167,6 +164,9 @@ namespace bamr {
     double nb_e1;
 
   public:
+
+    /// Kinetic part of symmetry energy
+    double kin_sym;
 
     /** \brief Setup new model parameters */
     virtual void setup_params(o2scl::cli &cl);
