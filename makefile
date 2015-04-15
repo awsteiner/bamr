@@ -85,6 +85,12 @@ bamr_nompi.o: bamr.cpp
 test:
 	bamr -run default.in -model twop -mcmc run1
 
+process.o: process.cpp 
+	$(CXX) $(FLAGS2) -o process.o -c process.cpp
+
+process: process.o
+	$(CXX) $(FLAGS2) $(LIB_DIRS) -o process process.o $(LIB) 
+
 # --------------------------------------------------------
 # Internal 
 # --------------------------------------------------------
