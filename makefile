@@ -30,7 +30,7 @@ READLINE_LIBS = -lreadline -lncurses
 
 # Some basic warning and optimization flags
 COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
-	-DO2SCL_NO_TR1_MEMORY -std=c++0x
+	-std=c++0x -Wno-literal-suffix
 
 # --------------------------------------------------------
 # Basic bamr targets

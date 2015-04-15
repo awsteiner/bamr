@@ -1310,6 +1310,24 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     nparams=9;
     has_esym=true;
     has_eos=true;
+  } else if (sv[1]==((string)"qmc")) {
+    modp=new qmc_neut;
+    modp2=new qmc_neut;
+    nparams=7;
+    has_esym=true;
+    has_eos=true;
+  } else if (sv[1]==((string)"qmc_twop")) {
+    modp=new qmc_twop;
+    modp2=new qmc_twop;
+    nparams=9;
+    has_esym=true;
+    has_eos=true;
+  } else if (sv[1]==((string)"qmc_fixp")) {
+    modp=new qmc_fixp;
+    modp2=new qmc_fixp;
+    nparams=9;
+    has_esym=true;
+    has_eos=true;
   } else {
     cerr << "Model unknown." << endl;
     nparams=0;

@@ -242,8 +242,9 @@
     \hline
     \section ack_sect Acknowledgements
 
-    I would like to thank Ed Brown, Stefano Gandolfi, and Jim 
-    Lattimer for their collaboration on these projects.
+    I would like to thank Paulo Bedaque, Ed Brown, Farrukh Fattoyev,
+    Stefano Gandolfi, Jim Lattimer, and Will Newton for their
+    collaboration on these projects.
 
     \hline
     \section ref_sect Bibliography
@@ -252,48 +253,29 @@
     the work referred to using its DOI identifer.
     
     \anchor Lattimer14b Lattimer14b:
-    \htmlonly
     <a href="http://dx.doi.org/10.1088/0004-637X/784/2/123">
     J.M. Lattimer and A.W. Steiner</a>,
-    \endhtmlonly
-    \latexonly
-    \href{http://dx.doi.org/10.1088/0004-637X/784/2/123}{
-    J.~M. Lattimer and A.~W. Steiner},
-    \endlatexonly
     Astrophys. J. \b 784 (2014) 123.
 
     \anchor Steiner10 Steiner10:
-    \htmlonly
     <a href="http://dx.doi.org/10.1088/0004-637X/722/1/33">
     A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
-    \endhtmlonly
-    \latexonly
-    \href{http://dx.doi.org/10.1088/0004-637X/722/1/33}{
-    A.~W. Steiner, J.~M. Lattimer, E.~F. Brown},
-    \endlatexonly
     Astrophys. J. \b 722 (2010) 33.
 
-    \anchor Steiner12_sg Steiner12:
-    \htmlonly
+    \anchor Steiner12cn Steiner12:
     <a href="http://dx.doi.org/10.1103/PhysRevLett.108.081102">
     A.W. Steiner and S. Gandolfi</a>,
-    \endhtmlonly
-    \latexonly
-    \href{http://dx.doi.org/10.1103/PhysRevLett.108.081102}{
-    A.~W. Steiner and S. Gandolfi},
-    \endlatexonly
     Phys. Rev. Lett. \b 108 (2012) 081102.
 
     \anchor Steiner13 Steiner13:
-    \htmlonly
     <a href="http://dx.doi.org/10.1088/2041-8205/765/1/L5">
     A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
-    \endhtmlonly
-    \latexonly
-    \href{http://dx.doi.org/10.1088/2041-8205/765/1/L5}{
-    A.~W. Steiner, J.~M. Lattimer, E.~F. Brown},
-    \endlatexonly
     Astrophys. J. Lett. \b 765 (2013) 5.
+
+    \anchor Steiner15 Steiner15:
+    <a href="http://dx.doi.org/10.1103/PhysRevC.91.015804">
+    A.W. Steiner, S. Gandolfi, F.J. Fattoyev, and W.G. Newton</a>,
+    Phys. Rev. C \b 91 (2015) 015804.
 
     \page license_page Licensing
    

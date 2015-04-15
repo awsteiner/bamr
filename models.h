@@ -32,6 +32,7 @@
 #include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
 #include <o2scl/cli.h>
+#include <o2scl/prob_dens_func.h>
 
 #include "nstar_cold2.h"
 #include "entry.h"
@@ -272,7 +273,7 @@ namespace bamr {
   
   };
 
-  /** \brief Fixed pressures
+  /** \brief Fix pressure on a grid of energy densities
     
       Referred to as Model C in \ref Steiner13. 
 
@@ -438,7 +439,7 @@ namespace bamr {
   /** \brief A strange quark star model
 
       Referred to as Model E in \ref Steiner13. 
-   */
+  */
   class quark_star : public two_polytropes {
   
   public:
@@ -510,6 +511,193 @@ namespace bamr {
     virtual void first_point(entry &e);
 
   };
+
+  /** \brief Use QMC computations of neutron matter from
+      \ref Steiner12cn
+	
+      The original model from Steiner and Gandolfi (2012)
+      with 
+      \f{eqnarray*}
+      a &=& 13 \pm 0.3~[\mathrm{MeV}] \nonumber \\
+      \alpha &=& 0.50 \pm 0.02 \nonumber \\
+      b &=& 3 \pm 2~[\mathrm{MeV}] \nonumber \\
+      \beta &=& 2.3 \pm 0.2
+      \f}
+      and polytropes similar to \ref bamr::two_polytropes. The
+      remaining 3 parameters are <tt>index1</tt>, <tt>trans1</tt>, and
+      <tt>index2</tt>. In the original paper, the polytrope indices
+      are between 0.2 and 2.0. The transition to the first polytrope
+      at is at a baryon density of \ref rho_trans and the transition
+      to the second is at the energy density in <tt>trans1</tt> which
+      is between 2.0 and 8.0 \f$ \mathrm{fm}^{-4} \f$. The upper limit
+      on polytropic indices has since been changed from 2.0 to 4.0.
+  */
+  class qmc_neut : public two_polytropes {
+
+  public:
+  
+    qmc_neut();
+    
+    virtual ~qmc_neut();
+    
+    /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
+    double rho0;
+
+    /// Transition density (default 0.48)
+    double rho_trans;
+
+    /// Ratio interpolator
+    o2scl::interp_vec<> si;
+
+    /// Ratio error interpolator
+    o2scl::interp_vec<> si_err;
+  
+    /// Interpolation objects
+    ubvector ed_corr, pres_corr, pres_err;
+
+    /// Gaussian distribution for proton correction factor
+    o2scl::prob_dens_gaussian pdg;
+
+    /** \brief Set the lower boundaries for all the parameters,
+        masses, and radii
+    */
+    virtual void low_limits(entry &e);
+    
+    /** \brief Set the upper boundaries for all the parameters,
+        masses, and radii
+    */
+    virtual void high_limits(entry &e);
+    
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_name(size_t i);
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i);
+    
+    /** \brief Compute the EOS corresponding to parameters in 
+        \c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e);
+  };
+  
+  /** \brief QMC + two polytropes for \ref Steiner15
+      
+      This class attempts to expand the parameter distributions
+      for \f$ a \f$ and \f$ \alpha \f$ and re-cast the paramters
+      \f$ b \f$ and \f$ \beta \f$ into \f$ S \f$ and \f$ L \f$.
+      \f{eqnarray*}
+      a &=& 4~\mathrm{to}~16~[\mathrm{MeV}] \nonumber \\
+      \alpha &=& 0~\mathrm{to}~1 \nonumber \\
+      S &=& 28~\mathrm{to}~38~[\mathrm{MeV}]\nonumber \\
+      L &=& 0~\mathrm{to}~120~[\mathrm{MeV}]
+      \f}
+      
+      Polytropes are added at high density similar to \ref
+      bamr::two_polytropes, and the four parameters are
+      <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>, and
+      <tt>trans2</tt>. The parameter limits are a bit different, the
+      indices are allowed to be between 0.2 and 8.0 and the transition
+      densities are allowed to be between 0.75 and 8.0 \f$
+      \mathrm{fm}^{-4} \f$.
+  */
+  class qmc_twop : public two_polytropes {
+
+  public:
+  
+    qmc_twop();
+    
+    virtual ~qmc_twop();
+    
+    /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
+    double rho0;
+
+    /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
+    double rho_trans;
+
+    /** \brief Set the lower boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void low_limits(entry &e);
+    
+    /** \brief Set the upper boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void high_limits(entry &e);
+    
+    /// Return the name of parameter with index \c i
+    virtual std::string param_name(size_t i);
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i);
+    
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e);
+  
+  };
+
+  /** \brief QMC + line segments model for \ref Steiner15
+
+      This is similar to \ref bamr::qmc_twop, except that the
+      high-density EOS is a set of line-segments, similar to \ref
+      bamr::fixed_pressure. The limits on the high-density EOS
+      parameters are the same as those in \ref bamr::fixed_pressure.
+  */
+  class qmc_fixp : public two_polytropes {
+
+  public:
+  
+    qmc_fixp();
+    
+    virtual ~qmc_fixp();
+
+    double ed1;
+    double ed2;
+    double ed3;
+    double ed4;
+    
+    /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
+    double rho0;
+
+    /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
+    double rho_trans;
+
+    /** \brief Set the lower boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void low_limits(entry &e);
+    
+    /** \brief Set the upper boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void high_limits(entry &e);
+    
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_name(size_t i);
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i);
+    
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e);
+  
+  };
+
 
 }
 
