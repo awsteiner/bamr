@@ -1325,7 +1325,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   } else if (sv[1]==((string)"qmc_fixp")) {
     modp=new qmc_fixp;
     modp2=new qmc_fixp;
-    nparams=9;
+    nparams=8;
     has_esym=true;
     has_eos=true;
   } else {
