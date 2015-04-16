@@ -111,7 +111,7 @@ namespace bamr {
 
   /** \brief Two polytropes
 
-      Based on the model from \ref Steiner10. The original limits on
+      Based on the model from \ref Steiner10te. The original limits on
       the parameters are maintained here.
 
       For a polytrope \f$ P = K \varepsilon^{1+1/n} \f$
@@ -166,9 +166,6 @@ namespace bamr {
 
   public:
 
-    /// Kinetic part of symmetry energy
-    double kin_sym;
-
     /** \brief Setup new model parameters */
     virtual void setup_params(o2scl::cli &cl);
 
@@ -220,13 +217,13 @@ namespace bamr {
 
   /** \brief Alternate polytropes
 
-      Referred to as Model B in \ref Steiner13. 
+      Referred to as Model B in \ref Steiner13tn. 
 
       As in \ref two_polytropes, but in terms of the exponents instead
       of the polytropic indices. The lower limit on 'exp1' is 1.5, as
-      in \ref Steiner13, but softer EOSs could be allowed by setting
+      in \ref Steiner13tn, but softer EOSs could be allowed by setting
       this to zero. This doesn't matter much for the final results in
-      \ref Steiner13, because the lowest pressure EOSs came from \ref
+      \ref Steiner13tn, because the lowest pressure EOSs came from \ref
       bamr::fixed_pressure anyway.
 
       For a polytrope \f$ P = K \varepsilon^{\Gamma} \f$
@@ -275,7 +272,7 @@ namespace bamr {
 
   /** \brief Fix pressure on a grid of energy densities
     
-      Referred to as Model C in \ref Steiner13. 
+      Referred to as Model C in \ref Steiner13tn. 
 
       Instead of polytropes, linearly interpolate pressures on a fixed
       grid of energy densities. The schematic EOS is used up to an
@@ -340,9 +337,9 @@ namespace bamr {
 
   /** \brief Generic quark model
 
-      Referred to as Model D in \ref Steiner13. 
+      Referred to as Model D in \ref Steiner13tn. 
 
-      This model uses \ref o2scl::schematic_eos near saturation,
+      This model uses \ref o2scl::eos_had_schematic near saturation,
       a polytrope (with a uniform prior in the exponent like
       \ref alt_polytropes) and then a generic quark matter EOS
       at high densities. 
@@ -438,7 +435,7 @@ namespace bamr {
 
   /** \brief A strange quark star model
 
-      Referred to as Model E in \ref Steiner13. 
+      Referred to as Model E in \ref Steiner13tn. 
   */
   class quark_star : public two_polytropes {
   
@@ -584,7 +581,7 @@ namespace bamr {
     virtual void first_point(entry &e);
   };
   
-  /** \brief QMC + two polytropes for \ref Steiner15
+  /** \brief QMC + two polytropes for \ref Steiner15un
       
       This class attempts to expand the parameter distributions
       for \f$ a \f$ and \f$ \alpha \f$ and re-cast the paramters
@@ -645,7 +642,7 @@ namespace bamr {
   
   };
 
-  /** \brief QMC + line segments model for \ref Steiner15
+  /** \brief QMC + line segments model for \ref Steiner15un
 
       This is similar to \ref bamr::qmc_twop, except that the
       high-density EOS is a set of line-segments, similar to \ref

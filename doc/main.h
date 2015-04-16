@@ -12,8 +12,7 @@
     astrophysicists who are already familiar with C++ and are
     interested in modifying this code for their own use.
 
-    This implementation was originally supported by Chandra grant
-    TM1-12003X.
+    This code was originally supported by Chandra grant TM1-12003X.
 
     This is a beta version. Use at your own risk.
 
@@ -153,7 +152,7 @@
     - The function \ref bamr::model::compute_eos() should use the
     parameters in the \ref bamr::entry argument to compute the EOS and
     store it in the object returned by \ref
-    o2scl::cold_nstar::get_eos_results().
+    o2scl::nstar_cold::get_eos_results().
 
     - The energy density should be stored in a column named
     <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
@@ -223,21 +222,12 @@
         - Otherwise if there's no EOS: \ref bamr::model::compute_mr()
         - Test for causality
 
-    \comment
-    Note that doxygen gets unhappy if the lists above are made with
-    tabs instead of spaces. 
-    \endcomment
-
-    \comment
     \hline
-    \section plot_sect Plotting
+    \section changelog_sect Recent Change Log
 
-    Plotting requires the installation of 
-    <a href="http://root.cern.ch">ROOT</a>, but only requires the most
-    basic functionality of ROOT so all of the extra packages which are
-    available can be disabled. The relevant \c makefile targets
-    are \c plot and \c plot2d.
-    \endcomment
+    April 2015: Added process.cpp and created new functions \ref
+    bamr::model::setup_params and \ref bamr::model::remove_params() .
+    Added several new models.
 
     \hline
     \section ack_sect Acknowledgements
@@ -252,27 +242,37 @@
     Some of the references which contain links should direct you to
     the work referred to using its DOI identifer.
     
-    \anchor Lattimer14b Lattimer14b:
+    \anchor Bedaque15sv Bedaque15sv:
+    <a href="http://dx.doi.org/10.1103/PhysRevLett.114.031103">
+    P. Bedaque and A.W. Steiner</a>,
+    Phys. Rev. Lett. \b 114 (2015).
+
+    \anchor Lattimer14co Lattimer14co:
+    <a href="http://dx.doi.org/10.1140/epja/i2014-14040-y">
+    J.M. Lattimer and A.W. Steiner</a>,
+    Eur. Phys. J. A \b 50 (2014) 40.
+
+    \anchor Lattimer14ns Lattimer14ns:
     <a href="http://dx.doi.org/10.1088/0004-637X/784/2/123">
     J.M. Lattimer and A.W. Steiner</a>,
     Astrophys. J. \b 784 (2014) 123.
 
-    \anchor Steiner10 Steiner10:
+    \anchor Steiner10te Steiner10te:
     <a href="http://dx.doi.org/10.1088/0004-637X/722/1/33">
     A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
     Astrophys. J. \b 722 (2010) 33.
 
-    \anchor Steiner12cn Steiner12:
+    \anchor Steiner12cn Steiner12cn:
     <a href="http://dx.doi.org/10.1103/PhysRevLett.108.081102">
     A.W. Steiner and S. Gandolfi</a>,
     Phys. Rev. Lett. \b 108 (2012) 081102.
 
-    \anchor Steiner13 Steiner13:
+    \anchor Steiner13tn Steiner13tn:
     <a href="http://dx.doi.org/10.1088/2041-8205/765/1/L5">
     A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
     Astrophys. J. Lett. \b 765 (2013) 5.
 
-    \anchor Steiner15 Steiner15:
+    \anchor Steiner15un Steiner15un:
     <a href="http://dx.doi.org/10.1103/PhysRevC.91.015804">
     A.W. Steiner, S. Gandolfi, F.J. Fattoyev, and W.G. Newton</a>,
     Phys. Rev. C \b 91 (2015) 015804.

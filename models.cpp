@@ -31,8 +31,7 @@ using namespace o2scl_const;
 using namespace bamr;
 
 void two_polytropes::setup_params(o2scl::cli &cl) {
-  kin_sym=17.0/hc_mev_fm;
-  p_kin_sym.d=&kin_sym;
+  p_kin_sym.d=&se.a;
   p_kin_sym.help="Kinetic part of symmetry energy.";
   cl.par_list.insert(make_pair("kin_sym",&p_kin_sym));
 
@@ -140,9 +139,6 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
     return;
   }
   
-  // Set kinetic part of symmetry energy
-  se.a=kin_sym;
-
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
   se.kprime=e.params[1];
@@ -296,9 +292,6 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
-
-  // Set kinetic part of symmetry energy
-  se.a=kin_sym;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
@@ -456,9 +449,6 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
-
-  // Set kinetic part of symmetry energy
-  se.a=kin_sym;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
@@ -624,9 +614,6 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
-
-  // Set kinetic part of symmetry energy
-  se.a=kin_sym;
 
   // Set hadronic EOS from entry information
   se.comp=e.params[0];
