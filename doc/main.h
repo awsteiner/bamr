@@ -138,15 +138,21 @@
     the \c _scr file. The easiest fix is just to change the initial 
     guess.
 
-    In order to make the output more efficient, the table 
-    representing the full Markov chain is divided up into 
-    tables with about 10,000 rows each. The total number of
-    tables is stored in <tt>n_chains</tt>.
+    In order to make the output more efficient, the table representing
+    the full Markov chain is divided up into tables with about 10,000
+    rows each, named \c markov_chain0, \c markov_chain1, and so on.
+    The total number of tables is stored in the integer
+    <tt>n_chains</tt>.
+
+    Different models have different optimal MC step sizes. The step
+    size for each parameter is chosen to be the difference betwen the
+    high and low limiting values divided by the value \c step_fac .
+    Increasing or decreasing this value may give better results.
 
     \hline
     \section model_sect EOS Model
 
-    Some EOS models are already provided. New models (i.e. new
+    Several EOS models are provided. New models (i.e. new
     children of the \ref bamr::model class) must perform several tasks
 
     - The function \ref bamr::model::compute_eos() should use the
@@ -221,6 +227,33 @@
           - If some masses are too large: \ref bamr::bamr_class::select_mass() 
         - Otherwise if there's no EOS: \ref bamr::model::compute_mr()
         - Test for causality
+
+    \hline
+    \section postproc_sect Postprocessing code
+
+    The \c process program contains some code to analyze the \c bamr
+    output files. Principally, it attempts to remove autocorrelations
+    from the data by separating the data into blocks, and using the
+    fluctuations in the mean of each block to determine the
+    uncertainty in the mean. For example, 
+
+    \code
+    ./process -set xscale 197.33 -hist L out.o2 bamr_0_out 
+    \endcode
+
+    creates a new file called \c out.o2 with an object of type \ref
+    o2scl::table which represents a probability distribution for \f$ L
+    \f$ from the \c bamr output file named \c bamr_0_out . The option
+    <tt>-set xscale 197.33</tt> ensures that the new table converts
+    from \f$ \mathrm{fm}^{-1} \f$ to \f$ \mathrm{Mev} \f$ . The five
+    columns are \c reps, \c avgs, \c errs, \c plus and \c minus, which
+    give:
+
+    - The central bin values for \f$ L \f$ (in \f$ \mathrm{MeV} \f$)
+    - The probability of the specified value
+    - The uncertainty in the probabiliy of the specified value
+    - Column 2 plus column 3
+    - Column 2 minus column 3
 
     \hline
     \section changelog_sect Recent Change Log

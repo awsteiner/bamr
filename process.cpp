@@ -1521,7 +1521,7 @@ namespace bamr {
 
       cli::parameter_string p_constraint;
       p_constraint.str=&constraint;
-      p_constraint.help="Constraint (default \"\").";
+      p_constraint.help="Constraint (default is an empty string).";
       cl.par_list.insert(make_pair("constraint",&p_constraint));
 
       // ---------------------------------------
