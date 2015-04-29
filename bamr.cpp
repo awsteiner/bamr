@@ -302,11 +302,11 @@ void bamr_class::fill_line
       double emax2=tab_eos->max("ed");
       if (eval<emax2) {
 	double pres_temp=tab_eos->interp("ed",eval,"pr");
-	if (pres_temp<pmax) {
-	  line.push_back(pres_temp);
-	} else {
-	  line.push_back(0.0);
-	}
+	//if (pres_temp<pmax) {
+	line.push_back(pres_temp);
+	//} else {
+	//line.push_back(0.0);
+	//}
       } else {
 	line.push_back(0.0);
       }
