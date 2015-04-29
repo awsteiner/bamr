@@ -102,7 +102,6 @@ namespace bamr {
     format_float ff;
     //@}
 
-
     /// \name Commands
     //@{
     /** \brief Create a table of autocorrelation data from a specified
@@ -498,21 +497,16 @@ namespace bamr {
       t.set("avgs",0,0.0);
       t.set("avgs",hist_size-1,0.0);
     
-      cout << "Here." << endl;
-      
       // Compute total integral
       double total=vector_integ_linear(hist_size,t["reps"],t["avgs"]);
       if (verbose>0) cout << "Total integral: " << total << endl;
   
-      cout << "Here " << total << endl;
       std::vector<double> locs;
       double lev;
 
       // Get one-sigma error ranges
       vector_invert_enclosed_sum(one_sigma*total,hist_size,
 				 t["reps"],t["avgs"],lev);
-
-      cout << "here: " << locs.size() << endl;
 
       vector_find_level(lev,hist_size,t["reps"],t["avgs"],locs);
       double xlo1=locs[0], xhi1=locs[0];
