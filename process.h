@@ -46,8 +46,6 @@
 #include <o2scl/interp.h>
 #include <o2scl/vector.h>
 #include <o2scl/hist.h>
-#include <o2scl/mcarlo_miser.h>
-#include <o2scl/fit_linear.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -65,7 +63,19 @@ namespace bamr {
   class process {
   
   protected:
-
+    
+    o2scl::cli::parameter_double p_xscale;
+    o2scl::cli::parameter_double p_yscale;
+    o2scl::cli::parameter_bool p_errors;
+    o2scl::cli::parameter_bool p_logx;
+    o2scl::cli::parameter_bool p_logy;
+    o2scl::cli::parameter_bool p_logz;
+    o2scl::cli::parameter_int p_hist_size;
+    o2scl::cli::parameter_int p_n_blocks;
+    o2scl::cli::parameter_int p_line_start;
+    o2scl::cli::parameter_int p_verbose;
+    o2scl::cli::parameter_string p_constraint;
+    
     /// \name Command-line parameters
     //@{
     /// Verbosity (default 1)
@@ -90,6 +100,12 @@ namespace bamr {
     int n_blocks;
     //@}
 
+#ifdef BAMR_READLINE
+    o2scl::cli_readline cl;
+#else
+    o2scl::cli cl;
+#endif
+    
     /// \name Axis limits from 'xlimits' and 'ylimits'
     //@{
     /// If true, x limits are set
@@ -170,6 +186,9 @@ namespace bamr {
      */
     int contours(std::vector<std::string> &sv, bool itive_com);
     //@}
+
+    /// Desc
+    virtual void setup_cli();
     
   public:
     

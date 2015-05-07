@@ -103,7 +103,10 @@ process: process.o process_main.o
 # ----------------------------------------------------------------------
 
 test:
-	bamr -run default.in -model twop -mcmc run1
+	mpirun -np 2 bamr -run default.in -model twop -mcmc run1
+
+test_nompi:
+	bamr_nompi -run default.in -model twop -mcmc run1
 
 # ----------------------------------------------------------------------
 # Internal 

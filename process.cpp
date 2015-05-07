@@ -1290,26 +1290,11 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
   n_blocks=0;
 }
 
-/** \brief Main public interface
- */
-void process::run(int argc, char *argv[]) {
-  
-  // ---------------------------------------
-  // Specify command-line option object
-    
-#ifdef BAMR_READLINE
-  cli_readline cl;
-#else
-  cli cl;
-#endif
-  cl.prompt="process> ";
-  cl.gnu_intro=false;
+void process::setup_cli() {
 
-  //sfit();
-    
   // ---------------------------------------
   // Set options
-    
+  
   static const int nopt=8;
   comm_option_s options[nopt]={
     {'x',"xlimits","Set histogram limits for first variable",0,3,
@@ -1383,67 +1368,66 @@ void process::run(int argc, char *argv[]) {
   // ---------------------------------------
   // Set parameters
     
-  cli::parameter_double p_xscale;
   p_xscale.d=&xscale;
   p_xscale.help="Scale parameter for first variable";
   cl.par_list.insert(make_pair("xscale",&p_xscale));
     
-  cli::parameter_double p_yscale;
   p_yscale.d=&yscale;
   p_yscale.help="Scale parameter for second variable";
   cl.par_list.insert(make_pair("yscale",&p_yscale));
 
-  cli::parameter_bool p_errors;
   p_errors.b=&errors;
   p_errors.help="If true, output more error information";
   cl.par_list.insert(make_pair("errors",&p_errors));
 
-  cli::parameter_bool p_logx;
   p_logx.b=&logx;
   p_logx.help="If true, use a logarithmic x-axis (default false).";
   cl.par_list.insert(make_pair("logx",&p_logx));
 
-  cli::parameter_bool p_logy;
   p_logy.b=&logy;
   p_logy.help="If true, use a logarithmic y-axis (default false).";
   cl.par_list.insert(make_pair("logy",&p_logy));
 
-  cli::parameter_bool p_logz;
   p_logz.b=&logz;
   p_logz.help="If true, use a logarithmic z-axis (default false).";
   cl.par_list.insert(make_pair("logz",&p_logz));
 
-  cli::parameter_int p_hist_size;
   p_hist_size.i=&hist_size_int;
   p_hist_size.help="Histogram size (default 100).";
   cl.par_list.insert(make_pair("hist_size",&p_hist_size));
 
-  cli::parameter_int p_n_blocks;
   p_n_blocks.i=&n_blocks;
   p_n_blocks.help="Number of blocks (default 20).";
   cl.par_list.insert(make_pair("n_blocks",&p_n_blocks));
 
-  cli::parameter_int p_line_start;
   p_line_start.i=&line_start;
   p_line_start.help=((string)"Number of initial rows to skip over ")+
     "when reading MCMC tables.";
   cl.par_list.insert(make_pair("line_start",&p_line_start));
 
-  cli::parameter_int p_verbose;
   p_verbose.i=&verbose;
   p_verbose.help="Verbosity (default 1).";
   cl.par_list.insert(make_pair("verbose",&p_verbose));
 
-  cli::parameter_string p_constraint;
   p_constraint.str=&constraint;
   p_constraint.help="Constraint (default is an empty string).";
   cl.par_list.insert(make_pair("constraint",&p_constraint));
 
+  cl.prompt="process> ";
+
+  return;
+}
+
+void process::run(int argc, char *argv[]) {
+  
   // ---------------------------------------
   // Process command-line arguments and run
-    
+  
+  setup_cli();
+  
   cl.run_auto(argc,argv);
-    
+
   return;
+
 }
 
