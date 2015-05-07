@@ -18,8 +18,15 @@
 
     Currently, \bm is dual-hosted as an SVN respostory at
     http://www.sourceforge.net/projects/bamr and a git repository at
-    http://www.github.com/awsteiner/bamr . This HTML documentation 
-    is hosted at http://bamr.sourceforge.net.
+    http://www.github.com/awsteiner/bamr . The corresponding entry at
+    the Astrophysics Source Code Library (ASCL) is
+    http://ascl.net/1408.020 and at the ADS is
+    http://adsabs.harvard.edu/abs/2014ascl.soft08020S . This HTML
+    documentation is hosted at http://bamr.sourceforge.net. While you
+    are not required to do so, please consider citing the ASCL entry
+    following the method described at
+    http://ascl.net/wordpress/?page_id=351 , and the relevant 
+    references in the bibliography below. 
 
     If you are considering using this code for your research, I
     encourage you to contact me so that I can help you with the
@@ -89,6 +96,7 @@
     \verbatim
     ./bamr -model twop -set max_time 43200 -run default.in -mcmc run2
     \endverbatim
+    which runs for 12 hours instead of the default 24 hours. 
 
     An example of an MPI invocation is
     \verbatim
@@ -106,10 +114,26 @@
     \hline
     \section infile_sect Data Files
 
-    The data files are HDF5 files (typically named with a <tt>.o2</tt>
-    extension) which contain one \ref o2scl::table3d object giving the
-    probability density of a neutron star observation as a slice in
-    that table.
+    The input data files are HDF5 files (typically named with a
+    <tt>.o2</tt> extension) which contain one \ref o2scl::table3d
+    object giving the probability density of one neutron star
+    observation as a slice in that table. The command
+    <tt>add-data</tt>, which adds a neutron star data set, takes four 
+    arguments (and a fifth optional argument):
+    - The ASCII name of the neutron star for the output chains
+    - The input data file name
+    - The name of the \ref o2scl::table3d slice in which the data 
+    is stored
+    - The initial guess for the neutron star's mass
+    - The fifth argument is the name of the \ref o2scl::table3d object
+    in the data file
+    
+    It is assumed that the "x" grid in the data file refers to the
+    radius and the "y" grid refers to the mass. The data need not
+    be normalized. By default \c bm renormalizes the data so that
+    the maximum probability is 1. If the parameter <tt>norm_max</tt>
+    is set to false, then the data is renormalized to have a total
+    integral of 1.
 
     \hline
     \section outfile_sect Output Files
@@ -118,12 +142,27 @@
     argument to the \c mcmc command, one set of files
     for each processor. Output includes files with the 
     following suffixes (where X is the processor index):
-    - \c _X_out: Main output file containing full Markov chain
+    - \c _X_out: Main output file containing full Markov chain(s)
     and most of the parameter values
     - \c _X_scr: Running output of entire simulation
 
     If the executable is run directly (without <tt>mpirun</tt>)
     then X is always zero.
+
+    Representations of the EOS and the \f$ M-R \f$ curve are stored on
+    grids for each Monte Carlo point. The number of points in the grid
+    is specified by the parameter <tt>grid_size</tt>. The energy
+    density grid is specified by the limits <tt>e_low</tt> and
+    <tt>e_high</tt>, the baryon density grid is specified by the
+    limits <tt>nb_low</tt> and <tt>nb_high</tt>, and the mass grid is
+    specified by the limits <tt>m_low</tt> and <tt>m_high</tt>.
+    A default run stores pressure as a function of energy density
+    (in columns with prefix <tt>P_</tt>), radius as a function
+    of mass (in columns with prefix <tt>R_</tt>), central pressure
+    as a function of mass (in columns with prefix <tt>PM_</tt>),
+    pressure as a function of baryon density (in columns with 
+    prefix <tt>Pnb_</tt>), and energy per baryon as a function
+    of baryon density (in columns with prefix <tt>EoA_</tt>).
 
     \hline
     \section detail_sect Some Details

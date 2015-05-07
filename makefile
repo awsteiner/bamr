@@ -31,13 +31,19 @@ READLINE_LIBS = -lreadline -lncurses
 # Basic optimization flags
 COMPILER_FLAGS = -std=c++0x -O3
 
+# ----------------------------------------------------------------------
+# Secondary variables
+# ----------------------------------------------------------------------
+
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
+
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
+
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
 
 # ----------------------------------------------------------------------
-# Basic bamr targets
+# Targets for bamr
 # ----------------------------------------------------------------------
 
 bamr: bamr.o entry.o models.o nstar_cold2.o main.o
@@ -60,7 +66,7 @@ bamr.o: bamr.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
-# Basic bamr targets
+# Targets for bamr_nompi
 # ----------------------------------------------------------------------
 
 bamr_nompi: bamr_nompi.o entry_nompi.o models_nompi.o \
@@ -85,7 +91,7 @@ bamr_nompi.o: bamr.cpp
 	$(CXX) $(ALL_FLAGS) -o bamr_nompi.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
-# process
+# Targets for process
 # ----------------------------------------------------------------------
 
 process.o: process.cpp process.h
