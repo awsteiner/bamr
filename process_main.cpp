@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2013-2015, Andrew W. Steiner
+  Copyright (C) 2012-2015, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -20,33 +20,12 @@
 
   -------------------------------------------------------------------
 */
-#ifndef BAMR_NO_MPI
-#include <mpi.h>
-#endif
 
-#include "bamr.h"
+#include "process.h"
 
 int main(int argc, char *argv[]) {
-
-  // ---------------------------------------
-  // Init MPI
-  
-#ifndef BAMR_NO_MPI
-  MPI_Init(&argc,&argv);
-#endif
-
-  // ---------------------------------------
-  // Main bamr object 
-  
-  bamr::bamr_class b;
-  b.run(argc,argv);
-  
-  // ---------------------------------------
-  // Finalize MPI
-
-#ifndef BAMR_NO_MPI
-  MPI_Finalize();
-#endif
-
+  cout.setf(ios::scientific);
+  bamr::process pc;
+  pc.run(argc,argv);
   return 0;
 }
