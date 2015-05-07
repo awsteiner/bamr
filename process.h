@@ -121,9 +121,9 @@ namespace bamr {
     /// Constraint to apply to the data
     std::string constraint;
     /// Contour levels set in 'contours'
-    vector<double> cont_levels;
+    std::vector<double> cont_levels;
     /// Formatter for floating point numbers
-    format_float ff;
+    o2scl::format_float ff;
     //@}
 
     /// \name Commands
@@ -165,10 +165,14 @@ namespace bamr {
     /** \brief Combine several <tt>bamr</tt> output files
      */
     int combine(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Specify which contour levels to use
+     */
+    int contours(std::vector<std::string> &sv, bool itive_com);
     //@}
     
   public:
-
+    
     /// Create the process object
     process();
     

@@ -23,6 +23,8 @@
 
 #include "process.h"
 
+using namespace std;
+
 int main(int argc, char *argv[]) {
   cout.setf(ios::scientific);
   bamr::process pc;

@@ -20,7 +20,7 @@ INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC) -I$(BOOST_INC) -I$(GSL_INC) \
 MPI_CXX = mpic++ 
 
 # Generic (no MPI necessary) C++ compiler
-CXX = g++-4.9
+# CXX = 
 
 # Comment out these two variables if you do not have GNU readline or
 # if O2scl was compiled without readline support
@@ -136,6 +136,6 @@ docp: empty
 	cd doc/latex; $(MAKE)
 
 clean:
-	rm -f *.o bamr bamr_nompi
+	rm -f *.o bamr bamr_nompi process
 
 
