@@ -1,7 +1,7 @@
-# --------------------------------------------------------
-# Variables which must be modified. These default values 
-# will probably not work on your system.
-# --------------------------------------------------------
+# ----------------------------------------------------------------------
+# This section has variables which may need to be modified. The rest
+# of the makefile should not need too much editing.
+# ----------------------------------------------------------------------
 
 # This variable should include the directories for the O2scl, GSL, and
 # HDF5 libraries. In my configuration, I use the environment variables
@@ -17,10 +17,10 @@ INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC) -I$(BOOST_INC) -I$(GSL_INC) \
 	-I$(EIGEN_INC) -I$(ARMA_INC)
 
 # C++ compiler
-MPI_CXX = mpic++ 
+# MPI_CXX = mpic++ 
 
 # Generic (no MPI necessary) C++ compiler
-# CXX = 
+# CXX = g++
 
 # Comment out these two variables if you do not have GNU readline or
 # if O2scl was compiled without readline support
@@ -28,76 +28,86 @@ READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
 
 READLINE_LIBS = -lreadline -lncurses
 
-# Some basic warning and optimization flags
-COMPILER_FLAGS = -Wreturn-type -Wparentheses -Wall -Wno-unused -O3 \
-	-std=c++0x -Wno-literal-suffix
+# Basic optimization flags
+COMPILER_FLAGS = -std=c++0x -O3
 
-# --------------------------------------------------------
-# Basic bamr targets
-# --------------------------------------------------------
-
-FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
-FLAGS2 = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
-
+ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
 
+# ----------------------------------------------------------------------
+# Basic bamr targets
+# ----------------------------------------------------------------------
+
 bamr: bamr.o entry.o models.o nstar_cold2.o main.o
-	$(MPI_CXX) $(FLAGS) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
+	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
 		entry.o models.o bamr.o $(LIB) 
 
 main.o: main.cpp 
-	$(MPI_CXX) $(FLAGS) -o main.o -c main.cpp
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
 
 nstar_cold2.o: nstar_cold2.cpp 
-	$(MPI_CXX) $(FLAGS) -o nstar_cold2.o -c nstar_cold2.cpp
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o nstar_cold2.o -c nstar_cold2.cpp
 
 models.o: models.cpp 
-	$(MPI_CXX) $(FLAGS) -o models.o -c models.cpp
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o models.o -c models.cpp
 
 entry.o: entry.cpp 
-	$(MPI_CXX) $(FLAGS) -o entry.o -c entry.cpp
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o entry.o -c entry.cpp
 
 bamr.o: bamr.cpp 
-	$(MPI_CXX) $(FLAGS) -o bamr.o -c bamr.cpp
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
+
+# ----------------------------------------------------------------------
+# Basic bamr targets
+# ----------------------------------------------------------------------
 
 bamr_nompi: bamr_nompi.o entry_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o
-	$(CXX) $(FLAGS2) $(LIB_DIRS) -o bamr_nompi main_nompi.o \
+	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi main_nompi.o \
 		nstar_cold2_nompi.o entry_nompi.o models_nompi.o \
 		bamr_nompi.o $(LIB) 
 
 main_nompi.o: main.cpp 
-	$(CXX) $(FLAGS2) -o main_nompi.o -c main.cpp
+	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
 
 nstar_cold2_nompi.o: nstar_cold2.cpp 
-	$(CXX) $(FLAGS2) -o nstar_cold2_nompi.o -c nstar_cold2.cpp
+	$(CXX) $(ALL_FLAGS) -o nstar_cold2_nompi.o -c nstar_cold2.cpp
 
 models_nompi.o: models.cpp 
-	$(CXX) $(FLAGS2) -o models_nompi.o -c models.cpp
+	$(CXX) $(ALL_FLAGS) -o models_nompi.o -c models.cpp
 
 entry_nompi.o: entry.cpp 
-	$(CXX) $(FLAGS2) -o entry_nompi.o -c entry.cpp
+	$(CXX) $(ALL_FLAGS) -o entry_nompi.o -c entry.cpp
 
 bamr_nompi.o: bamr.cpp 
-	$(CXX) $(FLAGS2) -o bamr_nompi.o -c bamr.cpp
+	$(CXX) $(ALL_FLAGS) -o bamr_nompi.o -c bamr.cpp
+
+# ----------------------------------------------------------------------
+# process
+# ----------------------------------------------------------------------
+
+process.o: process.cpp process.h
+	$(CXX) $(ALL_FLAGS) -o process.o -c process.cpp
+
+process_main.o: process_main.cpp
+	$(CXX) $(ALL_FLAGS) -o process_main.o -c process_main.cpp
+
+process: process.o process_main.o
+	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o process process_main.o \
+		process.o $(LIB) 
+
+# ----------------------------------------------------------------------
+# test
+# ----------------------------------------------------------------------
 
 test:
 	bamr -run default.in -model twop -mcmc run1
 
-process.o: process.cpp process.h
-	$(CXX) $(FLAGS2) -o process.o -c process.cpp
-
-process_main.o: process_main.cpp
-	$(CXX) $(FLAGS2) -o process_main.o -c process_main.cpp
-
-process: process.o process_main.o
-	$(CXX) $(FLAGS2) $(LIB_DIRS) -o process process.o process_main.o \
-		$(LIB) 
-
-# --------------------------------------------------------
+# ----------------------------------------------------------------------
 # Internal 
-# --------------------------------------------------------
+# ----------------------------------------------------------------------
 
 empty:
 
@@ -129,8 +139,6 @@ update-tags:
 doc: empty
 	cd doc; doxygen doxyfile
 	cat doc/doxygen.log
-#	cd doc; perl rep.perl < html/search/search.css > temp.css
-#	cd doc; mv temp.css html/search/search.css
 
 docp: empty
 	cd doc/latex; $(MAKE)
