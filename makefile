@@ -140,6 +140,9 @@ sf-web:
 	cd doc/html; rsync -Cavzu * \
 		awsteiner,bamr@web.sourceforge.net:htdocs
 
+utk-web:
+	cd doc/html; cp -r * $(HOME)/svn/int3/web/utk/bamr
+
 update-tags:
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
 	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .

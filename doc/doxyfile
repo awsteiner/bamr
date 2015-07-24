@@ -1178,7 +1178,7 @@ DOCSET_BUNDLE_ID = org.doxygen.Project
 # The default value is: org.doxygen.Publisher. This tag requires that
 # the tag GENERATE_DOCSET is set to YES.
 
-DOCSET_PUBLISHER_ID = net.sourceforge.bamr
+DOCSET_PUBLISHER_ID = edu.utk.web
 
 # The DOCSET_PUBLISHER_NAME tag identifies the documentation
 # publisher. The default value is: Publisher. This tag requires that
@@ -1985,7 +1985,7 @@ SKIP_FUNCTION_MACROS = YES
 # the directory in which doxygen is run, you must also specify the
 # path to the tagfile here.
 
-TAGFILES = o2scl.tag=http://o2scl.sourceforge.net/o2scl/html o2scl_part.tag=http://o2scl.sourceforge.net/o2scl/part/html o2scl_eos.tag=http://o2scl.sourceforge.net/o2scl/eos/html
+TAGFILES = o2scl.tag=http://web.utk.edu/~asteine1/o2scl/html o2scl_part.tag=http://web.utk.edu/~asteine1/o2scl/part/html o2scl_eos.tag=http://web.utk.edu/~asteine1/o2scl/eos/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will
 # create a tag file that is based on the input files it reads. See

@@ -16,17 +16,16 @@
 
     This is a beta version. Use at your own risk.
 
-    Currently, \bm is dual-hosted as an SVN respostory at
-    http://www.sourceforge.net/projects/bamr and a git repository at
+    Currently, \bm is hosted as a git repository at
     http://www.github.com/awsteiner/bamr . The corresponding entry at
     the Astrophysics Source Code Library (ASCL) is
     http://ascl.net/1408.020 and at the ADS is
     http://adsabs.harvard.edu/abs/2014ascl.soft08020S . This HTML
-    documentation is hosted at http://bamr.sourceforge.net. While you
-    are not required to do so, please consider citing the ASCL entry
-    following the method described at
-    http://ascl.net/wordpress/?page_id=351 , and the relevant 
-    references in the bibliography below. 
+    documentation is hosted at http://web.utk.edu/~asteine1/bamr .
+    While you are not required to do so, please consider citing the
+    ASCL entry following the method described at
+    http://ascl.net/wordpress/?page_id=351 , and the relevant
+    references in the bibliography below.
 
     If you are considering using this code for your research, I
     encourage you to contact me so that I can help you with the
@@ -58,10 +57,10 @@
     (versions 1.8.4 and later), 
     \htmlonly
     the current development version of
-    <a href="http://o2scl.sourceforge.net">O<span style='position:
+    <a href="http://web.utk.edu/~asteine1/o2scl">O<span style='position:
     relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> (in the
     <tt>branches/dev</tt> folder of the 
-    <a href="http://o2scl.sourceforge.net">O<span style='position:
+    <a href="http://web.utk.edu/~asteine1/o2scl">O<span style='position:
     relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> distribution),
     \endhtmlonly
     \latexonly
