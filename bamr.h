@@ -111,6 +111,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_e_high;
     o2scl::cli::parameter_double p_m_low;
     o2scl::cli::parameter_double p_m_high;
+    o2scl::cli::parameter_double p_mvsr_pr_inc;
     //@}
 
     /** \name Histogram limits
@@ -133,6 +134,9 @@ namespace bamr {
 
     /// \name Other parameters accessed by 'set' and 'get'
     //@{
+    /// Pressure increment for the M vs. R curve (default 1.1)
+    double mvsr_pr_inc;
+
     /** \brief The number of MCMC successes between file updates
      */
     int file_update_iters;

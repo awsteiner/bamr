@@ -83,6 +83,7 @@ bamr_class::bamr_class() {
   inc_baryon_mass=false;
   max_iters=0;
   norm_max=true;
+  mvsr_pr_inc=1.1;
 
   // -----------------------------------------------------------
   // Grid limits
@@ -938,6 +939,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     }
 
     // Solve for M vs. R curve
+    tsr->princ=mvsr_pr_inc;
     int info=tsr->mvsr();
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << endl;
@@ -2176,6 +2178,10 @@ void bamr_class::setup_cli() {
   p_inc_baryon_mass.b=&inc_baryon_mass;
   p_inc_baryon_mass.help="";
   cl.par_list.insert(make_pair("inc_baryon_mass",&p_inc_baryon_mass));
+
+  p_mvsr_pr_inc.d=&mvsr_pr_inc;
+  p_mvsr_pr_inc.help="";
+  cl.par_list.insert(make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
 
   // --------------------------------------------------------
 
