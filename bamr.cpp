@@ -154,11 +154,11 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
   for(size_t i=0;i<nsources;i++) {
-    s+=((string)"R_")+source_names[i]+" ";
+    s+=((string)"Rns_")+source_names[i]+" ";
     u+="km ";
   }
   for(size_t i=0;i<nsources;i++) {
-    s+=((string)"M_")+source_names[i]+" ";
+    s+=((string)"Mns_")+source_names[i]+" ";
     u+="Msun ";
   }
   if (has_eos) {
