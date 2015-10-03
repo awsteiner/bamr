@@ -72,6 +72,7 @@ bamr_class::bamr_class() {
   // Minimum neutron star mass
   min_mass=0.8;
   debug_star=false;
+  debug_line=false;
   debug_eos=false;
   output_next=true;
   baryon_density=true;
@@ -396,6 +397,20 @@ void bamr_class::add_measurement
       O2SCL_ERR("Alignment problem.",exc_efailed);
     }
     tc.line_of_data(line.size(),line);
+
+    if (debug_line) {
+      vector<string> sc_in, sc_out;
+      for(size_t k=0;k<line.size();k++) {
+	sc_in.push_back(tc.get_column_name(k)+": "+o2scl::dtos(line[k]));
+      }
+      o2scl::screenify(line.size(),sc_in,sc_out);
+      for(size_t k=0;k<sc_out.size();k++) {
+	cout << sc_out[k] << endl;
+      }
+      cout << "Press a key and enter to continue." << endl;
+      char ch;
+      cin >> ch;
+    }
     
   } else if (tc.get_nlines()>0) {
     tc.set("mult",tc.get_nlines()-1,
@@ -433,6 +448,7 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.seti("baryon_density",baryon_density);
   hf.seti("max_iters",max_iters);
   hf.seti("debug_load",debug_load);
+  hf.seti("debug_line",debug_line);
   hf.seti("debug_eos",debug_eos);
   hf.seti("debug_star",debug_star);
   hf.seti("best_detail",best_detail);
@@ -2154,6 +2170,11 @@ void bamr_class::setup_cli() {
   p_debug_load.help=((string)"If true, output info on loaded data ")+
     "(default false).";
   cl.par_list.insert(make_pair("debug_load",&p_debug_load));
+  
+  p_debug_line.b=&debug_line;
+  p_debug_line.help=((string)"If true, output each line as its stored ")+
+    "(default false).";
+  cl.par_list.insert(make_pair("debug_line",&p_debug_line));
   
   p_debug_eos.b=&debug_eos;
   p_debug_eos.help=((string)"If true, output initial equation of state ")+

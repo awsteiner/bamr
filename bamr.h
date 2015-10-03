@@ -99,6 +99,7 @@ namespace bamr {
     o2scl::cli::parameter_int p_file_update_iters;
     o2scl::cli::parameter_bool p_norm_max;
     o2scl::cli::parameter_bool p_debug_star;
+    o2scl::cli::parameter_bool p_debug_line;
     o2scl::cli::parameter_bool p_debug_load;
     o2scl::cli::parameter_bool p_debug_eos;
     o2scl::cli::parameter_bool p_output_next;
@@ -145,6 +146,10 @@ namespace bamr {
 	files (default false)
     */
     bool debug_load;
+
+    /** \brief If true, output each line of the table as it's stored
+     */
+    bool debug_line;
 
     /** \brief If true, normalize the data distributions so that the
 	max is one, otherwise, normalize so that the integral is one
