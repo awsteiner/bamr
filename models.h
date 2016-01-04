@@ -657,10 +657,13 @@ namespace bamr {
     
     virtual ~qmc_fixp();
 
+    /// \name The energy densities which define the grid
+    //@{
     double ed1;
     double ed2;
     double ed3;
     double ed4;
+    //@}
     
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
     double rho0;

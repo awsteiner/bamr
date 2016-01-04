@@ -2197,11 +2197,13 @@ void bamr_class::setup_cli() {
   cl.par_list.insert(make_pair("use_crust",&p_use_crust));
 
   p_inc_baryon_mass.b=&inc_baryon_mass;
-  p_inc_baryon_mass.help="";
+  p_inc_baryon_mass.help=((string)"If true, compute the baryon mass ")+
+    "(default false)";
   cl.par_list.insert(make_pair("inc_baryon_mass",&p_inc_baryon_mass));
 
   p_mvsr_pr_inc.d=&mvsr_pr_inc;
-  p_mvsr_pr_inc.help="";
+  p_mvsr_pr_inc.help=((string)"The multiplicative pressure increment for ")+
+    "the TOV solver (default 1.1).";
   cl.par_list.insert(make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
 
   // --------------------------------------------------------
