@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2015, Andrew W. Steiner
+  Copyright (C) 2012-2016, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -728,10 +728,11 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
 
   // Compute the EOS first
   if (has_eos) {
+    modref.copy_params(*modp);
     modref.compute_eos(e,success,scr_out);
     if (success!=ix_success) return;
   }
-
+  
   // Ensure we're using linear interpolation
   o2_shared_ptr<table_units<> >::type tab_eos=modref.cns.get_eos_results();
 

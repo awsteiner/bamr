@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2015, Andrew W. Steiner
+  Copyright (C) 2012-2016, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -45,7 +45,11 @@ namespace bamr {
 
   public:
 
-    /// TOV solver and storage for the EOS table
+    /** \brief TOV solver and storage for the EOS table
+	
+	The value of \ref o2scl::nstar_cold::nb_start is set to
+	0.01 by the constructor
+     */
     nstar_cold2 cns;
 
     model() {
@@ -53,32 +57,6 @@ namespace bamr {
     }
 
     virtual ~model() {}
-
-    /** \brief Setup new parameters */
-    virtual void setup_params(o2scl::cli &cl) {
-      return;
-    }
-
-    /** \brief Remove model-specific parameters */
-    virtual void remove_params(o2scl::cli &cl) {
-      return;
-    }
-
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e)=0;
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e)=0;
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i)=0;
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i)=0;
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -107,6 +85,43 @@ namespace bamr {
       return;
     }
 
+    /// \name Functions for MCMC parameters
+    //@{
+    /** \brief Set the lower boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void low_limits(entry &e)=0;
+
+    /** \brief Set the upper boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void high_limits(entry &e)=0;
+
+    /// Return the name of parameter with index \c i
+    virtual std::string param_name(size_t i)=0;
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i)=0;
+    //@}
+
+    /// \name Functions for model parameters fixed during the MCMC run
+    //@{
+    /** \brief Setup model parameters */
+    virtual void setup_params(o2scl::cli &cl) {
+      return;
+    }
+
+    /** \brief Remove model parameters */
+    virtual void remove_params(o2scl::cli &cl) {
+      return;
+    }
+    
+    /** \brief Copy model parameters */
+    virtual void copy_params(model &m) {
+      return;
+    }
+    //@}
+    
   };
 
   /** \brief Two polytropes
@@ -149,9 +164,6 @@ namespace bamr {
     /// Parameter for kinetic part of symmetry energy
     o2scl::cli::parameter_double p_kin_sym;
 
-    /// Low-density EOS
-    o2scl::eos_had_schematic se;
-
     /// Neutron for \ref se
     o2scl::fermion neut;
 
@@ -166,11 +178,20 @@ namespace bamr {
 
   public:
 
-    /** \brief Setup new model parameters */
+    /// Low-density EOS
+    o2scl::eos_had_schematic se;
+
+    /// \name Functions for model parameters fixed during the MCMC run
+    //@{
+    /** \brief Setup model parameters */
     virtual void setup_params(o2scl::cli &cl);
 
-    /** \brief Remove model-specific parameters */
+    /** \brief Remove model parameters */
     virtual void remove_params(o2scl::cli &cl);
+    
+    /** \brief Copy model parameters */
+    virtual void copy_params(model &m);
+    //@}
 
     /** \brief A point to calibrate the baryon density with
 
@@ -436,6 +457,9 @@ namespace bamr {
   /** \brief A strange quark star model
 
       Referred to as Model E in \ref Steiner13tn. 
+
+      \todo This shouldn't be a child of two_polytropes because
+      it doesn't use the eos_had_schematic object. 
   */
   class quark_star : public two_polytropes {
   
@@ -528,6 +552,9 @@ namespace bamr {
       to the second is at the energy density in <tt>trans1</tt> which
       is between 2.0 and 8.0 \f$ \mathrm{fm}^{-4} \f$. The upper limit
       on polytropic indices has since been changed from 2.0 to 4.0.
+
+      \todo This shouldn't be a child of two_polytropes because
+      it doesn't use the eos_had_schematic object. 
   */
   class qmc_neut : public two_polytropes {
 
@@ -600,6 +627,9 @@ namespace bamr {
       indices are allowed to be between 0.2 and 8.0 and the transition
       densities are allowed to be between 0.75 and 8.0 \f$
       \mathrm{fm}^{-4} \f$.
+
+      \todo This shouldn't be a child of two_polytropes because
+      it doesn't use the eos_had_schematic object. 
   */
   class qmc_twop : public two_polytropes {
 
@@ -648,6 +678,9 @@ namespace bamr {
       high-density EOS is a set of line-segments, similar to \ref
       bamr::fixed_pressure. The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
+
+      \todo This shouldn't be a child of two_polytropes because
+      it doesn't use the eos_had_schematic object. 
   */
   class qmc_fixp : public two_polytropes {
 

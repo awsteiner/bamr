@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2015, Andrew W. Steiner
+  Copyright (C) 2012-2016, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -55,11 +55,15 @@ namespace bamr {
 
   /** \brief Statistical analysis of EOS from M and R constraints
 
-      \todo Right now the EOS is rejected if the pressure decreases
-      at any density, when in reality, it should only check if 
-      the pressure decreases at a density below that of the central
-      density of the maximum mass star. This isn't a problem for
-      current EOSs, but could be a problem in the future.
+      \note Right now the EOS is rejected if the pressure decreases
+      with increasing density at any density, even if it happens at a
+      density which is larger than the central density of the maximum
+      mass star.
+      \comment
+      1/6/16 - I originally thought this was a problem, but
+      actually there is no problem here, as EOSs can always be
+      fixed to ensure that pressures always increase. 
+      \endcomment
 
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits
@@ -75,6 +79,12 @@ namespace bamr {
       \todo Help with plots
 
       \future Allow non-tabulated data specified as a function?
+
+      \future The code internally stores two copies of the model
+      objects, which makes things a bit easier to handle MC
+      rejections, but also requires models to have this funny
+      copy_params() function to copy model parameters between model
+      objects. There's probably a better way to do this.
   */
   class bamr_class {
     

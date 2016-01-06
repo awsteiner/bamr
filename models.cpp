@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2015, Andrew W. Steiner
+  Copyright (C) 2012-2016, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -35,6 +35,14 @@ void two_polytropes::setup_params(o2scl::cli &cl) {
   p_kin_sym.help="Kinetic part of symmetry energy.";
   cl.par_list.insert(make_pair("kin_sym",&p_kin_sym));
 
+  return;
+}
+
+void two_polytropes::copy_params(model &m) {
+  // Dynamic casts throw exceptions when they fail
+  two_polytropes &tp=dynamic_cast<two_polytropes &>(m);
+  se.a=tp.se.a;
+  
   return;
 }
 

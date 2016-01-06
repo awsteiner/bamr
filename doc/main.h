@@ -52,7 +52,7 @@
     
     The \bm executable requires the installation of 
     <a href="http://www.gnu.org/software/gsl">GSL</a> 
-    (versions 1.15 and later),     
+    (versions 1.16 and later),     
     <a href="http://www.hdfgroup.org">HDF5</a> 
     (versions 1.8.4 and later), 
     \htmlonly
@@ -316,7 +316,7 @@
     \anchor Bedaque15sv Bedaque15sv:
     <a href="http://dx.doi.org/10.1103/PhysRevLett.114.031103">
     P. Bedaque and A.W. Steiner</a>,
-    Phys. Rev. Lett. \b 114 (2015).
+    Phys. Rev. Lett. \b 114 (2015) 031103.
 
     \anchor Lattimer14co Lattimer14co:
     <a href="http://dx.doi.org/10.1140/epja/i2014-14040-y">
