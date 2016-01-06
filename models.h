@@ -43,6 +43,14 @@ namespace bamr {
    */
   class model {
 
+  protected:
+
+    /// The fiducial baryon density
+    double nb_n1;
+    
+    /// The fiducial energy density
+    double nb_e1;
+
   public:
 
     /** \brief TOV solver and storage for the EOS table
@@ -74,8 +82,8 @@ namespace bamr {
     /** \brief A point to calibrate the baryon density with
      */
     virtual void baryon_density_point(double &n1, double &e1) {
-      n1=0.0;
-      e1=0.0;
+      n1=nb_n1;
+      e1=nb_e1;
       return;
     }
 
@@ -170,12 +178,6 @@ namespace bamr {
     /// Proton for \ref se
     o2scl::fermion prot;
     
-    /// The fiducial baryon density
-    double nb_n1;
-
-    /// The fiducial energy density
-    double nb_e1;
-
   public:
 
     /// Low-density EOS
@@ -193,22 +195,13 @@ namespace bamr {
     virtual void copy_params(model &m);
     //@}
 
-    /** \brief A point to calibrate the baryon density with
-
-        This just returns \ref nb_n1 and \ref nb_e1, which
-	are computed in \ref compute_eos().
-    */
-    virtual void baryon_density_point(double &n1, double &e1) {
-      n1=nb_n1;
-      e1=nb_e1;
-      return;
-    }
-
     /// Create a model object
     two_polytropes();
 
     virtual ~two_polytropes() {}
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -224,6 +217,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -264,6 +258,8 @@ namespace bamr {
 
     virtual ~alt_polytropes() {}
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -279,6 +275,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -329,6 +326,8 @@ namespace bamr {
 
     virtual ~fixed_pressure() {}
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -344,6 +343,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -427,6 +427,8 @@ namespace bamr {
   
     virtual ~generic_quarks() {}
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -442,6 +444,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -457,11 +460,8 @@ namespace bamr {
   /** \brief A strange quark star model
 
       Referred to as Model E in \ref Steiner13tn. 
-
-      \todo This shouldn't be a child of two_polytropes because
-      it doesn't use the eos_had_schematic object. 
   */
-  class quark_star : public two_polytropes {
+  class quark_star : public model {
   
   public:
 
@@ -506,6 +506,8 @@ namespace bamr {
     /// Compute the pressure as a function of the chemical potential
     double pressure2(double mu);
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -521,6 +523,7 @@ namespace bamr {
   
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -552,11 +555,8 @@ namespace bamr {
       to the second is at the energy density in <tt>trans1</tt> which
       is between 2.0 and 8.0 \f$ \mathrm{fm}^{-4} \f$. The upper limit
       on polytropic indices has since been changed from 2.0 to 4.0.
-
-      \todo This shouldn't be a child of two_polytropes because
-      it doesn't use the eos_had_schematic object. 
   */
-  class qmc_neut : public two_polytropes {
+  class qmc_neut : public model {
 
   public:
   
@@ -582,6 +582,8 @@ namespace bamr {
     /// Gaussian distribution for proton correction factor
     o2scl::prob_dens_gaussian pdg;
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
         masses, and radii
     */
@@ -597,6 +599,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
         \c e and put output in \c tab_eos
@@ -627,11 +630,8 @@ namespace bamr {
       indices are allowed to be between 0.2 and 8.0 and the transition
       densities are allowed to be between 0.75 and 8.0 \f$
       \mathrm{fm}^{-4} \f$.
-
-      \todo This shouldn't be a child of two_polytropes because
-      it doesn't use the eos_had_schematic object. 
   */
-  class qmc_twop : public two_polytropes {
+  class qmc_twop : public model {
 
   public:
   
@@ -645,6 +645,8 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double rho_trans;
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -660,6 +662,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -678,11 +681,8 @@ namespace bamr {
       high-density EOS is a set of line-segments, similar to \ref
       bamr::fixed_pressure. The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
-
-      \todo This shouldn't be a child of two_polytropes because
-      it doesn't use the eos_had_schematic object. 
   */
-  class qmc_fixp : public two_polytropes {
+  class qmc_fixp : public model {
 
   public:
   
@@ -704,6 +704,8 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double rho_trans;
 
+    /// \name Functions for MCMC parameters
+    //@{
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
@@ -719,6 +721,7 @@ namespace bamr {
 
     /// Return the unit of parameter with index \c i
     virtual std::string param_unit(size_t i);
+    //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
