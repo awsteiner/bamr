@@ -121,6 +121,35 @@ test_nompi:
 
 empty:
 
+utk-web:
+	cd doc/html; cp -r * $(HOME)/wcs/int3/web/utk/bamr
+	cd $(HOME)/wcs/int3/web; make put
+
+update-tags:
+	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
+
+doc: empty
+	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
+	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
+	git rev-parse HEAD | awk \
+		'{print "<a href=\"http://github.com/awsteiner/bamr/tree/" $$1 "\">" $$1 "</a> ."}' \
+		 > doc/rev.txt
+	cd doc; doxygen doxyfile
+	cat doc/doxygen.log
+
+clean:
+	rm -f *.o bamr bamr_nompi process
+
+# ----------------------------------------------------------------------
+# Old
+# ----------------------------------------------------------------------
+
+docp: empty
+	cd doc/latex; $(MAKE)
+
 VERSION = 0.2
 
 dist:	
@@ -137,26 +166,5 @@ dist:
 dist-clean:
 	rm -rf bamr-$(VERSION).tar.gz bamr-$(VERSION)
 
-sf-web:
-	cd doc/html; rsync -Cavzu * \
-		awsteiner,bamr@web.sourceforge.net:htdocs
-
-utk-web:
-	cd doc/html; cp -r * $(HOME)/svn/int3/web/utk/bamr
-
-update-tags:
-	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
-
-doc: empty
-	cd doc; doxygen doxyfile
-	cat doc/doxygen.log
-
-docp: empty
-	cd doc/latex; $(MAKE)
-
-clean:
-	rm -f *.o bamr bamr_nompi process
 
 

@@ -5,14 +5,17 @@
 
     \section ug_section User's Guide
     
-    This document describes the open-source MPI implementation of a
-    Bayesian analysis of mass and radius data to determine the mass
+    This User's Guide describes the open-source MPI implementation of
+    a Bayesian analysis of mass and radius data to determine the mass
     versus radius curve and the equation of state of dense matter.
     This package will principally be useful for those physicists and
     astrophysicists who are already familiar with C++ and are
-    interested in modifying this code for their own use.
+    interested in modifying this code for their own use. This 
+    documentation was generated from git commit
+    \htmlinclude rev.txt
 
-    This code was originally supported by Chandra grant TM1-12003X.
+    This code was originally supported by Chandra grant
+    <a href="http://cxc.harvard.edu/target_lists/cycle12/theory12.html#12400566">TM1-12003X</a>.
 
     This is a beta version. Use at your own risk.
 
