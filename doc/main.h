@@ -321,6 +321,12 @@
     P. Bedaque and A.W. Steiner</a>,
     Phys. Rev. Lett. \b 114 (2015) 031103.
 
+    \anchor Fryer15tf Fryer15tf:
+    <a href="http://dx.doi.org/10.1088/0004-637X/812/1/24">
+    C.L. Fryer, K. Belzzynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
+    A.W. Steiner</a>,
+    Astrophys. J. \b 812 (2015) 1.
+
     \anchor Lattimer14co Lattimer14co:
     <a href="http://dx.doi.org/10.1140/epja/i2014-14040-y">
     J.M. Lattimer and A.W. Steiner</a>,
@@ -330,6 +336,12 @@
     <a href="http://dx.doi.org/10.1088/0004-637X/784/2/123">
     J.M. Lattimer and A.W. Steiner</a>,
     Astrophys. J. \b 784 (2014) 123.
+
+    \anchor Nattila15eo Nattila15eo:
+    <a href="http://arxiv.org/abs/1509.06561">
+    J. Nattila, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
+    J. Poutanen</a>,
+    arxiv.org/1509.06561.
 
     \anchor Steiner10te Steiner10te:
     <a href="http://dx.doi.org/10.1088/0004-637X/722/1/33">
@@ -350,6 +362,11 @@
     <a href="http://dx.doi.org/10.1103/PhysRevC.91.015804">
     A.W. Steiner, S. Gandolfi, F.J. Fattoyev, and W.G. Newton</a>,
     Phys. Rev. C \b 91 (2015) 015804.
+
+    \anchor Steiner16ns Steiner16ns:
+    <a href="http://arxiv.org/abs/1510.07515">
+    A.W. Steiner, J.M. Lattimer, and E.F. Brown</a>,
+    Eur. Phys. J. A (in press).
 
     \page license_page Licensing
    
