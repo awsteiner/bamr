@@ -307,8 +307,9 @@
     \section ack_sect Acknowledgements
 
     I would like to thank Paulo Bedaque, Ed Brown, Farrukh Fattoyev,
-    Stefano Gandolfi, Jim Lattimer, and Will Newton for their
-    collaboration on these projects.
+    Chris Fryer, Stefano Gandolfi, Jim Lattimer, Joonas
+    N&auml;ttil&aml; and Will Newton for their collaboration on these
+    projects.
 
     \hline
     \section ref_sect Bibliography
@@ -323,7 +324,7 @@
 
     \anchor Fryer15tf Fryer15tf:
     <a href="http://dx.doi.org/10.1088/0004-637X/812/1/24">
-    C.L. Fryer, K. Belzzynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
+    C.L. Fryer, K. Belzynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
     A.W. Steiner</a>,
     Astrophys. J. \b 812 (2015) 1.
 
@@ -339,7 +340,7 @@
 
     \anchor Nattila15eo Nattila15eo:
     <a href="http://arxiv.org/abs/1509.06561">
-    J. Nattila, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
+    J. N&auml;ttil&auml, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
     J. Poutanen</a>,
     arxiv.org/1509.06561.
 
