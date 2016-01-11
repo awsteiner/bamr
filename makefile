@@ -66,6 +66,20 @@ bamr.o: bamr.cpp bamr.h models.o entry.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
+# Help target
+# ----------------------------------------------------------------------
+
+help:
+	@echo "Main targets:"
+	@echo "  bamr"
+	@echo "  process"
+	@echo "  bamr_nompi"
+	@echo "Developer targets:"
+	@echo "  doc"
+	@echo "  utk-web"
+	@echo "  update-tags"
+
+# ----------------------------------------------------------------------
 # Targets for bamr_nompi
 # ----------------------------------------------------------------------
 

@@ -163,7 +163,7 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   tab_eos->add_constant("S",e.params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
-
+  
   // Transition densities
   double ed1=e.params[4];
   double ed2=e.params[6];

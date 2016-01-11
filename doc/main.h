@@ -308,7 +308,7 @@
 
     I would like to thank Paulo Bedaque, Ed Brown, Farrukh Fattoyev,
     Chris Fryer, Stefano Gandolfi, Jim Lattimer, Joonas
-    N&auml;ttil&aml; and Will Newton for their collaboration on these
+    N&auml;ttil&auml; and Will Newton for their collaboration on these
     projects.
 
     \hline
