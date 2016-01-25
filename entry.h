@@ -42,10 +42,10 @@ namespace bamr {
     /// Create empty entry object
     entry();
 
-    /// Create object for \c n sources
+    /// Create object for \c nps parameters and \c nso sources
     entry(size_t nps, size_t nso);
-
-    /// Reallocate for \c n sources
+    
+    /// Reallocate object for \c nps parameters and \c nso sources
     int allocate(size_t nps, size_t nso);
 
     /// Copy constructor
@@ -53,11 +53,8 @@ namespace bamr {
   
     /// Copy constructor
     entry(const entry &e);
-
+    
     /** \brief Number of parameters 
-      
-	This is automatically set in the constructor
-	to the template parameter
     */
     size_t np;
   

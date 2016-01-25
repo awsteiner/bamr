@@ -92,7 +92,7 @@ namespace bamr {
 
     /** \brief Error handler for each thread
      */
-    o2scl::err_hnd_cpp ee;
+    o2scl::err_hnd_cpp error_handler;
 
     /// \name Parameter objects for the 'set' command
     //@{
@@ -149,6 +149,7 @@ namespace bamr {
     double mvsr_pr_inc;
 
     /** \brief The number of MCMC successes between file updates
+	(default 10)
      */
     int file_update_iters;
 
@@ -158,11 +159,13 @@ namespace bamr {
     bool debug_load;
 
     /** \brief If true, output each line of the table as it's stored
+	(default false)
      */
     bool debug_line;
 
     /** \brief If true, normalize the data distributions so that the
 	max is one, otherwise, normalize so that the integral is one
+	(default true)
     */
     bool norm_max;
 
@@ -172,55 +175,59 @@ namespace bamr {
     /// If true, use the default crust (default true)
     bool use_crust;
 
-    /// If true, output stellar properties for debugging
+    /// If true, output stellar properties for debugging (default false)
     bool debug_star;
     
-    /// If true, output equation of state for debugging 
+    /// If true, output equation of state for debugging (default false)
     bool debug_eos;
 
-    /// If true, output next point
+    /// If true, output next point (default true)
     bool output_next;
 
-    /// If true, compute the baryon density
+    /// If true, compute the baryon density (default true)
     bool baryon_density;
 
-    /// MCMC stepsize factor (default 15)
+    /// MCMC stepsize factor (default 15.0)
     double step_fac;
 
-    /// The lower threshold for the input distributions
+    /// The lower threshold for the input distributions (default 0.0)
     double input_dist_thresh;
 
-    /// An upper mass threshold
+    /// The upper mass threshold (default 10.0)
     double exit_mass;
 
-    /// Minimum mass allowed for any of the individual neutron stars
+    /** \brief Minimum mass allowed for any of the individual neutron
+	stars (default 0.8)
+    */
     double min_mass;
   
-    /// Minimum allowed maximum mass
+    /// Minimum allowed maximum mass (default 2.0)
     double min_max_mass;
 
-    /** \brief Number of warm up steps (successful steps not iterations)
-
+    /** \brief Number of warm up steps (successful steps not
+	iterations) (default 0)
+	
 	\note Not to be confused with <tt>warm_up</tt>, which is 
 	a boolean local variable in some functions not an int.
     */
     int n_warm_up;
 
-    /** \brief Time in seconds (3600 seconds is one hour, default is
-	86400 seconds or 1 day)
+    /** \brief Time in seconds (default is 86400 seconds or 1 day)
     */
     double max_time;
 
-    /// If non-zero, use as the seed for the random number generator
+    /** \brief If non-zero, use as the seed for the random number 
+	generator (default 0)
+    */
     int user_seed;
 
     /** \brief If true, output more detailed information about the 
-	best point
+	best point (default false)
     */
     bool best_detail;
     
     /** \brief If true, output information about the baryon mass
-	as well as the gravitational mass
+	as well as the gravitational mass (default false)
      */
     bool inc_baryon_mass;
     //@}

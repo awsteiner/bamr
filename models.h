@@ -57,7 +57,7 @@ namespace bamr {
 	
 	The value of \ref o2scl::nstar_cold::nb_start is set to
 	0.01 by the constructor
-     */
+    */
     nstar_cold2 cns;
 
     model() {
@@ -641,17 +641,17 @@ namespace bamr {
     virtual void first_point(entry &e);
   };
   
-  /** \brief QMC + two polytropes for \ref Steiner15un (9 parameters)
+  /** \brief QMC + three polytropes for \ref Steiner15un (9 parameters)
       
       This class uses the parameterization from \ref Steiner12cn as
       done in \ref qmc_neut. The parameter ranges for for \f$ a \f$
       and \f$ \alpha \f$ are expanded and \f$ b \f$ and \f$ \beta \f$
       are recast in terms of \f$ S \f$ and \f$ L \f$.
       \f{eqnarray*}
-      a &=& 4~\mathrm{to}~16~[\mathrm{MeV}] \nonumber \\
-      \alpha &=& 0~\mathrm{to}~1 \nonumber \\
-      S &=& 28~\mathrm{to}~38~[\mathrm{MeV}]\nonumber \\
-      L &=& 0~\mathrm{to}~120~[\mathrm{MeV}]
+      a &=& 12.5~\mathrm{to}~13.5~[\mathrm{MeV}] \nonumber \\
+      \alpha &=& 0.47~\mathrm{to}~0.53 \nonumber \\
+      S &=& 29.5~\mathrm{to}~36.1~[\mathrm{MeV}]\nonumber \\
+      L &=& 30~\mathrm{to}~70~[\mathrm{MeV}]
       \f}
 
       The correlation between \f$ S \f$ and \f$ L \f$ defined
@@ -666,13 +666,17 @@ namespace bamr {
       are between the line through (29,0) and (35,55)
       and the line through (26.5,0) and (33.5,100) .
       
-      Polytropes are added at high density similar to \ref
-      bamr::two_polytropes, and the five parameters are
-      <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>,
-      <tt>trans2</tt>, and <tt>index3</tt>. The parameter limits are a
-      bit different, the indices are allowed to be between 0.2 and 8.0
-      and the transition densities are allowed to be between 0.75 and
-      8.0 \f$ \mathrm{fm}^{-4} \f$.
+      Three polytropes are added at high density similar to \ref
+      bamr::two_polytropes and \ref bamr::qmc_neut based on five
+      parameters <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>,
+      <tt>trans2</tt>, and <tt>index3</tt>. The transition between
+      neutron matter and the first polytrope is at a baryon density
+      specified in \ref rho_trans. The transition between the first
+      and second polytrope is specified in <tt>trans1</tt>, and the
+      transition between the second and third polytrope is specified
+      in <tt>trans2</tt>. The polytropic indices are allowed to be
+      between 0.2 and 8.0 and the transition densities are allowed to
+      be between 0.75 and 8.0 \f$ \mathrm{fm}^{-4} \f$.
   */
   class qmc_threep : public model {
 
@@ -780,7 +784,7 @@ namespace bamr {
   
   /** \brief QMC plus two line segments with arbitrary energy densities
       (8 parameters)
-   */
+  */
   class qmc_twolines : public model {
 
   public:

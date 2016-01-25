@@ -2249,7 +2249,7 @@ void bamr_class::run(int argc, char *argv[]) {
   // ---------------------------------------
   // Set error handler for this thread
   
-  o2scl::err_hnd=&ee;
+  o2scl::err_hnd=&error_handler;
   
   // ---------------------------------------
   // Process command-line arguments and run
