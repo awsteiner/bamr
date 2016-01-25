@@ -318,9 +318,14 @@
 
     \anchor Fryer15tf Fryer15tf:
     <a href="http://dx.doi.org/10.1088/0004-637X/812/1/24">
-    C.L. Fryer, K. Belzynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
+    C.L. Fryer, K. Belczynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
     A.W. Steiner</a>,
     Astrophys. J. \b 812 (2015) 1.
+
+    \anchor Gandolfi12mm Gandolfi12mm:
+    <a href="http://dx.doi.org/10.1103/PhysRevC.85.032801">
+    S. Gandolfi, J. Carlson, and S. Reddy</a>
+    Phys. Rev. C \b 85 (2012) 032801.
 
     \anchor Lattimer14co Lattimer14co:
     <a href="http://dx.doi.org/10.1140/epja/i2014-14040-y">

@@ -132,7 +132,7 @@ namespace bamr {
     
   };
 
-  /** \brief Two polytropes (8 parameters)
+  /** \brief Two polytropes (8 parameters) from \ref Steiner10te
 
       Based on the model from \ref Steiner10te. The original limits on
       the parameters are maintained here. This model is referred to as
@@ -252,7 +252,7 @@ namespace bamr {
 
   };
 
-  /** \brief Alternate polytropes (8 parameters)
+  /** \brief Alternate polytropes from \ref Steiner13tn (8 parameters) 
 
       Referred to as Model B in \ref Steiner13tn. 
 
@@ -310,7 +310,8 @@ namespace bamr {
   
   };
 
-  /** \brief Fix pressure on a grid of energy densities (8 parameters)
+  /** \brief Fix pressure on a grid of energy densities 
+      from \ref Steiner13tn (8 parameters)
     
       Referred to as Model C in \ref Steiner13tn. 
 
@@ -380,7 +381,7 @@ namespace bamr {
 
   };
 
-  /** \brief Generic quark model (9 parameters)
+  /** \brief Generic quark model from \ref Steiner13tn (9 parameters)
 
       Referred to as Model D in \ref Steiner13tn. 
 
@@ -481,7 +482,7 @@ namespace bamr {
 
   };
 
-  /** \brief A strange quark star model (4 parameters)
+  /** \brief A strange quark star model from \ref Steiner13tn (4 parameters)
 
       Referred to as Model E in \ref Steiner13tn. 
   */
@@ -563,24 +564,33 @@ namespace bamr {
   /** \brief Use QMC computations of neutron matter from
       \ref Steiner12cn (7 parameters)
 	
-      The original model from \ref Steiner12cn
-      with a neutron matter EOS parameterized by
+      \ref Steiner12cn used a parameterization for neutron matter
+      which is designed to fit results from quantum Monte Carlo (QMC)
+      simulations in \ref Gandolfi12mm . The parameterization is
+      \f[
+      E_{\mathrm{neut}} = a \left( \frac{n_B}{n_0} \right)^{\alpha}
+      + b \left( \frac{n_B}{n_0} \right)^{\beta}
+      \f]
+      where \f$ E_{\mathrm{neut}} \f$ is the energy per particle in
+      neutron matter, \f$ n_B \f$ is the baryon number density, and
+      \f$ n_0 \equiv 0.16~\mathrm{fm}^{-3} \f$ is the saturation
+      density. The parameter ranges are
       \f{eqnarray*}
       a &=& 13 \pm 0.3~\mathrm{MeV} \nonumber \\
       \alpha &=& 0.50 \pm 0.02 \nonumber \\
       b &=& 3 \pm 2~\mathrm{MeV} \nonumber \\
-      \beta &=& 2.3 \pm 0.2
+      \beta &=& 2.3 \pm 0.2 \, .
       \f}
-      and polytropes similar to \ref bamr::two_polytropes. The
-      transition between neutron matter and the first polytrope is at
-      a baryon density specified in \ref rho_trans. The remaining 3
-      parameters are <tt>index1</tt>, <tt>trans1</tt>, and
-      <tt>index2</tt>. In \ref Steiner12cn, the polytrope indices are
-      between 0.2 and 2.0. The upper limit on polytropic indices has
-      since been changed from 2.0 to 4.0. The transition between the
-      first and second polytrope at the energy density in
-      <tt>trans1</tt> which is between 2.0 and 8.0 \f$
-      \mathrm{fm}^{-4} \f$. 
+      At high density polytropes are used in a way similar to that in
+      \ref bamr::two_polytropes. The transition between neutron matter
+      and the first polytrope is at a baryon density specified in \ref
+      rho_trans. The remaining 3 parameters are <tt>index1</tt>,
+      <tt>trans1</tt>, and <tt>index2</tt>. In \ref Steiner12cn, the
+      polytrope indices are between 0.2 and 2.0. The upper limit on
+      polytropic indices has since been changed from 2.0 to 4.0. The
+      transition between the first and second polytrope at the energy
+      density in <tt>trans1</tt> which is between 2.0 and 8.0 \f$
+      \mathrm{fm}^{-4} \f$.
   */
   class qmc_neut : public model {
 
@@ -643,17 +653,17 @@ namespace bamr {
   
   /** \brief QMC + three polytropes for \ref Steiner15un (9 parameters)
       
-      This class uses the parameterization from \ref Steiner12cn as
-      done in \ref qmc_neut. The parameter ranges for for \f$ a \f$
-      and \f$ \alpha \f$ are expanded and \f$ b \f$ and \f$ \beta \f$
-      are recast in terms of \f$ S \f$ and \f$ L \f$.
+      For neutron-rich matter near the saturation density, this class
+      uses the QMC parameterization from \ref Steiner12cn as in \ref
+      qmc_neut. The parameter ranges for for \f$ a \f$ and \f$ \alpha
+      \f$ are expanded and \f$ b \f$ and \f$ \beta \f$ are recast in
+      terms of \f$ S \f$ and \f$ L \f$.
       \f{eqnarray*}
-      a &=& 12.5~\mathrm{to}~13.5~[\mathrm{MeV}] \nonumber \\
+      a &=& 12.5~\mathrm{to}~13.5~\mathrm{MeV} \nonumber \\
       \alpha &=& 0.47~\mathrm{to}~0.53 \nonumber \\
-      S &=& 29.5~\mathrm{to}~36.1~[\mathrm{MeV}]\nonumber \\
-      L &=& 30~\mathrm{to}~70~[\mathrm{MeV}]
+      S &=& 29.5~\mathrm{to}~36.1~\mathrm{MeV}\nonumber \\
+      L &=& 30~\mathrm{to}~70~\mathrm{MeV}
       \f}
-
       The correlation between \f$ S \f$ and \f$ L \f$ defined
       by 
       \f[
@@ -725,9 +735,34 @@ namespace bamr {
   /** \brief QMC + line segments model for \ref Steiner15un 
       (8 parameters)
 
-      This is similar to \ref bamr::qmc_threep, except that the
-      high-density EOS is a set of line-segments, similar to \ref
-      bamr::fixed_pressure. The limits on the high-density EOS
+      This EOS model is similar to \ref bamr::qmc_threep, except that
+      the high-density EOS is a set of line-segments, similar to \ref
+      bamr::fixed_pressure. The transition between neutron matter
+      from the QMC parameterization and the first line segment is
+      set to a baryon density of \ref nb_trans . The energy density
+      at this transition density is referred to as <tt>ed_trans</tt>,
+      and the corresponding pressure is <tt>pr_trans</tt>.
+      The four high-density parameters <tt>pres1</tt> through
+      <tt>pres4</tt> are then defined by
+      \f[
+      P(\mathrm{ed1}) - \mathrm{pr\_trans} = \mathrm{pres1};
+      \quad
+      P(\mathrm{ed2}) - P(\mathrm{ed1}) = \mathrm{pres2};
+      \quad
+      P(\mathrm{ed3}) - P(\mathrm{ed2}) = \mathrm{pres3};
+      \quad
+      P(\mathrm{ed4}) - P(\mathrm{ed3}) = \mathrm{pres4}
+      \f]
+      where the energy density grid is set by the class members
+      <tt>ed1</tt>, <tt>ed2</tt>, <tt>ed3</tt>, and <tt>ed4</tt>. The
+      lower limits on parameters <tt>pres1</tt> through <tt>pres4</tt>
+      are all zero. The upper limit on <tt>pres1</tt> is \f$
+      0.3~\mathrm{fm}^{-4} \f$. The upper limits on the remaining
+      pressure parameters are set so that the EOS is not acausal (even
+      though causality is separately double-checked by the code in
+      bamr.cpp anyway).
+      
+      The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
   */
   class qmc_fixp : public model {
@@ -747,10 +782,12 @@ namespace bamr {
     //@}
     
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
-    double rho0;
+    double nb0;
 
-    /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
-    double rho_trans;
+    /** \brief Transition baryon density (default 0.16, different 
+	than \ref bamr::qmc_neut)
+    */
+    double nb_trans;
 
     /// \name Functions for MCMC parameters
     //@{

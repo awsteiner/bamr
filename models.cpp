@@ -1439,8 +1439,8 @@ void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
 // --------------------------------------------------------------
 
 qmc_fixp::qmc_fixp() {
-  rho0=0.16;
-  rho_trans=0.16;
+  nb0=0.16;
+  nb_trans=0.16;
 
   ed1=2.0;
   ed2=3.0;
@@ -1523,7 +1523,7 @@ void qmc_fixp::first_point(entry &e) {
 void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
-  bool debug=false;
+  bool debug=true;
   
   // Hack to start with a fresh table
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
@@ -1558,21 +1558,24 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   tab_eos->add_constant("S",Stmp/hc_mev_fm);
   tab_eos->add_constant("L",Ltmp/hc_mev_fm);
 
-  double ed=0.0, pr=0.0, ed_last=0.0, nb_last=0.0, pr_last=0.0;
+  double ed=0.0, pr=0.0, ed_trans=0.0, pr_trans=0.0;
 
   if (debug) {
     cout.setf(ios::scientific);
-    cout << a << " " << alpha << " " << b << " " << beta << endl;
+    cout << "a,alpha,b,beta: "
+	 << a << " " << alpha << " " << b << " " << beta << endl;
     cout << endl;
+    cout << "EOS below saturation:" << endl;
+    cout << "ed           pr" << endl;
   }
-  for(double rho=0.02;rho<rho_trans;rho+=0.001) {
-    double rho1=rho/rho0;
-    double rho1a=pow(rho1,alpha);
-    double rho1b=pow(rho1,beta);
-    double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+  for(double nb=0.02;nb<nb_trans+1.0e-6;nb+=0.001) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
-    pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
+    pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
@@ -1582,33 +1585,38 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     }
     tab_eos->line_of_data(2,line);
     if (debug) cout << ed << " " << pr << endl;
-    ed_last=ed;
-    pr_last=pr;
-    nb_last=rho;
+    ed_trans=ed;
+    pr_trans=pr;
   }
   if (debug) cout << endl;
 
   // Set values for the computation of the baryon density
   // from the last point of the QMC parameterization
-  nb_n1=nb_last;
-  nb_e1=ed_last;
+  nb_n1=nb_trans;
+  nb_e1=ed_trans;
 
-  if (ed_last>ed1) {
+  if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
-    scr_out << ed_last << " " << ed1 << endl;
+    scr_out << ed_trans << " " << ed1 << endl;
     success=bamr_class::ix_param_mismatch;
     return;
   }
 
-  // Compute pressures on grid, ed=2.0, 3.0, 5, 7 fm^{-4}
-  double p2=pr_last+e.params[4];
-  double p3=p2+e.params[5];
-  double p5=p3+e.params[6];
+  // Compute pressures on grid, p1 is the pressure at ed1
+  double p1=pr_trans+e.params[4];
+  // Variable p2 is the pressure at ed2
+  double p2=p1+e.params[5];
+  // Variable p3 is the pressure at ed3
+  double p3=p2+e.params[6];
   
   // Add 1st high-density EOS
-  double delta_ed=(ed1-ed_last)/20.0;
-  for(double ed=ed_last+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
-    double line[2]={ed,pr_last+e.params[4]*(ed-ed_last)/(ed1-ed_last)};
+  if (debug) {
+    cout << "First line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  double delta_ed=(ed1-ed_trans)/20.0;
+  for(double ed=ed_trans+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
+    double line[2]={ed,pr_trans+e.params[4]*(ed-ed_trans)/(ed1-ed_trans)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (5): " << line[0] << " "
 	   << line[1] << endl;
@@ -1620,8 +1628,12 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   if (debug) cout << endl;
 
   // Add 2nd high-density EOS
+  if (debug) {
+    cout << "Second line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
   for(double ed=ed1;ed<ed2-1.0e-4;ed+=(ed2-ed1)/10.0) {
-    double line[2]={ed,p2+e.params[5]*(ed-ed1)/(ed2-ed1)};
+    double line[2]={ed,p1+e.params[5]*(ed-ed1)/(ed2-ed1)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (6): " << line[0] << " "
 	   << line[1] << endl;
@@ -1633,8 +1645,12 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   if (debug) cout << endl;
 
   // Add 3rd high-density EOS
+  if (debug) {
+    cout << "Third line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
   for(double ed=ed2;ed<ed3-1.0e-4;ed+=(ed3-ed2)/10.0) {
-    double line[2]={ed,p3+e.params[6]*(ed-ed2)/(ed3-ed2)};
+    double line[2]={ed,p2+e.params[6]*(ed-ed2)/(ed3-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (7): " << line[0] << " "
 	   << line[1] << endl;
@@ -1646,8 +1662,12 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   if (debug) cout << endl;
 
   // Add 4th high-density EOS
+  if (debug) {
+    cout << "Fourth line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
   for(double ed=ed3;ed<10.0-1.0e-4;ed+=(ed4-ed3)/10.0) {
-    double line[2]={ed,p5+e.params[7]*(ed-ed3)/(ed4-ed3)};
+    double line[2]={ed,p3+e.params[7]*(ed-ed3)/(ed4-ed3)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (8): " << line[0] << " "
 	   << line[1] << endl;
@@ -1656,7 +1676,11 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     tab_eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
-  if (debug) exit(-1);
+  if (debug) {
+    cout << "Exiting since debug in qmc_fixp::compute_eos() is true."
+	 << endl;
+    exit(-1);
+  }
 
   return;
 }
