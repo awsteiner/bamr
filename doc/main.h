@@ -57,19 +57,13 @@
     <a href="http://www.gnu.org/software/gsl">GSL</a> 
     (versions 1.16 and later),     
     <a href="http://www.hdfgroup.org">HDF5</a> 
-    (versions 1.8.4 and later), 
+    (versions 1.8.14 and later), 
     \htmlonly
-    the current development version of
+    the most recent release of 
     <a href="http://web.utk.edu/~asteine1/o2scl">O<span style='position:
-    relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> (in the
-    <tt>branches/dev</tt> folder of the 
-    <a href="http://web.utk.edu/~asteine1/o2scl">O<span style='position:
-    relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a> distribution),
+    relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a>
     \endhtmlonly
-    \latexonly
-    O$_2$scl
-    \endlatexonly
-    and MPI (tested with openmpi-1.4.2). After these four packages are
+    and MPI (tested with openmpi-1.8.6). After these four packages are
     successfully installed, you will need to edit the \c makefile and
     then compile \bm before execution.
 
@@ -340,7 +334,7 @@
 
     \anchor Nattila15eo Nattila15eo:
     <a href="http://arxiv.org/abs/1509.06561">
-    J. N&auml;ttil&auml, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
+    J. N&auml;ttil&auml;, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
     J. Poutanen</a>,
     arxiv.org/1509.06561.
 

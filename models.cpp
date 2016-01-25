@@ -1196,15 +1196,15 @@ void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
 // --------------------------------------------------------------
 
-qmc_twop::qmc_twop() {
+qmc_threep::qmc_threep() {
   rho0=0.16;
   rho_trans=0.16;
 }
 
-qmc_twop::~qmc_twop() {
+qmc_threep::~qmc_threep() {
 }
 
-void qmc_twop::low_limits(entry &e) {
+void qmc_threep::low_limits(entry &e) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
@@ -1223,7 +1223,7 @@ void qmc_twop::low_limits(entry &e) {
   return;
 }
 
-void qmc_twop::high_limits(entry &e) {
+void qmc_threep::high_limits(entry &e) {
     
   e.params[0]=13.5;
   e.params[1]=0.53;
@@ -1239,7 +1239,7 @@ void qmc_twop::high_limits(entry &e) {
   return;
 }
 
-string qmc_twop::param_name(size_t i) {
+string qmc_threep::param_name(size_t i) {
   if (i==0) return "a";
   else if (i==1) return "alpha";
   else if (i==2) return "S";
@@ -1251,7 +1251,7 @@ string qmc_twop::param_name(size_t i) {
   return "index3";
 }
 
-string qmc_twop::param_unit(size_t i) {
+string qmc_threep::param_unit(size_t i) {
   if (i==0) return "MeV";
   else if (i==1) return ".";
   else if (i==2) return "MeV";
@@ -1263,7 +1263,7 @@ string qmc_twop::param_unit(size_t i) {
   return ".";
 }
 
-void qmc_twop::first_point(entry &e) {
+void qmc_threep::first_point(entry &e) {
 
   e.params[0]=13.0;
   e.params[1]=0.5;
@@ -1278,7 +1278,7 @@ void qmc_twop::first_point(entry &e) {
   return;
 }
 
-void qmc_twop::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   bool debug=false;
 
@@ -1385,7 +1385,7 @@ void qmc_twop::compute_eos(entry &e, int &success, ofstream &scr_out) {
     pr=coeff1*pow(ed,exp1);
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in qmc_twop (2): " << line[0] << " "
+      cerr << "Problem in qmc_threep (2): " << line[0] << " "
 	   << line[1] << endl;
       cerr << coeff1 << " " << exp1 << " " << ed_last << " " << trans1 << endl;
       cerr << ed << " " << pr << " " << nb_n1 << " " << nb_e1 << endl;
@@ -1593,8 +1593,6 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   nb_n1=nb_last;
   nb_e1=ed_last;
 
-  //double ed1=1.5, ed2=2.0, ed3=2.5, ed4=5.0;
-  
   if (ed_last>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << ed1 << endl;
@@ -1659,6 +1657,206 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) exit(-1);
+
+  return;
+}
+
+// --------------------------------------------------------------
+
+qmc_twolines::qmc_twolines() {
+  rho0=0.16;
+  rho_trans=0.16;
+}
+
+qmc_twolines::~qmc_twolines() {
+}
+
+void qmc_twolines::low_limits(entry &e) {
+
+  // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
+  // this should allow S values as small as 28.5
+  e.params[0]=12.5;
+  // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
+  e.params[1]=0.47;
+  e.params[2]=29.5;
+  e.params[3]=30.0;
+  
+  e.params[4]=0.0;
+  e.params[5]=0.0;
+  e.params[6]=0.0;
+  e.params[7]=0.0;
+    
+  return;
+}
+
+void qmc_twolines::high_limits(entry &e) {
+    
+  e.params[0]=13.5;
+  e.params[1]=0.53;
+  e.params[2]=36.1;
+  e.params[3]=70.0;
+
+  e.params[4]=0.3;
+  e.params[5]=1.5;
+  e.params[6]=2.5;
+  e.params[7]=2.5;
+    
+  return;
+}
+
+string qmc_twolines::param_name(size_t i) {
+  if (i==0) return "a";
+  else if (i==1) return "alpha";
+  else if (i==2) return "S";
+  else if (i==3) return "L";
+  else if (i==4) return "pres1";
+  else if (i==5) return "pres2";
+  else if (i==6) return "pres3";
+  return "pres4";
+}
+
+string qmc_twolines::param_unit(size_t i) {
+  if (i==0) return "MeV";
+  else if (i==1) return ".";
+  else if (i==2) return "MeV";
+  else if (i==3) return "MeV";
+  else if (i==4) return "1/fm^4";
+  else if (i==5) return "1/fm^4";
+  else if (i==6) return "1/fm^4";
+  return "1/fm^4";
+}
+
+void qmc_twolines::first_point(entry &e) {
+
+  e.params[0]=1.276936e+01;
+  e.params[1]=5.043647e-01;
+  e.params[2]=30.0;
+  e.params[3]=40.0;
+  e.params[4]=0.014;
+  e.params[5]=0.74;
+  e.params[6]=0.60;
+  e.params[7]=1.84;
+
+  return;
+}
+
+void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
+
+  success=bamr_class::ix_success;
+  bool debug=false;
+  
+  // Hack to start with a fresh table
+  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  tab_eos->clear_table();
+  tab_eos->line_of_names("ed pr");
+  tab_eos->set_interp_type(itp_linear);
+
+  // Add the QMC calculations over the suggested range, but go a
+  // little bit lower in density to make sure we extend all the way
+  // down to the crust
+
+  double a=e.params[0];
+  double alpha=e.params[1];
+  double Stmp=e.params[2];
+  double Ltmp=e.params[3];
+
+  if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
+    scr_out << "L out of range." << endl;
+    success=bamr_class::ix_param_mismatch;
+    return;
+  }
+
+  double b=Stmp-16.0-a;
+  double beta=(Ltmp/3.0-a*alpha)/b;
+  if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
+    scr_out << "Parameter b=" << b << " or beta=" 
+	    << beta << " out of range." << endl;
+    success=bamr_class::ix_param_mismatch;
+    return;
+  }
+  
+  tab_eos->add_constant("S",Stmp/hc_mev_fm);
+  tab_eos->add_constant("L",Ltmp/hc_mev_fm);
+
+  double ed=0.0, pr=0.0, ed_last=0.0, nb_last=0.0, pr_last=0.0;
+
+  double ed_trans=e.params[5];
+  double ed1=e.params[7];
+  if (ed_trans>ed1) {
+    scr_out << "Transition densities misordered." << endl;
+    scr_out << ed_trans << " " << ed1 << endl;
+    success=bamr_class::ix_param_mismatch;
+    return;
+  }
+
+  if (debug) {
+    cout.setf(ios::scientific);
+    cout << a << " " << alpha << " " << b << " " << beta << endl;
+    cout << endl;
+  }
+  bool done=false;
+  for(double rho=0.02;done==false;rho+=0.001) {
+    double rho1=rho/rho0;
+    double rho1a=pow(rho1,alpha);
+    double rho1b=pow(rho1,beta);
+    double ene=a*rho1a+b*rho1b;
+    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+	    ("kg","1/fm",o2scl_mks::mass_neutron));
+    pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
+
+    if (ed>ed_trans) {
+      done=true;
+    } else {
+      double line[2]={ed,pr};
+      if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
+	cerr << "Problem in model (4): " << line[0] << " "
+	     << line[1] << endl;
+	exit(-1);
+      }
+      tab_eos->line_of_data(2,line);
+      if (debug) cout << ed << " " << pr << endl;
+      ed_last=ed;
+      pr_last=pr;
+      nb_last=rho;
+      
+      // Set values for the computation of the baryon density
+      // from the last point of the QMC parameterization
+      nb_n1=rho;
+      nb_e1=ed;
+    }
+  }
+  if (debug) cout << endl;
+
+  // Compute pressures on grid, ed=2.0, 3.0, 5, 7 fm^{-4}
+  double p2=pr_last+e.params[4];
+  double p3=p2+e.params[6];
+  
+  // Add 1st high-density EOS
+  double delta_ed=(ed1-ed_last)/20.0;
+  for(double ed=ed_last+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
+    double line[2]={ed,p2+e.params[4]*(ed-ed_last)/(ed1-ed_last)};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
+      cerr << "Problem in model (5): " << line[0] << " "
+	   << line[1] << endl;
+      exit(-1);
+    }
+    tab_eos->line_of_data(2,line);
+    if (debug) cout << line[0] << " " << line[1] << endl;
+  }
+  if (debug) cout << endl;
+
+  // Add 2nd high-density EOS
+  for(double ed=ed1;ed<10.0-1.0e-4;ed+=(10.0-ed1)/10.0) {
+    double line[2]={ed,p3+e.params[5]*(ed-ed1)/(10.0-ed1)};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
+      cerr << "Problem in model (6): " << line[0] << " "
+	   << line[1] << endl;
+      exit(-1);
+    }
+    tab_eos->line_of_data(2,line);
+    if (debug) cout << line[0] << " " << line[1] << endl;
+  }
+  if (debug) cout << endl;
 
   return;
 }

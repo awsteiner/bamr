@@ -132,10 +132,32 @@ namespace bamr {
     
   };
 
-  /** \brief Two polytropes
+  /** \brief Two polytropes (8 parameters)
 
       Based on the model from \ref Steiner10te. The original limits on
-      the parameters are maintained here.
+      the parameters are maintained here. This model is referred to as
+      Model A in \ref Steiner13tn.
+
+      The EOS from \ref o2scl::eos_had_schematic is used for the EOS
+      near the saturation density. The first parameter is \ref
+      o2scl::eos_had_base::comp (<tt>comp</tt>), the second is \ref
+      o2scl::eos_had_base::kprime (<tt>kprime</tt>), the third is used
+      to fix the sum (<tt>esym</tt>) of \ref
+      o2scl::eos_had_schematic::a and \ref
+      o2scl::eos_had_schematic::b, and the fourth parameter is \ref
+      o2scl::eos_had_schematic::gamma (<tt>gamma</tt>). The value of
+      \ref o2scl::eos_had_schematic::a defaults to \f$
+      17.0~\mathrm{MeV}/(\hbar c) \f$, and can be changed by setting
+      the parameter named <tt>kin_sym</tt> at run time. This EOS is
+      used up to the transition energy density specified by the fifth
+      parameter (<tt>trans1</tt>). The first polytrope is used with an
+      index specified by the sixth parameter (<tt>index1</tt>), up to
+      an energy density specified by the seventh parameter
+      (<tt>trans2</tt>). Finally, the second polytrope is used with an
+      index specified by the eighth parameter (<tt>index2</tt>). The
+      crust is computed using the default procedure in \ref
+      o2scl::eos_tov_interp using the crust EOS from \ref
+      o2scl::eos_tov_interp::default_low_dens_eos() .
 
       For a polytrope \f$ P = K \varepsilon^{1+1/n} \f$
       beginning at a pressure of \f$ P_1 \f$, an energy
@@ -230,16 +252,16 @@ namespace bamr {
 
   };
 
-  /** \brief Alternate polytropes
+  /** \brief Alternate polytropes (8 parameters)
 
       Referred to as Model B in \ref Steiner13tn. 
 
-      As in \ref two_polytropes, but in terms of the exponents instead
-      of the polytropic indices. The lower limit on 'exp1' is 1.5, as
-      in \ref Steiner13tn, but softer EOSs could be allowed by setting
-      this to zero. This doesn't matter much for the final results in
-      \ref Steiner13tn, because the lowest pressure EOSs came from \ref
-      bamr::fixed_pressure anyway.
+      This model is just as in \ref two_polytropes, but in terms of
+      the exponents instead of the polytropic indices. The lower limit
+      on 'exp1' is 1.5, as in \ref Steiner13tn, but softer EOSs could
+      be allowed by setting this to zero. This would not change the
+      the final results in \ref Steiner13tn, because the lowest
+      pressure EOSs came from \ref bamr::fixed_pressure anyway.
 
       For a polytrope \f$ P = K \varepsilon^{\Gamma} \f$
       beginning at a pressure of \f$ P_1 \f$, an energy
@@ -288,16 +310,18 @@ namespace bamr {
   
   };
 
-  /** \brief Fix pressure on a grid of energy densities
+  /** \brief Fix pressure on a grid of energy densities (8 parameters)
     
       Referred to as Model C in \ref Steiner13tn. 
 
-      Instead of polytropes, linearly interpolate pressures on a fixed
-      grid of energy densities. The schematic EOS is used up to an
-      energy density of \f$ 1~\mathrm{fm^{-4}} \f$. The last four
-      parameters are pressures named <tt>pres1</tt> through
-      <tt>pres4</tt>. Then the line segments are defined by the points
-      \f{eqnarray*}
+      This model is computed as in \ref two_polytropes, but instead of
+      using polytropes at high densities, pressures are linearly
+      interpolated on a fixed grid of energy densities. The schematic
+      EOS (\ref o2scl::eos_had_schematic) is used up to an energy
+      density of \f$ 1~\mathrm{fm^{-4}} \f$. The last four parameters
+      are pressures named <tt>pres1</tt> through <tt>pres4</tt>. Then
+      the line segments are defined by the points
+      \f[
       P(2~\mathrm{fm}^{-4}) - P(1~\mathrm{fm}^{-4}) = \mathrm{pres1};
       \quad
       P(3~\mathrm{fm}^{-4}) - P(2~\mathrm{fm}^{-4}) = \mathrm{pres2};
@@ -305,7 +329,7 @@ namespace bamr {
       P(5~\mathrm{fm}^{-4}) - P(3~\mathrm{fm}^{-4}) = \mathrm{pres3};
       \quad
       P(7~\mathrm{fm}^{-4}) - P(5~\mathrm{fm}^{-4}) = \mathrm{pres4}
-      \f}
+      \f]
       The final line segment is extrapolated up to 
       \f$ \varepsilon = 10~\mathrm{fm^{-4}} \f$
 
@@ -356,7 +380,7 @@ namespace bamr {
 
   };
 
-  /** \brief Generic quark model
+  /** \brief Generic quark model (9 parameters)
 
       Referred to as Model D in \ref Steiner13tn. 
 
@@ -457,7 +481,7 @@ namespace bamr {
 
   };
 
-  /** \brief A strange quark star model
+  /** \brief A strange quark star model (4 parameters)
 
       Referred to as Model E in \ref Steiner13tn. 
   */
@@ -537,24 +561,26 @@ namespace bamr {
   };
 
   /** \brief Use QMC computations of neutron matter from
-      \ref Steiner12cn
+      \ref Steiner12cn (7 parameters)
 	
-      The original model from Steiner and Gandolfi (2012)
-      with 
+      The original model from \ref Steiner12cn
+      with a neutron matter EOS parameterized by
       \f{eqnarray*}
-      a &=& 13 \pm 0.3~[\mathrm{MeV}] \nonumber \\
+      a &=& 13 \pm 0.3~\mathrm{MeV} \nonumber \\
       \alpha &=& 0.50 \pm 0.02 \nonumber \\
-      b &=& 3 \pm 2~[\mathrm{MeV}] \nonumber \\
+      b &=& 3 \pm 2~\mathrm{MeV} \nonumber \\
       \beta &=& 2.3 \pm 0.2
       \f}
       and polytropes similar to \ref bamr::two_polytropes. The
-      remaining 3 parameters are <tt>index1</tt>, <tt>trans1</tt>, and
-      <tt>index2</tt>. In the original paper, the polytrope indices
-      are between 0.2 and 2.0. The transition to the first polytrope
-      at is at a baryon density of \ref rho_trans and the transition
-      to the second is at the energy density in <tt>trans1</tt> which
-      is between 2.0 and 8.0 \f$ \mathrm{fm}^{-4} \f$. The upper limit
-      on polytropic indices has since been changed from 2.0 to 4.0.
+      transition between neutron matter and the first polytrope is at
+      a baryon density specified in \ref rho_trans. The remaining 3
+      parameters are <tt>index1</tt>, <tt>trans1</tt>, and
+      <tt>index2</tt>. In \ref Steiner12cn, the polytrope indices are
+      between 0.2 and 2.0. The upper limit on polytropic indices has
+      since been changed from 2.0 to 4.0. The transition between the
+      first and second polytrope at the energy density in
+      <tt>trans1</tt> which is between 2.0 and 8.0 \f$
+      \mathrm{fm}^{-4} \f$. 
   */
   class qmc_neut : public model {
 
@@ -570,14 +596,18 @@ namespace bamr {
     /// Transition density (default 0.48)
     double rho_trans;
 
-    /// Ratio interpolator
+    /// Ratio interpolation object
     o2scl::interp_vec<> si;
 
-    /// Ratio error interpolator
+    /// Ratio error interpolation object
     o2scl::interp_vec<> si_err;
   
-    /// Interpolation objects
-    ubvector ed_corr, pres_corr, pres_err;
+    /// \name Interpolation objects
+    //@{
+    ubvector ed_corr;
+    ubvector pres_corr;
+    ubvector pres_err;
+    //@}
 
     /// Gaussian distribution for proton correction factor
     o2scl::prob_dens_gaussian pdg;
@@ -611,33 +641,46 @@ namespace bamr {
     virtual void first_point(entry &e);
   };
   
-  /** \brief QMC + two polytropes for \ref Steiner15un
+  /** \brief QMC + two polytropes for \ref Steiner15un (9 parameters)
       
-      This class attempts to expand the parameter distributions
-      for \f$ a \f$ and \f$ \alpha \f$ and re-cast the paramters
-      \f$ b \f$ and \f$ \beta \f$ into \f$ S \f$ and \f$ L \f$.
+      This class uses the parameterization from \ref Steiner12cn as
+      done in \ref qmc_neut. The parameter ranges for for \f$ a \f$
+      and \f$ \alpha \f$ are expanded and \f$ b \f$ and \f$ \beta \f$
+      are recast in terms of \f$ S \f$ and \f$ L \f$.
       \f{eqnarray*}
       a &=& 4~\mathrm{to}~16~[\mathrm{MeV}] \nonumber \\
       \alpha &=& 0~\mathrm{to}~1 \nonumber \\
       S &=& 28~\mathrm{to}~38~[\mathrm{MeV}]\nonumber \\
       L &=& 0~\mathrm{to}~120~[\mathrm{MeV}]
       \f}
+
+      The correlation between \f$ S \f$ and \f$ L \f$ defined
+      by 
+      \f[
+      L < \left(\frac{9.17}{\mathrm{MeV}}\right) S - 266~\mathrm{MeV} 
+      \quad \mathrm{and} \quad
+      L > \left(\frac{14.3}{\mathrm{MeV}}\right) S - 379~\mathrm{MeV}
+      \f]
+      from \ref Lattimer14co is enforced. Alternatively, 
+      expressing these constraints in \f$ (S,L) \f$ space, 
+      are between the line through (29,0) and (35,55)
+      and the line through (26.5,0) and (33.5,100) .
       
       Polytropes are added at high density similar to \ref
-      bamr::two_polytropes, and the four parameters are
-      <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>, and
-      <tt>trans2</tt>. The parameter limits are a bit different, the
-      indices are allowed to be between 0.2 and 8.0 and the transition
-      densities are allowed to be between 0.75 and 8.0 \f$
-      \mathrm{fm}^{-4} \f$.
+      bamr::two_polytropes, and the five parameters are
+      <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>,
+      <tt>trans2</tt>, and <tt>index3</tt>. The parameter limits are a
+      bit different, the indices are allowed to be between 0.2 and 8.0
+      and the transition densities are allowed to be between 0.75 and
+      8.0 \f$ \mathrm{fm}^{-4} \f$.
   */
-  class qmc_twop : public model {
+  class qmc_threep : public model {
 
   public:
   
-    qmc_twop();
+    qmc_threep();
     
-    virtual ~qmc_twop();
+    virtual ~qmc_threep();
     
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
     double rho0;
@@ -675,9 +718,10 @@ namespace bamr {
   
   };
 
-  /** \brief QMC + line segments model for \ref Steiner15un
+  /** \brief QMC + line segments model for \ref Steiner15un 
+      (8 parameters)
 
-      This is similar to \ref bamr::qmc_twop, except that the
+      This is similar to \ref bamr::qmc_threep, except that the
       high-density EOS is a set of line-segments, similar to \ref
       bamr::fixed_pressure. The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
@@ -698,6 +742,53 @@ namespace bamr {
     double ed4;
     //@}
     
+    /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
+    double rho0;
+
+    /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
+    double rho_trans;
+
+    /// \name Functions for MCMC parameters
+    //@{
+    /** \brief Set the lower boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void low_limits(entry &e);
+    
+    /** \brief Set the upper boundaries for all the parameters,
+	masses, and radii
+    */
+    virtual void high_limits(entry &e);
+    
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_name(size_t i);
+
+    /// Return the unit of parameter with index \c i
+    virtual std::string param_unit(size_t i);
+    //@}
+    
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+
+    /** \brief Function to compute the initial guess
+     */
+    virtual void first_point(entry &e);
+  
+  };
+  
+  /** \brief QMC plus two line segments with arbitrary energy densities
+      (8 parameters)
+   */
+  class qmc_twolines : public model {
+
+  public:
+  
+    qmc_twolines();
+    
+    virtual ~qmc_twolines();
+
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
     double rho0;
 

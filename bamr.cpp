@@ -1335,15 +1335,21 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     nparams=7;
     has_esym=true;
     has_eos=true;
-  } else if (sv[1]==((string)"qmc_twop")) {
-    modp=new qmc_twop;
-    modp2=new qmc_twop;
+  } else if (sv[1]==((string)"qmc_threep")) {
+    modp=new qmc_threep;
+    modp2=new qmc_threep;
     nparams=9;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qmc_fixp")) {
     modp=new qmc_fixp;
     modp2=new qmc_fixp;
+    nparams=8;
+    has_esym=true;
+    has_eos=true;
+  } else if (sv[1]==((string)"qmc_twolines")) {
+    modp=new qmc_twolines;
+    modp2=new qmc_twolines;
     nparams=8;
     has_esym=true;
     has_eos=true;
