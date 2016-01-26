@@ -417,8 +417,17 @@ void fixed_pressure::low_limits(entry &e) {
 void fixed_pressure::high_limits(entry &e) {
   two_polytropes::high_limits(e);
   e.params[4]=0.3;
-  e.params[5]=1.5;
-  e.params[6]=2.5;
+  // This parameter is the pressure at 3 fm^{-4} minus the pressure at
+  // 2 fm^{-4}, thus from causality cannot be larger than 1 fm^{-4}.
+  e.params[5]=1.0;
+  // This parameter is the pressure at 5 fm^{-4} minus the pressure at
+  // 3 fm^{-4}, thus from causality cannot be larger than 2 fm^{-4}.
+  e.params[6]=2.0;
+  // This parameter is the pressure at 7 fm^{-4} minus the pressure at
+  // 5 fm^{-4}. It is not always limited by causality, because the
+  // central energy density is sometimes smaller than 5 fm^{-4}. We
+  // allow it to be larger than 2.0 fm^{-4}, but in practice larger
+  // values are relatively rare.
   e.params[7]=2.5;
   return;
 }
@@ -1476,6 +1485,10 @@ void qmc_fixp::high_limits(entry &e) {
   e.params[2]=36.1;
   e.params[3]=70.0;
 
+  // These parameters are limited by causality, but if the user
+  // changes the values of ed1, ed2, ed3, and ed4, then the upper
+  // limits change accordingly. To make things easier, we just choose
+  // relatively large values for these upper limits for now.
   e.params[4]=0.3;
   e.params[5]=1.5;
   e.params[6]=2.5;
@@ -1734,9 +1747,9 @@ string qmc_twolines::param_name(size_t i) {
   else if (i==2) return "S";
   else if (i==3) return "L";
   else if (i==4) return "pres1";
-  else if (i==5) return "pres2";
-  else if (i==6) return "pres3";
-  return "pres4";
+  else if (i==5) return "ed1";
+  else if (i==6) return "pres2";
+  return "ed2";
 }
 
 string qmc_twolines::param_unit(size_t i) {
@@ -1756,9 +1769,9 @@ void qmc_twolines::first_point(entry &e) {
   e.params[1]=5.043647e-01;
   e.params[2]=30.0;
   e.params[3]=40.0;
-  e.params[4]=0.014;
-  e.params[5]=0.74;
-  e.params[6]=0.60;
+  e.params[4]=0.3;
+  e.params[5]=1.0;
+  e.params[6]=0.8;
   e.params[7]=1.84;
 
   return;
@@ -1804,11 +1817,11 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   double ed=0.0, pr=0.0, ed_last=0.0, nb_last=0.0, pr_last=0.0;
 
-  double ed_trans=e.params[5];
-  double ed1=e.params[7];
-  if (ed_trans>ed1) {
+  double ed1=e.params[5];
+  double ed2=e.params[7];
+  if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
-    scr_out << ed_trans << " " << ed1 << endl;
+    scr_out << ed1 << " " << ed2 << endl;
     success=bamr_class::ix_param_mismatch;
     return;
   }
@@ -1828,7 +1841,7 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
-    if (ed>ed_trans) {
+    if (ed>ed1) {
       done=true;
     } else {
       double line[2]={ed,pr};
@@ -1860,9 +1873,9 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << "First line segment: " << endl;
     cout << "ed           pr" << endl;
   }
-  double delta_ed=(ed1-ed_last)/100.0;
-  for(double ed=ed_last+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
-    double line[2]={ed,pr_last+e.params[4]*(ed-ed_last)/(ed1-ed_last)};
+  double delta_ed=(ed2-ed_last)/100.0;
+  for(double ed=ed_last+delta_ed;ed<ed2-1.0e-4;ed+=delta_ed) {
+    double line[2]={ed,pr_last+e.params[4]*(ed-ed_last)/(ed2-ed_last)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (5): " << line[0] << " "
 	   << line[1] << endl;
@@ -1872,14 +1885,14 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) cout << endl;
-
+  
   // Add 2nd high-density EOS
   if (debug) {
-    cout << "First second segment: " << endl;
+    cout << "Second segment: " << endl;
     cout << "ed           pr" << endl;
   }
-  for(double ed=ed1;ed<10.0-1.0e-4;ed+=(10.0-ed1)/20.0) {
-    double line[2]={ed,p2+e.params[6]*(ed-ed1)/(10.0-ed1)};
+  for(double ed=ed2;ed<10.0-1.0e-4;ed+=(10.0-ed2)/20.0) {
+    double line[2]={ed,p2+e.params[6]*(ed-ed2)/(10.0-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (6): " << line[0] << " "
 	   << line[1] << endl;
