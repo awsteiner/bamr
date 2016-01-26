@@ -1523,7 +1523,7 @@ void qmc_fixp::first_point(entry &e) {
 void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
-  bool debug=true;
+  bool debug=false;
   
   // Hack to start with a fresh table
   o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
@@ -1688,8 +1688,8 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
 // --------------------------------------------------------------
 
 qmc_twolines::qmc_twolines() {
-  rho0=0.16;
-  rho_trans=0.16;
+  nb0=0.16;
+  nb_trans=0.16;
 }
 
 qmc_twolines::~qmc_twolines() {
@@ -1819,14 +1819,14 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << endl;
   }
   bool done=false;
-  for(double rho=0.02;done==false;rho+=0.001) {
-    double rho1=rho/rho0;
-    double rho1a=pow(rho1,alpha);
-    double rho1b=pow(rho1,beta);
-    double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+  for(double nb=0.02;done==false;nb+=0.001) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
-    pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
+    pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
     if (ed>ed_trans) {
       done=true;
@@ -1841,24 +1841,28 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
       if (debug) cout << ed << " " << pr << endl;
       ed_last=ed;
       pr_last=pr;
-      nb_last=rho;
+      nb_last=nb;
       
       // Set values for the computation of the baryon density
       // from the last point of the QMC parameterization
-      nb_n1=rho;
+      nb_n1=nb;
       nb_e1=ed;
     }
   }
   if (debug) cout << endl;
 
-  // Compute pressures on grid, ed=2.0, 3.0, 5, 7 fm^{-4}
+  // Compute pressures at end points
   double p2=pr_last+e.params[4];
   double p3=p2+e.params[6];
   
   // Add 1st high-density EOS
-  double delta_ed=(ed1-ed_last)/20.0;
+  if (debug) {
+    cout << "First line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  double delta_ed=(ed1-ed_last)/100.0;
   for(double ed=ed_last+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
-    double line[2]={ed,p2+e.params[4]*(ed-ed_last)/(ed1-ed_last)};
+    double line[2]={ed,pr_last+e.params[4]*(ed-ed_last)/(ed1-ed_last)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (5): " << line[0] << " "
 	   << line[1] << endl;
@@ -1870,8 +1874,12 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
   if (debug) cout << endl;
 
   // Add 2nd high-density EOS
-  for(double ed=ed1;ed<10.0-1.0e-4;ed+=(10.0-ed1)/10.0) {
-    double line[2]={ed,p3+e.params[5]*(ed-ed1)/(10.0-ed1)};
+  if (debug) {
+    cout << "First second segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  for(double ed=ed1;ed<10.0-1.0e-4;ed+=(10.0-ed1)/20.0) {
+    double line[2]={ed,p2+e.params[6]*(ed-ed1)/(10.0-ed1)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (6): " << line[0] << " "
 	   << line[1] << endl;
@@ -1880,7 +1888,10 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
     tab_eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
-  if (debug) cout << endl;
+  if (debug) {
+    cout << endl;
+    exit(-1);
+  }
 
   return;
 }

@@ -46,6 +46,10 @@
     - \ref infile_sect 
     - \ref outfile_sect
     - \ref detail_sect
+    - \ref model_sect
+    - \ref func_stack_sect
+    - \ref postproc_sect
+    - \ref changelog_sect
     - \ref ack_sect
     - \ref ref_sect
     - \ref license_page

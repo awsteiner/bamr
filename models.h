@@ -831,10 +831,10 @@ namespace bamr {
     virtual ~qmc_twolines();
 
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
-    double rho0;
+    double nb0;
 
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
-    double rho_trans;
+    double nb_trans;
 
     /// \name Functions for MCMC parameters
     //@{
