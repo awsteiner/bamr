@@ -136,7 +136,9 @@ namespace bamr {
 
       Based on the model from \ref Steiner10te. The original limits on
       the parameters are maintained here. This model is referred to as
-      Model A in \ref Steiner13tn.
+      Model A in \ref Steiner13tn and was also used in \ref
+      Lattimer14ns (where it was the "Base" model) and in \ref
+      Lattimer14co .
 
       The EOS from \ref o2scl::eos_had_schematic is used for the EOS
       near the saturation density. The first parameter is \ref
@@ -313,7 +315,9 @@ namespace bamr {
   /** \brief Fix pressure on a grid of energy densities 
       from \ref Steiner13tn (8 parameters)
     
-      Referred to as Model C in \ref Steiner13tn. 
+      This model is referred to as Model C in \ref Steiner13tn and was
+      also used in \ref Lattimer14ns (where it was the model labeled
+      "Exo").
 
       This model is computed as in \ref two_polytropes, but instead of
       using polytropes at high densities, pressures are linearly
@@ -651,7 +655,11 @@ namespace bamr {
     virtual void first_point(entry &e);
   };
   
-  /** \brief QMC + three polytropes for \ref Steiner15un (9 parameters)
+  /** \brief QMC + three polytropes created for \ref Steiner15un
+      (9 parameters)
+
+      This model was also used in \ref Fryer15tf, \ref Nattila15eo,
+      and \ref Steiner16ns .
       
       For neutron-rich matter near the saturation density, this class
       uses the QMC parameterization from \ref Steiner12cn as in \ref
@@ -732,8 +740,11 @@ namespace bamr {
   
   };
 
-  /** \brief QMC + line segments model for \ref Steiner15un 
+  /** \brief QMC + line segments model created for \ref Steiner15un
       (8 parameters)
+
+      This model was also used in \ref Fryer15tf, \ref Nattila15eo,
+      and \ref Steiner16ns .
 
       This EOS model is similar to \ref bamr::qmc_threep, except that
       the high-density EOS is a set of line-segments, similar to \ref
