@@ -595,6 +595,11 @@ namespace bamr {
       transition between the first and second polytrope at the energy
       density in <tt>trans1</tt> which is between 2.0 and 8.0 \f$
       \mathrm{fm}^{-4} \f$.
+
+      Note that since the QMC model provides an EOS for neutron
+      matter at low densities, the crust EOS is taken from 
+      the QMC results as well, ignoring the modification in 
+      the EOS from nuclei. 
   */
   class qmc_neut : public model {
 
@@ -695,6 +700,11 @@ namespace bamr {
       in <tt>trans2</tt>. The polytropic indices are allowed to be
       between 0.2 and 8.0 and the transition densities are allowed to
       be between 0.75 and 8.0 \f$ \mathrm{fm}^{-4} \f$.
+
+      Note that since the QMC model provides an EOS for neutron
+      matter at low densities, the crust EOS is taken from 
+      the QMC results as well, ignoring the modification in 
+      the EOS from nuclei. 
   */
   class qmc_threep : public model {
 
@@ -775,6 +785,11 @@ namespace bamr {
       
       The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
+
+      Note that since the QMC model provides an EOS for neutron
+      matter at low densities, the crust EOS is taken from 
+      the QMC results as well, ignoring the modification in 
+      the EOS from nuclei. 
   */
   class qmc_fixp : public model {
 
@@ -832,6 +847,11 @@ namespace bamr {
   
   /** \brief QMC plus two line segments with arbitrary energy densities
       (8 parameters)
+
+      Note that since the QMC model provides an EOS for neutron
+      matter at low densities, the crust EOS is taken from 
+      the QMC results as well, ignoring the modification in 
+      the EOS from nuclei. 
   */
   class qmc_twolines : public model {
 
