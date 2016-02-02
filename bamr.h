@@ -69,8 +69,11 @@ namespace bamr {
       really work. For now, one may have ensure the program exits
       after each mcmc() run. 
 
+      \comment
       \todo Fix issue of block_counter giving confusing output if
       there are too few MCMC points between each block. 
+      2/2/16 - I think this is fixed now
+      \endcomment
 
       \todo More testing
 

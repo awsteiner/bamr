@@ -156,10 +156,7 @@ namespace bamr {
       index specified by the sixth parameter (<tt>index1</tt>), up to
       an energy density specified by the seventh parameter
       (<tt>trans2</tt>). Finally, the second polytrope is used with an
-      index specified by the eighth parameter (<tt>index2</tt>). The
-      crust is computed using the default procedure in \ref
-      o2scl::eos_tov_interp using the crust EOS from \ref
-      o2scl::eos_tov_interp::default_low_dens_eos() .
+      index specified by the eighth parameter (<tt>index2</tt>). 
 
       For a polytrope \f$ P = K \varepsilon^{1+1/n} \f$
       beginning at a pressure of \f$ P_1 \f$, an energy
@@ -594,12 +591,17 @@ namespace bamr {
       polytropic indices has since been changed from 2.0 to 4.0. The
       transition between the first and second polytrope at the energy
       density in <tt>trans1</tt> which is between 2.0 and 8.0 \f$
-      \mathrm{fm}^{-4} \f$.
+      \mathrm{fm}^{-4} \f$. 
 
+      \comment
       Note that since the QMC model provides an EOS for neutron
       matter at low densities, the crust EOS is taken from 
       the QMC results as well, ignoring the modification in 
       the EOS from nuclei. 
+      2/2/16 - This is wrong. A crust is used (as stated in 
+      the paper. The crust EOS is set for the eos_tov_interp
+      object in bamr.cpp). 
+      \endcomment
   */
   class qmc_neut : public model {
 
@@ -699,12 +701,17 @@ namespace bamr {
       transition between the second and third polytrope is specified
       in <tt>trans2</tt>. The polytropic indices are allowed to be
       between 0.2 and 8.0 and the transition densities are allowed to
-      be between 0.75 and 8.0 \f$ \mathrm{fm}^{-4} \f$.
+      be between 0.75 and 8.0 \f$ \mathrm{fm}^{-4} \f$. 
 
+      \comment
       Note that since the QMC model provides an EOS for neutron
       matter at low densities, the crust EOS is taken from 
       the QMC results as well, ignoring the modification in 
       the EOS from nuclei. 
+      2/2/16 - This is wrong. A crust is used (as stated in 
+      the paper. The crust EOS is set for the eos_tov_interp
+      object in bamr.cpp). 
+      \endcomment
   */
   class qmc_threep : public model {
 
@@ -781,15 +788,20 @@ namespace bamr {
       0.3~\mathrm{fm}^{-4} \f$. The upper limits on the remaining
       pressure parameters are set so that the EOS is not acausal (even
       though causality is separately double-checked by the code in
-      bamr.cpp anyway).
+      bamr.cpp anyway). 
       
       The limits on the high-density EOS
       parameters are the same as those in \ref bamr::fixed_pressure.
 
+      \comment
       Note that since the QMC model provides an EOS for neutron
       matter at low densities, the crust EOS is taken from 
       the QMC results as well, ignoring the modification in 
       the EOS from nuclei. 
+      2/2/16 - This is wrong. A crust is used (as stated in 
+      the paper. The crust EOS is set for the eos_tov_interp
+      object in bamr.cpp). 
+      \endcomment
   */
   class qmc_fixp : public model {
 
@@ -848,10 +860,15 @@ namespace bamr {
   /** \brief QMC plus two line segments with arbitrary energy densities
       (8 parameters)
 
+      \comment
       Note that since the QMC model provides an EOS for neutron
       matter at low densities, the crust EOS is taken from 
       the QMC results as well, ignoring the modification in 
       the EOS from nuclei. 
+      2/2/16 - This is wrong. A crust is used (as stated in 
+      the paper. The crust EOS is set for the eos_tov_interp
+      object in bamr.cpp). 
+      \endcomment
   */
   class qmc_twolines : public model {
 

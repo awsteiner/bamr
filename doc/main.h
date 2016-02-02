@@ -46,6 +46,7 @@
     - \ref infile_sect 
     - \ref outfile_sect
     - \ref detail_sect
+    - \ref crust_sect
     - \ref model_sect
     - \ref func_stack_sect
     - \ref postproc_sect
@@ -187,6 +188,21 @@
     size for each parameter is chosen to be the difference betwen the
     high and low limiting values divided by the value \c step_fac .
     Increasing or decreasing this value may give better results.
+
+    \hline
+    \section crust_sect Crust model
+    
+    The crust is computed in \ref o2scl::eos_tov_interp using the
+    crust EOS from \ref o2scl::eos_tov_interp::default_low_dens_eos()
+    . However, by default, the transition pressure in this function is
+    assumed to be the largest pressure in the crust. This transition
+    pressure is decreased by 20 percent and a width of 20 percent is
+    given to the transition between the crust and the core EOS to
+    ensure that they are smooth using \ref
+    o2scl::eos_tov_interp::set_transition() .
+    
+    Model <tt>qstar</tt> from \ref bamr::quark_star is typically run
+    with <tt>use_crust</tt> set to false.
 
     \hline
     \section model_sect EOS Model

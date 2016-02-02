@@ -1530,7 +1530,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     double pt, pw;
     teos.get_transition(pt,pw);
     // We set the transition density a bit lower (because by default
-    // it's the largest density in the crust EOS) and then add a 
+    // it's the largest pressure in the crust EOS) and then add a 
     // small width
     teos.transition_mode=eos_tov_interp::smooth_trans;
     teos.set_transition(pt/1.2,1.2);
@@ -1960,19 +1960,29 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  
       // End of "if (suc==ix_success)"
     }
+
+    // --------------------------------------------------------------
+    // After the warm-up is over, the calculation is abritrarily
+    // broken up into 20 blocks. This section determines if we have
+    // finished a block or if we have finished the full calculation.
+    // Note that the value of mcmc_iterations isn't incremented until
+    // later.
     
-    // Note that the value of mcmc_iterations isn't incremented 
-    // until later
-    if (warm_up==false && (mcmc_iterations+1)%10==0) {
-    
+    if (warm_up==false) {
+      //&& (mcmc_iterations+1)%10==0) {
+
+      // If 'max_iters' is zero, then presume we're running over
+      // a fixed time interval
       if (max_iters==0) {
-	
-	// If we've made enough progress, force an update of the file
+
+	// Determine time elapsed
 #ifndef BAMR_NO_MPI
 	double elapsed=MPI_Wtime()-mpi_start_time;
 #else
 	double elapsed=time(0)-mpi_start_time;
 #endif
+	// Force a file update when we've finished a block or if
+	// we've run out of time
 	if (elapsed>max_time/((double)20)*((double)(block_counter+1)) ||
 	    (elapsed>max_time && block_counter==19)) {
 	  force_file_update=true;
@@ -1988,6 +1998,10 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
       } else {
 
+	// Otherwise, 'max_iters' is non-zero, so we're completing
+	// a fixed number of iterations.
+
+	// Force a file update when we've finished a block
 	if (((int)mcmc_iterations)+1>max_iters*(((int)block_counter)+1)/20) {
 	  force_file_update=true;
 	  block_counter++;
@@ -2006,15 +2020,21 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
      
     }
 
-    // Store a copy of measurements in file. By default file_default_iters
-    // is 10 and so the files are updated for every 10 MCMC successes
+    // --------------------------------------------------------------
+    // Store a copy of measurements in file if 'force_file_update' is
+    // true and for a fixed interval of MCMC successes. By default
+    // file_default_iters is 10 and so the files are updated for every
+    // 10 MCMC successes.
+    
     if (!warm_up && (force_file_update || 
-		     (mh_success+1)%file_update_iters==0)) {
+		     (mh_success+1) % file_update_iters==0)) {
       scr_out << "Updating files." << endl;
       update_files(fname_prefix,*modp,e_current);
       scr_out << "Done updating files." << endl;
     }
-    
+
+    // --------------------------------------------------------------
+
     // Increment iteration counter
     mcmc_iterations++;
 
@@ -2023,16 +2043,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       warm_up=false;
       scr_out << "Setting warm_up to false. Reset start time." << endl;
 #ifndef BAMR_NO_MPI
-      if (true) {
-	max_time-=MPI_Wtime()-mpi_start_time;
-	scr_out << "Resetting max_time to : " << max_time << endl;
-      }
+      max_time-=MPI_Wtime()-mpi_start_time;
+      scr_out << "Resetting max_time to : " << max_time << endl;
       mpi_start_time=MPI_Wtime();
 #else
-      if (true) {
-	max_time-=time(0)-mpi_start_time;
-	scr_out << "Resetting max_time to : " << max_time << endl;
-      }
+      max_time-=time(0)-mpi_start_time;
+      scr_out << "Resetting max_time to : " << max_time << endl;
       mpi_start_time=time(0);
 #endif
       scr_out.precision(12);
@@ -2064,7 +2080,9 @@ void bamr_class::setup_cli() {
      cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
-     "Typical values are 'twop', 'altp', 'fixp', 'genq', and 'qstar'.",
+     "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
+     "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
+     "model must be chosen before a MCMC run.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
      cli::comm_option_both},
     {'a',"add-data","Add data source to the list.",
