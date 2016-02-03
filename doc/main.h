@@ -190,15 +190,19 @@
     Increasing or decreasing this value may give better results.
 
     \hline
-    \section crust_sect Crust model
+    \section crust_sect Crust Model
     
     The crust is computed in \ref o2scl::eos_tov_interp using the
     crust EOS from \ref o2scl::eos_tov_interp::default_low_dens_eos()
-    . However, by default, the transition pressure in this function is
-    assumed to be the largest pressure in the crust. This transition
-    pressure is decreased by 20 percent and a width of 20 percent is
-    given to the transition between the crust and the core EOS to
-    ensure that they are smooth using \ref
+    . In \o2, by default, the transition pressure in this function is
+    assumed to be the largest pressure in the crust which for the
+    default crust EOS is the pressure corresponding to a baryon
+    density of 0.08 \f$ \mathrm{fm}^{-3} \f$. In order to ensure that
+    the transition is more smooth and that the core EOS (specified by
+    the user) is used for all pressures above a baryon density of 0.08
+    \f$ \mathrm{fm}^{-3} \f$, the default \o2 procedure is modified.
+    The transition pressure is decreased by 20 percent and a pressure
+    width of 20 percent is supplied to
     o2scl::eos_tov_interp::set_transition() .
     
     Model <tt>qstar</tt> from \ref bamr::quark_star is typically run
