@@ -1992,7 +1992,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	}
 	
 	// Check time
-	scr_out << "Elapsed time: " << elapsed << " " << max_time << endl;
+	scr_out << "Elapsed time: " << elapsed << " of " << max_time
+		<< " seconds" << endl;
 	if (elapsed>max_time) {
 	  main_done=true;
 	}
