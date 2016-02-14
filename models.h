@@ -74,7 +74,7 @@ namespace bamr {
     /// Compute the M-R curve directly
     virtual void compute_mr
       (entry &e, std::ofstream &scr_out,
-       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        int &success) {
       return;
     }

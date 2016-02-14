@@ -250,8 +250,8 @@ void bamr_class::init_grids_table(entry &low, entry &high) {
 }
 
 void bamr_class::fill_line
-(entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
- o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+(entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+ std::shared_ptr<o2scl::table_units<> > tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts,
  std::vector<double> &line) {
 
@@ -376,8 +376,8 @@ void bamr_class::fill_line
 }
 
 void bamr_class::add_measurement
-(entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
- o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+(entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+ std::shared_ptr<o2scl::table_units<> > tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
   
   // Test to see if we need to add a new line of data or
@@ -734,7 +734,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
   }
   
   // Ensure we're using linear interpolation
-  o2_shared_ptr<table_units<> >::type tab_eos=modref.cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=modref.cns.get_eos_results();
 
   if (has_eos) {
     tab_eos->set_interp_type(itp_linear);
@@ -868,7 +868,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     // !tab_eos->is_column("nb")) {' 
   }
 
-  o2_shared_ptr<table_units<> >::type tab_mvsr;
+  shared_ptr<table_units<> > tab_mvsr;
 
   if (has_eos) {
 
@@ -1171,7 +1171,7 @@ double bamr_class::compute_weight(entry &e, model &modref, tov_solve *tsr,
   success=ix_success;
   double ret=1.0;
 
-  o2_shared_ptr<table_units<> >::type tab_mvsr=tsr->get_results();
+  shared_ptr<table_units<> > tab_mvsr=tsr->get_results();
   tab_mvsr->set_interp_type(itp_linear);
   double m_max_current=tab_mvsr->max("gm");
 
@@ -1367,8 +1367,8 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 }
 
 void bamr_class::output_best(string fname_prefix, entry &e_best, double w_best,
-			     o2_shared_ptr<table_units<> >::type tab_eos,
-			     o2_shared_ptr<table_units<> >::type tab_mvsr,
+			     shared_ptr<table_units<> > tab_eos,
+			     shared_ptr<table_units<> > tab_mvsr,
 			     ubvector &wgts) {
   
   scr_out << "Best: " << e_best << " " << w_best << endl;
@@ -1753,8 +1753,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   }
   
   {
-    o2_shared_ptr<table_units<> >::type tab_eos;
-    o2_shared_ptr<table_units<> >::type tab_mvsr;
+    shared_ptr<table_units<> > tab_eos;
+    shared_ptr<table_units<> > tab_mvsr;
     tab_eos=modp->cns.get_eos_results();
     tab_mvsr=ts->get_results();
     if (warm_up==false) {
@@ -1869,8 +1869,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	mh_success++;
 
 	// Add measurement from new point
-	o2_shared_ptr<table_units<> >::type tab_eos;
-	o2_shared_ptr<table_units<> >::type tab_mvsr;
+	shared_ptr<table_units<> > tab_eos;
+	shared_ptr<table_units<> > tab_mvsr;
 
 	if (first_half) {
 	  tab_eos=modp2->cns.get_eos_results();
@@ -1919,8 +1919,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	mh_failure++;
 
-	o2_shared_ptr<table_units<> >::type tab_eos;
-	o2_shared_ptr<table_units<> >::type tab_mvsr;
+	shared_ptr<table_units<> > tab_eos;
+	shared_ptr<table_units<> > tab_mvsr;
 	
 	if (first_half) {
 	  tab_eos=modp->cns.get_eos_results();

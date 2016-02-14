@@ -436,16 +436,16 @@ namespace bamr {
     /** \brief Add a measurement
      */
     virtual void add_measurement
-      (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
-       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights);
 
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
      */
     virtual void fill_line
-      (entry &e, o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
-       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights,
        std::vector<double> &line);
     
@@ -492,8 +492,8 @@ namespace bamr {
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
       (std::string fname_prefix, entry &e_best, double w_best,
-       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_eos,
-       o2scl::o2_shared_ptr<o2scl::table_units<> >::type tab_mvsr,
+       std::shared_ptr<o2scl::table_units<> > tab_eos,
+       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        ubvector &wgts);
     //@}
 

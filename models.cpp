@@ -158,7 +158,7 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
@@ -312,7 +312,7 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
@@ -478,7 +478,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
@@ -643,7 +643,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
   tab_eos->add_constant("S",e.params[2]);
@@ -888,7 +888,7 @@ void quark_star::compute_eos(entry &e, int &success, std::ofstream &scr_out) {
   Delta=e.params[2];
   ms=e.params[3];
 
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
     
   // Compute chemical potential at zero pressure
   ubvector x(1), y(1);
@@ -1103,7 +1103,7 @@ void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
   success=bamr_class::ix_success;
   
   // Hack to start with a fresh table
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->clear_table();
   tab_eos->line_of_names("ed pr");
   tab_eos->set_interp_type(itp_linear);
@@ -1294,7 +1294,7 @@ void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
   success=bamr_class::ix_success;
   
   // Hack to start with a fresh table
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->clear_table();
   tab_eos->line_of_names("ed pr");
   tab_eos->set_interp_type(itp_linear);
@@ -1539,7 +1539,7 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   bool debug=false;
   
   // Hack to start with a fresh table
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->clear_table();
   tab_eos->line_of_names("ed pr");
   tab_eos->set_interp_type(itp_linear);
@@ -1783,7 +1783,7 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
   bool debug=false;
   
   // Hack to start with a fresh table
-  o2_shared_ptr<table_units<> >::type tab_eos=cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->clear_table();
   tab_eos->line_of_names("ed pr");
   tab_eos->set_interp_type(itp_linear);
