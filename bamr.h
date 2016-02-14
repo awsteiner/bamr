@@ -29,7 +29,6 @@
 #include <iostream>
 
 #include <o2scl/rng_gsl.h>
-#include <o2scl/shared_ptr.h>
 #include <o2scl/uniform_grid.h>
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_file.h>
