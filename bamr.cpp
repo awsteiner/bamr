@@ -59,7 +59,7 @@ bamr_class::bamr_class() {
   // Default parameter values
 
   grid_size=100;
-  file_update_iters=10;
+  file_update_iters=40;
   first_point_file="";
   first_point_type=fp_unspecified;
   debug_load=false;
@@ -1970,7 +1970,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // later.
     
     if (warm_up==false) {
-      //&& (mcmc_iterations+1)%10==0) {
 
       // If 'max_iters' is zero, then presume we're running over
       // a fixed time interval
@@ -1990,10 +1989,15 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  block_counter++;
 	  scr_out << "Finished block " << block_counter << " of 20." << endl;
 	}
+
+	// Output elapsed time every 10 iterations. The value of
+	// mcmc_iterations isn't increased until later.
+	if ((mcmc_iterations+1)%10==0) {
+	  // Check time
+	  scr_out << "Elapsed time: " << elapsed << " of " << max_time
+		  << " seconds" << endl;
+	}
 	
-	// Check time
-	scr_out << "Elapsed time: " << elapsed << " of " << max_time
-		<< " seconds" << endl;
 	if (elapsed>max_time) {
 	  main_done=true;
 	}
@@ -2029,7 +2033,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // 10 MCMC successes.
     
     if (!warm_up && (force_file_update || 
-		     (mh_success+1) % file_update_iters==0)) {
+		     (mcmc_iterations+1) % file_update_iters==0)) {
       scr_out << "Updating files." << endl;
       update_files(fname_prefix,*modp,e_current);
       scr_out << "Done updating files." << endl;

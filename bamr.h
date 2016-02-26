@@ -151,7 +151,7 @@ namespace bamr {
     double mvsr_pr_inc;
 
     /** \brief The number of MCMC successes between file updates
-	(default 10)
+	(default 40)
      */
     int file_update_iters;
 
