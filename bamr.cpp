@@ -120,6 +120,7 @@ bamr_class::bamr_class() {
 
   mpi_nprocs=1;
   mpi_rank=0;
+  max_chain_size=10000;
 }
 
 bamr_class::~bamr_class() {
@@ -514,13 +515,15 @@ void bamr_class::update_files(string fname_prefix, model &modp,
   hf.set_szt("n_chains",n_chains);
   string ch_name="markov_chain"+szttos(n_chains-1);
   hdf_output(hf,tc,ch_name);
-  if (tc.get_nlines()>10000) {
+  if (((int)tc.get_nlines())==max_chain_size) {
     tc.clear_data();
     n_chains++;
+
+    // 03/04/16 - I don't think this is necessary
     // Store the new empty chain in the HDF5 file just in case we
     // stop before the next call to update_files().
-    string ch_name="markov_chain"+szttos(n_chains-1);
-    hdf_output(hf,tc,ch_name);
+    //string ch_name="markov_chain"+szttos(n_chains-1);
+    //hdf_output(hf,tc,ch_name);
   }
 
   hf.close();
@@ -1507,10 +1510,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // Fix file_update_iters if necessary
   if (file_update_iters<1) {
-    scr_out << "Fixed 'file_update_iters' to 1." << endl;
+    scr_out << "Parameter 'file_update_iters' less than 1. Set equal to 1."
+	    << endl;
     file_update_iters=1;
   }
 
+  if (max_chain_size<1) {
+    O2SCL_ERR("Parameter 'max_chain_size' must be larger than 1.",
+	      exc_einval);
+  }
+  
   // Fix step_fac if it's too small
   if (step_fac<1.0) {
     step_fac=1.0;
@@ -2028,11 +2037,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     // --------------------------------------------------------------
     // Store a copy of measurements in file if 'force_file_update' is
-    // true and for a fixed interval of MCMC successes. By default
-    // file_default_iters is 10 and so the files are updated for every
-    // 10 MCMC successes.
+    // true and for a fixed interval of MCMC successes and if the
+    // table is at the maximum size. By default file_default_iters is
+    // 10 and so the files are updated for every 10 MCMC successes.
     
-    if (!warm_up && (force_file_update || 
+    if (!warm_up && (force_file_update ||
+		     ((int)tc.get_nlines())==max_chain_size || 
 		     (mcmc_iterations+1) % file_update_iters==0)) {
       scr_out << "Updating files." << endl;
       update_files(fname_prefix,*modp,e_current);
@@ -2236,6 +2246,13 @@ void bamr_class::setup_cli() {
   p_mvsr_pr_inc.help=((string)"The multiplicative pressure increment for ")+
     "the TOV solver (default 1.1).";
   cl.par_list.insert(make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
+
+  // --------------------------------------------------------
+
+  p_max_chain_size.i=&max_chain_size;
+  p_max_chain_size.help=((string)"Maximum Markov chain size (default ")+
+    "10000).";
+  cl.par_list.insert(make_pair("max_chain_size",&p_max_chain_size));
 
   // --------------------------------------------------------
 

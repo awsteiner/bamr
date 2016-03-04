@@ -109,6 +109,7 @@ namespace bamr {
     o2scl::cli::parameter_int p_user_seed;
     o2scl::cli::parameter_int p_max_iters;
     o2scl::cli::parameter_int p_file_update_iters;
+    o2scl::cli::parameter_int p_max_chain_size;
     o2scl::cli::parameter_bool p_norm_max;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_line;
@@ -155,6 +156,10 @@ namespace bamr {
      */
     int file_update_iters;
 
+    /** \brief Maximum size of Markov chain (default 10000)
+     */
+    int max_chain_size;
+    
     /** \brief If true, output debug information about the input data 
 	files (default false)
     */
