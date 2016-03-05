@@ -1971,12 +1971,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       // End of "if (suc==ix_success)"
     }
 
-    // --------------------------------------------------------------
+    // ---------------------------------------------------------------
+
     // After the warm-up is over, the calculation is abritrarily
-    // broken up into 20 blocks. This section determines if we have
-    // finished a block or if we have finished the full calculation.
-    // Note that the value of mcmc_iterations isn't incremented until
-    // later.
+    // broken up into 20 blocks. The purpose of these blocks is simply
+    // to allow easier tracking of progress and to force periodic file
+    // updates.
+
+    // This section determines if we have finished a block or if we
+    // have finished the full calculation. Note that the value of
+    // mcmc_iterations isn't incremented until later.
     
     if (warm_up==false) {
 
@@ -2002,7 +2006,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	// Output elapsed time every 10 iterations. The value of
 	// mcmc_iterations isn't increased until later.
 	if ((mcmc_iterations+1)%10==0) {
-	  // Check time
 	  scr_out << "Elapsed time: " << elapsed << " of " << max_time
 		  << " seconds" << endl;
 	}
