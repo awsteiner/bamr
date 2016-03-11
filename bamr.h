@@ -440,7 +440,8 @@ namespace bamr {
     /** \brief Add a measurement
      */
     virtual void add_measurement
-      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+      (std::string fname_prefix,
+       entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
        std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights);
 

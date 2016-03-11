@@ -377,7 +377,8 @@ void bamr_class::fill_line
 }
 
 void bamr_class::add_measurement
-(entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+(std::string fname_prefix,
+ entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
  std::shared_ptr<o2scl::table_units<> > tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
   
@@ -1768,8 +1769,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     tab_mvsr=ts->get_results();
     if (warm_up==false) {
       // Add the initial point if there's no warm up
-      add_measurement(e_current,tab_eos,tab_mvsr,w_current,true,
-		      mh_success,wgts);
+      add_measurement(fname_prefix,e_current,tab_eos,tab_mvsr,w_current,
+		      true,mh_success,wgts);
     }
     e_best=e_current;
     w_best=w_current;
@@ -1893,7 +1894,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	// Store results from new point
 	if (!warm_up) {
-	  add_measurement(e_next,tab_eos,tab_mvsr,w_next,true,
+	  add_measurement(fname_prefix,e_next,tab_eos,tab_mvsr,w_next,true,
 			  mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding new: " 
@@ -1943,8 +1944,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	// Repeat measurement of old point
 	if (!warm_up) {
-	  add_measurement(e_current,tab_eos,tab_mvsr,w_current,false,
-			  mh_success,wgts);
+	  add_measurement(fname_prefix,e_current,tab_eos,tab_mvsr,
+			  w_current,false,mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding old: " 
 		 << e_current.params[0] << " " << w_current << " "
