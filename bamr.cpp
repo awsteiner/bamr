@@ -748,7 +748,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve *tsr,
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
     // instead.
   
-    for(size_t i=0;(tab_eos->get_nlines()>0 && i<tab_eos->get_nlines()-1);i++) {
+    for(size_t i=0;(tab_eos->get_nlines()>0 && i<tab_eos->get_nlines()-1);
+	i++) {
       if ((!use_crust || tab_eos->get("ed",i)>0.6) && 
 	  tab_eos->get("pr",i+1)<tab_eos->get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << endl;
