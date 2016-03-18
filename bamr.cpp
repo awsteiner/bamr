@@ -37,6 +37,18 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
   
+double bamr_class::approx_like(entry &e) {
+  double ret=hg_norm;
+  size_t np=e.np;
+  ubvector q(np), vtmp(np);
+  for(size_t i=0;i<np;i++) {
+    q[i]=e.params[i]-hg_best[i];
+  }
+  vtmp=prod(hg_covar_inv,q);
+  ret*=exp(-0.5*inner_prod(q,vtmp));
+  return ret;
+}
+
 bamr_class::bamr_class() {
 
   nparams=0;
@@ -58,6 +70,7 @@ bamr_class::bamr_class() {
   
   // Default parameter values
 
+  hg_mode=0;
   grid_size=100;
   file_update_iters=40;
   first_point_file="";
@@ -1411,14 +1424,19 @@ int bamr_class::mcmc_init() {
 }
 
 bool bamr_class::make_step(double w_current, double w_next, bool debug,
-			   bool warm_up, int iteration) {
+			   bool warm_up, int iteration, double q_current,
+			   double q_next) {
   
   double r=gr.random();
 
   bool accept=false;
 
   // Metropolis algorithm
-  if (r<w_next/w_current) accept=true;
+  if (hg_mode>0) {
+    if (r<w_next*q_current/w_current/q_next) accept=true;
+  } else {
+    if (r<w_next/w_current) accept=true;
+  }
 
   if (debug) {
     cout << "Metropolis: " << r << " " << w_next/w_current << " " 
@@ -1762,6 +1780,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     scr_out << "Initial weight zero. Aborting." << endl;
     exit(-1);
   }
+
+  double q_current=0.0, q_next;
+  if (hg_mode>0) {
+    q_current=approx_like(e_current);
+  }
   
   {
     shared_ptr<table_units<> > tab_eos;
@@ -1799,35 +1822,87 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   size_t block_counter=0;
 
   while (!main_done) {
+    
+    if (hg_mode>0) {
 
-    // Make a step, ensure that we're in bounds and that
-    // the masses are not too large
-    for(size_t k=0;k<e_next.np;k++) {
+      // Make a Metropolis-Hastings step based on previous data
 
-      e_next.params[k]=e_current.params[k]+(gr.random()*2.0-1.0)*
-	(high.params[k]-low.params[k])/step_fac;
+      prob_dens_gaussian pdg;
+      size_t nv=e_next.np+nsources;
+      ubvector hg_temp(nv), hg_z(nv);
 
-      // If it's out of range, redo step near boundary
-      if (e_next.params[k]<low.params[k]) {
-	e_next.params[k]=low.params[k]+gr.random()*
+      bool out_of_range;
+      int hg_it=0;
+
+      do {
+
+	for(size_t k=0;k<nv;k++) {
+	  hg_z[k]=pdg.sample();
+	}
+	hg_temp=prod(hg_chol,hg_z);
+	for(size_t k=0;k<nv;k++) {
+	  if (k<e_next.np) {
+	    e_next.params[k]=hg_best[k]+hg_temp[k];
+	  } else {
+	    e_next.mass[k-e_next.np]=hg_best[k]+hg_temp[k];
+	  }
+	}
+	
+	out_of_range=false;
+	for(size_t k=0;k<e_next.np;k++) {
+	  if (e_next.params[k]<low.params[k] ||
+	      e_next.params[k]>high.params[k]) {
+	    out_of_range=true;
+	  }
+	}
+	for(size_t k=0;k<nsources;k++) {
+	  if (e_next.mass[k]<low.mass[k] ||
+	      e_next.mass[k]>high.mass[k]) {
+	    out_of_range=true;
+	  }
+	}
+
+	hg_it++;
+	if (hg_it>1000) {
+	  O2SCL_ERR("Sanity check in hg step.",exc_esanity);
+	}
+
+      } while (out_of_range==true);
+
+      q_next=approx_like(e_next);
+
+    } else {
+
+      // Make a step, ensure that we're in bounds and that
+      // the masses are not too large
+      for(size_t k=0;k<e_next.np;k++) {
+	
+	e_next.params[k]=e_current.params[k]+(gr.random()*2.0-1.0)*
 	  (high.params[k]-low.params[k])/step_fac;
-      } else if (e_next.params[k]>high.params[k]) {
-	e_next.params[k]=high.params[k]-gr.random()*
-	  (high.params[k]-low.params[k])/step_fac;
+	
+	// If it's out of range, redo step near boundary
+	if (e_next.params[k]<low.params[k]) {
+	  e_next.params[k]=low.params[k]+gr.random()*
+	    (high.params[k]-low.params[k])/step_fac;
+	} else if (e_next.params[k]>high.params[k]) {
+	  e_next.params[k]=high.params[k]-gr.random()*
+	    (high.params[k]-low.params[k])/step_fac;
+	}
+	
+	if (e_next.params[k]<low.params[k] || 
+	    e_next.params[k]>high.params[k]) {
+	  O2SCL_ERR("Sanity check in parameter step.",exc_esanity);
+	}
       }
-
-      if (e_next.params[k]<low.params[k] || 
-	  e_next.params[k]>high.params[k]) {
-	O2SCL_ERR("Sanity check in parameter step.",exc_esanity);
+      
+      if (nsources>0) {
+	// Just use a large value (1.0e6) here since we don't yet
+	// know the maximum mass
+	select_mass(e_current,e_next,1.0e6);
       }
+      
     }
     
-    if (nsources>0) {
-      // Just use a large value (1.0e6) here since we don't yet
-      // know the maximum mass
-      select_mass(e_current,e_next,1.0e6);
-    }
-
     // Output the next point
     if (output_next) {
       scr_out << "Iteration, next: " << mcmc_iterations << " " 
@@ -1873,7 +1948,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	     << e_next.params[0] << " " << w_next << endl;
       }
       
-      bool accept=make_step(w_current,w_next,debug,warm_up,mcmc_iterations);
+      bool accept=make_step(w_current,w_next,debug,warm_up,mcmc_iterations,
+			    q_current,q_next);
       
       if (accept) {
 

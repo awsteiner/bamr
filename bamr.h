@@ -28,11 +28,14 @@
 
 #include <iostream>
 
+#include <boost/numeric/ublas/vector.hpp>
+
 #include <o2scl/rng_gsl.h>
 #include <o2scl/uniform_grid.h>
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_file.h>
 #include <o2scl/exception.h>
+#include <o2scl/cholesky.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -91,6 +94,27 @@ namespace bamr {
   class bamr_class {
     
   protected:
+
+    /// Desc
+    int hg_mode;
+    
+    /// Desc
+    ubmatrix hg_chol;
+    
+    /// Desc
+    ubmatrix hg_covar_inv;
+    
+    /// Desc
+    double hg_norm;
+    
+    /// Desc
+    ubvector hg_best;
+    
+    /// Desc
+    bool craig_mode;
+    
+    /// Desc
+    double approx_like(entry &e);
 
     /** \brief Error handler for each thread
      */
@@ -421,7 +445,8 @@ namespace bamr {
     /** \brief Decide to accept or reject the step 
      */
     virtual bool make_step(double w_current, double w_next, bool debug,
-			   bool warm_up, int iteration);
+			   bool warm_up, int iteration,
+			   double q_current, double q_next);
 
     /** \brief Initialize the expectation value objects
 
