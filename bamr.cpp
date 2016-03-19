@@ -1268,6 +1268,79 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int bamr_class::hastings(std::vector<std::string> &sv, 
+				bool itive_com) {
+  if (sv.size()<2) {
+    cout << "No arguments given to 'hastings'." << endl;
+    return exc_efailed;
+  }
+
+  // Read the data file
+  std::string fname=sv[1];
+  hdf_file hf;
+  hf.open(fname);
+  table_units<> file_tab;
+  hdf_input(hf,file_tab,"markov_chain0");
+  hf.close();
+
+  // The total number of variables
+  size_t nv=nparams+nsources;
+  
+  // Find the average values
+  for(size_t i=0;i<nparams;i++) {
+    string str_i=((string)"params_")+modp->param_name(i);
+    hg_best[i]=vector_mean(file_tab.get_nlines(),file_tab[str_i]);
+  }
+  for(size_t i=0;i<nsources;i++) {
+    string str_i=((string)"M_")+modp->param_name(i);
+    hg_best[i+nparams]=vector_mean(file_tab.get_nlines(),file_tab[str_i]);
+  }
+  
+  // Construct the covariance matrix
+  ubmatrix covar(nv,nv);
+  for(size_t i=0;i<nparams;i++) {
+    string str_i=((string)"params_")+modp->param_name(i);
+    for(size_t j=i;j<nparams;j++) {
+      string str_j=((string)"params_")+modp->param_name(j);
+      covar(i,j)=vector_covariance(file_tab.get_nlines(),
+				   file_tab[str_i],file_tab[str_j]);
+      covar(j,i)=covar(i,j);
+    }
+    for(size_t j=0;j<nsources;j++) {
+      string str_j=((string)"M_")+modp->param_name(j);
+      covar(i,j+nparams)=vector_covariance(file_tab.get_nlines(),
+					   file_tab[str_i],file_tab[str_j]);
+      covar(j+nparams,i)=covar(i,j+nparams);
+    }
+  }
+  for(size_t i=0;i<nsources;i++) {
+    string str_i=((string)"M_")+modp->param_name(i);
+    for(size_t j=i;j<nsources;j++) {
+      string str_j=((string)"M_")+modp->param_name(j);
+      covar(i,j)=vector_covariance(file_tab.get_nlines(),
+				   file_tab[str_i],file_tab[str_j]);
+      covar(j,i)=covar(i,j);
+    }
+  }
+
+  // Perform the Cholesky decomposition
+  hg_chol=covar;
+  o2scl_linalg::cholesky_decomp(nv,hg_chol);
+
+  // Find the inverse
+  hg_covar_inv=hg_chol;
+  o2scl_linalg::cholesky_invert<ubmatrix>(nv,hg_covar_inv);
+  
+  // Force hg_chol to be lower triangular
+  for(size_t i=0;i<nv;i++) {
+    for(size_t j=0;j<nv;j++) {
+      if (i<j) hg_chol(i,j)=0.0;
+    }
+  }
+  
+  return 0;
+}
+
 int bamr_class::set_first_point(std::vector<std::string> &sv, 
 				bool itive_com) {
 
@@ -1781,7 +1854,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     exit(-1);
   }
 
-  double q_current=0.0, q_next;
+  double q_current=0.0, q_next=0.0;
   if (hg_mode>0) {
     q_current=approx_like(e_current);
   }

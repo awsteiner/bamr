@@ -111,9 +111,6 @@ namespace bamr {
     ubvector hg_best;
     
     /// Desc
-    bool craig_mode;
-    
-    /// Desc
     double approx_like(entry &e);
 
     /** \brief Error handler for each thread
@@ -407,6 +404,10 @@ namespace bamr {
      */
     virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
 
+    /** \brief Desc
+     */
+    virtual int hastings(std::vector<std::string> &sv, bool itive_com);
+			 
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
