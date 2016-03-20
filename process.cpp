@@ -1318,7 +1318,7 @@ void process::setup_cli() {
      new comm_option_mfptr<process>(this,&process::ylimits),
      cli::comm_option_both},
     {'C',"combine","Combine two bamr output files.",2,-1,
-     "<name> <file1> <file2> [file 3...]",
+     "<thin factor> <output filename> <file1> <file2> [file 3...]",
      ((string)"Long ")+"desc.",
      new comm_option_mfptr<process>(this,&process::combine),
      cli::comm_option_both},

@@ -39,10 +39,13 @@ using namespace bamr;
   
 double bamr_class::approx_like(entry &e) {
   double ret=hg_norm;
-  size_t np=e.np;
+  size_t np=nparams+nsources;
   ubvector q(np), vtmp(np);
-  for(size_t i=0;i<np;i++) {
+  for(size_t i=0;i<nparams;i++) {
     q[i]=e.params[i]-hg_best[i];
+  }
+  for(size_t i=nparams;i<nparams+nsources;i++) {
+    q[i]=e.mass[i-nparams]-hg_best[i];
   }
   vtmp=prod(hg_covar_inv,q);
   ret*=exp(-0.5*inner_prod(q,vtmp));
@@ -1269,9 +1272,17 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int bamr_class::hastings(std::vector<std::string> &sv, 
-				bool itive_com) {
+			 bool itive_com) {
+
+  bool debug=true;
+  
   if (sv.size()<2) {
     cout << "No arguments given to 'hastings'." << endl;
+    return exc_efailed;
+  }
+
+  if (model_type.length()==0) {
+    cout << "No model selected in 'hastings'." << endl;
     return exc_efailed;
   }
 
@@ -1283,43 +1294,94 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   hdf_input(hf,file_tab,"markov_chain0");
   hf.close();
 
+  if (debug) cout.setf(ios::scientific);
+
+  // Create a new column equal to mult times weight
+  file_tab.function_column("mult*weight","mwgt");
+  
+  // Remove
+  double max_mwgt=file_tab.max("weight");
+  cout << "lines: " << file_tab.get_nlines() << endl;
+  file_tab.add_constant("max_mwgt",max_mwgt);
+  file_tab.delete_rows("weight<1.0e-31");
+  cout << "lines: " << file_tab.get_nlines() << endl;
+  exit(-1);
+  
+  if (true) {
+    size_t row=file_tab.function_find_row("mwgt");
+    cout << file_tab.get("mult",row) << endl;
+    cout << file_tab.get("weight",row) << endl;
+    cout << endl;
+    for(size_t i=0;i<nparams;i++) {
+      string str_i=((string)"param_")+modp->param_name(i);
+      cout << modp->param_name(i) << " " << file_tab.get(str_i,i) << endl;
+    }
+  }
+
   // The total number of variables
   size_t nv=nparams+nsources;
+  if (debug) {
+    cout << nparams << " parameters and " << nsources << " sources."
+	 << endl;
+  }
+  hg_best.resize(nv);
   
   // Find the average values
   for(size_t i=0;i<nparams;i++) {
-    string str_i=((string)"params_")+modp->param_name(i);
-    hg_best[i]=vector_mean(file_tab.get_nlines(),file_tab[str_i]);
+    string str_i=((string)"param_")+modp->param_name(i);
+    hg_best[i]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
+			    file_tab["mwgt"]);
+    cout << "Hastings best " << i << " " << hg_best[i] << endl;
   }
+  cout << endl;
   for(size_t i=0;i<nsources;i++) {
-    string str_i=((string)"M_")+modp->param_name(i);
-    hg_best[i+nparams]=vector_mean(file_tab.get_nlines(),file_tab[str_i]);
+    string str_i=((string)"Mns_")+source_names[i];
+    hg_best[i+nparams]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
+				    file_tab["mwgt"]);
+    cout << "Hastings best " << i+nparams << " "
+	 << hg_best[i+nparams] << endl;
   }
+  exit(-1);
   
   // Construct the covariance matrix
   ubmatrix covar(nv,nv);
   for(size_t i=0;i<nparams;i++) {
-    string str_i=((string)"params_")+modp->param_name(i);
+    string str_i=((string)"param_")+modp->param_name(i);
     for(size_t j=i;j<nparams;j++) {
-      string str_j=((string)"params_")+modp->param_name(j);
-      covar(i,j)=vector_covariance(file_tab.get_nlines(),
-				   file_tab[str_i],file_tab[str_j]);
+      string str_j=((string)"param_")+modp->param_name(j);
+      covar(i,j)=wvector_covariance(file_tab.get_nlines(),
+				    file_tab[str_i],file_tab[str_j],
+				    file_tab["mult"]);
+      if (debug) {
+	cout << "Covar: " << i << " " << j << " "
+	     << covar(i,j) << endl;
+      }
       covar(j,i)=covar(i,j);
     }
     for(size_t j=0;j<nsources;j++) {
-      string str_j=((string)"M_")+modp->param_name(j);
-      covar(i,j+nparams)=vector_covariance(file_tab.get_nlines(),
-					   file_tab[str_i],file_tab[str_j]);
+      string str_j=((string)"Mns_")+source_names[j];
+      covar(i,j+nparams)=wvector_covariance(file_tab.get_nlines(),
+					    file_tab[str_i],file_tab[str_j],
+					    file_tab["mult"]);
+      if (debug) {
+	cout << "Covar: " << i << " " << j+nparams << " "
+	     << covar(i,j+nparams) << endl;
+      }
       covar(j+nparams,i)=covar(i,j+nparams);
     }
   }
   for(size_t i=0;i<nsources;i++) {
-    string str_i=((string)"M_")+modp->param_name(i);
+    string str_i=((string)"Mns_")+source_names[i];
     for(size_t j=i;j<nsources;j++) {
-      string str_j=((string)"M_")+modp->param_name(j);
-      covar(i,j)=vector_covariance(file_tab.get_nlines(),
-				   file_tab[str_i],file_tab[str_j]);
-      covar(j,i)=covar(i,j);
+      string str_j=((string)"Mns_")+source_names[j];
+      covar(i+nparams,j+nparams)=wvector_covariance(file_tab.get_nlines(),
+				    file_tab[str_i],file_tab[str_j],
+				    file_tab["mult"]);
+      if (debug) {
+	cout << "Covar: " << i+nparams << " " << j+nparams << " "
+	     << covar(i+nparams,j+nparams) << endl;
+      }
+      covar(j+nparams,i+nparams)=covar(i+nparams,j+nparams);
     }
   }
 
@@ -1337,6 +1399,59 @@ int bamr_class::hastings(std::vector<std::string> &sv,
       if (i<j) hg_chol(i,j)=0.0;
     }
   }
+
+  // Compute the normalization, weighted by the likelihood function
+  hg_norm=1.0;
+  size_t step=file_tab.get_nlines()/20;
+  if (step<1) step=1;
+  double renorm=0.0;
+  double wgt_sum=0.0;
+  for(size_t i=0;i<file_tab.get_nlines();i+=step) {
+    entry e(nparams,nsources);
+    for(size_t j=0;j<nparams;j++) {
+      string str_j=((string)"param_")+modp->param_name(j);
+      e.params[j]=file_tab.get(str_j,i);
+    }
+    for(size_t j=0;j<nsources;j++) {
+      string str_j=((string)"Mns_")+source_names[j];
+      e.mass[j]=file_tab.get(str_j,i);
+    }
+    double wgt=file_tab.get("mult",i)*file_tab.get("weight",i);
+    double rat=wgt/approx_like(e);
+    renorm+=wgt*wgt/approx_like(e);
+    if (debug) {
+      cout << wgt << " " << approx_like(e) << " " << rat << endl;
+    }
+    wgt_sum+=wgt;
+  }
+  renorm/=((double)wgt_sum);
+  hg_norm*=renorm;
+  if (debug) {
+    cout << "New normalization: " << hg_norm << endl;
+  }
+
+  step=file_tab.get_nlines()/20;
+  if (step<1) step=1;
+  for(size_t i=0;i<file_tab.get_nlines();i+=step) {
+    entry e(nparams,nsources);
+    for(size_t j=0;j<nparams;j++) {
+      string str_j=((string)"param_")+modp->param_name(j);
+      e.params[j]=file_tab.get(str_j,i);
+    }
+    for(size_t j=0;j<nsources;j++) {
+      string str_j=((string)"Mns_")+source_names[j];
+      e.mass[j]=file_tab.get(str_j,i);
+    }
+    double wgt=file_tab.get("mult",i)*file_tab.get("weight",i);
+    double rat=wgt/approx_like(e);
+    if (debug) {
+      cout << wgt << " " << approx_like(e) << " " << rat << endl;
+    }
+  }
+  if (debug) {
+    exit(-1);
+  }
+  hg_mode=1;
   
   return 0;
 }
@@ -1510,6 +1625,9 @@ bool bamr_class::make_step(double w_current, double w_next, bool debug,
   } else {
     if (r<w_next/w_current) accept=true;
   }
+  scr_out << r << " " << accept << endl;
+  scr_out << w_next << " " << w_current << endl;
+  scr_out << q_next << " " << q_current << endl;
 
   if (debug) {
     cout << "Metropolis: " << r << " " << w_next/w_current << " " 
@@ -1843,6 +1961,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
   // Compute initial weight
   int suc;
+  cout << "Initial weight: " << w_current << endl;
   w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
   ret_codes[suc]++;
   scr_out << "Initial weight: " << w_current << endl;
@@ -1900,7 +2019,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
       // Make a Metropolis-Hastings step based on previous data
 
-      prob_dens_gaussian pdg;
       size_t nv=e_next.np+nsources;
       ubvector hg_temp(nv), hg_z(nv);
 
@@ -2239,7 +2357,7 @@ void bamr_class::setup_cli() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=4;
+  static const int nopt=5;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      1,1,"<filename prefix>",((string)"This is the main part of ")+
@@ -2278,6 +2396,11 @@ void bamr_class::setup_cli() {
      "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
      "to ensure they do not get confused with other options.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
+     cli::comm_option_both},
+    {'s',"hastings","Specify distribution for M-H step",
+     1,1,"<filename>",
+     ((string)"Desc. ")+"Desc2.",
+     new comm_option_mfptr<bamr_class>(this,&bamr_class::hastings),
      cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);

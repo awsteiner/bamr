@@ -96,6 +96,9 @@ namespace bamr {
   protected:
 
     /// Desc
+    o2scl::prob_dens_gaussian pdg;
+    
+    /// Desc
     int hg_mode;
     
     /// Desc
