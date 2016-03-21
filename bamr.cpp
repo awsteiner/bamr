@@ -1274,7 +1274,7 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 int bamr_class::hastings(std::vector<std::string> &sv, 
 			 bool itive_com) {
 
-  bool debug=true;
+  bool debug=false;
   
   if (sv.size()<2) {
     cout << "No arguments given to 'hastings'." << endl;
@@ -1300,24 +1300,12 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   file_tab.function_column("mult*weight","mwgt");
   
   // Remove
-  double max_mwgt=file_tab.max("weight");
-  cout << "lines: " << file_tab.get_nlines() << endl;
+  double max_mwgt=file_tab.max("mwgt");
+  if (debug) cout << "lines: " << file_tab.get_nlines() << endl;
   file_tab.add_constant("max_mwgt",max_mwgt);
-  file_tab.delete_rows("weight<1.0e-31");
-  cout << "lines: " << file_tab.get_nlines() << endl;
-  exit(-1);
+  file_tab.delete_rows("mwgt<0.1*max_mwgt");
+  if (debug) cout << "lines: " << file_tab.get_nlines() << endl;
   
-  if (true) {
-    size_t row=file_tab.function_find_row("mwgt");
-    cout << file_tab.get("mult",row) << endl;
-    cout << file_tab.get("weight",row) << endl;
-    cout << endl;
-    for(size_t i=0;i<nparams;i++) {
-      string str_i=((string)"param_")+modp->param_name(i);
-      cout << modp->param_name(i) << " " << file_tab.get(str_i,i) << endl;
-    }
-  }
-
   // The total number of variables
   size_t nv=nparams+nsources;
   if (debug) {
@@ -1331,17 +1319,12 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     string str_i=((string)"param_")+modp->param_name(i);
     hg_best[i]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
 			    file_tab["mwgt"]);
-    cout << "Hastings best " << i << " " << hg_best[i] << endl;
   }
-  cout << endl;
   for(size_t i=0;i<nsources;i++) {
     string str_i=((string)"Mns_")+source_names[i];
     hg_best[i+nparams]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
 				    file_tab["mwgt"]);
-    cout << "Hastings best " << i+nparams << " "
-	 << hg_best[i+nparams] << endl;
   }
-  exit(-1);
   
   // Construct the covariance matrix
   ubmatrix covar(nv,nv);
