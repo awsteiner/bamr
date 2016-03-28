@@ -76,7 +76,6 @@ help:
 	@echo "  bamr_nompi"
 	@echo "Developer targets:"
 	@echo "  doc"
-	@echo "  utk-web"
 	@echo "  update-tags"
 
 # ----------------------------------------------------------------------
@@ -134,10 +133,6 @@ test_nompi:
 # ----------------------------------------------------------------------
 
 empty:
-
-utk-web:
-	cd doc/html; cp -r * $(HOME)/wcs/int3/web/utk/bamr
-	cd $(HOME)/wcs/int3/web; make put
 
 update-tags:
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
