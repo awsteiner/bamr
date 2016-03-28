@@ -64,13 +64,14 @@
     <a href="http://www.hdfgroup.org">HDF5</a> 
     (versions 1.8.14 and later), 
     \htmlonly
-    the most recent release of 
+    the most current version of
     <a href="http://web.utk.edu/~asteine1/o2scl">O<span style='position:
     relative; top: 0.3em; font-size: 0.8em'>2</span>scl</a>
     \endhtmlonly
-    and MPI (tested with openmpi-1.8.6). After these four packages are
-    successfully installed, you will need to edit the \c makefile and
-    then compile \bm before execution.
+    from the github repository, and MPI (tested with openmpi-1.8.6).
+    After these four packages are successfully installed, you will
+    need to edit the \c makefile and then compile \bm before
+    execution.
 
     \hline
     \section dl_sect Download
