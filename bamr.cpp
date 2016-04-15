@@ -1794,7 +1794,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       // Get masses
       if (nsources>0) {
 	for(size_t i=0;i<nsources;i++) {
-	  string obj_name=((string)"M_")+source_names[i];
+	  string obj_name=((string)"Mns_")+source_names[i];
 	  e_current.mass[i]=file_tab.get(obj_name,last_line);
 	  scr_out << "Mass for " << source_names[i] << " " 
 		  << e_current.mass[i] << endl;
