@@ -1457,6 +1457,9 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
       first_point[i-2]=o2scl::function_to_double(sv[i]);
     }
     first_point_type=fp_unspecified;
+  } else if (sv[1]==((string)"prefix")) {
+    first_point_type=fp_last;
+    first_point_file=sv[2]+((std::string)"_")+std::to_string(mpi_rank)+"_out";
   } else if (sv[1]==((string)"last")) {
     first_point_type=fp_last;
     first_point_file=sv[2];
