@@ -1489,6 +1489,14 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     delete modp2;
     modp2=0;
   }
+#ifdef O2SCL_SMOVE
+  if (mod_arr.size()>0) {
+    for(size_t i=0;i<nwalk;i++) {
+      delete mod_arr[i];
+    }
+    mod_arr.clear();
+  }
+#endif
   if (sv[1]==((string)"twop")) {
     modp=new two_polytropes;
     modp2=new two_polytropes;
@@ -1684,6 +1692,16 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   }
   string fname_prefix=sv[1];
 
+#ifdef O2SCL_SMOVE
+  ts_arr.resize(nwalk);
+  for(size_t i=0;i<nwalk;i++) {
+    ts[i].verbose=0;
+    ts[i].set_units("1/fm^4","1/fm^4","1/fm^3");
+    ts[i].set_eos(teos);
+    ts[i].err_nonconv=false;
+  }
+#endif
+  
   // Make sure that first_update() is called when necessary
   first_file_update=false;
 
@@ -1767,9 +1785,20 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   // First MC point
   entry e_current(nparams,nsources);
+
+#ifdef O2SCL_SMOVE
+  std::vector<entry> e_curr_arr(nwalk);
+  std::vector<entry> e_next_arr(nwalk);
+  for(size_t i=0;i<nwalk;i++) {
+    e_curr_arr.allocate(nparams,nsources);
+    e_next_arr.allocate(nparams,nsources);
+  }
+  std::vector<double> w_curr_arr(nwalk);
+  std::vector<double> w_next_arr(nwalk);
+#endif
   
   if (first_point_file.length()>0) {
-
+  
     if (first_point_type==fp_last) {
 
       // Read file 
@@ -1898,6 +1927,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   }
 
+  scr_out << "First point: " << e_current << endl;
+
   // Determine initial masses
 
   for(size_t i=0;i<nsources;i++) {
@@ -1905,8 +1936,19 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     e_current.rad[i]=0.0;
   }
 
-  scr_out << "First point: " << e_current << endl;
+#ifdef O2SCL_SMOVE
 
+  scr_out << "First point from default." << endl;
+  for(size_t ij=0;ij<nwalk;ij++) {
+    mod_arr[ij]->first_point(e_curr_arr[ij]);
+    for(size_t i=0;i<nsources;i++) {
+      e_curr_arr[ij].mass[i]=first_mass[i];
+      e_curr_arr[ij].rad[i]=0.0;
+    }
+  }
+  
+#endif
+  
   // Set lower and upper bounds for parameters
   low.allocate(nparams,nsources);
   high.allocate(nparams,nsources);
@@ -1962,12 +2004,28 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     scr_out << "Initial weight zero. Aborting." << endl;
     exit(-1);
   }
-
+  
   double q_current=0.0, q_next=0.0;
   if (hg_mode>0) {
     q_current=approx_like(e_current);
   }
   
+#ifdef O2SCL_SMOVE
+  for(size_t ij=0;ij<nwalk;ij++) {
+    cout << "Initial weight: " << w_current << endl;
+    w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
+    ret_codes[suc]++;
+    scr_out << "Initial weight: " << w_current << endl;
+    if (w_current<=0.0) {
+      for(size_t i=0;i<nsources;i++) {
+	scr_out << i << " " << wgts[i] << endl;
+      }
+      scr_out << "Initial weight zero. Aborting." << endl;
+      exit(-1);
+    }
+  }
+#endif
+
   {
     shared_ptr<table_units<> > tab_eos;
     shared_ptr<table_units<> > tab_mvsr;
