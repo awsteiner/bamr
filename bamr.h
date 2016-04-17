@@ -95,26 +95,29 @@ namespace bamr {
     
   protected:
 
-    /// Desc
+    /// \name Member data for the Metropolis-Hastings step
+    //@{
+    /// A Gaussian probability distribution
     o2scl::prob_dens_gaussian pdg;
     
-    /// Desc
+    /// If true, then use Metropolis-Hastings with a multivariate Gaussian
     int hg_mode;
     
-    /// Desc
+    /// The Cholesky decomposition of the covariance matrix
     ubmatrix hg_chol;
     
-    /// Desc
+    /// The inverse of the covariance matrix
     ubmatrix hg_covar_inv;
     
-    /// Desc
+    /// The normalization factor
     double hg_norm;
     
-    /// Desc
+    /// The location of the peak
     ubvector hg_best;
     
-    /// Desc
+    /// Return the approximate likelihood
     double approx_like(entry &e);
+    //@}
 
     /** \brief Error handler for each thread
      */
@@ -407,7 +410,7 @@ namespace bamr {
      */
     virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
 
-    /** \brief Desc
+    /** \brief Prepare for MCMC using Metropolis-Hastings
      */
     virtual int hastings(std::vector<std::string> &sv, bool itive_com);
 			 
