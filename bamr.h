@@ -95,6 +95,10 @@ namespace bamr {
     
   protected:
 
+#ifdef O2SCL_SMOVE
+    size_t nwalk;
+#endif
+    
     /// \name Member data for the Metropolis-Hastings step
     //@{
     /// A Gaussian probability distribution
@@ -180,7 +184,7 @@ namespace bamr {
 
     /** \brief The number of MCMC successes between file updates
 	(default 40)
-     */
+    */
     int file_update_iters;
 
     /** \brief Maximum size of Markov chain (default 10000)
@@ -194,7 +198,7 @@ namespace bamr {
 
     /** \brief If true, output each line of the table as it's stored
 	(default false)
-     */
+    */
     bool debug_line;
 
     /** \brief If true, normalize the data distributions so that the
@@ -247,7 +251,7 @@ namespace bamr {
     int n_warm_up;
 
     /** \brief Time in seconds (default is 86400 seconds or 1 day)
-    */
+     */
     double max_time;
 
     /** \brief If non-zero, use as the seed for the random number 
@@ -262,7 +266,7 @@ namespace bamr {
     
     /** \brief If true, output information about the baryon mass
 	as well as the gravitational mass (default false)
-     */
+    */
     bool inc_baryon_mass;
     //@}
 
@@ -271,7 +275,7 @@ namespace bamr {
 	These are automatically computed in load_mc() as the
 	smallest rectangle in the \f$ (M,R) \f$ plane which
 	encloses all of the user-specified source data
-     */
+    */
     //@{
     double in_m_min;
     double in_m_max;
@@ -309,7 +313,7 @@ namespace bamr {
     std::vector<std::string> slice_names;
 
     /** \brief The number of sources
-    */
+     */
     size_t nsources;
 
     /// The initial set of neutron star masses
@@ -393,6 +397,11 @@ namespace bamr {
     /// The second copy of the model for the EOS
     model *modp2;
 
+#ifdef O2SCL_SMOVE
+    /// EOS model list
+    std::vector<model *> mod_arr;
+#endif
+
     /// Random number generator
     o2scl::rng_gsl gr;
   
@@ -466,7 +475,7 @@ namespace bamr {
 	
 	This function is empty by default.
     */
-    virtual void prepare_eos(entry &e, model &modref, o2scl::tov_solve *tsr, 
+    virtual void prepare_eos(entry &e, model &modref, o2scl::tov_solve &tsr, 
 			     int &success);
 
     /** \brief Add a measurement
@@ -479,7 +488,7 @@ namespace bamr {
 
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
-     */
+    */
     virtual void fill_line
       (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
        std::shared_ptr<o2scl::table_units<> > tab_mvsr,
@@ -510,7 +519,7 @@ namespace bamr {
 	Called by mcmc().
     */
     virtual double compute_weight(entry &e, model &modref, 
-				  o2scl::tov_solve *ts, int &success,
+				  o2scl::tov_solve &ts, int &success,
 				  ubvector &wgts, bool warm_up);
 
   public:
@@ -521,7 +530,7 @@ namespace bamr {
 
 	\todo Temporarily made public for drdp project hack
     */
-    virtual void compute_star(entry &e, model &modref, o2scl::tov_solve *ts, 
+    virtual void compute_star(entry &e, model &modref, o2scl::tov_solve &ts, 
 			      int &success);
     
   protected:
@@ -539,17 +548,16 @@ namespace bamr {
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
 
-    /// Pointer to a TOV solver
-    o2scl::tov_solve *ts;
-  
-    /// Second pointer to a TOV solver
-    o2scl::tov_solve *ts2;
+    /// TOV solver
+    o2scl::tov_solve ts;
 
-    /// Default TOV solver
-    o2scl::tov_solve def_ts;
-  
-    /// Second default TOV solver
-    o2scl::tov_solve def_ts2;
+#ifdef O2SCL_SMOVE
+    /// TOV solver array
+    std::vector<o2scl::tov_solve> ts_arr;
+#endif
+
+    /// Second TOV solver
+    o2scl::tov_solve ts2;
     //@}
 
     /** \brief The arguments sent to the command-line
