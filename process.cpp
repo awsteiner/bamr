@@ -228,14 +228,15 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
     
   // column name
   string name=sv[1];
-    
+
   // (output file is sv[2])
 
   // Form list of data files
   vector<string> files;
   for(size_t i=3;i<sv.size();i++) files.push_back(sv[i]);
   size_t nf=files.size();
-
+  
+  
   // Storage for all of the values and weights
   vector<double> values, weights;
 
@@ -306,6 +307,8 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
   if (verbose>0) {
     cout << "Done with reading files.\n" << endl;
   }
+
+  // ------------------------------------------------------------
 
   // ------------------------------------------------------------
   // Get limits for grid
