@@ -1448,6 +1448,7 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
   }
 
   if (sv[1]==((string)"values")) {
+
     first_point.resize(sv.size()-1);
     for(size_t i=2;i<sv.size();i++) {
       // Remove parentheses if present
@@ -1457,9 +1458,18 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
       first_point[i-2]=o2scl::function_to_double(sv[i]);
     }
     first_point_type=fp_unspecified;
+
   } else if (sv[1]==((string)"prefix")) {
+
+#ifndef BAMR_NO_MPI
+  // Get MPI rank, etc.
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
+#endif
+  
     first_point_type=fp_last;
     first_point_file=sv[2]+((std::string)"_")+std::to_string(mpi_rank)+"_out";
+
   } else if (sv[1]==((string)"last")) {
     first_point_type=fp_last;
     first_point_file=sv[2];
@@ -1947,7 +1957,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
   // Compute initial weight
   int suc;
-  cout << "Initial weight: " << w_current << endl;
   w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
   ret_codes[suc]++;
   scr_out << "Initial weight: " << w_current << endl;
