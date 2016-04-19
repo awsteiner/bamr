@@ -1798,13 +1798,10 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 #ifdef O2SCL_SMOVE
   std::vector<entry> e_curr_arr(nwalk);
-  std::vector<entry> e_next_arr(nwalk);
   for(size_t i=0;i<nwalk;i++) {
     e_curr_arr.allocate(nparams,nsources);
-    e_next_arr.allocate(nparams,nsources);
   }
   std::vector<double> w_curr_arr(nwalk);
-  std::vector<double> w_next_arr(nwalk);
 #endif
   
   if (first_point_file.length()>0) {
@@ -1946,11 +1943,22 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     e_current.rad[i]=0.0;
   }
 
+  // Set lower and upper bounds for parameters
+  low.allocate(nparams,nsources);
+  high.allocate(nparams,nsources);
+  modp->low_limits(low);
+  modp->high_limits(high);
+
 #ifdef O2SCL_SMOVE
 
   scr_out << "First point from default." << endl;
   for(size_t ij=0;ij<nwalk;ij++) {
     mod_arr[ij]->first_point(e_curr_arr[ij]);
+    for(size_t ik=0;ik<nparams;ik++) {
+      e_curr_arr[ij].param[ik]+=(gr.random()*2.0-1.0)*(high.param[ik]-low.param[ik]/100.0;
+    }
+    for(size_t ik=0;ik<nsources;ik++) {
+    }
     for(size_t i=0;i<nsources;i++) {
       e_curr_arr[ij].mass[i]=first_mass[i];
       e_curr_arr[ij].rad[i]=0.0;
@@ -1959,12 +1967,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
 #endif
   
-  // Set lower and upper bounds for parameters
-  low.allocate(nparams,nsources);
-  high.allocate(nparams,nsources);
-  modp->low_limits(low);
-  modp->high_limits(high);
-
   n_chains=0;
 
   // Vector containing weights
@@ -2021,11 +2023,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
 #ifdef O2SCL_SMOVE
   for(size_t ij=0;ij<nwalk;ij++) {
-    cout << "Initial weight: " << w_current << endl;
-    w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
-    ret_codes[suc]++;
-    scr_out << "Initial weight: " << w_current << endl;
-    if (w_current<=0.0) {
+    w_curr_arr[ij]=compute_weight(e_curr_arr[ij],*modp,ts,suc,wgts,warm_up);
+    scr_out << "Initial weight: " << w_curr_arr[ij] << endl;
+    if (w_curr_arr[ij]<=0.0) {
       for(size_t i=0;i<nsources;i++) {
 	scr_out << i << " " << wgts[i] << endl;
       }
@@ -2072,6 +2072,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   while (!main_done) {
     
+#ifdef O2SCL_SMOVE
+#endif
+
     if (hg_mode>0) {
 
       // Make a Metropolis-Hastings step based on previous data
