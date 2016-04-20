@@ -1803,7 +1803,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   }
   std::vector<double> w_curr_arr(nwalk);
 #endif
-  
+
   if (first_point_file.length()>0) {
   
     if (first_point_type==fp_last) {
@@ -1949,24 +1949,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   modp->low_limits(low);
   modp->high_limits(high);
 
-#ifdef O2SCL_SMOVE
-
-  scr_out << "First point from default." << endl;
-  for(size_t ij=0;ij<nwalk;ij++) {
-    mod_arr[ij]->first_point(e_curr_arr[ij]);
-    for(size_t ik=0;ik<nparams;ik++) {
-      e_curr_arr[ij].param[ik]+=(gr.random()*2.0-1.0)*(high.param[ik]-low.param[ik]/100.0;
-    }
-    for(size_t ik=0;ik<nsources;ik++) {
-    }
-    for(size_t i=0;i<nsources;i++) {
-      e_curr_arr[ij].mass[i]=first_mass[i];
-      e_curr_arr[ij].rad[i]=0.0;
-    }
-  }
-  
-#endif
-  
   n_chains=0;
 
   // Vector containing weights
@@ -2003,6 +1985,30 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   mh_success=0;
   mh_failure=0;
   
+#ifdef O2SCL_SMOVE
+
+  scr_out << "First point from default." << endl;
+  for(size_t ij=0;ij<nwalk;ij++) {
+    bool done=false;
+    while (!done) {
+      mod_arr[ij]->first_point(e_curr_arr[ij]);
+      for(size_t ik=0;ik<nparams;ik++) {
+	e_curr_arr[ij].param[ik]+=(gr.random()*2.0-1.0)*
+	  (high.param[ik]-low.param[ik])/100.0;
+      }
+      for(size_t ik=0;ik<nsources;ik++) {
+	e_curr_arr[ij].mass[ik]=first_mass[ik]+(gr.random()*2.0-1.0)*
+	  (high.mass[ik]-low.mass[ik])/100.0;
+	e_curr_arr[ij].rad[i]=0.0;
+      }
+      w_curr_arr[ij]=compute_weight(e_curr_arr[ij],mod_arr[ij],
+				    ts_arr[ij],suc,wgts,warm_up);
+      if (w_curr_arr[ij]>0.0) done=true;
+    }
+  }
+  
+#endif
+  
   // Compute initial weight
   int suc;
   w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
@@ -2020,20 +2026,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   if (hg_mode>0) {
     q_current=approx_like(e_current);
   }
-  
-#ifdef O2SCL_SMOVE
-  for(size_t ij=0;ij<nwalk;ij++) {
-    w_curr_arr[ij]=compute_weight(e_curr_arr[ij],*modp,ts,suc,wgts,warm_up);
-    scr_out << "Initial weight: " << w_curr_arr[ij] << endl;
-    if (w_curr_arr[ij]<=0.0) {
-      for(size_t i=0;i<nsources;i++) {
-	scr_out << i << " " << wgts[i] << endl;
-      }
-      scr_out << "Initial weight zero. Aborting." << endl;
-      exit(-1);
-    }
-  }
-#endif
 
   {
     shared_ptr<table_units<> > tab_eos;
@@ -2073,6 +2065,21 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   while (!main_done) {
     
 #ifdef O2SCL_SMOVE
+    // Choose walker to move
+    size_t ik=mcmc_iterations % nwalk;
+    // Choose jth walker
+    size_t ij=ik;
+    while (ij==ik) ij=gr.random()*nwalk;
+    // Select z
+    double z;
+    for(size_t i=0;i<nparams;i++) {
+    e_next.params[i]=e_curr_arr[ij].params[i]+z*
+      (e_curr_arr[ik].params[i]-e_curr_arr[ij].params[i]);
+  }
+    for(size_t i=0;i<nsources;i++) {
+    e_next.mass[i]=e_curr_arr[ij].mass[i]+z*
+      (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
+  }
 #endif
 
     if (hg_mode>0) {
