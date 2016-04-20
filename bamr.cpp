@@ -1284,6 +1284,14 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     return exc_efailed;
   }
 
+#ifndef BAMR_MPI_LOAD
+  int buffer=0, tag=0;
+  if (mpi_nprocs>1 && mpi_rank>0) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
+	     MPI_STATUS_IGNORE);
+  }
+#endif
+  
   // Read the data file
   std::string fname=sv[1];
   hdf_file hf;
@@ -1291,6 +1299,12 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   table_units<> file_tab;
   hdf_input(hf,file_tab,"markov_chain0");
   hf.close();
+
+#ifndef BAMR_MPI_LOAD
+  if (mpi_nprocs>1 && mpi_rank>0) {
+    MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
+  }
+#endif
 
   if (debug) cout.setf(ios::scientific);
 
@@ -1458,12 +1472,6 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
     first_point_type=fp_unspecified;
 
   } else if (sv[1]==((string)"prefix")) {
-
-#ifndef BAMR_NO_MPI
-  // Get MPI rank, etc.
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
-#endif
   
     first_point_type=fp_last;
     first_point_file=sv[2]+((std::string)"_")+std::to_string(mpi_rank)+"_out";
@@ -1514,10 +1522,11 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     has_esym=true;
     has_eos=true;
 #ifdef O2SCL_SMOVE
-    mod_arr.resize(nwalk);
-    for(size_t i=0;i<nwalk;i++) {
+    mod_arr.resize(nwalk*2);
+    for(size_t i=0;i<nwalk*2;i++) {
       mod_arr=new two_polytropes;
     }
+    step_flags.resize(nwalk);
 #endif
   } else if (sv[1]==((string)"altp")) {
     modp=new alt_polytropes;
@@ -1703,8 +1712,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   string fname_prefix=sv[1];
 
 #ifdef O2SCL_SMOVE
-  ts_arr.resize(nwalk);
-  for(size_t i=0;i<nwalk;i++) {
+  ts_arr.resize(nwalk*2);
+  for(size_t i=0;i<nwalk*2;i++) {
     ts[i].verbose=0;
     ts[i].set_units("1/fm^4","1/fm^4","1/fm^3");
     ts[i].set_eos(teos);
@@ -1716,9 +1725,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   first_file_update=false;
 
 #ifndef BAMR_NO_MPI
-  // Get MPI rank, etc.
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
   mpi_start_time=MPI_Wtime();
 #else
   mpi_start_time=time(0);
@@ -1802,6 +1808,14 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     e_curr_arr.allocate(nparams,nsources);
   }
   std::vector<double> w_curr_arr(nwalk);
+#endif
+
+#ifndef BAMR_MPI_LOAD
+  int buffer=0, tag=0;
+  if (mpi_nprocs>1 && mpi_rank>0) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
+	     MPI_STATUS_IGNORE);
+  }
 #endif
 
   if (first_point_file.length()>0) {
@@ -1933,6 +1947,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     modp->first_point(e_current);
 
   }
+
+#ifndef BAMR_MPI_LOAD
+  if (mpi_nprocs>1 && mpi_rank>0) {
+    MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
+  }
+#endif
 
   scr_out << "First point: " << e_current << endl;
 
@@ -2641,6 +2661,10 @@ void bamr_class::run(int argc, char *argv[]) {
   
   setup_cli();
   
+  // Get MPI rank, etc.
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
+
   for(int i=0;i<argc;i++) {
     run_args.push_back(argv[i]);
   }

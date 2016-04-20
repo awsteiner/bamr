@@ -400,6 +400,9 @@ namespace bamr {
 #ifdef O2SCL_SMOVE
     /// EOS model list
     std::vector<model *> mod_arr;
+
+    /// Step flags
+    std::vector<bool> step_flags;
 #endif
 
     /// Random number generator

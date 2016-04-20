@@ -180,15 +180,29 @@
     guess.
 
     In order to make the output more efficient, the table representing
-    the full Markov chain is divided up into tables with about 10,000
-    rows each, named \c markov_chain0, \c markov_chain1, and so on.
-    The total number of tables is stored in the integer
-    <tt>n_chains</tt>.
+    the full Markov chain is divided up into tables with 10,000 rows
+    each, named \c markov_chain0, \c markov_chain1, and so on. The
+    total number of tables is stored in the integer <tt>n_chains</tt>.
 
     Different models have different optimal MC step sizes. The step
     size for each parameter is chosen to be the difference betwen the
     high and low limiting values divided by the value \c step_fac .
     Increasing or decreasing this value may give better results.
+
+    The EOS results are stored in a table in the \ref bamr::model::cns
+    data member and the TOV results are stored in a table in the \ref
+    o2scl::tov_solve object. In order to prevent needless copying of
+    the EOS and TOV tables back and forth, the code keeps two
+    instances of the model objects (\ref bamr::bamr_class::modp and
+    \ref bamr::bamr_class::modp2) and two copies of the \ref
+    o2scl::tov_solve objects (\ref bamr::bamr_class::ts and \ref
+    bamr::bamr_class::ts2). The class \ref bamr::bamr_class flips back
+    and forth between these two result sets depending on whether or
+    not the MCMC algorithm gives an acceptance or a rejection.
+
+    In order to ensure that several processors do not try to
+    access the same input file at the same time, MPI
+    calls are used to force each processor to take turns.
 
     \hline
     \section crust_sect Crust Model
