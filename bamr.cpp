@@ -1284,7 +1284,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     return exc_efailed;
   }
 
-#ifndef BAMR_MPI_LOAD
+#ifndef BAMR_NO_MPI
   int buffer=0, tag=0;
   if (mpi_nprocs>1 && mpi_rank>0) {
     MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
@@ -1300,8 +1300,8 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   hdf_input(hf,file_tab,"markov_chain0");
   hf.close();
 
-#ifndef BAMR_MPI_LOAD
-  if (mpi_nprocs>1 && mpi_rank>0) {
+#ifndef BAMR_NO_MPI
+  if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
     MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
   }
 #endif
@@ -1447,7 +1447,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     exit(-1);
   }
   hg_mode=1;
-  
+
   return 0;
 }
 
@@ -1810,7 +1810,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   std::vector<double> w_curr_arr(nwalk);
 #endif
 
-#ifndef BAMR_MPI_LOAD
+#ifndef BAMR_NO_MPI
   int buffer=0, tag=0;
   if (mpi_nprocs>1 && mpi_rank>0) {
     MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
@@ -1948,8 +1948,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
   }
 
-#ifndef BAMR_MPI_LOAD
-  if (mpi_nprocs>1 && mpi_rank>0) {
+#ifndef BAMR_NO_MPI
+  if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
     MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
   }
 #endif
@@ -2660,10 +2660,12 @@ void bamr_class::run(int argc, char *argv[]) {
   // Process command-line arguments and run
   
   setup_cli();
-  
+
+#ifndef BAMR_NO_MPI
   // Get MPI rank, etc.
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
+#endif
 
   for(int i=0;i<argc;i++) {
     run_args.push_back(argv[i]);
