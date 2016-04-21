@@ -1789,9 +1789,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     
   // Set RNG seed
   unsigned long int seed=time(0);
-  if (user_seed!=0) seed=user_seed;
+  if (user_seed!=0) {
+    seed=user_seed;
+  }
   seed*=(mpi_rank+1);
   gr.set_seed(seed);
+  pdg.set_seed(seed);
   scr_out << "Using seed " << seed 
 	  << " for processor " << mpi_rank+1 << "/" 
 	  << mpi_nprocs << "." << endl;
