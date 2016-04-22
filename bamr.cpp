@@ -642,7 +642,7 @@ void bamr_class::load_mc() {
     } else {
       scr_out << "Normalizing integral of distribution to 1." << endl;
     }
-    
+
     scr_out << "File                          name   total        "
 	    << "max          P(10,1.4)" << endl;
 
@@ -712,7 +712,8 @@ void bamr_class::load_mc() {
 
       scr_out.setf(ios::left);
       scr_out.width(29);
-      scr_out << source_fnames[k] << " ";
+      string stempx=source_fnames[k].substr(0,29);
+      scr_out << stempx << " ";
       scr_out.width(6);
       scr_out << source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(ios::left);
@@ -1708,12 +1709,6 @@ void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax) {
 }
 
 int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
-
-  // User-specified filename prefix
-  if (sv.size()<2) {
-    cout << "No filename prefix given in bamr_class::mcmc()." << endl;
-    return exc_efailed;
-  }
 
 #ifdef O2SCL_SMOVE
   ts_arr.resize(nwalk*2);
