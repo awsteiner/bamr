@@ -127,6 +127,10 @@ namespace bamr {
      */
     o2scl::err_hnd_cpp error_handler;
 
+    /** \brief Prefix for output filenames
+     */
+    std::string prefix;
+    
     /// \name Parameter objects for the 'set' command
     //@{
     o2scl::cli::parameter_double p_max_time;
@@ -157,6 +161,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_low;
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
+    o2scl::cli::parameter_string p_prefix;
     //@}
 
     /** \name Histogram limits
@@ -410,6 +415,9 @@ namespace bamr {
   
     /// The screen output file
     std::ofstream scr_out;
+
+    /// If true, scr_out has been opened
+    bool file_opened;
     //@}
 
     /// \name Main functions called from the command-line interface
@@ -484,8 +492,7 @@ namespace bamr {
     /** \brief Add a measurement
      */
     virtual void add_measurement
-      (std::string fname_prefix,
-       entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
        std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        double weight, bool new_meas, size_t n_meas, ubvector &weights);
 
@@ -504,8 +511,8 @@ namespace bamr {
     
     /** \brief Write histogram data to files with prefix \c fname
      */
-    virtual void update_files(std::string fname_prefix, 
-			      model &modp, entry &e_current);
+    virtual void update_files(model &modp, entry &e_current);
+			      
     
     /** \brief Set up the 'cli' object
 
@@ -540,7 +547,7 @@ namespace bamr {
     
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
-      (std::string fname_prefix, entry &e_best, double w_best,
+      (entry &e_best, double w_best,
        std::shared_ptr<o2scl::table_units<> > tab_eos,
        std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        ubvector &wgts);
@@ -565,7 +572,7 @@ namespace bamr {
 
     /** \brief The arguments sent to the command-line
      */
-    std::vector<std::string> run_args;
+    std::vector<std::string> cl_args;
 
   public:
 

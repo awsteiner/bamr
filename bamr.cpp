@@ -54,6 +54,8 @@ double bamr_class::approx_like(entry &e) {
 
 bamr_class::bamr_class() {
 
+  file_opened=false;
+  prefix="bamr";
   nparams=0;
   nsources=0;
   first_file_update=false;
@@ -391,8 +393,7 @@ void bamr_class::fill_line
 }
 
 void bamr_class::add_measurement
-(std::string fname_prefix,
- entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
+(entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
  std::shared_ptr<o2scl::table_units<> > tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
   
@@ -501,18 +502,17 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
   hf.setd_vec("low",low_vec);
   hf.setd_vec("high",high_vec);
 
-  hf.sets_vec("run_args",run_args);
+  hf.sets_vec("cl_args",cl_args);
 
   return;
 }
 
-void bamr_class::update_files(string fname_prefix, model &modp, 
-			      entry &e_current) {
+void bamr_class::update_files(model &modp, entry &e_current) {
 
   hdf_file hf;
 
   // Open main update file
-  hf.open_or_create(fname_prefix+"_out");
+  hf.open_or_create(prefix+"_"+std::to_string(mpi_rank)+"_out");
     
   // First time, output some initial quantities
   if (first_file_update==false) {
@@ -1272,8 +1272,16 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 int bamr_class::hastings(std::vector<std::string> &sv, 
 			 bool itive_com) {
 
-  bool debug=false;
-  
+  bool debug=true;
+
+  if (file_opened==false) {
+    // Open main output file
+    scr_out.open((prefix+"_"+std::to_string(mpi_rank)+"_scr").c_str());
+    scr_out.setf(ios::scientific);
+    file_opened=true;
+    scr_out << "Opened main file in command 'hastings'." << endl;
+  }
+
   if (sv.size()<2) {
     cout << "No arguments given to 'hastings'." << endl;
     return exc_efailed;
@@ -1294,11 +1302,13 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   
   // Read the data file
   std::string fname=sv[1];
+  scr_out << "Opening file " << fname << " for hastings." << endl;
   hdf_file hf;
   hf.open(fname);
   table_units<> file_tab;
   hdf_input(hf,file_tab,"markov_chain0");
   hf.close();
+  scr_out << "Done opening file " << fname << " for hastings." << endl;
 
 #ifndef BAMR_NO_MPI
   if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
@@ -1306,22 +1316,20 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   }
 #endif
 
-  if (debug) cout.setf(ios::scientific);
-
   // Create a new column equal to mult times weight
   file_tab.function_column("mult*weight","mwgt");
   
   // Remove
   double max_mwgt=file_tab.max("mwgt");
-  if (debug) cout << "lines: " << file_tab.get_nlines() << endl;
+  if (debug) scr_out << "lines: " << file_tab.get_nlines() << endl;
   file_tab.add_constant("max_mwgt",max_mwgt);
   file_tab.delete_rows("mwgt<0.1*max_mwgt");
-  if (debug) cout << "lines: " << file_tab.get_nlines() << endl;
+  if (debug) scr_out << "lines: " << file_tab.get_nlines() << endl;
   
   // The total number of variables
   size_t nv=nparams+nsources;
   if (debug) {
-    cout << nparams << " parameters and " << nsources << " sources."
+    scr_out << nparams << " parameters and " << nsources << " sources."
 	 << endl;
   }
   hg_best.resize(nv);
@@ -1348,7 +1356,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
 				    file_tab[str_i],file_tab[str_j],
 				    file_tab["mult"]);
       if (debug) {
-	cout << "Covar: " << i << " " << j << " "
+	scr_out << "Covar: " << i << " " << j << " "
 	     << covar(i,j) << endl;
       }
       covar(j,i)=covar(i,j);
@@ -1359,7 +1367,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
 					    file_tab[str_i],file_tab[str_j],
 					    file_tab["mult"]);
       if (debug) {
-	cout << "Covar: " << i << " " << j+nparams << " "
+	scr_out << "Covar: " << i << " " << j+nparams << " "
 	     << covar(i,j+nparams) << endl;
       }
       covar(j+nparams,i)=covar(i,j+nparams);
@@ -1373,7 +1381,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
 				    file_tab[str_i],file_tab[str_j],
 				    file_tab["mult"]);
       if (debug) {
-	cout << "Covar: " << i+nparams << " " << j+nparams << " "
+	scr_out << "Covar: " << i+nparams << " " << j+nparams << " "
 	     << covar(i+nparams,j+nparams) << endl;
       }
       covar(j+nparams,i+nparams)=covar(i+nparams,j+nparams);
@@ -1415,14 +1423,14 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     double rat=wgt/approx_like(e);
     renorm+=wgt*wgt/approx_like(e);
     if (debug) {
-      cout << wgt << " " << approx_like(e) << " " << rat << endl;
+      scr_out << wgt << " " << approx_like(e) << " " << rat << endl;
     }
     wgt_sum+=wgt;
   }
   renorm/=((double)wgt_sum);
   hg_norm*=renorm;
   if (debug) {
-    cout << "New normalization: " << hg_norm << endl;
+    scr_out << "New normalization: " << hg_norm << endl;
   }
 
   step=file_tab.get_nlines()/20;
@@ -1440,11 +1448,8 @@ int bamr_class::hastings(std::vector<std::string> &sv,
     double wgt=file_tab.get("mult",i)*file_tab.get("weight",i);
     double rat=wgt/approx_like(e);
     if (debug) {
-      cout << wgt << " " << approx_like(e) << " " << rat << endl;
+      scr_out << wgt << " " << approx_like(e) << " " << rat << endl;
     }
-  }
-  if (debug) {
-    exit(-1);
   }
   hg_mode=1;
 
@@ -1589,14 +1594,14 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-void bamr_class::output_best(string fname_prefix, entry &e_best, double w_best,
+void bamr_class::output_best(entry &e_best, double w_best,
 			     shared_ptr<table_units<> > tab_eos,
 			     shared_ptr<table_units<> > tab_mvsr,
 			     ubvector &wgts) {
   
   scr_out << "Best: " << e_best << " " << w_best << endl;
 
-  string fname_best_out=fname_prefix+"_out";
+  string fname_best_out=prefix+"_"+std::to_string(mpi_rank)+"_out";
   hdf_file hf;
   hf.open_or_create(fname_best_out);
   std::vector<double> best_point;
@@ -1709,7 +1714,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     cout << "No filename prefix given in bamr_class::mcmc()." << endl;
     return exc_efailed;
   }
-  string fname_prefix=sv[1];
 
 #ifdef O2SCL_SMOVE
   ts_arr.resize(nwalk*2);
@@ -1730,13 +1734,14 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   mpi_start_time=time(0);
 #endif
 
-  // Update filename with processor rank
-  fname_prefix+=((string)"_")+itos(mpi_rank);
-    
-  // Open main output file
-  scr_out.open((fname_prefix+"_scr").c_str());
-  scr_out.setf(ios::scientific);
-  
+  if (file_opened==false) {
+    // Open main output file
+    scr_out.open((prefix+"_"+std::to_string(mpi_rank)+"_scr").c_str());
+    scr_out.setf(ios::scientific);
+    file_opened=true;
+    scr_out << "Opened main file in command 'mcmc'." << endl;
+  }
+
   // Check model
   if (model_type.length()==0 || modp==0 || modp2==0) {
     scr_out << "Model not set." << endl;
@@ -2057,12 +2062,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     tab_mvsr=ts.get_results();
     if (warm_up==false) {
       // Add the initial point if there's no warm up
-      add_measurement(fname_prefix,e_current,tab_eos,tab_mvsr,w_current,
+      add_measurement(e_current,tab_eos,tab_mvsr,w_current,
 		      true,mh_success,wgts);
     }
     e_best=e_current;
     w_best=w_current;
-    output_best(fname_prefix,e_current,w_current,tab_eos,tab_mvsr,wgts);
+    output_best(e_current,w_current,tab_eos,tab_mvsr,wgts);
   }
 
   // Initialize radii of e_next to zero
@@ -2252,7 +2257,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	// Store results from new point
 	if (!warm_up) {
-	  add_measurement(fname_prefix,e_next,tab_eos,tab_mvsr,w_next,true,
+	  add_measurement(e_next,tab_eos,tab_mvsr,w_next,true,
 			  mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding new: " 
@@ -2269,7 +2274,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	if (w_next>w_best) {
 	  e_best=e_next;
 	  w_best=w_next;
-	  output_best(fname_prefix,e_best,w_best,tab_eos,tab_mvsr,wgts);
+	  output_best(e_best,w_best,tab_eos,tab_mvsr,wgts);
 	  force_file_update=true;
 	}
 
@@ -2302,7 +2307,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	// Repeat measurement of old point
 	if (!warm_up) {
-	  add_measurement(fname_prefix,e_current,tab_eos,tab_mvsr,
+	  add_measurement(e_current,tab_eos,tab_mvsr,
 			  w_current,false,mh_success,wgts);
 	  if (debug) {
 	    cout << first_half << " Adding old: " 
@@ -2319,7 +2324,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	if (w_next>w_best) {
 	  e_best=e_next;
 	  w_best=w_next;
-	  output_best(fname_prefix,e_best,w_best,tab_eos,tab_mvsr,wgts);
+	  output_best(e_best,w_best,tab_eos,tab_mvsr,wgts);
 	  force_file_update=true;
 	  scr_out << "Best point with rejected step: " << w_next << " " 
 		  << w_best << endl;
@@ -2407,7 +2412,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 		     ((int)tc.get_nlines())==max_chain_size || 
 		     (mcmc_iterations+1) % file_update_iters==0)) {
       scr_out << "Updating files." << endl;
-      update_files(fname_prefix,*modp,e_current);
+      update_files(*modp,e_current);
       scr_out << "Done updating files." << endl;
     }
 
@@ -2437,8 +2442,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     // End of main loop
   }
    
-  scr_out.close();
- 
   return 0;
 }
 
@@ -2450,10 +2453,9 @@ void bamr_class::setup_cli() {
   static const int nopt=5;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-     1,1,"<filename prefix>",((string)"This is the main part of ")+
+     0,0,"",((string)"This is the main part of ")+
      "the code which performs the simulation. Make sure to set the "+
-     "model first using the 'model' command. The required argument to "+
-     "mcmc' is the prefix for the output files.",
+     "model first using the 'model' command first.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
      cli::comm_option_both},
     {'o',"model","Choose model.",
@@ -2649,6 +2651,10 @@ void bamr_class::setup_cli() {
 
   // --------------------------------------------------------
   
+  p_prefix.str=&prefix;
+  p_prefix.help="Output file prefix (default 'bamr').";
+  cl.par_list.insert(make_pair("prefix",&p_prefix));
+
   return;
 }
 
@@ -2670,13 +2676,19 @@ void bamr_class::run(int argc, char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
 #endif
 
+  // Process arguments
   for(int i=0;i<argc;i++) {
-    run_args.push_back(argv[i]);
+    cl_args.push_back(argv[i]);
   }
-    
+
   cl.prompt="bamr> ";
   cl.run_auto(argc,argv);
 
+  if (file_opened) {
+    // Close main output file
+    scr_out.close();
+  }
+ 
   return;
 }
 

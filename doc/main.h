@@ -88,7 +88,7 @@
     
     The basic usage is something like
     \verbatim
-    ./bamr -model twop -run default.in -mcmc run1
+    ./bamr -model twop -run default.in -mcmc
     \endverbatim
     to perform a one day run with model \c twop with the input
     file in \c default.in. 
@@ -96,13 +96,13 @@
     There are several variables which can be modified with the
     \c set command, e.g. 
     \verbatim
-    ./bamr -model twop -set max_time 43200 -run default.in -mcmc run2
+    ./bamr -model twop -set max_time 43200 -run default.in -mcmc
     \endverbatim
     which runs for 12 hours instead of the default 24 hours. 
 
     An example of an MPI invocation is
     \verbatim
-    mpirun -np 4 ./bamr -set model twop -run default.in -mcmc run3 &
+    mpirun -np 4 ./bamr -set model twop -run default.in -mcmc &
     \endverbatim
     which runs with four processors on the current machine.
 
