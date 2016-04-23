@@ -42,8 +42,6 @@ bamr_class::bamr_class() {
   first_file_update=false;
   model_type="";
   has_eos=true;
-  chain_size=0;
-  n_chains=0;
   schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
 
   in_m_min=0.8;
@@ -1510,13 +1508,11 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     nparams=8;
     has_esym=true;
     has_eos=true;
-#ifdef O2SCL_SMOVE
-    mod_arr.resize(nwalk*2);
-    for(size_t i=0;i<nwalk*2;i++) {
-      mod_arr=new two_polytropes;
-    }
-    step_flags.resize(nwalk);
-#endif
+
+    data_arr.resize(2);
+    data_arr[0].modp=new two_polytropes;
+    data_arr[1].modp=new two_polytropes;
+    
   } else if (sv[1]==((string)"altp")) {
     modp=new alt_polytropes;
     modp2=new alt_polytropes;
@@ -2582,8 +2578,8 @@ void bamr_class::setup_cli() {
   cl.par_list.insert(make_pair("m_high",&p_m_high));
 
   // --------------------------------------------------------
-
-  mcmc::setup_cli();
+  
+  mcmc_class::setup_cli();
   
   return;
 }

@@ -72,10 +72,49 @@ namespace bamr {
     virtual double weight(ubvector &params);
     
   };
+
+  /** \brief Desc
+   */
+  class eos_tov {
+    
+  public:
+
+    /// The model for the EOS
+    model *modp;
+    
+    /// TOV solver
+    o2scl::tov_solve ts;
+    
+    /// EOS interpolation object for TOV solver
+    o2scl::eos_tov_interp teos;
+    
+    eos_tov() {
+      modp=0;
+      ts.verbose=0;
+      ts.set_units("1/fm^4","1/fm^4","1/fm^3");
+      ts.set_eos(teos);
+      ts.err_nonconv=false;
+    }
+
+    /** \brief Desc
+     */
+    eos_tov(const eos_tov &e) {
+      modp=0;
+    }
+    
+    /** \brief Desc
+     */
+    eos_tov &operator=(const eos_tov &e) {
+      if (this!=&e) {
+	modp=0;
+      }
+    }
+    
+  };
   
   /** \brief Desc
    */
-  template<class data_t=data_type> class mcmc {
+  template<class data_t=data_type> class mcmc_class {
     
   public:
 
@@ -182,6 +221,12 @@ namespace bamr {
   /// Total number of mcmc iterations
   size_t mcmc_iterations;
 
+    /// Number of Markov chain segments
+    size_t n_chains;
+
+    /// Number of chains
+    size_t chain_size;
+  
 #ifdef BAMR_READLINE
   /// Command-line interface
   o2scl::cli_readline cl;
@@ -190,6 +235,9 @@ namespace bamr {
   o2scl::cli cl;
 #endif
 
+  /// Main data table for Markov chain
+  o2scl::table_units<> tc;
+    
   /// Random number generator
   o2scl::rng_gsl gr;
   
@@ -206,8 +254,11 @@ namespace bamr {
    */
   std::vector<std::string> cl_args;
 
+  /// Vector of data objects
+  std::vector<data_t> data_arr;
+  
   /** \brief Set up the 'cli' object
-
+      
       This function just adds the four commands and the 'set' parameters
   */
   virtual void setup_cli() {
@@ -302,7 +353,7 @@ namespace bamr {
     return;
   }    
 
-  mcmc() {
+  mcmc_class() {
     prefix="mcmc";
     file_update_iters=40;
     max_chain_size=10000;
@@ -317,6 +368,8 @@ namespace bamr {
 
     mpi_nprocs=1;
     mpi_rank=0;
+    chain_size=0;
+    n_chains=0;
   }
     
   };
@@ -357,7 +410,7 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class : public mcmc<> {
+  class bamr_class : public mcmc_class<eos_tov> {
     
   protected:
 
@@ -527,24 +580,12 @@ namespace bamr {
     static const int fp_best=-3;
     //@}
 
-    /// Main data table for Markov chain
-    o2scl::table_units<> tc;
-    
-    /// Store the full Markov chain
-    std::vector<double> markov_chain;
-
     /// If true, then \ref first_update() has been called
     bool first_file_update;
 
     /// Number of bins for all histograms (default 100)
     int grid_size;
 
-    /// Number of Markov chain segments
-    size_t n_chains;
-
-    /// Number of chains
-    size_t chain_size;
-  
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
@@ -565,15 +606,6 @@ namespace bamr {
 
     /// The second copy of the model for the EOS
     model *modp2;
-
-#ifdef O2SCL_SMOVE
-    /// Vector of data objects
-    std::vector<data_t> data_arr;
-    
-    /// EOS model list
-    std::vector<model *> mod_arr;
-#endif
-
     //@}
 
     /// \name Main functions called from the command-line interface
@@ -715,11 +747,6 @@ namespace bamr {
 
     /// TOV solver
     o2scl::tov_solve ts;
-
-#ifdef O2SCL_SMOVE
-    /// TOV solver array
-    std::vector<o2scl::tov_solve> ts_arr;
-#endif
 
     /// Second TOV solver
     o2scl::tov_solve ts2;
