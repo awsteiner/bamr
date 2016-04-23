@@ -55,6 +55,107 @@
 */
 namespace bamr {
 
+#ifdef O2SCL_SMOVE
+
+  /** \brief Desc
+   */
+  class data_type {
+
+  public:
+    
+    std::vector<double> params;
+    virtual double weight();
+    
+  };
+  
+  /** \brief Desc
+   */
+  template<class data_t=data_type> class mcmc {
+    
+  public:
+
+    /// \name Member data for the Metropolis-Hastings step
+    //@{
+    /// A Gaussian probability distribution
+    o2scl::prob_dens_gaussian pdg;
+    
+    /// If true, then use Metropolis-Hastings with a multivariate Gaussian
+    int hg_mode;
+    
+    /// The Cholesky decomposition of the covariance matrix
+    ubmatrix hg_chol;
+    
+    /// The inverse of the covariance matrix
+    ubmatrix hg_covar_inv;
+    
+    /// The normalization factor
+    double hg_norm;
+    
+    /// The location of the peak
+    ubvector hg_best;
+    
+    /// Return the approximate likelihood
+    double approx_like(entry &e);
+    //@}
+
+    /** \brief Error handler for each thread
+     */
+    o2scl::err_hnd_cpp error_handler;
+
+    /** \brief Prefix for output filenames
+     */
+    std::string prefix;
+    
+    /// Vector of data objects
+    std::vector<data_t> data_arr;
+    
+    /// \name Parameter objects for the 'set' command
+    //@{
+    o2scl::cli::parameter_double p_max_time;
+    o2scl::cli::parameter_double p_step_fac;
+    o2scl::cli::parameter_int p_n_warm_up;
+    o2scl::cli::parameter_int p_grid_size;
+    o2scl::cli::parameter_int p_user_seed;
+    o2scl::cli::parameter_int p_max_iters;
+    o2scl::cli::parameter_int p_file_update_iters;
+    o2scl::cli::parameter_int p_max_chain_size;
+    o2scl::cli::parameter_bool p_norm_max;
+    o2scl::cli::parameter_bool p_output_next;
+    o2scl::cli::parameter_string p_prefix;
+    //@}
+
+    /** \brief The number of MCMC successes between file updates
+	(default 40)
+    */
+    int file_update_iters;
+
+    /** \brief Maximum size of Markov chain (default 10000)
+     */
+    int max_chain_size;
+    
+    /** \brief If true, output debug information about the input data 
+	files (default false)
+    */
+    bool debug_load;
+
+    /** \brief If true, output each line of the table as it's stored
+	(default false)
+    */
+    bool debug_line;
+
+    /** \brief If true, normalize the data distributions so that the
+	max is one, otherwise, normalize so that the integral is one
+	(default true)
+    */
+    bool norm_max;
+
+    /// Maximum number of iterations (default 0)
+    int max_iters;
+
+  };
+  
+#endif
+  
   /** \brief Statistical analysis of EOS from M and R constraints
 
       \note Right now the EOS is rejected if the pressure decreases
@@ -403,6 +504,9 @@ namespace bamr {
     model *modp2;
 
 #ifdef O2SCL_SMOVE
+    /// Vector of data objects
+    std::vector<data_t> data_arr;
+    
     /// EOS model list
     std::vector<model *> mod_arr;
 
