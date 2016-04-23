@@ -22,10 +22,6 @@
 */
 #include "bamr.h"
 
-#ifndef BAMR_NO_MPI
-#include <mpi.h>
-#endif
-
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
 
@@ -36,21 +32,6 @@ using namespace o2scl_hdf;
 // For pi, pi^2, etc.
 using namespace o2scl_const;
 using namespace bamr;
-  
-double bamr_class::approx_like(entry &e) {
-  double ret=hg_norm;
-  size_t np=nparams+nsources;
-  ubvector q(np), vtmp(np);
-  for(size_t i=0;i<nparams;i++) {
-    q[i]=e.params[i]-hg_best[i];
-  }
-  for(size_t i=nparams;i<nparams+nsources;i++) {
-    q[i]=e.mass[i-nparams]-hg_best[i];
-  }
-  vtmp=prod(hg_covar_inv,q);
-  ret*=exp(-0.5*inner_prod(q,vtmp));
-  return ret;
-}
 
 bamr_class::bamr_class() {
 
@@ -75,16 +56,10 @@ bamr_class::bamr_class() {
   
   // Default parameter values
 
-  hg_mode=0;
   grid_size=100;
-  file_update_iters=40;
   first_point_file="";
   first_point_type=fp_unspecified;
   debug_load=false;
-  step_fac=15.0;
-  // Default to 24 hours
-  max_time=3.6e3*24;
-  n_warm_up=0;
   // Minimum allowed maximum mass
   min_max_mass=2.0;
   // Minimum neutron star mass
@@ -92,15 +67,12 @@ bamr_class::bamr_class() {
   debug_star=false;
   debug_line=false;
   debug_eos=false;
-  output_next=true;
   baryon_density=true;
   exit_mass=10.0;
   input_dist_thresh=0.0;
   use_crust=true;
-  user_seed=0;
   best_detail=false;
   inc_baryon_mass=false;
-  max_iters=0;
   norm_max=true;
   mvsr_pr_inc=1.1;
 
@@ -133,15 +105,26 @@ bamr_class::bamr_class() {
 
   ret_codes.resize(100);
   for(size_t i=0;i<100;i++) ret_codes[i]=0;
-
-  mpi_nprocs=1;
-  mpi_rank=0;
-  max_chain_size=10000;
 }
 
 bamr_class::~bamr_class() {
   if (modp!=0) delete modp;
   if (modp2!=0) delete modp2;
+}
+
+double bamr_class::approx_like(entry &e) {
+  double ret=hg_norm;
+  size_t np=nparams+nsources;
+  ubvector q(np), vtmp(np);
+  for(size_t i=0;i<nparams;i++) {
+    q[i]=e.params[i]-hg_best[i];
+  }
+  for(size_t i=nparams;i<nparams+nsources;i++) {
+    q[i]=e.mass[i-nparams]-hg_best[i];
+  }
+  vtmp=prod(hg_covar_inv,q);
+  ret*=exp(-0.5*inner_prod(q,vtmp));
+  return ret;
 }
 
 void bamr_class::table_names_units(std::string &s, std::string &u) {
@@ -2495,10 +2478,6 @@ void bamr_class::setup_cli() {
   // ---------------------------------------
   // Set parameters
     
-  p_max_time.d=&max_time;
-  p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
-  cl.par_list.insert(make_pair("max_time",&p_max_time));
-
   p_grid_size.i=&grid_size;
   p_grid_size.help="Grid size (default 100).";
   cl.par_list.insert(make_pair("grid_size",&p_grid_size));
@@ -2512,15 +2491,6 @@ void bamr_class::setup_cli() {
   p_min_mass.help=((string)"Minimum possible mass for any of individual ")+
     "neutron stars in solar masses. The default is 0.8 solar masses.";
   cl.par_list.insert(make_pair("min_mass",&p_min_mass));
-
-  p_step_fac.d=&step_fac;
-  p_step_fac.help=((string)"MCMC step factor. The step size for each ")+
-    "variable is taken as the difference between the high and low "+
-    "limits divided by this factor (default 15.0). This factor can "+
-    "be increased if the acceptance rate is too small, but care must "+
-    "be taken, e.g. if the conditional probability is multimodal. If "+
-    "this step size is smaller than 1.0, it is reset to 1.0 .";
-  cl.par_list.insert(make_pair("step_fac",&p_step_fac));
 
   p_exit_mass.d=&exit_mass;
   p_exit_mass.help=((string)"Upper limit on maximum mass ")+
@@ -2539,27 +2509,6 @@ void bamr_class::setup_cli() {
     "useful to gracefully avoid zero probabilities in the input "+
     "data files. The default is 0.";
   cl.par_list.insert(make_pair("input_dist_thresh",&p_input_dist_thresh));
-
-  p_n_warm_up.i=&n_warm_up;
-  p_n_warm_up.help=((string)"Minimum number of warm up iterations ")+
-    "(default 0).";
-  cl.par_list.insert(make_pair("n_warm_up",&p_n_warm_up));
-
-  p_file_update_iters.i=&file_update_iters;
-  p_file_update_iters.help=((string)"Number of MCMC successes between ")+
-    "file upates (default 10, minimum value 1).";
-  cl.par_list.insert(make_pair("file_update_iters",&p_file_update_iters));
-
-  p_user_seed.i=&user_seed;
-  p_user_seed.help=((string)"Seed for multiplier for random number ")+
-    "generator. If zero is given (the default), then mcmc() uses "+
-    "time(0) to generate a random seed.";
-  cl.par_list.insert(make_pair("user_seed",&p_user_seed));
-
-  p_max_iters.i=&max_iters;
-  p_max_iters.help=((string)"If non-zero, limit the number of ")+
-    "iterations to be less than the specified number (default zero).";
-  cl.par_list.insert(make_pair("max_iters",&p_max_iters));
 
   p_debug_star.b=&debug_star;
   p_debug_star.help=((string)"If true, output stellar properties ")+
@@ -2586,11 +2535,6 @@ void bamr_class::setup_cli() {
     "to file 'debug_eos.o2' and abort (default false).";
   cl.par_list.insert(make_pair("debug_eos",&p_debug_eos));
 
-  p_output_next.b=&output_next;
-  p_output_next.help=((string)"If true, output next point ")+
-    "to the '_scr' file before calling TOV solver (default true).";
-  cl.par_list.insert(make_pair("output_next",&p_output_next));
-
   p_baryon_density.b=&baryon_density;
   p_baryon_density.help=((string)"If true, compute baryon density ")+
     "and associated profiles (default true).";
@@ -2610,13 +2554,6 @@ void bamr_class::setup_cli() {
   p_mvsr_pr_inc.help=((string)"The multiplicative pressure increment for ")+
     "the TOV solver (default 1.1).";
   cl.par_list.insert(make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
-
-  // --------------------------------------------------------
-
-  p_max_chain_size.i=&max_chain_size;
-  p_max_chain_size.help=((string)"Maximum Markov chain size (default ")+
-    "10000).";
-  cl.par_list.insert(make_pair("max_chain_size",&p_max_chain_size));
 
   // --------------------------------------------------------
 
@@ -2645,45 +2582,9 @@ void bamr_class::setup_cli() {
   cl.par_list.insert(make_pair("m_high",&p_m_high));
 
   // --------------------------------------------------------
+
+  mcmc::setup_cli();
   
-  p_prefix.str=&prefix;
-  p_prefix.help="Output file prefix (default 'bamr').";
-  cl.par_list.insert(make_pair("prefix",&p_prefix));
-
-  return;
-}
-
-void bamr_class::run(int argc, char *argv[]) {
-  
-  // ---------------------------------------
-  // Set error handler for this thread
-  
-  o2scl::err_hnd=&error_handler;
-  
-  // ---------------------------------------
-  // Process command-line arguments and run
-  
-  setup_cli();
-
-#ifndef BAMR_NO_MPI
-  // Get MPI rank, etc.
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
-#endif
-
-  // Process arguments
-  for(int i=0;i<argc;i++) {
-    cl_args.push_back(argv[i]);
-  }
-
-  cl.prompt="bamr> ";
-  cl.run_auto(argc,argv);
-
-  if (file_opened) {
-    // Close main output file
-    scr_out.close();
-  }
- 
   return;
 }
 

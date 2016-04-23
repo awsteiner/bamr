@@ -30,6 +30,10 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
+#ifndef BAMR_NO_MPI
+#include <mpi.h>
+#endif
+
 #include <o2scl/rng_gsl.h>
 #include <o2scl/uniform_grid.h>
 #include <o2scl/table3d.h>
@@ -54,17 +58,18 @@
     This file is documented in bamr.h .
 */
 namespace bamr {
-
-#ifdef O2SCL_SMOVE
-
+  
+  typedef boost::numeric::ublas::vector<double> ubvector;
+  
   /** \brief Desc
    */
   class data_type {
 
   public:
     
-    std::vector<double> params;
-    virtual double weight();
+    /** \brief Desc
+     */
+    virtual double weight(ubvector &params);
     
   };
   
@@ -74,87 +79,247 @@ namespace bamr {
     
   public:
 
-    /// \name Member data for the Metropolis-Hastings step
-    //@{
-    /// A Gaussian probability distribution
-    o2scl::prob_dens_gaussian pdg;
-    
-    /// If true, then use Metropolis-Hastings with a multivariate Gaussian
-    int hg_mode;
-    
-    /// The Cholesky decomposition of the covariance matrix
-    ubmatrix hg_chol;
-    
-    /// The inverse of the covariance matrix
-    ubmatrix hg_covar_inv;
-    
-    /// The normalization factor
-    double hg_norm;
-    
-    /// The location of the peak
-    ubvector hg_best;
-    
-    /// Return the approximate likelihood
-    double approx_like(entry &e);
-    //@}
+#ifdef O2SCL_SMOVE
+  size_t nwalk;
 
-    /** \brief Error handler for each thread
-     */
-    o2scl::err_hnd_cpp error_handler;
-
-    /** \brief Prefix for output filenames
-     */
-    std::string prefix;
-    
-    /// Vector of data objects
-    std::vector<data_t> data_arr;
-    
-    /// \name Parameter objects for the 'set' command
-    //@{
-    o2scl::cli::parameter_double p_max_time;
-    o2scl::cli::parameter_double p_step_fac;
-    o2scl::cli::parameter_int p_n_warm_up;
-    o2scl::cli::parameter_int p_grid_size;
-    o2scl::cli::parameter_int p_user_seed;
-    o2scl::cli::parameter_int p_max_iters;
-    o2scl::cli::parameter_int p_file_update_iters;
-    o2scl::cli::parameter_int p_max_chain_size;
-    o2scl::cli::parameter_bool p_norm_max;
-    o2scl::cli::parameter_bool p_output_next;
-    o2scl::cli::parameter_string p_prefix;
-    //@}
-
-    /** \brief The number of MCMC successes between file updates
-	(default 40)
-    */
-    int file_update_iters;
-
-    /** \brief Maximum size of Markov chain (default 10000)
-     */
-    int max_chain_size;
-    
-    /** \brief If true, output debug information about the input data 
-	files (default false)
-    */
-    bool debug_load;
-
-    /** \brief If true, output each line of the table as it's stored
-	(default false)
-    */
-    bool debug_line;
-
-    /** \brief If true, normalize the data distributions so that the
-	max is one, otherwise, normalize so that the integral is one
-	(default true)
-    */
-    bool norm_max;
-
-    /// Maximum number of iterations (default 0)
-    int max_iters;
-
-  };
-  
+  /// Step flags
+  std::vector<bool> step_flags;
 #endif
+    
+  /// \name Member data for the Metropolis-Hastings step
+  //@{
+  /// A Gaussian probability distribution
+  o2scl::prob_dens_gaussian pdg;
+    
+  /// If true, then use Metropolis-Hastings with a multivariate Gaussian
+  int hg_mode;
+    
+  /// The Cholesky decomposition of the covariance matrix
+  ubmatrix hg_chol;
+    
+  /// The inverse of the covariance matrix
+  ubmatrix hg_covar_inv;
+    
+  /// The normalization factor
+  double hg_norm;
+    
+  /// The location of the peak
+  ubvector hg_best;
+  //@}
+
+  /** \brief Error handler for each thread
+   */
+  o2scl::err_hnd_cpp error_handler;
+
+  /** \brief Prefix for output filenames
+   */
+  std::string prefix;
+    
+  /// \name Parameter objects for the 'set' command
+  //@{
+  o2scl::cli::parameter_double p_max_time;
+  o2scl::cli::parameter_double p_step_fac;
+  o2scl::cli::parameter_int p_n_warm_up;
+  o2scl::cli::parameter_int p_grid_size;
+  o2scl::cli::parameter_int p_user_seed;
+  o2scl::cli::parameter_int p_max_iters;
+  o2scl::cli::parameter_int p_file_update_iters;
+  o2scl::cli::parameter_int p_max_chain_size;
+  o2scl::cli::parameter_bool p_output_next;
+  o2scl::cli::parameter_string p_prefix;
+  //@}
+
+  /** \brief The number of MCMC successes between file updates
+      (default 40)
+  */
+  int file_update_iters;
+
+  /** \brief Maximum size of Markov chain (default 10000)
+   */
+  int max_chain_size;
+    
+  /// Maximum number of iterations (default 0)
+  int max_iters;
+
+  /// MCMC stepsize factor (default 15.0)
+  double step_fac;
+
+  /** \brief Number of warm up steps (successful steps not
+      iterations) (default 0)
+	
+      \note Not to be confused with <tt>warm_up</tt>, which is 
+      a boolean local variable in some functions not an int.
+  */
+  int n_warm_up;
+
+  /** \brief Time in seconds (default is 86400 seconds or 1 day)
+   */
+  double max_time;
+
+  /** \brief If non-zero, use as the seed for the random number 
+      generator (default 0)
+  */
+  int user_seed;
+
+  /// \name MPI properties
+  //@{
+  /// The MPI processor rank
+  int mpi_rank;
+
+  /// The MPI number of processors
+  int mpi_nprocs;
+
+  /// The MPI starting time
+  double mpi_start_time;
+  //@}
+    
+  /// The number of Metropolis steps which succeeded
+  size_t mh_success;
+
+  /// The number of Metropolis steps which failed
+  size_t mh_failure;
+
+  /// Total number of mcmc iterations
+  size_t mcmc_iterations;
+
+#ifdef BAMR_READLINE
+  /// Command-line interface
+  o2scl::cli_readline cl;
+#else
+  /// Command-line interface
+  o2scl::cli cl;
+#endif
+
+  /// Random number generator
+  o2scl::rng_gsl gr;
+  
+  /// The screen output file
+  std::ofstream scr_out;
+
+  /// If true, scr_out has been opened
+  bool file_opened;
+
+  /// If true, output next point (default true)
+  bool output_next;
+
+  /** \brief The arguments sent to the command-line
+   */
+  std::vector<std::string> cl_args;
+
+  /** \brief Set up the 'cli' object
+
+      This function just adds the four commands and the 'set' parameters
+  */
+  virtual void setup_cli() {
+
+    // ---------------------------------------
+    // Set parameters
+    
+    p_max_time.d=&max_time;
+    p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
+    cl.par_list.insert(std::make_pair("max_time",&p_max_time));
+    
+    p_step_fac.d=&step_fac;
+    p_step_fac.help=((std::string)"MCMC step factor. The step size for each ")+
+      "variable is taken as the difference between the high and low "+
+      "limits divided by this factor (default 15.0). This factor can "+
+      "be increased if the acceptance rate is too small, but care must "+
+      "be taken, e.g. if the conditional probability is multimodal. If "+
+      "this step size is smaller than 1.0, it is reset to 1.0 .";
+    cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
+
+    p_n_warm_up.i=&n_warm_up;
+    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
+      "(default 0).";
+    cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
+
+    p_file_update_iters.i=&file_update_iters;
+    p_file_update_iters.help=((std::string)"Number of MCMC successes between ")+
+      "file upates (default 10, minimum value 1).";
+    cl.par_list.insert(std::make_pair("file_update_iters",
+				      &p_file_update_iters));
+
+    p_user_seed.i=&user_seed;
+    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
+      "generator. If zero is given (the default), then mcmc() uses "+
+      "time(0) to generate a random seed.";
+    cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
+
+    p_max_iters.i=&max_iters;
+    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
+      "iterations to be less than the specified number (default zero).";
+    cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
+
+    p_output_next.b=&output_next;
+    p_output_next.help=((std::string)"If true, output next point ")+
+      "to the '_scr' file before calling TOV solver (default true).";
+    cl.par_list.insert(std::make_pair("output_next",&p_output_next));
+
+    p_max_chain_size.i=&max_chain_size;
+    p_max_chain_size.help=((std::string)"Maximum Markov chain size (default ")+
+      "10000).";
+    cl.par_list.insert(std::make_pair("max_chain_size",&p_max_chain_size));
+
+    p_prefix.str=&prefix;
+    p_prefix.help="Output file prefix (default 'bamr').";
+    cl.par_list.insert(std::make_pair("prefix",&p_prefix));
+
+    return;
+  }    
+    
+  /// Main wrapper for parsing command-line arguments
+  virtual void run(int argc, char *argv[]) {
+  
+    // ---------------------------------------
+    // Set error handler for this thread
+  
+    o2scl::err_hnd=&error_handler;
+  
+    // ---------------------------------------
+    // Process command-line arguments and run
+  
+    setup_cli();
+
+#ifndef BAMR_NO_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
+#endif
+
+    // Process arguments
+    for(int i=0;i<argc;i++) {
+      cl_args.push_back(argv[i]);
+    }
+
+    cl.prompt="mcmc> ";
+    cl.run_auto(argc,argv);
+
+    if (file_opened) {
+      // Close main output file
+      scr_out.close();
+    }
+ 
+    return;
+  }    
+
+  mcmc() {
+    prefix="mcmc";
+    file_update_iters=40;
+    max_chain_size=10000;
+    max_iters=0;
+    hg_mode=0;
+    step_fac=15.0;
+    user_seed=0;
+    n_warm_up=0;
+    // Default to 24 hours
+    max_time=3.6e3*24;
+    output_next=true;
+
+    mpi_nprocs=1;
+    mpi_rank=0;
+  }
+    
+  };
   
   /** \brief Statistical analysis of EOS from M and R constraints
 
@@ -192,69 +357,31 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class {
+  class bamr_class : public mcmc<> {
     
   protected:
 
-#ifdef O2SCL_SMOVE
-    size_t nwalk;
-#endif
-    
     /// \name Member data for the Metropolis-Hastings step
     //@{
-    /// A Gaussian probability distribution
-    o2scl::prob_dens_gaussian pdg;
-    
-    /// If true, then use Metropolis-Hastings with a multivariate Gaussian
-    int hg_mode;
-    
-    /// The Cholesky decomposition of the covariance matrix
-    ubmatrix hg_chol;
-    
-    /// The inverse of the covariance matrix
-    ubmatrix hg_covar_inv;
-    
-    /// The normalization factor
-    double hg_norm;
-    
-    /// The location of the peak
-    ubvector hg_best;
-    
     /// Return the approximate likelihood
     double approx_like(entry &e);
     //@}
 
-    /** \brief Error handler for each thread
-     */
-    o2scl::err_hnd_cpp error_handler;
-
-    /** \brief Prefix for output filenames
-     */
-    std::string prefix;
-    
     /// \name Parameter objects for the 'set' command
     //@{
-    o2scl::cli::parameter_double p_max_time;
     o2scl::cli::parameter_double p_min_max_mass;
-    o2scl::cli::parameter_double p_step_fac;
     o2scl::cli::parameter_double p_exit_mass;
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
-    o2scl::cli::parameter_int p_n_warm_up;
     o2scl::cli::parameter_int p_grid_size;
-    o2scl::cli::parameter_int p_user_seed;
-    o2scl::cli::parameter_int p_max_iters;
-    o2scl::cli::parameter_int p_file_update_iters;
-    o2scl::cli::parameter_int p_max_chain_size;
-    o2scl::cli::parameter_bool p_norm_max;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_line;
     o2scl::cli::parameter_bool p_debug_load;
     o2scl::cli::parameter_bool p_debug_eos;
-    o2scl::cli::parameter_bool p_output_next;
     o2scl::cli::parameter_bool p_baryon_density;
     o2scl::cli::parameter_bool p_use_crust;
     o2scl::cli::parameter_bool p_inc_baryon_mass;
+    o2scl::cli::parameter_bool p_norm_max;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
     o2scl::cli::parameter_double p_e_low;
@@ -288,15 +415,15 @@ namespace bamr {
     /// Pressure increment for the M vs. R curve (default 1.1)
     double mvsr_pr_inc;
 
-    /** \brief The number of MCMC successes between file updates
-	(default 40)
+    /** \brief If true, normalize the data distributions so that the
+	max is one, otherwise, normalize so that the integral is one
+	(default true)
     */
-    int file_update_iters;
+    bool norm_max;
 
-    /** \brief Maximum size of Markov chain (default 10000)
-     */
-    int max_chain_size;
-    
+    /// If true, use the default crust (default true)
+    bool use_crust;
+
     /** \brief If true, output debug information about the input data 
 	files (default false)
     */
@@ -306,33 +433,15 @@ namespace bamr {
 	(default false)
     */
     bool debug_line;
-
-    /** \brief If true, normalize the data distributions so that the
-	max is one, otherwise, normalize so that the integral is one
-	(default true)
-    */
-    bool norm_max;
-
-    /// Maximum number of iterations (default 0)
-    int max_iters;
-
-    /// If true, use the default crust (default true)
-    bool use_crust;
-
+    
     /// If true, output stellar properties for debugging (default false)
     bool debug_star;
     
     /// If true, output equation of state for debugging (default false)
     bool debug_eos;
 
-    /// If true, output next point (default true)
-    bool output_next;
-
     /// If true, compute the baryon density (default true)
     bool baryon_density;
-
-    /// MCMC stepsize factor (default 15.0)
-    double step_fac;
 
     /// The lower threshold for the input distributions (default 0.0)
     double input_dist_thresh;
@@ -347,23 +456,6 @@ namespace bamr {
   
     /// Minimum allowed maximum mass (default 2.0)
     double min_max_mass;
-
-    /** \brief Number of warm up steps (successful steps not
-	iterations) (default 0)
-	
-	\note Not to be confused with <tt>warm_up</tt>, which is 
-	a boolean local variable in some functions not an int.
-    */
-    int n_warm_up;
-
-    /** \brief Time in seconds (default is 86400 seconds or 1 day)
-     */
-    double max_time;
-
-    /** \brief If non-zero, use as the seed for the random number 
-	generator (default 0)
-    */
-    int user_seed;
 
     /** \brief If true, output more detailed information about the 
 	best point (default false)
@@ -389,18 +481,6 @@ namespace bamr {
     double in_r_max;
     //@}
 
-    /// \name MPI properties
-    //@{
-    /// The MPI processor rank
-    int mpi_rank;
-
-    /// The MPI number of processors
-    int mpi_nprocs;
-
-    /// The MPI starting time
-    double mpi_start_time;
-    //@}
-    
     /// \name Input neutron star data
     //@{
     /// Input probability distributions
@@ -450,25 +530,8 @@ namespace bamr {
     /// Main data table for Markov chain
     o2scl::table_units<> tc;
     
-    /// The number of Metropolis steps which succeeded
-    size_t mh_success;
-
-    /// The number of Metropolis steps which failed
-    size_t mh_failure;
-
-    /// Total number of mcmc iterations
-    size_t mcmc_iterations;
-
     /// Store the full Markov chain
     std::vector<double> markov_chain;
-
-#ifdef BAMR_READLINE
-    /// Command-line interface
-    o2scl::cli_readline cl;
-#else
-    /// Command-line interface
-    o2scl::cli cl;
-#endif
 
     /// If true, then \ref first_update() has been called
     bool first_file_update;
@@ -509,19 +572,8 @@ namespace bamr {
     
     /// EOS model list
     std::vector<model *> mod_arr;
-
-    /// Step flags
-    std::vector<bool> step_flags;
 #endif
 
-    /// Random number generator
-    o2scl::rng_gsl gr;
-  
-    /// The screen output file
-    std::ofstream scr_out;
-
-    /// If true, scr_out has been opened
-    bool file_opened;
     //@}
 
     /// \name Main functions called from the command-line interface
@@ -616,7 +668,6 @@ namespace bamr {
     /** \brief Write histogram data to files with prefix \c fname
      */
     virtual void update_files(model &modp, entry &e_current);
-			      
     
     /** \brief Set up the 'cli' object
 
@@ -674,18 +725,11 @@ namespace bamr {
     o2scl::tov_solve ts2;
     //@}
 
-    /** \brief The arguments sent to the command-line
-     */
-    std::vector<std::string> cl_args;
-
   public:
 
     bamr_class();
 
     virtual ~bamr_class();
-
-    /// Main wrapper for parsing command-line arguments
-    virtual void run(int argc, char *argv[]);
 
     /// \name Return codes for each point
     //@{
