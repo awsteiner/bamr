@@ -359,7 +359,7 @@ void bamr_class::add_measurement
 (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
  std::shared_ptr<o2scl::table_units<> > tab_mvsr,
  double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
-  
+
   // Test to see if we need to add a new line of data or
   // increment the weight on the previous line
   if (tc.get_nlines()==0 || new_meas==true) {
@@ -1777,12 +1777,6 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     data_arr[i].modp->copy_params(*data_arr[0].modp);
   }
 
-  // Check model
-  if (model_type.length()==0) {
-    scr_out << "Model not set." << endl;
-    return exc_efailed;
-  }
-
   // Low-density crust
   if (use_crust) {
     teos.default_low_dens_eos();
@@ -1815,6 +1809,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     scr_out.setf(ios::scientific);
     file_opened=true;
     scr_out << "Opened main file in command 'mcmc'." << endl;
+  }
+
+  // Check model
+  if (model_type.length()==0) {
+    scr_out << "Model not set." << endl;
+    return exc_efailed;
   }
 
   // Fix file_update_iters if necessary
@@ -2069,7 +2069,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   mh_failure=0;
 
   // ---------------------------------------------------
-  // Compute initial point and initial weightsx
+  // Compute initial point and initial weights
 
   int suc;
   double q_current=0.0, q_next=0.0;
@@ -2093,11 +2093,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	// Make a perturbation from the initial point
 	for(size_t ik=0;ik<nparams;ik++) {
 	  e_curr_arr[ij].params[ik]+=(gr.random()*2.0-1.0)*
-	    (high.params[ik]-low.params[ik])/step_fac;
+	    (high.params[ik]-low.params[ik])/100.0;
 	}
 	for(size_t ik=0;ik<nsources;ik++) {
 	  e_curr_arr[ij].mass[ik]=first_mass[ik]+(gr.random()*2.0-1.0)*
-	    (high.mass[ik]-low.mass[ik])/step_fac;
+	    (high.mass[ik]-low.mass[ik])/100.0;
 	  e_curr_arr[ij].rad[ik]=0.0;
 	}
 	
@@ -2247,7 +2247,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	e_next.mass[i]=e_curr_arr[ij].mass[i]+smove_z*
 	  (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
       }
-      
+
     } else if (hg_mode>0) {
       
       // Make a Metropolis-Hastings step based on previous data
@@ -2448,8 +2448,13 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	}
 
 	// Prepare for next point
-	e_current=e_next;
-	w_current=w_next;
+	if (use_smove) {
+	  e_curr_arr[ik]=e_next;
+	  w_curr_arr[ik]=w_next;
+	} else {
+	  e_current=e_next;
+	  w_current=w_next;
+	}
 
 	// Flip "first_half" parameter
 	if (use_smove) {
@@ -2490,12 +2495,22 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
 	// Repeat measurement of old point
 	if (!warm_up) {
-	  add_measurement(e_current,tab_eos,tab_mvsr,
-			  w_current,false,mh_success,wgts);
-	  if (debug) {
-	    cout << first_half << " Adding old: " 
-		 << e_current.params[0] << " " << w_current << " "
-		 << tab_mvsr->max("gm") << endl;
+	  if (use_smove) {
+	    add_measurement(e_curr_arr[ik],tab_eos,tab_mvsr,
+			    w_curr_arr[ik],false,mh_success,wgts);
+	    if (debug) {
+	      cout << step_flags[ik] << " Adding old: "
+		   << e_curr_arr[ik].params[0] << " " << w_curr_arr[ik] << " "
+		   << tab_mvsr->max("gm") << endl;
+	    }
+	  } else {
+	    add_measurement(e_current,tab_eos,tab_mvsr,
+			    w_current,false,mh_success,wgts);
+	    if (debug) {
+	      cout << first_half << " Adding old: "
+		   << e_current.params[0] << " " << w_current << " "
+		   << tab_mvsr->max("gm") << endl;
+	    }
 	  }
 	}
 
