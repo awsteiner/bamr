@@ -109,9 +109,6 @@ namespace bamr {
   /// Desc
   size_t nwalk;
 
-  /// Step flags
-  std::vector<bool> step_flags;
-    
   /// \name Member data for the Metropolis-Hastings step
   //@{
   /// A Gaussian probability distribution
@@ -152,6 +149,7 @@ namespace bamr {
   o2scl::cli::parameter_int p_file_update_iters;
   o2scl::cli::parameter_int p_max_chain_size;
   o2scl::cli::parameter_bool p_output_next;
+  o2scl::cli::parameter_bool p_use_smove;
   o2scl::cli::parameter_string p_prefix;
   //@}
 
@@ -293,6 +291,10 @@ namespace bamr {
       "to the '_scr' file before calling TOV solver (default true).";
     cl.par_list.insert(std::make_pair("output_next",&p_output_next));
 
+    p_use_smove.b=&use_smove;
+    p_use_smove.help="";
+    cl.par_list.insert(std::make_pair("use_smove",&p_use_smove));
+
     p_max_chain_size.i=&max_chain_size;
     p_max_chain_size.help=((std::string)"Maximum Markov chain size (default ")+
       "10000).";
@@ -357,6 +359,7 @@ namespace bamr {
     use_smove=false;
     hg_mode=0;
     step_fac=15.0;
+    nwalk=10;
 
     // Initial values
     mpi_nprocs=1;

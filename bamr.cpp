@@ -1473,10 +1473,18 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     has_esym=true;
     has_eos=true;
 
-    data_arr.resize(2);
-    for(size_t i=0;i<2;i++) {
-      data_arr[i].modp=new two_polytropes;
-      data_arr[i].ts.set_eos(teos);
+    if (use_smove) {
+      data_arr.resize(2*nwalk);
+      for(size_t i=0;i<2*nwalk;i++) {
+	data_arr[i].modp=new two_polytropes;
+	data_arr[i].ts.set_eos(teos);
+      }
+    } else {
+      data_arr.resize(2);
+      for(size_t i=0;i<2;i++) {
+	data_arr[i].modp=new two_polytropes;
+	data_arr[i].ts.set_eos(teos);
+      }
     }
 
   } else if (sv[1]==((string)"altp")) {
@@ -1635,11 +1643,6 @@ bool bamr_class::make_step(double w_current, double w_next, bool debug,
       accept=true;
     }
   }
-  /*
-    scr_out << r << " " << accept << endl;
-    scr_out << w_next << " " << w_current << endl;
-    scr_out << q_next << " " << q_current << endl;
-  */
 
   if (debug) {
     cout << "Metropolis: " << r << " " << w_next/w_current << " " 
@@ -1789,13 +1792,15 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // First MC point
   entry e_current(nparams,nsources);
 
-#ifdef O2SCL_SMOVE
   std::vector<entry> e_curr_arr(nwalk);
-  for(size_t i=0;i<nwalk;i++) {
-    e_curr_arr.allocate(nparams,nsources);
-  }
   std::vector<double> w_curr_arr(nwalk);
-#endif
+  std::vector<bool> step_flags(nwalk);
+  if (use_smove) {
+    for(size_t i=0;i<nwalk;i++) {
+      e_curr_arr[i].allocate(nparams,nsources);
+      step_flags[i]=false;
+    }
+  }
 
 #ifndef BAMR_NO_MPI
   int buffer=0, tag=0;
@@ -1991,63 +1996,102 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // Keep track of successful and failed MH moves
   mh_success=0;
   mh_failure=0;
-  
-#ifdef O2SCL_SMOVE
 
-  scr_out << "First point from default." << endl;
-  for(size_t ij=0;ij<nwalk;ij++) {
-    bool done=false;
-    while (!done) {
-      mod_arr[ij]->first_point(e_curr_arr[ij]);
-      for(size_t ik=0;ik<nparams;ik++) {
-	e_curr_arr[ij].param[ik]+=(gr.random()*2.0-1.0)*
-	  (high.param[ik]-low.param[ik])/100.0;
-      }
-      for(size_t ik=0;ik<nsources;ik++) {
-	e_curr_arr[ij].mass[ik]=first_mass[ik]+(gr.random()*2.0-1.0)*
-	  (high.mass[ik]-low.mass[ik])/100.0;
-	e_curr_arr[ij].rad[i]=0.0;
-      }
-      w_curr_arr[ij]=compute_weight(e_curr_arr[ij],mod_arr[ij],
-				    ts_arr[ij],suc,wgts,warm_up);
-      if (w_curr_arr[ij]>0.0) done=true;
-    }
-  }
-  
-#endif
-  
-  // Compute initial weight
+  // ---------------------------------------------------
+  // Compute initial weight, etc.
+
   int suc;
-  w_current=compute_weight(e_current,data_arr[0],suc,wgts,warm_up);
-  ret_codes[suc]++;
-  scr_out << "Initial weight: " << w_current << endl;
-  if (w_current<=0.0) {
-    for(size_t i=0;i<nsources;i++) {
-      scr_out << i << " " << wgts[i] << endl;
-    }
-    scr_out << "Initial weight zero. Aborting." << endl;
-    exit(-1);
-  }
-  
   double q_current=0.0, q_next=0.0;
-  if (hg_mode>0) {
-    q_current=approx_like(e_current);
+
+  if (use_smove) {
+
+    size_t ij_best=0;
+    for(size_t ij=0;ij<nwalk;ij++) {
+      bool done=false;
+      while (!done) {
+	data_arr[ij].modp->first_point(e_curr_arr[ij]);
+	for(size_t ik=0;ik<nparams;ik++) {
+	  e_curr_arr[ij].params[ik]+=(gr.random()*2.0-1.0)*
+	    (high.params[ik]-low.params[ik])/100.0;
+	}
+	for(size_t ik=0;ik<nsources;ik++) {
+	  e_curr_arr[ij].mass[ik]=first_mass[ik]+(gr.random()*2.0-1.0)*
+	    (high.mass[ik]-low.mass[ik])/100.0;
+	  e_curr_arr[ij].rad[ik]=0.0;
+	}
+	w_curr_arr[ij]=compute_weight(e_curr_arr[ij],data_arr[ij],
+				      suc,wgts,warm_up);
+	scr_out << "SM Init " << ij << " "
+		<< e_curr_arr[ij] << " " << w_curr_arr[ij] << endl;
+	
+	if (ij==0) {
+	  w_best=w_curr_arr[0];
+	} else if (w_curr_arr[ij]>w_best) {
+	  ij_best=ij;
+	  w_best=w_curr_arr[ij];
+	}
+	
+	scr_out << "First point: " << ij << " " << w_curr_arr[ij] << endl;
+	if (w_curr_arr[ij]>0.0) done=true;
+      }
+
+      {
+	shared_ptr<table_units<> > tab_eos;
+	shared_ptr<table_units<> > tab_mvsr;
+	tab_eos=data_arr[ij].modp->cns.get_eos_results();
+	tab_mvsr=data_arr[ij].ts.get_results();
+	if (warm_up==false) {
+	  // Add the initial point if there's no warm up
+	  add_measurement(e_curr_arr[ij],tab_eos,tab_mvsr,w_curr_arr[ij],
+			  true,mh_success,wgts);
+	}
+      }
+    }
+    
+    {
+      e_best=e_curr_arr[ij_best];
+      shared_ptr<table_units<> > tab_eos;
+      shared_ptr<table_units<> > tab_mvsr;
+      tab_eos=data_arr[ij_best].modp->cns.get_eos_results();
+      tab_mvsr=data_arr[ij_best].ts.get_results();
+      output_best(e_best,w_best,tab_eos,tab_mvsr,wgts);
+    }
+
+  } else {
+    
+    w_current=compute_weight(e_current,data_arr[0],suc,wgts,warm_up);
+    ret_codes[suc]++;
+    scr_out << "Initial weight: " << w_current << endl;
+    if (w_current<=0.0) {
+      for(size_t i=0;i<nsources;i++) {
+	scr_out << i << " " << wgts[i] << endl;
+      }
+      scr_out << "Initial weight zero. Aborting." << endl;
+      exit(-1);
+    }
+    
+    if (hg_mode>0) {
+      q_current=approx_like(e_current);
+    }
+    
+    {
+      shared_ptr<table_units<> > tab_eos;
+      shared_ptr<table_units<> > tab_mvsr;
+      tab_eos=data_arr[0].modp->cns.get_eos_results();
+      tab_mvsr=data_arr[0].ts.get_results();
+      if (warm_up==false) {
+	// Add the initial point if there's no warm up
+	add_measurement(e_current,tab_eos,tab_mvsr,w_current,
+			true,mh_success,wgts);
+      }
+      e_best=e_current;
+      w_best=w_current;
+      output_best(e_current,w_current,tab_eos,tab_mvsr,wgts);
+    }
+    
   }
 
-  {
-    shared_ptr<table_units<> > tab_eos;
-    shared_ptr<table_units<> > tab_mvsr;
-    tab_eos=data_arr[0].modp->cns.get_eos_results();
-    tab_mvsr=data_arr[0].ts.get_results();
-    if (warm_up==false) {
-      // Add the initial point if there's no warm up
-      add_measurement(e_current,tab_eos,tab_mvsr,w_current,
-		      true,mh_success,wgts);
-    }
-    e_best=e_current;
-    w_best=w_current;
-    output_best(e_current,w_current,tab_eos,tab_mvsr,wgts);
-  }
+  // ---------------------------------------------------
 
   // Initialize radii of e_next to zero
   for(size_t k=0;k<nsources;k++) {
@@ -2070,37 +2114,45 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   size_t block_counter=0;
 
   while (!main_done) {
+
+    // Walker to move for smove
+    size_t ik=0;
     
-#ifdef O2SCL_SMOVE
-    // Choose walker to move
-    size_t ik=mcmc_iterations % nwalk;
-    // Choose jth walker
-    size_t ij=ik;
-    while (ij==ik) ij=gr.random()*nwalk;
-    // Select z
-    double z;
-    for(size_t i=0;i<nparams;i++) {
-    e_next.params[i]=e_curr_arr[ij].params[i]+z*
-      (e_curr_arr[ik].params[i]-e_curr_arr[ij].params[i]);
-  }
-    for(size_t i=0;i<nsources;i++) {
-    e_next.mass[i]=e_curr_arr[ij].mass[i]+z*
-      (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
-  }
-#endif
+    // ---------------------------------------------------
+    // Select next point
+    
+    if (use_smove) {
 
-    if (hg_mode>0) {
-
+      // Choose walker to move
+      ik=mcmc_iterations % nwalk;
+      // Choose jth walker
+      size_t ij=ik;
+      while (ij==ik) ij=gr.random()*nwalk;
+      // Select z
+      double p=gr.random();
+      double a=step_fac/7.5;
+      double z=(1.0-2.0*p+2.0*a*p+p*p-2.0*a*p*p+a*a*p*p)/a;
+      for(size_t i=0;i<nparams;i++) {
+	e_next.params[i]=e_curr_arr[ij].params[i]+z*
+	  (e_curr_arr[ik].params[i]-e_curr_arr[ij].params[i]);
+      }
+      for(size_t i=0;i<nsources;i++) {
+	e_next.mass[i]=e_curr_arr[ij].mass[i]+z*
+	  (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
+      }
+      
+    } else if (hg_mode>0) {
+      
       // Make a Metropolis-Hastings step based on previous data
-
+      
       size_t nv=e_next.np+nsources;
       ubvector hg_temp(nv), hg_z(nv);
-
+      
       bool out_of_range;
       int hg_it=0;
-
+      
       do {
-
+	
 	for(size_t k=0;k<nv;k++) {
 	  hg_z[k]=pdg.sample();
 	}
@@ -2167,21 +2219,36 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       }
       
     }
-    
+
+    // End of select next point
+    // ---------------------------------------------------
+
     // Output the next point
     if (output_next) {
       scr_out << "Iteration, next: " << mcmc_iterations << " " 
 	      << e_next << endl;
     }
       
+    // ---------------------------------------------------
     // Compute next weight
-    if (first_half) {
-      w_next=compute_weight(e_next,data_arr[1],suc,wgts,warm_up);
+
+    if (use_smove) {
+      if (step_flags[ik]==false) {
+	w_next=compute_weight(e_next,data_arr[ik+nwalk],suc,wgts,warm_up);
+      } else {
+	w_next=compute_weight(e_next,data_arr[ik],suc,wgts,warm_up);
+      }
     } else {
-      w_next=compute_weight(e_next,data_arr[0],suc,wgts,warm_up);
+      if (first_half) {
+	w_next=compute_weight(e_next,data_arr[1],suc,wgts,warm_up);
+      } else {
+	w_next=compute_weight(e_next,data_arr[0],suc,wgts,warm_up);
+      }
     }
     ret_codes[suc]++;
-      
+
+    // ---------------------------------------------------
+    
     // Test to ensure new point is good
     if (suc==ix_success) {
 
@@ -2213,8 +2280,14 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	     << e_next.params[0] << " " << w_next << endl;
       }
       
-      bool accept=make_step(w_current,w_next,debug,warm_up,mcmc_iterations,
-			    q_current,q_next);
+      bool accept;
+      if (use_smove) {
+	accept=make_step(w_curr_arr[ik],w_next,debug,warm_up,
+			 mcmc_iterations,q_current,q_next);
+      } else {
+	accept=make_step(w_current,w_next,debug,warm_up,
+			 mcmc_iterations,q_current,q_next);
+      }
       
       if (accept) {
 
@@ -2224,12 +2297,22 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	shared_ptr<table_units<> > tab_eos;
 	shared_ptr<table_units<> > tab_mvsr;
 
-	if (first_half) {
-	  tab_eos=data_arr[1].modp->cns.get_eos_results();
-	  tab_mvsr=data_arr[1].ts.get_results();
+	if (use_smove) {
+	  if (step_flags[ik]==false) {
+	    tab_eos=data_arr[ik+nwalk].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[ik+nwalk].ts.get_results();
+	  } else {
+	    tab_eos=data_arr[ik].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[ik].ts.get_results();
+	  }
 	} else {
-	  tab_eos=data_arr[0].modp->cns.get_eos_results();
-	  tab_mvsr=data_arr[0].ts.get_results();
+	  if (first_half) {
+	    tab_eos=data_arr[1].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[1].ts.get_results();
+	  } else {
+	    tab_eos=data_arr[0].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[0].ts.get_results();
+	  }
 	}
 	tab_eos->set_interp_type(itp_linear);
 	tab_mvsr->set_interp_type(itp_linear);
@@ -2262,8 +2345,12 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	w_current=w_next;
 
 	// Flip "first_half" parameter
-	first_half=!(first_half);
-	if (debug) cout << "Flip: " << first_half << endl;
+	if (use_smove) {
+	  step_flags[ik]=!(step_flags[ik]);
+	} else {
+	  first_half=!(first_half);
+	  if (debug) cout << "Flip: " << first_half << endl;
+	}
 	  
       } else {
 	    
@@ -2274,12 +2361,22 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	shared_ptr<table_units<> > tab_eos;
 	shared_ptr<table_units<> > tab_mvsr;
 	
-	if (first_half) {
-	  tab_eos=data_arr[0].modp->cns.get_eos_results();
-	  tab_mvsr=data_arr[0].ts.get_results();
+	if (use_smove) {
+	  if (step_flags[ik]==false) {
+	    tab_eos=data_arr[ik].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[ik].ts.get_results();
+	  } else {
+	    tab_eos=data_arr[ik+nwalk].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[ik+nwalk].ts.get_results();
+	  }
 	} else {
-	  tab_eos=data_arr[1].modp->cns.get_eos_results();
-	  tab_mvsr=data_arr[1].ts.get_results();
+	  if (first_half) {
+	    tab_eos=data_arr[0].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[0].ts.get_results();
+	  } else {
+	    tab_eos=data_arr[1].modp->cns.get_eos_results();
+	    tab_mvsr=data_arr[1].ts.get_results();
+	  }
 	}
 	tab_eos->set_interp_type(itp_linear);
 	tab_mvsr->set_interp_type(itp_linear);
