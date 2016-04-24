@@ -63,18 +63,6 @@ namespace bamr {
   
   /** \brief Desc
    */
-  class data_type {
-
-  public:
-    
-    /** \brief Desc
-     */
-    virtual double weight(ubvector &params);
-    
-  };
-
-  /** \brief Desc
-   */
   class eos_tov {
     
   public:
@@ -111,7 +99,7 @@ namespace bamr {
   
   /** \brief Desc
    */
-  template<class data_t=data_type> class mcmc_class {
+  template<class data_t> class mcmc_class {
     
   public:
 
@@ -353,18 +341,24 @@ namespace bamr {
   }    
 
   mcmc_class() {
+
+    // Parameters
     prefix="mcmc";
     file_update_iters=40;
     max_chain_size=10000;
     max_iters=0;
-    hg_mode=0;
-    step_fac=15.0;
     user_seed=0;
     n_warm_up=0;
     // Default to 24 hours
     max_time=3.6e3*24;
     output_next=true;
 
+    // MC step parameters
+    use_smove=false;
+    hg_mode=0;
+    step_fac=15.0;
+
+    // Initial values
     mpi_nprocs=1;
     mpi_rank=0;
     chain_size=0;
@@ -375,11 +369,11 @@ namespace bamr {
   
   /** \brief Statistical analysis of EOS from M and R constraints
 
+      \comment
       \note Right now the EOS is rejected if the pressure decreases
       with increasing density at any density, even if it happens at a
       density which is larger than the central density of the maximum
       mass star.
-      \comment
       1/6/16 - I originally thought this was a problem, but
       actually there is no problem here, as EOSs can always be
       fixed to ensure that pressures always increase. 

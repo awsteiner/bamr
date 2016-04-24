@@ -487,7 +487,7 @@ void bamr_class::update_files(model &modp, entry &e_current) {
   hf.set_szt("mh_failure",mh_failure);
   hf.set_szt("mcmc_iterations",mcmc_iterations);
   hf.seti_vec("ret_codes",ret_codes);
-
+  
   // Store Markov chain
   if (n_chains==0) n_chains++;
   hf.set_szt("n_chains",n_chains);
@@ -709,7 +709,6 @@ void bamr_class::compute_star(entry &e, eos_tov &dat, int &success) {
 
   // Compute the EOS first
   if (has_eos) {
-    dat.modp->copy_params(*data_arr[0].modp);
     dat.modp->compute_eos(e,success,scr_out);
     if (success!=ix_success) return;
   }
@@ -1700,16 +1699,11 @@ void bamr_class::select_mass(entry &e_current, entry &e_next, double mmax) {
 
 int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
-#ifdef O2SCL_SMOVE
-  ts_arr.resize(nwalk*2);
-  for(size_t i=0;i<nwalk*2;i++) {
-    ts[i].verbose=0;
-    ts[i].set_units("1/fm^4","1/fm^4","1/fm^3");
-    ts[i].set_eos(teos);
-    ts[i].err_nonconv=false;
+  // Copy model parameters to all of the data objects
+  for(size_t i=1;i<data_arr.size();i++) {
+    data_arr[i].modp->copy_params(*data_arr[0].modp);
   }
-#endif
-
+  
   // Make sure that first_update() is called when necessary
   first_file_update=false;
 
