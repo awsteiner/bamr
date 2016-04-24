@@ -103,108 +103,108 @@ namespace bamr {
     
   public:
 
-  /// Desc
-  bool use_smove;
+    /// Desc
+    bool use_smove;
   
-  /// Desc
-  size_t nwalk;
+    /// Desc
+    size_t nwalk;
 
-  /// \name Member data for the Metropolis-Hastings step
-  //@{
-  /// A Gaussian probability distribution
-  o2scl::prob_dens_gaussian pdg;
+    /// \name Member data for the Metropolis-Hastings step
+    //@{
+    /// A Gaussian probability distribution
+    o2scl::prob_dens_gaussian pdg;
     
-  /// If true, then use Metropolis-Hastings with a multivariate Gaussian
-  int hg_mode;
+    /// If true, then use Metropolis-Hastings with a multivariate Gaussian
+    int hg_mode;
     
-  /// The Cholesky decomposition of the covariance matrix
-  ubmatrix hg_chol;
+    /// The Cholesky decomposition of the covariance matrix
+    ubmatrix hg_chol;
     
-  /// The inverse of the covariance matrix
-  ubmatrix hg_covar_inv;
+    /// The inverse of the covariance matrix
+    ubmatrix hg_covar_inv;
     
-  /// The normalization factor
-  double hg_norm;
+    /// The normalization factor
+    double hg_norm;
     
-  /// The location of the peak
-  ubvector hg_best;
-  //@}
+    /// The location of the peak
+    ubvector hg_best;
+    //@}
 
-  /** \brief Error handler for each thread
-   */
-  o2scl::err_hnd_cpp error_handler;
+    /** \brief Error handler for each thread
+     */
+    o2scl::err_hnd_cpp error_handler;
 
-  /** \brief Prefix for output filenames
-   */
-  std::string prefix;
+    /** \brief Prefix for output filenames
+     */
+    std::string prefix;
     
-  /// \name Parameter objects for the 'set' command
-  //@{
-  o2scl::cli::parameter_double p_max_time;
-  o2scl::cli::parameter_double p_step_fac;
-  o2scl::cli::parameter_int p_n_warm_up;
-  o2scl::cli::parameter_int p_grid_size;
-  o2scl::cli::parameter_int p_user_seed;
-  o2scl::cli::parameter_int p_max_iters;
-  o2scl::cli::parameter_int p_file_update_iters;
-  o2scl::cli::parameter_int p_max_chain_size;
-  o2scl::cli::parameter_bool p_output_next;
-  o2scl::cli::parameter_bool p_use_smove;
-  o2scl::cli::parameter_string p_prefix;
-  //@}
+    /// \name Parameter objects for the 'set' command
+    //@{
+    o2scl::cli::parameter_double p_max_time;
+    o2scl::cli::parameter_double p_step_fac;
+    o2scl::cli::parameter_int p_n_warm_up;
+    o2scl::cli::parameter_int p_grid_size;
+    o2scl::cli::parameter_int p_user_seed;
+    o2scl::cli::parameter_int p_max_iters;
+    o2scl::cli::parameter_int p_file_update_iters;
+    o2scl::cli::parameter_int p_max_chain_size;
+    o2scl::cli::parameter_bool p_output_next;
+    o2scl::cli::parameter_bool p_use_smove;
+    o2scl::cli::parameter_string p_prefix;
+    //@}
 
-  /** \brief The number of MCMC successes between file updates
-      (default 40)
-  */
-  int file_update_iters;
+    /** \brief The number of MCMC successes between file updates
+	(default 40)
+    */
+    int file_update_iters;
 
-  /** \brief Maximum size of Markov chain (default 10000)
-   */
-  int max_chain_size;
+    /** \brief Maximum size of Markov chain (default 10000)
+     */
+    int max_chain_size;
     
-  /// Maximum number of iterations (default 0)
-  int max_iters;
+    /// Maximum number of iterations (default 0)
+    int max_iters;
 
-  /// MCMC stepsize factor (default 15.0)
-  double step_fac;
+    /// MCMC stepsize factor (default 15.0)
+    double step_fac;
 
-  /** \brief Number of warm up steps (successful steps not
-      iterations) (default 0)
+    /** \brief Number of warm up steps (successful steps not
+	iterations) (default 0)
 	
-      \note Not to be confused with <tt>warm_up</tt>, which is 
-      a boolean local variable in some functions not an int.
-  */
-  int n_warm_up;
+	\note Not to be confused with <tt>warm_up</tt>, which is 
+	a boolean local variable in some functions not an int.
+    */
+    int n_warm_up;
 
-  /** \brief Time in seconds (default is 86400 seconds or 1 day)
-   */
-  double max_time;
+    /** \brief Time in seconds (default is 86400 seconds or 1 day)
+     */
+    double max_time;
 
-  /** \brief If non-zero, use as the seed for the random number 
-      generator (default 0)
-  */
-  int user_seed;
+    /** \brief If non-zero, use as the seed for the random number 
+	generator (default 0)
+    */
+    int user_seed;
 
-  /// \name MPI properties
-  //@{
-  /// The MPI processor rank
-  int mpi_rank;
+    /// \name MPI properties
+    //@{
+    /// The MPI processor rank
+    int mpi_rank;
 
-  /// The MPI number of processors
-  int mpi_nprocs;
+    /// The MPI number of processors
+    int mpi_nprocs;
 
-  /// The MPI starting time
-  double mpi_start_time;
-  //@}
+    /// The MPI starting time
+    double mpi_start_time;
+    //@}
     
-  /// The number of Metropolis steps which succeeded
-  size_t mh_success;
+    /// The number of Metropolis steps which succeeded
+    size_t mh_success;
 
-  /// The number of Metropolis steps which failed
-  size_t mh_failure;
+    /// The number of Metropolis steps which failed
+    size_t mh_failure;
 
-  /// Total number of mcmc iterations
-  size_t mcmc_iterations;
+    /// Total number of mcmc iterations
+    size_t mcmc_iterations;
 
     /// Number of Markov chain segments
     size_t n_chains;
@@ -213,160 +213,160 @@ namespace bamr {
     size_t chain_size;
   
 #ifdef BAMR_READLINE
-  /// Command-line interface
-  o2scl::cli_readline cl;
+    /// Command-line interface
+    o2scl::cli_readline cl;
 #else
-  /// Command-line interface
-  o2scl::cli cl;
+    /// Command-line interface
+    o2scl::cli cl;
 #endif
 
-  /// Main data table for Markov chain
-  o2scl::table_units<> tc;
+    /// Main data table for Markov chain
+    o2scl::table_units<> tc;
     
-  /// Random number generator
-  o2scl::rng_gsl gr;
+    /// Random number generator
+    o2scl::rng_gsl gr;
   
-  /// The screen output file
-  std::ofstream scr_out;
+    /// The screen output file
+    std::ofstream scr_out;
 
-  /// If true, scr_out has been opened
-  bool file_opened;
+    /// If true, scr_out has been opened
+    bool file_opened;
 
-  /// If true, output next point (default true)
-  bool output_next;
+    /// If true, output next point (default true)
+    bool output_next;
 
-  /** \brief The arguments sent to the command-line
-   */
-  std::vector<std::string> cl_args;
+    /** \brief The arguments sent to the command-line
+     */
+    std::vector<std::string> cl_args;
 
-  /// Vector of data objects
-  std::vector<data_t> data_arr;
+    /// Vector of data objects
+    std::vector<data_t> data_arr;
   
-  /** \brief Set up the 'cli' object
+    /** \brief Set up the 'cli' object
       
-      This function just adds the four commands and the 'set' parameters
-  */
-  virtual void setup_cli() {
+	This function just adds the four commands and the 'set' parameters
+    */
+    virtual void setup_cli() {
 
-    // ---------------------------------------
-    // Set parameters
+      // ---------------------------------------
+      // Set parameters
     
-    p_max_time.d=&max_time;
-    p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
-    cl.par_list.insert(std::make_pair("max_time",&p_max_time));
+      p_max_time.d=&max_time;
+      p_max_time.help="Maximum run time in seconds (default 86400 sec or 1 day).";
+      cl.par_list.insert(std::make_pair("max_time",&p_max_time));
     
-    p_step_fac.d=&step_fac;
-    p_step_fac.help=((std::string)"MCMC step factor. The step size for each ")+
-      "variable is taken as the difference between the high and low "+
-      "limits divided by this factor (default 15.0). This factor can "+
-      "be increased if the acceptance rate is too small, but care must "+
-      "be taken, e.g. if the conditional probability is multimodal. If "+
-      "this step size is smaller than 1.0, it is reset to 1.0 .";
-    cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
+      p_step_fac.d=&step_fac;
+      p_step_fac.help=((std::string)"MCMC step factor. The step size for each ")+
+	"variable is taken as the difference between the high and low "+
+	"limits divided by this factor (default 15.0). This factor can "+
+	"be increased if the acceptance rate is too small, but care must "+
+	"be taken, e.g. if the conditional probability is multimodal. If "+
+	"this step size is smaller than 1.0, it is reset to 1.0 .";
+      cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
-    p_n_warm_up.i=&n_warm_up;
-    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
-      "(default 0).";
-    cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
+      p_n_warm_up.i=&n_warm_up;
+      p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
+	"(default 0).";
+      cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
 
-    p_file_update_iters.i=&file_update_iters;
-    p_file_update_iters.help=((std::string)"Number of MCMC successes between ")+
-      "file upates (default 10, minimum value 1).";
-    cl.par_list.insert(std::make_pair("file_update_iters",
-				      &p_file_update_iters));
+      p_file_update_iters.i=&file_update_iters;
+      p_file_update_iters.help=((std::string)"Number of MCMC successes between ")+
+	"file upates (default 10, minimum value 1).";
+      cl.par_list.insert(std::make_pair("file_update_iters",
+					&p_file_update_iters));
 
-    p_user_seed.i=&user_seed;
-    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-      "generator. If zero is given (the default), then mcmc() uses "+
-      "time(0) to generate a random seed.";
-    cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
+      p_user_seed.i=&user_seed;
+      p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
+	"generator. If zero is given (the default), then mcmc() uses "+
+	"time(0) to generate a random seed.";
+      cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
 
-    p_max_iters.i=&max_iters;
-    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-      "iterations to be less than the specified number (default zero).";
-    cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
+      p_max_iters.i=&max_iters;
+      p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
+	"iterations to be less than the specified number (default zero).";
+      cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
 
-    p_output_next.b=&output_next;
-    p_output_next.help=((std::string)"If true, output next point ")+
-      "to the '_scr' file before calling TOV solver (default true).";
-    cl.par_list.insert(std::make_pair("output_next",&p_output_next));
+      p_output_next.b=&output_next;
+      p_output_next.help=((std::string)"If true, output next point ")+
+	"to the '_scr' file before calling TOV solver (default true).";
+      cl.par_list.insert(std::make_pair("output_next",&p_output_next));
 
-    p_use_smove.b=&use_smove;
-    p_use_smove.help="";
-    cl.par_list.insert(std::make_pair("use_smove",&p_use_smove));
+      p_use_smove.b=&use_smove;
+      p_use_smove.help="";
+      cl.par_list.insert(std::make_pair("use_smove",&p_use_smove));
 
-    p_max_chain_size.i=&max_chain_size;
-    p_max_chain_size.help=((std::string)"Maximum Markov chain size (default ")+
-      "10000).";
-    cl.par_list.insert(std::make_pair("max_chain_size",&p_max_chain_size));
+      p_max_chain_size.i=&max_chain_size;
+      p_max_chain_size.help=((std::string)"Maximum Markov chain size (default ")+
+	"10000).";
+      cl.par_list.insert(std::make_pair("max_chain_size",&p_max_chain_size));
 
-    p_prefix.str=&prefix;
-    p_prefix.help="Output file prefix (default 'bamr').";
-    cl.par_list.insert(std::make_pair("prefix",&p_prefix));
+      p_prefix.str=&prefix;
+      p_prefix.help="Output file prefix (default 'bamr').";
+      cl.par_list.insert(std::make_pair("prefix",&p_prefix));
 
-    return;
-  }    
+      return;
+    }    
     
-  /// Main wrapper for parsing command-line arguments
-  virtual void run(int argc, char *argv[]) {
+    /// Main wrapper for parsing command-line arguments
+    virtual void run(int argc, char *argv[]) {
   
-    // ---------------------------------------
-    // Set error handler for this thread
+      // ---------------------------------------
+      // Set error handler for this thread
   
-    o2scl::err_hnd=&error_handler;
+      o2scl::err_hnd=&error_handler;
   
-    // ---------------------------------------
-    // Process command-line arguments and run
+      // ---------------------------------------
+      // Process command-line arguments and run
   
-    setup_cli();
+      setup_cli();
 
 #ifndef BAMR_NO_MPI
-    // Get MPI rank, etc.
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
+      // Get MPI rank, etc.
+      MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+      MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
 #endif
 
-    // Process arguments
-    for(int i=0;i<argc;i++) {
-      cl_args.push_back(argv[i]);
-    }
+      // Process arguments
+      for(int i=0;i<argc;i++) {
+	cl_args.push_back(argv[i]);
+      }
 
-    cl.prompt="mcmc> ";
-    cl.run_auto(argc,argv);
+      cl.prompt="mcmc> ";
+      cl.run_auto(argc,argv);
 
-    if (file_opened) {
-      // Close main output file
-      scr_out.close();
-    }
+      if (file_opened) {
+	// Close main output file
+	scr_out.close();
+      }
  
-    return;
-  }    
+      return;
+    }    
 
-  mcmc_class() {
+    mcmc_class() {
 
-    // Parameters
-    prefix="mcmc";
-    file_update_iters=40;
-    max_chain_size=10000;
-    max_iters=0;
-    user_seed=0;
-    n_warm_up=0;
-    // Default to 24 hours
-    max_time=3.6e3*24;
-    output_next=true;
+      // Parameters
+      prefix="mcmc";
+      file_update_iters=40;
+      max_chain_size=10000;
+      max_iters=0;
+      user_seed=0;
+      n_warm_up=0;
+      // Default to 24 hours
+      max_time=3.6e3*24;
+      output_next=true;
 
-    // MC step parameters
-    use_smove=false;
-    hg_mode=0;
-    step_fac=15.0;
-    nwalk=10;
+      // MC step parameters
+      use_smove=false;
+      hg_mode=0;
+      step_fac=15.0;
+      nwalk=10;
 
-    // Initial values
-    mpi_nprocs=1;
-    mpi_rank=0;
-    chain_size=0;
-    n_chains=0;
-  }
+      // Initial values
+      mpi_nprocs=1;
+      mpi_rank=0;
+      chain_size=0;
+      n_chains=0;
+    }
     
   };
   
@@ -651,7 +651,7 @@ namespace bamr {
      */
     virtual bool make_step(double w_current, double w_next, bool debug,
 			   bool warm_up, int iteration,
-			   double q_current, double q_next);
+			   double q_current, double q_next, double z);
 
     /** \brief Initialize the expectation value objects
 
