@@ -85,14 +85,10 @@ namespace bamr {
     /// TOV solver
     o2scl::tov_solve ts;
     
-    /// EOS interpolation object for TOV solver
-    o2scl::eos_tov_interp teos;
-    
     eos_tov() {
       modp=0;
       ts.verbose=0;
       ts.set_units("1/fm^4","1/fm^4","1/fm^3");
-      ts.set_eos(teos);
       ts.err_nonconv=false;
     }
 
@@ -600,12 +596,6 @@ namespace bamr {
     
     /// Schwarzchild radius (set in constructor)
     double schwarz_km;
-
-    /// The model for the EOS
-    model *modp;
-
-    /// The second copy of the model for the EOS
-    model *modp2;
     //@}
 
     /// \name Main functions called from the command-line interface
@@ -674,8 +664,7 @@ namespace bamr {
 	
 	This function is empty by default.
     */
-    virtual void prepare_eos(entry &e, model &modref, o2scl::tov_solve &tsr, 
-			     int &success);
+    virtual void prepare_eos(entry &e, eos_tov &dat, int &success);
 
     /** \brief Add a measurement
      */
@@ -715,8 +704,7 @@ namespace bamr {
 	
 	Called by mcmc().
     */
-    virtual double compute_weight(entry &e, model &modref, 
-				  o2scl::tov_solve &ts, int &success,
+    virtual double compute_weight(entry &e, eos_tov &dat, int &success,
 				  ubvector &wgts, bool warm_up);
 
   public:
@@ -727,10 +715,12 @@ namespace bamr {
 
 	\todo Temporarily made public for drdp project hack
     */
-    virtual void compute_star(entry &e, model &modref, o2scl::tov_solve &ts, 
-			      int &success);
+    virtual void compute_star(entry &e, eos_tov &dat, int &success);
     
   protected:
+    
+    /// EOS interpolation object for TOV solver
+    o2scl::eos_tov_interp teos;
     
     /// Output the "best" EOS obtained so far (called by mcmc())
     virtual void output_best
@@ -738,18 +728,6 @@ namespace bamr {
        std::shared_ptr<o2scl::table_units<> > tab_eos,
        std::shared_ptr<o2scl::table_units<> > tab_mvsr,
        ubvector &wgts);
-    //@}
-
-    /// \name TOV solver objects
-    //@{
-    /// EOS interpolation object for TOV solver
-    o2scl::eos_tov_interp teos;
-
-    /// TOV solver
-    o2scl::tov_solve ts;
-
-    /// Second TOV solver
-    o2scl::tov_solve ts2;
     //@}
 
   public:

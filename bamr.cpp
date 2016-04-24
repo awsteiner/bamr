@@ -49,9 +49,6 @@ bamr_class::bamr_class() {
   in_r_min=5.0;
   in_r_max=18.0;
 
-  modp=0;
-  modp2=0;
-  
   // Default parameter values
 
   grid_size=100;
@@ -86,28 +83,13 @@ bamr_class::bamr_class() {
   m_low=0.2;
   m_high=3.0;
   
-  // -----------------------------------------------------------
-  // Set up TOV solvers
-
-  teos.verbose=0;
-
-  ts.verbose=0;
-  ts.set_units("1/fm^4","1/fm^4","1/fm^3");
-  ts.set_eos(teos);
-  ts.err_nonconv=false;
-
-  ts2.verbose=0;
-  ts2.set_units("1/fm^4","1/fm^4","1/fm^3");
-  ts2.set_eos(teos);
-  ts2.err_nonconv=false;
-
   ret_codes.resize(100);
   for(size_t i=0;i<100;i++) ret_codes[i]=0;
+
+  teos.verbose=0;
 }
 
 bamr_class::~bamr_class() {
-  if (modp!=0) delete modp;
-  if (modp2!=0) delete modp2;
 }
 
 double bamr_class::approx_like(entry &e) {
@@ -144,8 +126,8 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     }
   }
   for(size_t i=0;i<nparams;i++) {
-    s+=((string)"param_")+modp->param_name(i)+" ";
-    u+=modp->param_unit(i)+" ";
+    s+=((string)"param_")+data_arr[0].modp->param_name(i)+" ";
+    u+=data_arr[0].modp->param_unit(i)+" ";
   }
 
   // It is important here that all of these columns which store values
@@ -716,25 +698,23 @@ void bamr_class::load_mc() {
   return;
 }
   
-void bamr_class::prepare_eos(entry &e, model &modref, tov_solve &tsr, 
-			     int &success) {
+void bamr_class::prepare_eos(entry &e, eos_tov &dat, int &success) {
   return;
 }
 
-void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr, 
-			      int &success) {
+void bamr_class::compute_star(entry &e, eos_tov &dat, int &success) {
+			      
   
   success=ix_success;
 
   // Compute the EOS first
   if (has_eos) {
-    modref.copy_params(*modp);
-    modref.compute_eos(e,success,scr_out);
+    dat.modp->compute_eos(e,success,scr_out);
     if (success!=ix_success) return;
   }
   
   // Ensure we're using linear interpolation
-  shared_ptr<table_units<> > tab_eos=modref.cns.get_eos_results();
+  shared_ptr<table_units<> > tab_eos=dat.modp->cns.get_eos_results();
 
   if (has_eos) {
     tab_eos->set_interp_type(itp_linear);
@@ -764,7 +744,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr,
     
     // Obtain the baryon density calibration point from the model
     double n1, e1;
-    modref.baryon_density_point(n1,e1);
+    dat.modp->baryon_density_point(n1,e1);
     
     if (n1<=0.0 && e1<=0.0) {
       O2SCL_ERR2("Computing the baryon density requires one ",
@@ -874,7 +854,7 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr,
   if (has_eos) {
 
     // Perform any additional necessary EOS preparations
-    prepare_eos(e,modref,tsr,success);
+    prepare_eos(e,dat,success);
     if (success!=ix_success) {
       return;
     }
@@ -957,14 +937,14 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr,
     }
 
     // Solve for M vs. R curve
-    tsr.princ=mvsr_pr_inc;
-    int info=tsr.mvsr();
+    dat.ts.princ=mvsr_pr_inc;
+    int info=dat.ts.mvsr();
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << endl;
       success=ix_mvsr_failed;
       return;
     }
-    tab_mvsr=tsr.get_results();
+    tab_mvsr=dat.ts.get_results();
     tab_mvsr->set_interp_type(itp_linear);
   
     // If the EOS is sufficiently stiff, the TOV solver will output
@@ -1076,8 +1056,8 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr,
   } else {
 
     // If there's no EOS, then the model object gives the M-R curve
-    tab_mvsr=tsr.get_results();
-    modref.compute_mr(e,scr_out,tab_mvsr,success);
+    tab_mvsr=dat.ts.get_results();
+    dat.modp->compute_mr(e,scr_out,tab_mvsr,success);
     if (success!=ix_success) {
       return;
     }
@@ -1132,11 +1112,11 @@ void bamr_class::compute_star(entry &e, model &modref, tov_solve &tsr,
   return;
 }
 
-double bamr_class::compute_weight(entry &e, model &modref, tov_solve &tsr, 
+double bamr_class::compute_weight(entry &e, eos_tov &dat, 
 				  int &success, ubvector &wgts, bool warm_up) {
 			     
   // Compute the M vs R curve and return if it failed
-  compute_star(e,modref,tsr,success);
+  compute_star(e,dat,success);
   if (success!=ix_success) {
     return 0.0;
   }
@@ -1172,7 +1152,7 @@ double bamr_class::compute_weight(entry &e, model &modref, tov_solve &tsr,
   success=ix_success;
   double ret=1.0;
 
-  shared_ptr<table_units<> > tab_mvsr=tsr.get_results();
+  shared_ptr<table_units<> > tab_mvsr=dat.ts.get_results();
   tab_mvsr->set_interp_type(itp_linear);
   double m_max_current=tab_mvsr->max("gm");
 
@@ -1318,7 +1298,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   
   // Find the average values
   for(size_t i=0;i<nparams;i++) {
-    string str_i=((string)"param_")+modp->param_name(i);
+    string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
     hg_best[i]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
 			    file_tab["mwgt"]);
   }
@@ -1331,9 +1311,9 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   // Construct the covariance matrix
   ubmatrix covar(nv,nv);
   for(size_t i=0;i<nparams;i++) {
-    string str_i=((string)"param_")+modp->param_name(i);
+    string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
     for(size_t j=i;j<nparams;j++) {
-      string str_j=((string)"param_")+modp->param_name(j);
+      string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
       covar(i,j)=wvector_covariance(file_tab.get_nlines(),
 				    file_tab[str_i],file_tab[str_j],
 				    file_tab["mult"]);
@@ -1394,7 +1374,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   for(size_t i=0;i<file_tab.get_nlines();i+=step) {
     entry e(nparams,nsources);
     for(size_t j=0;j<nparams;j++) {
-      string str_j=((string)"param_")+modp->param_name(j);
+      string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
       e.params[j]=file_tab.get(str_j,i);
     }
     for(size_t j=0;j<nsources;j++) {
@@ -1420,7 +1400,7 @@ int bamr_class::hastings(std::vector<std::string> &sv,
   for(size_t i=0;i<file_tab.get_nlines();i+=step) {
     entry e(nparams,nsources);
     for(size_t j=0;j<nparams;j++) {
-      string str_j=((string)"param_")+modp->param_name(j);
+      string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
       e.params[j]=file_tab.get(str_j,i);
     }
     for(size_t j=0;j<nsources;j++) {
@@ -1485,26 +1465,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     return exc_efailed;
   }
   model_type=sv[1];
-  if (modp!=0) {
-    modp->remove_params(cl);
-    delete modp;
-    modp=0;
-  }
-  if (modp2!=0) {
-    delete modp2;
-    modp2=0;
-  }
-#ifdef O2SCL_SMOVE
-  if (mod_arr.size()>0) {
-    for(size_t i=0;i<nwalk;i++) {
-      delete mod_arr[i];
-    }
-    mod_arr.clear();
-  }
-#endif
   if (sv[1]==((string)"twop")) {
-    modp=new two_polytropes;
-    modp2=new two_polytropes;
     nparams=8;
     has_esym=true;
     has_eos=true;
@@ -1512,52 +1473,54 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     data_arr.resize(2);
     data_arr[0].modp=new two_polytropes;
     data_arr[1].modp=new two_polytropes;
+    data_arr[0].ts.set_eos(teos);
+    data_arr[1].ts.set_eos(teos);
     
   } else if (sv[1]==((string)"altp")) {
-    modp=new alt_polytropes;
-    modp2=new alt_polytropes;
+    //modp=new alt_polytropes;
+    //modp2=new alt_polytropes;
     nparams=8;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"fixp")) {
-    modp=new fixed_pressure;
-    modp2=new fixed_pressure;
+    //modp=new fixed_pressure;
+    //modp2=new fixed_pressure;
     nparams=8;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qstar")) {
-    modp=new quark_star;
-    modp2=new quark_star;
+    //modp=new quark_star;
+    //modp2=new quark_star;
     nparams=4;
     has_esym=false;
     has_eos=true;
   } else if (sv[1]==((string)"genq")) {
-    modp=new generic_quarks;
-    modp2=new generic_quarks;
+    //modp=new generic_quarks;
+    //modp2=new generic_quarks;
     nparams=9;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qmc")) {
-    modp=new qmc_neut;
-    modp2=new qmc_neut;
+    //modp=new qmc_neut;
+    //modp2=new qmc_neut;
     nparams=7;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qmc_threep")) {
-    modp=new qmc_threep;
-    modp2=new qmc_threep;
+    //modp=new qmc_threep;
+    //modp2=new qmc_threep;
     nparams=9;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qmc_fixp")) {
-    modp=new qmc_fixp;
-    modp2=new qmc_fixp;
+    //modp=new qmc_fixp;
+    //modp2=new qmc_fixp;
     nparams=8;
     has_esym=true;
     has_eos=true;
   } else if (sv[1]==((string)"qmc_twolines")) {
-    modp=new qmc_twolines;
-    modp2=new qmc_twolines;
+    //modp=new qmc_twolines;
+    //modp2=new qmc_twolines;
     nparams=8;
     has_esym=true;
     has_eos=true;
@@ -1569,7 +1532,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     has_eos=true;
     return exc_efailed;
   }
-  modp->setup_params(cl);
+  data_arr[0].modp->setup_params(cl);
 
   return 0;
 }
@@ -1625,11 +1588,15 @@ bool bamr_class::make_step(double w_current, double w_next, bool debug,
   if (hg_mode>0) {
     if (r<w_next*q_current/w_current/q_next) accept=true;
   } else {
-    if (r<w_next/w_current) accept=true;
+    if (r<w_next/w_current) {
+      accept=true;
+    }
   }
-  scr_out << r << " " << accept << endl;
-  scr_out << w_next << " " << w_current << endl;
-  scr_out << q_next << " " << q_current << endl;
+  /*
+    scr_out << r << " " << accept << endl;
+    scr_out << w_next << " " << w_current << endl;
+    scr_out << q_next << " " << q_current << endl;
+  */
 
   if (debug) {
     cout << "Metropolis: " << r << " " << w_next/w_current << " " 
@@ -1698,7 +1665,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
     ts[i].err_nonconv=false;
   }
 #endif
-  
+
   // Make sure that first_update() is called when necessary
   first_file_update=false;
 
@@ -1717,7 +1684,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Check model
-  if (model_type.length()==0 || modp==0 || modp2==0) {
+  if (model_type.length()==0) {
     scr_out << "Model not set." << endl;
     return exc_efailed;
   }
@@ -1821,9 +1788,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       
       // Get parameters
       for(size_t i=0;i<nparams;i++) {
-	string pname=((string)"param_")+modp->param_name(i);
+	string pname=((string)"param_")+data_arr[0].modp->param_name(i);
 	e_current.params[i]=file_tab.get(pname,last_line);
-	scr_out << "Parameter named " << modp->param_name(i) << " " 
+	scr_out << "Parameter named " << data_arr[0].modp->param_name(i) << " " 
 		<< e_current.params[i] << endl;
       }
       
@@ -1893,9 +1860,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       
       // Get parameters
       for(size_t i=0;i<nparams;i++) {
-	string pname=((string)"param_")+modp->param_name(i);
+	string pname=((string)"param_")+data_arr[0].modp->param_name(i);
 	e_current.params[i]=file_tab.get(pname,row);
-	scr_out << "Parameter named " << modp->param_name(i) << " " 
+	scr_out << "Parameter named " << data_arr[0].modp->param_name(i) << " " 
 		<< e_current.params[i] << endl;
       }
       
@@ -1926,7 +1893,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   } else {
     
     scr_out << "First point from default." << endl;
-    modp->first_point(e_current);
+    data_arr[0].modp->first_point(e_current);
 
   }
 
@@ -1948,8 +1915,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   // Set lower and upper bounds for parameters
   low.allocate(nparams,nsources);
   high.allocate(nparams,nsources);
-  modp->low_limits(low);
-  modp->high_limits(high);
+  data_arr[0].modp->low_limits(low);
+  data_arr[0].modp->high_limits(high);
 
   n_chains=0;
 
@@ -2013,7 +1980,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   
   // Compute initial weight
   int suc;
-  w_current=compute_weight(e_current,*modp,ts,suc,wgts,warm_up);
+  w_current=compute_weight(e_current,data_arr[0],suc,wgts,warm_up);
   ret_codes[suc]++;
   scr_out << "Initial weight: " << w_current << endl;
   if (w_current<=0.0) {
@@ -2032,8 +1999,8 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   {
     shared_ptr<table_units<> > tab_eos;
     shared_ptr<table_units<> > tab_mvsr;
-    tab_eos=modp->cns.get_eos_results();
-    tab_mvsr=ts.get_results();
+    tab_eos=data_arr[0].modp->cns.get_eos_results();
+    tab_mvsr=data_arr[0].ts.get_results();
     if (warm_up==false) {
       // Add the initial point if there's no warm up
       add_measurement(e_current,tab_eos,tab_mvsr,w_current,
@@ -2171,9 +2138,9 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       
     // Compute next weight
     if (first_half) {
-      w_next=compute_weight(e_next,*modp2,ts2,suc,wgts,warm_up);
+      w_next=compute_weight(e_next,data_arr[1],suc,wgts,warm_up);
     } else {
-      w_next=compute_weight(e_next,*modp,ts,suc,wgts,warm_up);
+      w_next=compute_weight(e_next,data_arr[0],suc,wgts,warm_up);
     }
     ret_codes[suc]++;
       
@@ -2220,11 +2187,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	shared_ptr<table_units<> > tab_mvsr;
 
 	if (first_half) {
-	  tab_eos=modp2->cns.get_eos_results();
-	  tab_mvsr=ts2.get_results();
+	  tab_eos=data_arr[1].modp->cns.get_eos_results();
+	  tab_mvsr=data_arr[1].ts.get_results();
 	} else {
-	  tab_eos=modp->cns.get_eos_results();
-	  tab_mvsr=ts.get_results();
+	  tab_eos=data_arr[0].modp->cns.get_eos_results();
+	  tab_mvsr=data_arr[0].ts.get_results();
 	}
 	tab_eos->set_interp_type(itp_linear);
 	tab_mvsr->set_interp_type(itp_linear);
@@ -2270,11 +2237,11 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	shared_ptr<table_units<> > tab_mvsr;
 	
 	if (first_half) {
-	  tab_eos=modp->cns.get_eos_results();
-	  tab_mvsr=ts.get_results();
+	  tab_eos=data_arr[0].modp->cns.get_eos_results();
+	  tab_mvsr=data_arr[0].ts.get_results();
 	} else {
-	  tab_eos=modp2->cns.get_eos_results();
-	  tab_mvsr=ts2.get_results();
+	  tab_eos=data_arr[1].modp->cns.get_eos_results();
+	  tab_mvsr=data_arr[1].ts.get_results();
 	}
 	tab_eos->set_interp_type(itp_linear);
 	tab_mvsr->set_interp_type(itp_linear);
@@ -2386,7 +2353,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 		     ((int)tc.get_nlines())==max_chain_size || 
 		     (mcmc_iterations+1) % file_update_iters==0)) {
       scr_out << "Updating files." << endl;
-      update_files(*modp,e_current);
+      update_files(*(data_arr[0].modp),e_current);
       scr_out << "Done updating files." << endl;
     }
 
