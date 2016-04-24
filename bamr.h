@@ -104,6 +104,7 @@ namespace bamr {
       if (this!=&e) {
 	modp=0;
       }
+      return *this;;
     }
     
   };
@@ -114,12 +115,14 @@ namespace bamr {
     
   public:
 
-#ifdef O2SCL_SMOVE
+  /// Desc
+  bool use_smove;
+  
+  /// Desc
   size_t nwalk;
 
   /// Step flags
   std::vector<bool> step_flags;
-#endif
     
   /// \name Member data for the Metropolis-Hastings step
   //@{

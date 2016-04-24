@@ -709,6 +709,7 @@ void bamr_class::compute_star(entry &e, eos_tov &dat, int &success) {
 
   // Compute the EOS first
   if (has_eos) {
+    dat.modp->copy_params(*data_arr[0].modp);
     dat.modp->compute_eos(e,success,scr_out);
     if (success!=ix_success) return;
   }
@@ -1430,10 +1431,6 @@ int bamr_class::set_first_point(std::vector<std::string> &sv,
 
     first_point.resize(sv.size()-1);
     for(size_t i=2;i<sv.size();i++) {
-      // Remove parentheses if present
-      //if (sv[i][0]=='(' && sv[i][sv[i].length()-1]==')') {
-      //sv[i]=sv[i].substr(1,sv[i].length()-2);
-      //}
       first_point[i-2]=o2scl::function_to_double(sv[i]);
     }
     first_point_type=fp_unspecified;
@@ -1465,65 +1462,112 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     return exc_efailed;
   }
   model_type=sv[1];
+  if (data_arr.size()>0) {
+    data_arr[0].modp->remove_params(cl);
+    for(size_t i=0;i<data_arr.size();i++) {
+      delete data_arr[i].modp;
+    }
+    data_arr.clear();
+  }
   if (sv[1]==((string)"twop")) {
     nparams=8;
     has_esym=true;
     has_eos=true;
 
     data_arr.resize(2);
-    data_arr[0].modp=new two_polytropes;
-    data_arr[1].modp=new two_polytropes;
-    data_arr[0].ts.set_eos(teos);
-    data_arr[1].ts.set_eos(teos);
-    
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new two_polytropes;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"altp")) {
-    //modp=new alt_polytropes;
-    //modp2=new alt_polytropes;
     nparams=8;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new alt_polytropes;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"fixp")) {
-    //modp=new fixed_pressure;
-    //modp2=new fixed_pressure;
     nparams=8;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new fixed_pressure;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"qstar")) {
-    //modp=new quark_star;
-    //modp2=new quark_star;
     nparams=4;
     has_esym=false;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new quark_star;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"genq")) {
-    //modp=new generic_quarks;
-    //modp2=new generic_quarks;
     nparams=9;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new generic_quarks;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"qmc")) {
-    //modp=new qmc_neut;
-    //modp2=new qmc_neut;
     nparams=7;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new qmc_neut;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"qmc_threep")) {
-    //modp=new qmc_threep;
-    //modp2=new qmc_threep;
     nparams=9;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new qmc_threep;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"qmc_fixp")) {
-    //modp=new qmc_fixp;
-    //modp2=new qmc_fixp;
     nparams=8;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new qmc_fixp;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else if (sv[1]==((string)"qmc_twolines")) {
-    //modp=new qmc_twolines;
-    //modp2=new qmc_twolines;
     nparams=8;
     has_esym=true;
     has_eos=true;
+
+    data_arr.resize(2);
+    for(size_t i=0;i<2;i++) {
+      data_arr[i].modp=new qmc_twolines;
+      data_arr[i].ts.set_eos(teos);
+    }
+
   } else {
     cerr << "Model unknown." << endl;
     nparams=0;
