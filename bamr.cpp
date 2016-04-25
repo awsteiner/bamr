@@ -2057,7 +2057,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
   init_grids_table(low,high);
 
   // Weights for each entry
-  double w_current, w_next, w_best=0.0;
+  double w_current=0.0, w_next=0.0, w_best=0.0;
 
   // Warm-up flag, not to be confused with 'n_warm_up', i.e. the
   // number of warm_up iterations.
