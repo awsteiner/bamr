@@ -2088,16 +2088,23 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       while (!done) {
 
 	// Begin with the intial point
-	data_arr[ij].modp->first_point(e_curr_arr[ij]);
+	entry e_first(nparams,nsources);
+	data_arr[ij].modp->first_point(e_first);
 
 	// Make a perturbation from the initial point
 	for(size_t ik=0;ik<nparams;ik++) {
-	  e_curr_arr[ij].params[ik]+=(gr.random()*2.0-1.0)*
-	    (high.params[ik]-low.params[ik])/100.0;
+	  do {
+	    e_curr_arr[ij].params[ik]=e_first.params[ik]+
+	      (gr.random()*2.0-1.0)*(high.params[ik]-low.params[ik])/100.0;
+	  } while (e_curr_arr[ij].params[ik]>=high.params[ik] ||
+		   e_curr_arr[ij].params[ik]<=low.params[ik]);
 	}
 	for(size_t ik=0;ik<nsources;ik++) {
-	  e_curr_arr[ij].mass[ik]=first_mass[ik]+(gr.random()*2.0-1.0)*
-	    (high.mass[ik]-low.mass[ik])/100.0;
+	  do {
+	    e_curr_arr[ij].mass[ik]=first_mass[ik]+
+	      (gr.random()*2.0-1.0)*(high.mass[ik]-low.mass[ik])/100.0;
+	  } while (e_curr_arr[ij].mass[ik]>=high.mass[ik] ||
+		   e_curr_arr[ij].mass[ik]<=low.mass[ik]);
 	  e_curr_arr[ij].rad[ik]=0.0;
 	}
 	
@@ -2226,27 +2233,51 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 
       // Choose walker to move
       ik=mcmc_iterations % nwalk;
-
-      // Choose jth walker
-      size_t ij;
+      
+      bool in_bounds;
+      size_t step_iters=0;
+      
       do {
-	ij=((size_t)(gr.random()*((double)nwalk)));
-      } while (ij==ik || ij>=nwalk);
 
-      // Select z 
-      double p=gr.random();
-      double a=step_fac;
-      smove_z=(1.0-2.0*p+2.0*a*p+p*p-2.0*a*p*p+a*a*p*p)/a;
+	in_bounds=true;
+	
+	// Choose jth walker
+	size_t ij;
+	do {
+	  ij=((size_t)(gr.random()*((double)nwalk)));
+	} while (ij==ik || ij>=nwalk);
+	
+	// Select z 
+	double p=gr.random();
+	double a=step_fac;
+	smove_z=(1.0-2.0*p+2.0*a*p+p*p-2.0*a*p*p+a*a*p*p)/a;
+	
+	// Create new trial point
+	for(size_t i=0;i<nparams;i++) {
+	  e_next.params[i]=e_curr_arr[ij].params[i]+smove_z*
+	    (e_curr_arr[ik].params[i]-e_curr_arr[ij].params[i]);
+	  if (e_next.params[i]>=high.params[i] ||
+	      e_next.params[i]<=low.params[i]) {
+	    in_bounds=false;
+	  }
+	}
+	for(size_t i=0;i<nsources;i++) {
+	  e_next.mass[i]=e_curr_arr[ij].mass[i]+smove_z*
+	    (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
+	  if (e_next.mass[i]>=high.mass[i] ||
+	      e_next.mass[i]<=low.mass[i]) {
+	    in_bounds=false;
+	  }
+	}
+	
+	step_iters++;
+	if (step_iters==1000) {
+	  scr_out << "Failed to find suitable step at point 1." << endl;
+	  cerr << "Failed to find suitable step at point 1." << endl;
+	  return 2;
+	}
 
-      // Create new trial point
-      for(size_t i=0;i<nparams;i++) {
-	e_next.params[i]=e_curr_arr[ij].params[i]+smove_z*
-	  (e_curr_arr[ik].params[i]-e_curr_arr[ij].params[i]);
-      }
-      for(size_t i=0;i<nsources;i++) {
-	e_next.mass[i]=e_curr_arr[ij].mass[i]+smove_z*
-	  (e_curr_arr[ik].mass[i]-e_curr_arr[ij].mass[i]);
-      }
+      } while (in_bounds==false);
 
     } else if (hg_mode>0) {
       
