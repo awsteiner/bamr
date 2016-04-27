@@ -2467,7 +2467,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	}
 
 	// Output the new point
-	scr_out << "MH Acc: " << mh_success << " " << e_next << " " 
+	scr_out << "MC Acc: " << mh_success << " " << e_next << " " 
 		<< w_next << endl;
 	  
 	// Keep track of best point
@@ -2545,9 +2545,14 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
 	  }
 	}
 
-	// Output the old point 
-	scr_out << "MH Rej: " << mh_success << " " << e_current 
-		<< " " << w_current << " " << w_next << endl;
+	// Output the old point
+	if (use_smove) {
+	  scr_out << "MC Rej: " << mh_success << " " << e_curr_arr[ik]
+		  << " " << w_curr_arr[ik] << " " << w_next << endl;
+	} else {
+	  scr_out << "MC Rej: " << mh_success << " " << e_current 
+		  << " " << w_current << " " << w_next << endl;
+	}
 
 	// Keep track of best point
 	if (w_next>w_best) {
