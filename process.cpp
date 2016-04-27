@@ -982,11 +982,14 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   for(size_t k=0;k<grid_size;k++) {
 
     string col=set_prefix+"_"+szttos(k);
-    cout << "Column " << col << " index: ";
+    cout.precision(3);
+    cout << "Col ";
+    cout.width(4);
+    cout << col << " ix: ";
     if (type==((string)"x")) {
-      cout << index_grid[k]*xscale << " count: ";
+      cout << index_grid[k]*xscale << " cnt: ";
     } else {
-      cout << index_grid[k]*yscale << " count: ";
+      cout << index_grid[k]*yscale << " cnt: ";
     }
     cout << count[k] << " ";
 
@@ -1041,6 +1044,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
     }
     hsum.clear_wgts();
     cout << endl;
+    cout.precision(6);
 
     // End of loop over grid index
   }
