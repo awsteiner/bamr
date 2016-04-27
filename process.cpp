@@ -1251,6 +1251,11 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
   cout << "Writing table to file " << out_file << endl;
   hdf_file hf;
   hf.open_or_create(out_file);
+  string type;
+  if (hf.find_group_by_name("markov_chain0",type)==0) {
+    O2SCL_ERR("Refusing to overwrite file with data in process 'combine'.",
+	      exc_efailed);
+  }
   hf.setd("e_low",e_low);
   hf.setd("e_high",e_high);
   hf.setd("nb_low",nb_low);
