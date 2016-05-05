@@ -686,8 +686,13 @@ void bamr_class::load_mc() {
     
     scr_out << endl;
   }
-  
+
   if (in_m_min<min_mass) in_m_min=min_mass;
+  
+#ifdef AWS_HACK
+  in_m_min=1.3;
+  in_m_max=1.5;
+#endif
   
   scr_out << "M limits: (" 
 	  << in_m_min << "," << in_m_max << ")" << endl;
