@@ -62,45 +62,6 @@ namespace bamr {
   
   typedef boost::numeric::ublas::vector<double> ubvector;
 
-  /** \brief Desc
-   */
-  class eos_tov {
-    
-  public:
-
-    /// The model for the EOS
-    model *modp;
-
-    /// Desc
-    ubvector rad;
-    
-    /// TOV solver
-    o2scl::tov_solve ts;
-    
-    eos_tov() {
-      modp=0;
-      ts.verbose=0;
-      ts.set_units("1/fm^4","1/fm^4","1/fm^3");
-      ts.err_nonconv=false;
-    }
-
-    /** \brief Desc
-     */
-    eos_tov(const eos_tov &e) {
-      modp=0;
-    }
-    
-    /** \brief Desc
-     */
-    eos_tov &operator=(const eos_tov &e) {
-      if (this!=&e) {
-	modp=0;
-      }
-      return *this;
-    }
-    
-  };
-  
   /** \brief Statistical analysis of EOS from M and R constraints
 
       \comment
@@ -137,15 +98,9 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class : public mcmc_class<eos_tov> {
+  class bamr_class : public mcmc_class<model_data,model> {
     
   protected:
-
-    /// \name Member data for the Metropolis-Hastings step
-    //@{
-    /// Return the approximate likelihood
-    double approx_like(entry &e);
-    //@}
 
     /// \name Parameter objects for the 'set' command
     //@{
@@ -290,25 +245,6 @@ namespace bamr {
     //@{
     entry low, high;
     //@}
-
-    /// \name Other variables
-    //@{
-    /// The first point in the parameter space
-    ubvector first_point;
-    
-    /// The file containing the initial point
-    std::string first_point_file;
-
-    /// \name Integer designating how to set the initial point
-    //@{
-    int first_point_type;
-    static const int fp_unspecified=-1;
-    static const int fp_last=-2;
-    static const int fp_best=-3;
-    //@}
-
-    /// If true, then \ref first_update() has been called
-    bool first_file_update;
 
     /// Number of bins for all histograms (default 100)
     int grid_size;
@@ -469,7 +405,6 @@ namespace bamr {
 
     /// \name Return codes for each point
     //@{
-    std::vector<int> ret_codes;
     static const int ix_success=0;
     static const int ix_mr_outside=1;
     static const int ix_r_outside=2;

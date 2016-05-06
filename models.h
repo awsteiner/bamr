@@ -38,6 +38,39 @@
 
 namespace bamr {
   
+  /** \brief Desc
+   */
+  class model_data {
+    
+  public:
+
+    /// Radii
+    ubvector rad;
+    
+    model_data() {
+    }
+
+  private:
+    
+    /** \brief Desc
+     */
+    model_data(const model_data &e);
+    //{
+    //modp=0;
+    //}
+    
+    /** \brief Desc
+     */
+    model_data &operator=(const model_data &e);
+    //{
+    //if (this!=&e) {
+    //modp=0;
+    //}
+    //return *this;
+    //}
+    
+  };
+  
   /** \brief Base class for an EOS parameterization
    */
   class model {
@@ -52,6 +85,9 @@ namespace bamr {
 
   public:
 
+    /// Desc
+    size_t nparams;
+    
     /** \brief TOV solver and storage for the EOS table
 	
 	The value of \ref o2scl::nstar_cold::nb_start is set to
@@ -59,8 +95,14 @@ namespace bamr {
     */
     nstar_cold2 cns;
 
+    /// TOV solver
+    o2scl::tov_solve ts;
+    
     model() {
       cns.nb_start=0.01;
+      ts.verbose=0;
+      ts.set_units("1/fm^4","1/fm^4","1/fm^3");
+      ts.err_nonconv=false;
     }
 
     virtual ~model() {}
@@ -68,8 +110,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_point(ubvector &pars, int &success,
-			       std::ofstream &scr_out, eos_tov &dat)=0;
+    virtual void compute_point(ubvector &pars, std::ofstream &scr_out, 
+			       int &success, model_data &dat)=0;
 
     /** \brief A point to calibrate the baryon density with
      */

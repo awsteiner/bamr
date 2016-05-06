@@ -46,9 +46,9 @@ LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr.o entry.o models.o nstar_cold2.o main.o
+bamr: bamr.o models.o nstar_cold2.o main.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
-		entry.o models.o bamr.o $(LIB) 
+		models.o bamr.o $(LIB) 
 
 main.o: main.cpp 
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -59,10 +59,7 @@ nstar_cold2.o: nstar_cold2.cpp nstar_cold2.h
 models.o: models.cpp models.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o models.o -c models.cpp
 
-entry.o: entry.cpp entry.h
-	$(MPI_CXX) $(ALL_FLAGS_MPI) -o entry.o -c entry.cpp
-
-bamr.o: bamr.cpp bamr.h models.o entry.o main.o nstar_cold2.o
+bamr.o: bamr.cpp bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
@@ -82,10 +79,10 @@ help:
 # Targets for bamr_nompi
 # ----------------------------------------------------------------------
 
-bamr_nompi: bamr_nompi.o entry_nompi.o models_nompi.o \
+bamr_nompi: bamr_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi main_nompi.o \
-		nstar_cold2_nompi.o entry_nompi.o models_nompi.o \
+		nstar_cold2_nompi.o models_nompi.o \
 		bamr_nompi.o $(LIB) 
 
 main_nompi.o: main.cpp 
@@ -97,10 +94,7 @@ nstar_cold2_nompi.o: nstar_cold2.cpp nstar_cold2.h
 models_nompi.o: models.cpp models.h
 	$(CXX) $(ALL_FLAGS) -o models_nompi.o -c models.cpp
 
-entry_nompi.o: entry.cpp entry.h
-	$(CXX) $(ALL_FLAGS) -o entry_nompi.o -c entry.cpp
-
-bamr_nompi.o: bamr.cpp bamr.h entry_nompi.o models_nompi.o \
+bamr_nompi.o: bamr.cpp bamr.h models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o
 	$(CXX) $(ALL_FLAGS) -o bamr_nompi.o -c bamr.cpp
 
