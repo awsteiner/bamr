@@ -70,36 +70,36 @@ two_polytropes::two_polytropes() {
   cns.include_muons=true;
 }
 
-void two_polytropes::low_limits(entry &e) {
+void two_polytropes::low_limits(ubvector &params) {
     
-  e.params[0]=180.0/hc_mev_fm;
-  e.params[1]=-1000.0/hc_mev_fm;
-  e.params[2]=28.0/hc_mev_fm;
-  e.params[3]=0.0;
+  params[0]=180.0/hc_mev_fm;
+  params[1]=-1000.0/hc_mev_fm;
+  params[2]=28.0/hc_mev_fm;
+  params[3]=0.0;
   // The value 0.75 fm^{-4} is about the energy density of nuclear
   // matter
-  e.params[4]=0.75;
-  e.params[5]=0.2;
-  e.params[6]=0.75;
-  e.params[7]=0.2;
+  params[4]=0.75;
+  params[5]=0.2;
+  params[6]=0.75;
+  params[7]=0.2;
 
   return;
 }
 
-void two_polytropes::high_limits(entry &e) {
+void two_polytropes::high_limits(ubvector &params) {
     
-  e.params[0]=300.0/hc_mev_fm;
+  params[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
-  e.params[1]=-200.0/hc_mev_fm;
-  e.params[2]=38.0/hc_mev_fm;
-  e.params[3]=1.2;
+  params[1]=-200.0/hc_mev_fm;
+  params[2]=38.0/hc_mev_fm;
+  params[3]=1.2;
   // The value of high.trans1 has to be small enough because we
   // don't want to evaluate the schematic EOS to too high of a
   // density.
-  e.params[4]=3.0;
-  e.params[5]=1.5;
-  e.params[6]=8.0;
-  e.params[7]=2.0;
+  params[4]=3.0;
+  params[5]=1.5;
+  params[6]=8.0;
+  params[7]=2.0;
 
   return;
 }
@@ -126,32 +126,32 @@ string two_polytropes::param_unit(size_t i) {
   return ".";
 }
 
-void two_polytropes::first_point(entry &e) {
-  e.params[0]=1.0;
-  e.params[1]=-3.0;
-  e.params[2]=0.165;
-  e.params[3]=0.644;
-  e.params[4]=1.51;
-  e.params[5]=0.576;
-  e.params[6]=4.60;
-  e.params[7]=1.21;
+void two_polytropes::first_point(ubvector &params) {
+  params[0]=1.0;
+  params[1]=-3.0;
+  params[2]=0.165;
+  params[3]=0.644;
+  params[4]=1.51;
+  params[5]=0.576;
+  params[6]=4.60;
+  params[7]=1.21;
   return;
 }
 
-void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
-  if (e.params[4]>e.params[6]) {
+  if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
     success=bamr_class::ix_param_mismatch;
     return;
   }
   
-  // Set hadronic EOS from entry information
-  se.comp=e.params[0];
-  se.kprime=e.params[1];
-  se.b=e.params[2]-se.a;
-  se.gamma=e.params[3];
+  // Set hadronic EOS from ubvector information
+  se.comp=params[0];
+  se.kprime=params[1];
+  se.b=params[2]-se.a;
+  se.gamma=params[3];
   se.kpp=0.0;
 
   // Compute low-density eos
@@ -161,12 +161,12 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",e.params[2]);
+  tab_eos->add_constant("S",params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
   
   // Transition densities
-  double ed1=e.params[4];
-  double ed2=e.params[6];
+  double ed1=params[4];
+  double ed2=params[6];
 
   // Boundary baryon density and pressure by interpolating
   // the table
@@ -174,7 +174,7 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double pr1=tab_eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
-  double coeff1=pr1/pow(ed1,1.0+1.0/e.params[5]);
+  double coeff1=pr1/pow(ed1,1.0+1.0/params[5]);
 
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -210,9 +210,9 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // important to ensure that we don't have two points
   // at the same energy density
   for(double ed=ed1;ed<ed2-0.001;ed+=0.05) {
-    double pr=coeff1*pow(ed,1.0+1.0/e.params[5]);
-    double nb=nb1*pow(ed/ed1,1.0+e.params[5])/
-      pow((ed+pr)/(ed1+pr1),e.params[5]);
+    double pr=coeff1*pow(ed,1.0+1.0/params[5]);
+    double nb=nb1*pow(ed/ed1,1.0+params[5])/
+      pow((ed+pr)/(ed1+pr1),params[5]);
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
@@ -225,12 +225,12 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
   
   // Boundary baryon density and pressure
-  double pr2=coeff1*pow(ed2,1.0+1.0/e.params[5]);
-  double nb2=nb1*pow(ed2/ed1,1.0+e.params[5])/
-    pow((ed2+pr2)/(ed1+pr1),e.params[5]);
+  double pr2=coeff1*pow(ed2,1.0+1.0/params[5]);
+  double nb2=nb1*pow(ed2/ed1,1.0+params[5])/
+    pow((ed2+pr2)/(ed1+pr1),params[5]);
 
   // Determine 2nd polytrope coefficient
-  double coeff2=pr2/pow(ed2,1.0+1.0/e.params[7]);
+  double coeff2=pr2/pow(ed2,1.0+1.0/params[7]);
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -241,9 +241,9 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   // Add second polytrope to table
   for(double ed=ed2;ed<=10.0;ed+=0.05) {
-    double pr=coeff2*pow(ed,1.0+1.0/e.params[7]);
-    double nb=nb2*pow(ed/ed2,1.0+e.params[7])/
-      pow((ed+pr)/(ed2+pr2),e.params[7]);
+    double pr=coeff2*pow(ed,1.0+1.0/params[7]);
+    double nb=nb2*pow(ed/ed2,1.0+params[7])/
+      pow((ed+pr)/(ed2+pr2),params[7]);
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
@@ -251,17 +251,17 @@ void two_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   return;
 }
 
-void alt_polytropes::low_limits(entry &e) {
-  two_polytropes::low_limits(e);
-  e.params[5]=1.5;
-  e.params[7]=0.0;
+void alt_polytropes::low_limits(ubvector &params) {
+  two_polytropes::low_limits(params);
+  params[5]=1.5;
+  params[7]=0.0;
   return;
 }
 
-void alt_polytropes::high_limits(entry &e) {
-  two_polytropes::high_limits(e);
-  e.params[5]=6.0;
-  e.params[7]=3.0;
+void alt_polytropes::high_limits(ubvector &params) {
+  two_polytropes::high_limits(params);
+  params[5]=6.0;
+  params[7]=3.0;
   return;
 }
 
@@ -277,22 +277,22 @@ string alt_polytropes::param_unit(size_t i) {
   return two_polytropes::param_unit(i);
 }
 
-void alt_polytropes::first_point(entry &e) {
-  e.params[0]=1.0;
-  e.params[1]=-2.66;
-  e.params[2]=0.165;
-  e.params[3]=0.66;
-  e.params[4]=1.48;
-  e.params[5]=2.913;
-  e.params[6]=4.066;
-  e.params[7]=1.80;
+void alt_polytropes::first_point(ubvector &params) {
+  params[0]=1.0;
+  params[1]=-2.66;
+  params[2]=0.165;
+  params[3]=0.66;
+  params[4]=1.48;
+  params[5]=2.913;
+  params[6]=4.066;
+  params[7]=1.80;
   return;
 }
 
-void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
   
   success=bamr_class::ix_success;
-  if (e.params[4]>e.params[6]) {
+  if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
     success=bamr_class::ix_param_mismatch;
     return;
@@ -301,11 +301,11 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
 
-  // Set hadronic EOS from entry information
-  se.comp=e.params[0];
-  se.kprime=e.params[1];
-  se.b=e.params[2]-se.a;
-  se.gamma=e.params[3];
+  // Set hadronic EOS from ubvector information
+  se.comp=params[0];
+  se.kprime=params[1];
+  se.b=params[2]-se.a;
+  se.gamma=params[3];
   se.kpp=0.0;
 
   // Compute low-density eos
@@ -315,12 +315,12 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",e.params[2]);
+  tab_eos->add_constant("S",params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
 
   // Transition densities
-  double ed1=e.params[4];
-  double ed2=e.params[6];
+  double ed1=params[4];
+  double ed2=params[6];
 
   // Boundary baryon density and pressure by interpolating
   // the table
@@ -328,7 +328,7 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double pr1=tab_eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
-  double coeff1=pr1/pow(ed1,e.params[5]);
+  double coeff1=pr1/pow(ed1,params[5]);
     
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -364,9 +364,9 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // important to ensure that we don't have two points
   // at the same energy density
   for(double ed=ed1;ed<ed2-0.001;ed+=0.05) {
-    double pr=coeff1*pow(ed,e.params[5]);
-    double nb=nb1*pow(ed/ed1,e.params[5]/(e.params[5]-1.0))*
-      pow((ed+pr)/(ed1+pr1),1.0/(1.0-e.params[5]));
+    double pr=coeff1*pow(ed,params[5]);
+    double nb=nb1*pow(ed/ed1,params[5]/(params[5]-1.0))*
+      pow((ed+pr)/(ed1+pr1),1.0/(1.0-params[5]));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
@@ -379,12 +379,12 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Boundary baryon density and pressure
-  double pr2=coeff1*pow(ed2,e.params[5]);
-  double nb2=nb1*pow(ed2/ed1,e.params[5]/(e.params[5]-1.0))*
-    pow((ed2+pr2)/(ed1+pr1),1.0/(1.0-e.params[5]));
+  double pr2=coeff1*pow(ed2,params[5]);
+  double nb2=nb1*pow(ed2/ed1,params[5]/(params[5]-1.0))*
+    pow((ed2+pr2)/(ed1+pr1),1.0/(1.0-params[5]));
   
   // Determine 2nd polytrope coefficient
-  double coeff2=pr2/pow(ed2,e.params[7]);
+  double coeff2=pr2/pow(ed2,params[7]);
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -395,9 +395,9 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   // Add second polytrope to table
   for(double ed=ed2;ed<=10.0;ed+=0.05) {
-    double pr=coeff2*pow(ed,e.params[7]);
-    double nb=nb2*pow(ed/ed2,e.params[7]/(e.params[7]-1.0))*
-      pow((ed+pr)/(ed2+pr2),1.0/(1.0-e.params[7]));
+    double pr=coeff2*pow(ed,params[7]);
+    double nb=nb2*pow(ed/ed2,params[7]/(params[7]-1.0))*
+      pow((ed+pr)/(ed2+pr2),1.0/(1.0-params[7]));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
@@ -405,30 +405,30 @@ void alt_polytropes::compute_eos(entry &e, int &success, ofstream &scr_out) {
   return;
 }
   
-void fixed_pressure::low_limits(entry &e) {
-  two_polytropes::low_limits(e);
-  e.params[4]=0.0;
-  e.params[5]=0.0;
-  e.params[6]=0.0;
-  e.params[7]=0.0;
+void fixed_pressure::low_limits(ubvector &params) {
+  two_polytropes::low_limits(params);
+  params[4]=0.0;
+  params[5]=0.0;
+  params[6]=0.0;
+  params[7]=0.0;
   return;
 }
 
-void fixed_pressure::high_limits(entry &e) {
-  two_polytropes::high_limits(e);
-  e.params[4]=0.3;
+void fixed_pressure::high_limits(ubvector &params) {
+  two_polytropes::high_limits(params);
+  params[4]=0.3;
   // This parameter is the pressure at 3 fm^{-4} minus the pressure at
   // 2 fm^{-4}, thus from causality cannot be larger than 1 fm^{-4}.
-  e.params[5]=1.0;
+  params[5]=1.0;
   // This parameter is the pressure at 5 fm^{-4} minus the pressure at
   // 3 fm^{-4}, thus from causality cannot be larger than 2 fm^{-4}.
-  e.params[6]=2.0;
+  params[6]=2.0;
   // This parameter is the pressure at 7 fm^{-4} minus the pressure at
   // 5 fm^{-4}. It is not always limited by causality, because the
   // central energy density is sometimes smaller than 5 fm^{-4}. We
   // allow it to be larger than 2.0 fm^{-4}, but in practice larger
   // values are relatively rare.
-  e.params[7]=2.5;
+  params[7]=2.5;
   return;
 }
 
@@ -448,30 +448,30 @@ string fixed_pressure::param_unit(size_t i) {
   return two_polytropes::param_unit(i);
 }
 
-void fixed_pressure::first_point(entry &e) {
-  e.params[0]=1.0;
-  e.params[1]=-2.5;
-  e.params[2]=0.165;
-  e.params[3]=0.8;
-  e.params[4]=0.024;
-  e.params[5]=0.74;
-  e.params[6]=0.60;
-  e.params[7]=1.84;
+void fixed_pressure::first_point(ubvector &params) {
+  params[0]=1.0;
+  params[1]=-2.5;
+  params[2]=0.165;
+  params[3]=0.8;
+  params[4]=0.024;
+  params[5]=0.74;
+  params[6]=0.60;
+  params[7]=1.84;
   return;
 }
 
-void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void fixed_pressure::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
 
-  // Set hadronic EOS from entry information
-  se.comp=e.params[0];
-  se.kprime=e.params[1];
-  se.b=e.params[2]-se.a;
-  se.gamma=e.params[3];
+  // Set hadronic EOS from ubvector information
+  se.comp=params[0];
+  se.kprime=params[1];
+  se.b=params[2]-se.a;
+  se.gamma=params[3];
   se.kpp=0.0;
 
   // Compute low-density eos
@@ -481,7 +481,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",e.params[2]);
+  tab_eos->add_constant("S",params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
   
   // Compute boundary energy density, baryon density and pressure
@@ -498,19 +498,19 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Compute pressures on grid, ed=2, 3, 5, 7 fm^{-4}
-  double p2=pr_last+e.params[4];
-  double p3=p2+e.params[5];
-  double p5=p3+e.params[6];
+  double p2=pr_last+params[4];
+  double p3=p2+params[5];
+  double p5=p3+params[6];
 
   // Computes slopes (squared sound speeds)
-  double cs2_1=e.params[4]/(2.0-1.0);
-  double cs2_2=e.params[5]/(3.0-2.0);
-  double cs2_3=e.params[6]/(5.0-3.0);
-  double cs2_4=e.params[7]/(7.0-5.0);
+  double cs2_1=params[4]/(2.0-1.0);
+  double cs2_2=params[5]/(3.0-2.0);
+  double cs2_3=params[6]/(5.0-3.0);
+  double cs2_4=params[7]/(7.0-5.0);
 
   // Add 1st high-density EOS
   for(double ed=1.0;ed<2.0-1.0e-4;ed+=0.1) {
-    double pr=pr_last+e.params[4]*(ed-1.0)/(2.0-1.0);
+    double pr=pr_last+params[4]*(ed-1.0)/(2.0-1.0);
     double nb=nb_last*pow((ed+pr_last+cs2_1*(ed-ed_last))/
 			  (ed_last+pr_last),1.0/(1.0+cs2_1));
     double line[3]={ed,pr,nb};
@@ -521,7 +521,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   
   // Add 2nd high-density EOS
   for(double ed=2.0;ed<3.0-1.0e-4;ed+=0.1) {
-    double pr=p2+e.params[5]*(ed-2.0)/(3.0-2.0);
+    double pr=p2+params[5]*(ed-2.0)/(3.0-2.0);
     double nb=nb2*pow((ed+p2+cs2_2*(ed-2.0))/(2.0+p2),1.0/(1.0+cs2_2));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
@@ -530,7 +530,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   // Add 3rd high-density EOS
   for(double ed=3.0;ed<5.0-1.0e-4;ed+=0.1) {
-    double pr=p3+e.params[6]*(ed-3.0)/(5.0-3.0);
+    double pr=p3+params[6]*(ed-3.0)/(5.0-3.0);
     double nb=nb3*pow((ed+p3+cs2_3*(ed-3.0))/(3.0+p3),1.0/(1.0+cs2_3));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
@@ -539,7 +539,7 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   // Add 4th high-density EOS
   for(double ed=5.0;ed<10.0-1.0e-4;ed+=0.2) {
-    double pr=p5+e.params[7]*(ed-5.0)/(7.0-5.0);
+    double pr=p5+params[7]*(ed-5.0)/(7.0-5.0);
     double nb=nb5*pow((ed+p5+cs2_4*(ed-5.0))/(5.0+p5),1.0/(1.0+cs2_4));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
@@ -548,42 +548,42 @@ void fixed_pressure::compute_eos(entry &e, int &success, ofstream &scr_out) {
   return;
 }
   
-void generic_quarks::low_limits(entry &e) {
+void generic_quarks::low_limits(ubvector &params) {
     
-  e.params[0]=180.0/hc_mev_fm;
-  e.params[1]=-1000.0/hc_mev_fm;
-  e.params[2]=28.0/hc_mev_fm;
-  //e.params[3]=0.2;
-  e.params[3]=0.0;
+  params[0]=180.0/hc_mev_fm;
+  params[1]=-1000.0/hc_mev_fm;
+  params[2]=28.0/hc_mev_fm;
+  //params[3]=0.2;
+  params[3]=0.0;
   // 0.75 is about the energy density of nuclear matter
-  e.params[4]=0.75;
-  e.params[5]=2.0;
-  e.params[6]=0.75;
+  params[4]=0.75;
+  params[5]=2.0;
+  params[6]=0.75;
   // a2
-  e.params[7]=-0.3;
+  params[7]=-0.3;
   // a4
-  e.params[8]=0.045;
+  params[8]=0.045;
 
   return;
 }
 
-void generic_quarks::high_limits(entry &e) {
+void generic_quarks::high_limits(ubvector &params) {
     
-  e.params[0]=300.0/hc_mev_fm;
+  params[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
-  e.params[1]=-200.0/hc_mev_fm;
-  e.params[2]=38.0/hc_mev_fm;
-  e.params[3]=1.2;
+  params[1]=-200.0/hc_mev_fm;
+  params[2]=38.0/hc_mev_fm;
+  params[3]=1.2;
   // The value of high.trans1 has to be small enough because we
   // don't want to evaluate the schematic EOS to too high of a
   // density.
-  e.params[4]=3.0;
-  e.params[5]=12.0;
-  e.params[6]=4.5;
+  params[4]=3.0;
+  params[5]=12.0;
+  params[6]=4.5;
   // a2
-  e.params[7]=0.3;
+  params[7]=0.3;
   // a4
-  e.params[8]=0.08;
+  params[8]=0.08;
 
   return;
 }
@@ -612,31 +612,31 @@ string generic_quarks::param_unit(size_t i) {
   return ".";
 }
 
-void generic_quarks::first_point(entry &e) {
-  e.params[0]=1.19;
-  e.params[1]=-2.52;
-  e.params[2]=0.188;
-  e.params[3]=0.357;
-  e.params[4]=1.86;
-  e.params[5]=5.70;
-  e.params[6]=2.29;
-  e.params[7]=0.1907;
-  e.params[8]=0.0796;
+void generic_quarks::first_point(ubvector &params) {
+  params[0]=1.19;
+  params[1]=-2.52;
+  params[2]=0.188;
+  params[3]=0.357;
+  params[4]=1.86;
+  params[5]=5.70;
+  params[6]=2.29;
+  params[7]=0.1907;
+  params[8]=0.0796;
   return;
 }
 
-void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
 
-  // Set hadronic EOS from entry information
-  se.comp=e.params[0];
-  se.kprime=e.params[1];
-  se.b=e.params[2]-se.a;
-  se.gamma=e.params[3];
+  // Set hadronic EOS from ubvector information
+  se.comp=params[0];
+  se.kprime=params[1];
+  se.b=params[2]-se.a;
+  se.gamma=params[3];
   se.kpp=0.0;
 
   // Compute low-density eos
@@ -646,7 +646,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
   tab_eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",e.params[2]);
+  tab_eos->add_constant("S",params[2]);
   tab_eos->add_constant("L",se.fesym_slope(0.16));
 
   // Double check that the table is non-empty (we have to do this
@@ -656,7 +656,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Transition between nuclear part and polytrope
-  double ed1=e.params[4];
+  double ed1=params[4];
 
   // Boundary baryon density and pressure by interpolating
   // the table
@@ -664,7 +664,7 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   double pr1=tab_eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
-  double coeff1=pr1/pow(ed1,e.params[5]);
+  double coeff1=pr1/pow(ed1,params[5]);
   
   // Store the transition pressure for later use
   tab_eos->add_constant("pr_pt",pr1);
@@ -700,19 +700,19 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
   
   // Transition between polytrope and quarks
-  double ed_trans=e.params[6];
-  double pr_trans=coeff1*pow(ed_trans,e.params[5]);
-  double nb_trans=nb1*pow(ed_trans/ed1,e.params[5]/(e.params[5]-1.0))*
-    pow((ed_trans+pr_trans)/(ed1+pr1),1.0/(1.0-e.params[5]));
+  double ed_trans=params[6];
+  double pr_trans=coeff1*pow(ed_trans,params[5]);
+  double nb_trans=nb1*pow(ed_trans/ed1,params[5]/(params[5]-1.0))*
+    pow((ed_trans+pr_trans)/(ed1+pr1),1.0/(1.0-params[5]));
 
   // Store the transition pressure for later use
   tab_eos->add_constant("pr_q",pr_trans);
 
   // Add first polytrope to table
   for(double ed=ed1;ed<=ed_trans;ed+=0.05) {
-    double pr=coeff1*pow(ed,e.params[5]);
-    double nb=nb1*pow(ed/ed1,e.params[5]/(e.params[5]-1.0))*
-      pow((ed+pr)/(ed1+pr1),1.0/(1.0-e.params[5]));
+    double pr=coeff1*pow(ed,params[5]);
+    double nb=nb1*pow(ed/ed1,params[5]/(params[5]-1.0))*
+      pow((ed+pr)/(ed1+pr1),1.0/(1.0-params[5]));
     double line[3]={ed,pr,nb};
     tab_eos->line_of_data(3,line);
   }
@@ -725,8 +725,8 @@ void generic_quarks::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Quark EOS parameters
-  double a2=e.params[7];
-  double a4=e.params[8];
+  double a2=params[7];
+  double a4=params[8];
   
   // Coefficients of quadratic
   double quad_b=a2/2.0/a4;
@@ -829,30 +829,30 @@ double quark_star::pressure2(double mu) {
   return pr;
 }
 
-void quark_star::low_limits(entry &e) {
+void quark_star::low_limits(ubvector &params) {
 
   // B
-  e.params[0]=-10.0;
+  params[0]=-10.0;
   // c
-  e.params[1]=0.0;
+  params[1]=0.0;
   // Delta
-  e.params[2]=0.0;
+  params[2]=0.0;
   // ms
-  e.params[3]=0.75;
+  params[3]=0.75;
     
   return;
 }
   
-void quark_star::high_limits(entry &e) {
+void quark_star::high_limits(ubvector &params) {
 
   // B
-  e.params[0]=10.0;
+  params[0]=10.0;
   // c
-  e.params[1]=0.4;
+  params[1]=0.4;
   // Delta
-  e.params[2]=1.0;
+  params[2]=1.0;
   // ms
-  e.params[3]=2.5;
+  params[3]=2.5;
 
   return;
 }
@@ -871,22 +871,22 @@ std::string quark_star::param_unit(size_t i) {
   return "1/fm";
 }
   
-void quark_star::first_point(entry &e) {
-  e.params[0]=0.2446;
-  e.params[1]=0.0740;
-  e.params[2]=0.00289;
-  e.params[3]=0.0754;
+void quark_star::first_point(ubvector &params) {
+  params[0]=0.2446;
+  params[1]=0.0740;
+  params[2]=0.00289;
+  params[3]=0.0754;
   return;
 }
 
-void quark_star::compute_eos(entry &e, int &success, std::ofstream &scr_out) {
+void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_out) {
   
   success=bamr_class::ix_success;
 
-  B=e.params[0];
-  c=e.params[1];
-  Delta=e.params[2];
-  ms=e.params[3];
+  B=params[0];
+  c=params[1];
+  Delta=params[2];
+  ms=params[3];
 
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
     
@@ -1039,28 +1039,28 @@ qmc_neut::qmc_neut() {
 qmc_neut::~qmc_neut() {
 }
 
-void qmc_neut::low_limits(entry &e) {
+void qmc_neut::low_limits(ubvector &params) {
 
-  e.params[0]=12.7;
-  e.params[1]=0.48;
-  e.params[2]=1.0;
-  e.params[3]=2.1;
-  e.params[4]=0.2;
-  e.params[5]=2.0;
-  e.params[6]=0.2;
+  params[0]=12.7;
+  params[1]=0.48;
+  params[2]=1.0;
+  params[3]=2.1;
+  params[4]=0.2;
+  params[5]=2.0;
+  params[6]=0.2;
     
   return;
 }
 
-void qmc_neut::high_limits(entry &e) {
+void qmc_neut::high_limits(ubvector &params) {
     
-  e.params[0]=13.3;
-  e.params[1]=0.52;
-  e.params[2]=5.0;
-  e.params[3]=2.5;
-  e.params[4]=4.0;
-  e.params[5]=8.0;
-  e.params[6]=4.0;
+  params[0]=13.3;
+  params[1]=0.52;
+  params[2]=5.0;
+  params[3]=2.5;
+  params[4]=4.0;
+  params[5]=8.0;
+  params[6]=4.0;
     
   return;
 }
@@ -1085,20 +1085,20 @@ string qmc_neut::param_unit(size_t i) {
   return ".";
 }
 
-void qmc_neut::first_point(entry &e) {
+void qmc_neut::first_point(ubvector &params) {
 
-  e.params[0]=1.276936e+01;
-  e.params[1]=5.043647e-01;
-  e.params[2]=4.584098e+00;
-  e.params[3]=2.323736e+00;
-  e.params[4]=0.576;
-  e.params[5]=4.60;
-  e.params[6]=1.21;
+  params[0]=1.276936e+01;
+  params[1]=5.043647e-01;
+  params[2]=4.584098e+00;
+  params[3]=2.323736e+00;
+  params[4]=0.576;
+  params[5]=4.60;
+  params[6]=1.21;
 
   return;
 }
 
-void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void qmc_neut::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
   
@@ -1112,10 +1112,10 @@ void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // little bit lower in density to make sure we extend all the way
   // down to the crust
 
-  double a=e.params[0];
-  double alpha=e.params[1];
-  double b=e.params[2];
-  double beta=e.params[3];
+  double a=params[0];
+  double alpha=params[1];
+  double b=params[2];
+  double beta=params[3];
     
   double L=3.0*(a*alpha+b*beta);
   tab_eos->add_constant("S",(a+b+16.0)/hc_mev_fm);
@@ -1159,43 +1159,43 @@ void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // Check that the last Monte Carlo energy density
   // isn't greater than the transition between the
   // polytropes
-  if (e.params[5]<ed) {
+  if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
     success=bamr_class::ix_param_mismatch;
     return;
   }
 
   // Polytropic index at higher densities
-  double index1=e.params[4];
+  double index1=params[4];
 
   // Compute coefficient given index
   double exp=1.0+1.0/index1;
   double coeff=pr/pow(ed,exp);
 
   // Compute stepsize in energy density
-  double delta_ed=(e.params[5]-ed)/50.01;
+  double delta_ed=(params[5]-ed)/50.01;
 
   // Ensure first point is not the same as the last point
   // (this causes problems for the baryon density)
   ed+=delta_ed;
 
   // Add first polytrope to table
-  for(;ed<e.params[5];ed+=delta_ed) {
+  for(;ed<params[5];ed+=delta_ed) {
     double line[2]={ed,coeff*pow(ed,exp)};
     tab_eos->line_of_data(2,line);
   }
 
   // Compute second coefficient given index
-  double index2=e.params[6];
+  double index2=params[6];
   double exp2=1.0+1.0/index2;
 
   // Compute coefficient
-  double pr_last=coeff*pow(e.params[5],exp);
-  double coeff2=pr_last/pow(e.params[5],exp2);
+  double pr_last=coeff*pow(params[5],exp);
+  double coeff2=pr_last/pow(params[5],exp2);
 
   // Add second polytrope to table
-  delta_ed=(10.0-e.params[5])/50.01;
-  for(ed=e.params[5];ed<10.0;ed+=delta_ed) {
+  delta_ed=(10.0-params[5])/50.01;
+  for(ed=params[5];ed<10.0;ed+=delta_ed) {
     double line[2]={ed,coeff2*pow(ed,exp2)};
     tab_eos->line_of_data(2,line);
   }
@@ -1213,37 +1213,37 @@ qmc_threep::qmc_threep() {
 qmc_threep::~qmc_threep() {
 }
 
-void qmc_threep::low_limits(entry &e) {
+void qmc_threep::low_limits(ubvector &params) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  e.params[0]=12.5;
+  params[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  e.params[1]=0.47;
-  e.params[2]=29.5;
-  e.params[3]=30.0;
+  params[1]=0.47;
+  params[2]=29.5;
+  params[3]=30.0;
   
-  e.params[4]=0.2;
-  e.params[5]=0.75;
-  e.params[6]=0.2;
-  e.params[7]=0.75;
-  e.params[8]=0.2;
+  params[4]=0.2;
+  params[5]=0.75;
+  params[6]=0.2;
+  params[7]=0.75;
+  params[8]=0.2;
     
   return;
 }
 
-void qmc_threep::high_limits(entry &e) {
+void qmc_threep::high_limits(ubvector &params) {
     
-  e.params[0]=13.5;
-  e.params[1]=0.53;
-  e.params[2]=36.1;
-  e.params[3]=70.0;
+  params[0]=13.5;
+  params[1]=0.53;
+  params[2]=36.1;
+  params[3]=70.0;
 
-  e.params[4]=8.0;
-  e.params[5]=8.0;
-  e.params[6]=8.0;
-  e.params[7]=8.0;
-  e.params[8]=8.0;
+  params[4]=8.0;
+  params[5]=8.0;
+  params[6]=8.0;
+  params[7]=8.0;
+  params[8]=8.0;
     
   return;
 }
@@ -1272,22 +1272,22 @@ string qmc_threep::param_unit(size_t i) {
   return ".";
 }
 
-void qmc_threep::first_point(entry &e) {
+void qmc_threep::first_point(ubvector &params) {
 
-  e.params[0]=13.0;
-  e.params[1]=0.5;
-  e.params[2]=32.0;
-  e.params[3]=50.0;
-  e.params[4]=0.5;
-  e.params[5]=2.0;
-  e.params[6]=0.5;
-  e.params[7]=2.5;
-  e.params[8]=1.0;
+  params[0]=13.0;
+  params[1]=0.5;
+  params[2]=32.0;
+  params[3]=50.0;
+  params[4]=0.5;
+  params[5]=2.0;
+  params[6]=0.5;
+  params[7]=2.5;
+  params[8]=1.0;
 
   return;
 }
 
-void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   bool debug=false;
 
@@ -1307,10 +1307,10 @@ void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // little bit lower in density to make sure we extend all the way
   // down to the crust
 
-  double a=e.params[0];
-  double alpha=e.params[1];
-  double Stmp=e.params[2];
-  double Ltmp=e.params[3];
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
 
   /*
     This is based on limits from two lines, as in Jim and I's EPJA
@@ -1339,13 +1339,13 @@ void qmc_threep::compute_eos(entry &e, int &success, ofstream &scr_out) {
   tab_eos->add_constant("S",Stmp/hc_mev_fm);
   tab_eos->add_constant("L",Ltmp/hc_mev_fm);
 
-  double index1=e.params[4];
+  double index1=params[4];
   double exp1=1.0+1.0/index1;
-  double trans1=e.params[5];
-  double index2=e.params[6];
+  double trans1=params[5];
+  double index2=params[6];
   double exp2=1.0+1.0/index2;
-  double trans2=e.params[7];
-  double index3=e.params[8];
+  double trans2=params[7];
+  double index3=params[8];
   double exp3=1.0+1.0/index3;
 
   double ed=0.0, pr=0.0, ed_last=0.0, pr_last=0.0, nb_last=0.0;
@@ -1460,39 +1460,39 @@ qmc_fixp::qmc_fixp() {
 qmc_fixp::~qmc_fixp() {
 }
 
-void qmc_fixp::low_limits(entry &e) {
+void qmc_fixp::low_limits(ubvector &params) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  e.params[0]=12.5;
+  params[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  e.params[1]=0.47;
-  e.params[2]=29.5;
-  e.params[3]=30.0;
+  params[1]=0.47;
+  params[2]=29.5;
+  params[3]=30.0;
   
-  e.params[4]=0.0;
-  e.params[5]=0.0;
-  e.params[6]=0.0;
-  e.params[7]=0.0;
+  params[4]=0.0;
+  params[5]=0.0;
+  params[6]=0.0;
+  params[7]=0.0;
     
   return;
 }
 
-void qmc_fixp::high_limits(entry &e) {
+void qmc_fixp::high_limits(ubvector &params) {
     
-  e.params[0]=13.5;
-  e.params[1]=0.53;
-  e.params[2]=36.1;
-  e.params[3]=70.0;
+  params[0]=13.5;
+  params[1]=0.53;
+  params[2]=36.1;
+  params[3]=70.0;
 
   // These parameters are limited by causality, but if the user
   // changes the values of ed1, ed2, ed3, and ed4, then the upper
   // limits change accordingly. To make things easier, we just choose
   // relatively large values for these upper limits for now.
-  e.params[4]=0.3;
-  e.params[5]=1.5;
-  e.params[6]=2.5;
-  e.params[7]=2.5;
+  params[4]=0.3;
+  params[5]=1.5;
+  params[6]=2.5;
+  params[7]=2.5;
     
   return;
 }
@@ -1519,21 +1519,21 @@ string qmc_fixp::param_unit(size_t i) {
   return "1/fm^4";
 }
 
-void qmc_fixp::first_point(entry &e) {
+void qmc_fixp::first_point(ubvector &params) {
 
-  e.params[0]=1.276936e+01;
-  e.params[1]=5.043647e-01;
-  e.params[2]=30.0;
-  e.params[3]=40.0;
-  e.params[4]=0.014;
-  e.params[5]=0.74;
-  e.params[6]=0.60;
-  e.params[7]=1.84;
+  params[0]=1.276936e+01;
+  params[1]=5.043647e-01;
+  params[2]=30.0;
+  params[3]=40.0;
+  params[4]=0.014;
+  params[5]=0.74;
+  params[6]=0.60;
+  params[7]=1.84;
 
   return;
 }
 
-void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
   bool debug=false;
@@ -1548,10 +1548,10 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // little bit lower in density to make sure we extend all the way
   // down to the crust
 
-  double a=e.params[0];
-  double alpha=e.params[1];
-  double Stmp=e.params[2];
-  double Ltmp=e.params[3];
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
@@ -1616,11 +1616,11 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
 
   // Compute pressures on grid, p1 is the pressure at ed1
-  double p1=pr_trans+e.params[4];
+  double p1=pr_trans+params[4];
   // Variable p2 is the pressure at ed2
-  double p2=p1+e.params[5];
+  double p2=p1+params[5];
   // Variable p3 is the pressure at ed3
-  double p3=p2+e.params[6];
+  double p3=p2+params[6];
   
   // Add 1st high-density EOS
   if (debug) {
@@ -1629,7 +1629,7 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
   double delta_ed=(ed1-ed_trans)/20.0;
   for(double ed=ed_trans+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
-    double line[2]={ed,pr_trans+e.params[4]*(ed-ed_trans)/(ed1-ed_trans)};
+    double line[2]={ed,pr_trans+params[4]*(ed-ed_trans)/(ed1-ed_trans)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (5): " << line[0] << " "
 	   << line[1] << endl;
@@ -1646,7 +1646,7 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << "ed           pr" << endl;
   }
   for(double ed=ed1;ed<ed2-1.0e-4;ed+=(ed2-ed1)/10.0) {
-    double line[2]={ed,p1+e.params[5]*(ed-ed1)/(ed2-ed1)};
+    double line[2]={ed,p1+params[5]*(ed-ed1)/(ed2-ed1)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (6): " << line[0] << " "
 	   << line[1] << endl;
@@ -1663,7 +1663,7 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << "ed           pr" << endl;
   }
   for(double ed=ed2;ed<ed3-1.0e-4;ed+=(ed3-ed2)/10.0) {
-    double line[2]={ed,p2+e.params[6]*(ed-ed2)/(ed3-ed2)};
+    double line[2]={ed,p2+params[6]*(ed-ed2)/(ed3-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (7): " << line[0] << " "
 	   << line[1] << endl;
@@ -1680,7 +1680,7 @@ void qmc_fixp::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << "ed           pr" << endl;
   }
   for(double ed=ed3;ed<10.0-1.0e-4;ed+=(ed4-ed3)/10.0) {
-    double line[2]={ed,p3+e.params[7]*(ed-ed3)/(ed4-ed3)};
+    double line[2]={ed,p3+params[7]*(ed-ed3)/(ed4-ed3)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (8): " << line[0] << " "
 	   << line[1] << endl;
@@ -1708,35 +1708,35 @@ qmc_twolines::qmc_twolines() {
 qmc_twolines::~qmc_twolines() {
 }
 
-void qmc_twolines::low_limits(entry &e) {
+void qmc_twolines::low_limits(ubvector &params) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  e.params[0]=12.5;
+  params[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  e.params[1]=0.47;
-  e.params[2]=29.5;
-  e.params[3]=30.0;
+  params[1]=0.47;
+  params[2]=29.5;
+  params[3]=30.0;
   
-  e.params[4]=0.0;
-  e.params[5]=0.0;
-  e.params[6]=0.0;
-  e.params[7]=0.0;
+  params[4]=0.0;
+  params[5]=0.0;
+  params[6]=0.0;
+  params[7]=0.0;
     
   return;
 }
 
-void qmc_twolines::high_limits(entry &e) {
+void qmc_twolines::high_limits(ubvector &params) {
     
-  e.params[0]=13.5;
-  e.params[1]=0.53;
-  e.params[2]=36.1;
-  e.params[3]=70.0;
+  params[0]=13.5;
+  params[1]=0.53;
+  params[2]=36.1;
+  params[3]=70.0;
 
-  e.params[4]=0.3;
-  e.params[5]=1.5;
-  e.params[6]=2.5;
-  e.params[7]=2.5;
+  params[4]=0.3;
+  params[5]=1.5;
+  params[6]=2.5;
+  params[7]=2.5;
     
   return;
 }
@@ -1763,21 +1763,21 @@ string qmc_twolines::param_unit(size_t i) {
   return "1/fm^4";
 }
 
-void qmc_twolines::first_point(entry &e) {
+void qmc_twolines::first_point(ubvector &params) {
 
-  e.params[0]=1.276936e+01;
-  e.params[1]=5.043647e-01;
-  e.params[2]=30.0;
-  e.params[3]=40.0;
-  e.params[4]=0.3;
-  e.params[5]=1.0;
-  e.params[6]=0.8;
-  e.params[7]=1.84;
+  params[0]=1.276936e+01;
+  params[1]=5.043647e-01;
+  params[2]=30.0;
+  params[3]=40.0;
+  params[4]=0.3;
+  params[5]=1.0;
+  params[6]=0.8;
+  params[7]=1.84;
 
   return;
 }
 
-void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
+void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   success=bamr_class::ix_success;
   bool debug=false;
@@ -1792,10 +1792,10 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
   // little bit lower in density to make sure we extend all the way
   // down to the crust
 
-  double a=e.params[0];
-  double alpha=e.params[1];
-  double Stmp=e.params[2];
-  double Ltmp=e.params[3];
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
@@ -1817,8 +1817,8 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   double ed=0.0, pr=0.0, ed_last=0.0, nb_last=0.0, pr_last=0.0;
 
-  double ed1=e.params[5];
-  double ed2=e.params[7];
+  double ed1=params[5];
+  double ed2=params[7];
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
@@ -1865,8 +1865,8 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
   if (debug) cout << endl;
 
   // Compute pressures at end points
-  double p2=pr_last+e.params[4];
-  double p3=p2+e.params[6];
+  double p2=pr_last+params[4];
+  double p3=p2+params[6];
   
   // Add 1st high-density EOS
   if (debug) {
@@ -1875,7 +1875,7 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
   }
   double delta_ed=(ed2-ed_last)/100.0;
   for(double ed=ed_last+delta_ed;ed<ed2-1.0e-4;ed+=delta_ed) {
-    double line[2]={ed,pr_last+e.params[4]*(ed-ed_last)/(ed2-ed_last)};
+    double line[2]={ed,pr_last+params[4]*(ed-ed_last)/(ed2-ed_last)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (5): " << line[0] << " "
 	   << line[1] << endl;
@@ -1892,7 +1892,7 @@ void qmc_twolines::compute_eos(entry &e, int &success, ofstream &scr_out) {
     cout << "ed           pr" << endl;
   }
   for(double ed=ed2;ed<10.0-1.0e-4;ed+=(10.0-ed2)/20.0) {
-    double line[2]={ed,p2+e.params[6]*(ed-ed2)/(10.0-ed2)};
+    double line[2]={ed,p2+params[6]*(ed-ed2)/(10.0-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in model (6): " << line[0] << " "
 	   << line[1] << endl;

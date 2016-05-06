@@ -39,6 +39,7 @@
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_file.h>
 #include <o2scl/exception.h>
+#include <o2scl/prob_dens_func.h>
 #include <o2scl/cholesky.h>
 
 #ifndef O2SCL_READLINE
@@ -61,6 +62,10 @@ namespace mcmc_namespace {
   /** \brief Desc
    */
   class default_model {
+
+    virtual void init() {
+      return;
+    };
     
     /** \brief Desc
      */
@@ -125,8 +130,17 @@ namespace mcmc_namespace {
     /// \name Member data for the Metropolis-Hastings step
     //@{
     /// Return the approximate likelihood
-  double approx_like(ubvector &pars);
-    //@}
+  double approx_like(ubvector &pars) {
+    double ret=hg_norm;
+    ubvector q(nparams), vtmp(nparams);
+    for(size_t i=0;i<nparams;i++) {
+      q[i]=e.params[i]-hg_best[i];
+    }
+    vtmp=prod(hg_covar_inv,q);
+    ret*=exp(-0.5*inner_prod(q,vtmp));
+    return ret;
+  }
+  //@}
 
   /// \name Other variables
   //@{
@@ -144,7 +158,12 @@ namespace mcmc_namespace {
   static const int fp_best=-3;
   //@}
 
+  /// \name Desc
+  //@{
   std::vector<int> ret_codes;
+  static const int ix_success=0;
+  static const int ix_zero_wgt=1;
+  //@}
   
   /// If true, then \ref first_update() has been called
   bool first_file_update;
@@ -377,13 +396,23 @@ namespace mcmc_namespace {
   
   /** \brief Desc
    */
-  virtual void output_best
-  (ubvector &best, double w_best, data_t &d);
+  void output_best(ubvector &best, double w_best, data_t &dat) {
+    return;
+  }
+  
+  /** \brief Desc
+   */
+  void add_measurement(ubvector &pars, double weight, data_t &dat,
+		       bool new_meas, size_t n_meas) {
+    return;
+  };
 
   /** \brief Desc
    */
   int mcmc(std::vector<std::string> &sv, bool itive_com) {
 
+    bool debug=false;
+    
     // Get model object
     typename std::map<std::string,model_t,
       std::greater<std::string> >::const_iterator model_it=
@@ -732,9 +761,11 @@ namespace mcmc_namespace {
     // ---------------------------------------------------
 
     // Initialize radii of next to zero
-    for(size_t k=0;k<nsources;k++) {
-      next.rad[k]=0.0;
-    }
+    //for(size_t k=0;k<nsources;k++) {
+    //next.rad[k]=0.0;
+    //}
+    std::cout << "fixme." << std::endl;
+    exit(-1);
 
     // Keep track of total number of different points in the parameter
     // space that are considered (some of them may not result in TOV
@@ -782,18 +813,8 @@ namespace mcmc_namespace {
 	
 	  // Create new trial point
 	  for(size_t i=0;i<nparams;i++) {
-	    next[i]=current[ij][i]+smove_z*
-	      (current[ik][i]-current[ij][i]);
-	    if (next[i]>=high[i] ||
-		next[i]<=low[i]) {
-	      in_bounds=false;
-	    }
-	  }
-	  for(size_t i=0;i<nsources;i++) {
-	    next.mass[i]=current[ij].mass[i]+smove_z*
-	      (current[ik].mass[i]-current[ij].mass[i]);
-	    if (next.mass[i]>=high.mass[i] ||
-		next.mass[i]<=low.mass[i]) {
+	    next[i]=current[ij][i]+smove_z*(current[ik][i]-current[ij][i]);
+	    if (next[i]>=high[i] || next[i]<=low[i]) {
 	      in_bounds=false;
 	    }
 	  }
@@ -801,7 +822,8 @@ namespace mcmc_namespace {
 	  step_iters++;
 	  if (step_iters==1000) {
 	    scr_out << "Failed to find suitable step at point 1." << std::endl;
-	    cerr << "Failed to find suitable step at point 1." << std::endl;
+	    std::cerr << "Failed to find suitable step at point 1."
+		      << std::endl;
 	    return 2;
 	  }
 
@@ -811,43 +833,31 @@ namespace mcmc_namespace {
       
 	// Make a Metropolis-Hastings step based on previous data
       
-	size_t nv=next.np+nsources;
-	ubvector hg_temp(nv), hg_z(nv);
+	ubvector hg_temp(nparams), hg_z(nparams);
       
 	bool out_of_range;
 	int hg_it=0;
       
 	do {
 	
-	  for(size_t k=0;k<nv;k++) {
+	  for(size_t k=0;k<nparams;k++) {
 	    hg_z[k]=pdg.sample();
 	  }
 	  hg_temp=prod(hg_chol,hg_z);
-	  for(size_t k=0;k<nv;k++) {
-	    if (k<next.np) {
-	      next[k]=hg_best[k]+hg_temp[k];
-	    } else {
-	      next.mass[k-next.np]=hg_best[k]+hg_temp[k];
-	    }
+	  for(size_t k=0;k<nparams;k++) {
+	    next[k]=hg_best[k]+hg_temp[k];
 	  }
 	
 	  out_of_range=false;
-	  for(size_t k=0;k<next.np;k++) {
-	    if (next[k]<low[k] ||
-		next[k]>high[k]) {
-	      out_of_range=true;
-	    }
-	  }
-	  for(size_t k=0;k<nsources;k++) {
-	    if (next.mass[k]<low.mass[k] ||
-		next.mass[k]>high.mass[k]) {
+	  for(size_t k=0;k<nparams;k++) {
+	    if (next[k]<low[k] || next[k]>high[k]) {
 	      out_of_range=true;
 	    }
 	  }
 
 	  hg_it++;
 	  if (hg_it>1000) {
-	    O2SCL_ERR("Sanity check in hg step.",exc_esanity);
+	    O2SCL_ERR("Sanity check in hg step.",o2scl::exc_esanity);
 	  }
 
 	} while (out_of_range==true);
@@ -858,31 +868,28 @@ namespace mcmc_namespace {
 
 	// Make a step, ensure that we're in bounds and that
 	// the masses are not too large
-	for(size_t k=0;k<next.np;k++) {
+	for(size_t k=0;k<nparams;k++) {
 	
 	  next[k]=current[0][k]+(gr.random()*2.0-1.0)*
 	    (high[k]-low[k])/step_fac;
 	
 	  // If it's out of range, redo step near boundary
 	  if (next[k]<low[k]) {
-	    next[k]=low[k]+gr.random()*
-	      (high[k]-low[k])/step_fac;
+	    next[k]=low[k]+gr.random()*(high[k]-low[k])/step_fac;
 	  } else if (next[k]>high[k]) {
-	    next[k]=high[k]-gr.random()*
-	      (high[k]-low[k])/step_fac;
+	    next[k]=high[k]-gr.random()*(high[k]-low[k])/step_fac;
 	  }
-	
-	  if (next[k]<low[k] || 
-	      next[k]>high[k]) {
-	    O2SCL_ERR("Sanity check in parameter step.",exc_esanity);
+	  
+	  if (next[k]<low[k] || next[k]>high[k]) {
+	    O2SCL_ERR("Sanity check in parameter step.",o2scl::exc_esanity);
 	  }
 	}
-      
-	if (nsources>0) {
-	  // Just use a large value (1.0e6) here since we don't yet
-	  // know the maximum mass
-	  select_mass(current[0],next,1.0e6);
-	}
+
+	std::cout << "fixme" << std::endl;
+	exit(-1);
+	//if (nsources>0) {
+	//select_mass(current[0],next,1.0e6);
+	//}
       
       }
 
@@ -900,15 +907,15 @@ namespace mcmc_namespace {
 
       if (use_smove) {
 	if (step_flags[ik]==false) {
-	  w_next=compute_weight(next,data_arr[ik+nwalk],suc,wgts,warm_up);
+	  w_next=compute_point(next,scr_out,suc,data_arr[ik+nwalk]);
 	} else {
-	  w_next=compute_weight(next,data_arr[ik],suc,wgts,warm_up);
+	  w_next=compute_point(next,scr_out,suc,data_arr[ik]);
 	}
       } else {
 	if (step_flags[0]) {
-	  w_next=compute_weight(next,data_arr[1],suc,wgts,warm_up);
+	  w_next=compute_point(next,scr_out,suc,data_arr[1]);
 	} else {
-	  w_next=compute_weight(next,data_arr[0],suc,wgts,warm_up);
+	  w_next=compute_point(next,scr_out,suc,data_arr[0]);
 	}
       }
       ret_codes[suc]++;
@@ -916,23 +923,9 @@ namespace mcmc_namespace {
       // ---------------------------------------------------
     
       // Test to ensure new point is good
-      if (suc==ix_success) {
-
-	// Test radii
-	for(size_t i=0;i<nsources;i++) {
-	  if (next.rad[i]>high.rad[i] || next.rad[i]<low.rad[i]) {
-	    scr_out << "Rejected: Radius out of range." << std::endl;
-	    suc=ix_r_outside;
-	    i=nsources;
-	  }
-	}
-	
-	// Ensure non-zero weight
-	if (w_next==0.0) {
-	  scr_out << "Rejected: Zero weight." << std::endl;
-	  suc=ix_zero_wgt;
-	}
-	
+      if (suc==ix_success && w_next<=0.0) {
+	scr_out << "Rejected: Zero weight." << std::endl;
+	suc=ix_zero_wgt;
       }
 
       bool force_file_update=false;
@@ -942,19 +935,33 @@ namespace mcmc_namespace {
       if (suc==ix_success) {
 
 	if (debug) {
-	  cout << step_flags[0] << " Next: " 
+	  std::cout << step_flags[0] << " Next: " 
 	       << next[0] << " " << w_next << std::endl;
 	}
       
-	bool accept;
+	bool accept=false;
+	double r=gr.random();
+
+	// Metropolis algorithm
 	if (use_smove) {
-	  accept=make_step(w_current[ik],w_next,debug,warm_up,
-			   mcmc_iterations,q_current,q_next,smove_z);
+	  if (r<pow(z,((double)nwalk)-1.0)*w_next/w_current) {
+	    accept=true;
+	  }
+	} else if (hg_mode>0) {
+	  if (r<w_next*q_current/w_current/q_next) {
+	    accept=true;
+	  }
 	} else {
-	  accept=make_step(w_current,w_next,debug,warm_up,
-			   mcmc_iterations,q_current,q_next,0.0);
+	  if (r<w_next/w_current) {
+	    accept=true;
+	  }
 	}
-      
+	
+	if (debug) {
+	  cout << "Metropolis: " << r << " " << w_next/w_current << " " 
+	       << accept << endl;
+	}
+	
 	if (accept) {
 
 	  mh_success++;
@@ -964,24 +971,23 @@ namespace mcmc_namespace {
 	    if (use_smove) {
 	      if (step_flags[ik]==false) {
 		add_measurement(next,data_arr[ik+nwalk],w_next,true,
-				mh_success,wgts);
+				mh_success);
 	      } else {
 		add_measurement(next,data_arr[ik],w_next,true,
-				mh_success,wgts);
+				mh_success);
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
 		add_measurement(next,data_arr[1],w_next,true,
-				mh_success,wgts);
+				mh_success);
 	      } else {
 		add_measurement(next,data_arr[0],w_next,true,
-				mh_success,wgts);
+				mh_success);
 	      }
 	    }
 	    if (debug) {
-	      cout << step_flags[0] << " Adding new: " 
-		   << next[0] << " " << w_next << " "
-		   << tab_mvsr->max("gm") << std::endl;
+	      std::cout << step_flags[0] << " Adding new: " 
+		   << next[0] << " " << w_next << std::endl;
 	    }
 	  }
 
@@ -993,7 +999,9 @@ namespace mcmc_namespace {
 	  if (w_next>w_best) {
 	    best=next;
 	    w_best=w_next;
-	    output_best(best,w_best,tab_eos,tab_mvsr,wgts);
+	    //output_best(best,w_best,data_arr[0]);
+	    std::cout << "fixme." << std::endl;
+	    exit(-1);
 	    force_file_update=true;
 	  }
 
@@ -1003,7 +1011,7 @@ namespace mcmc_namespace {
 	    w_current[ik]=w_next;
 	  } else {
 	    current[0]=next;
-	    w_current=w_next;
+	    w_current[0]=w_next;
 	  }
 
 	  // Flip "first_half" parameter
@@ -1011,13 +1019,15 @@ namespace mcmc_namespace {
 	    step_flags[ik]=!(step_flags[ik]);
 	  } else {
 	    step_flags[0]=!(step_flags[0]);
-	    if (debug) cout << "Flip: " << step_flags[0] << std::endl;
+	    if (debug) {
+	      std::cout << "Flip: " << step_flags[0] << std::endl;
+	    }
 	  }
 	  
 	} else {
 	    
 	  // Point was rejected
-
+	  
 	  mh_failure++;
 
 
@@ -1026,28 +1036,28 @@ namespace mcmc_namespace {
 	    if (use_smove) {
 	      if (step_flags[ik]==false) {
 		add_measurement(current[ik],data_arr[ik],
-				w_current[ik],false,mh_success,wgts);
+				w_current[ik],false,mh_success);
 	      } else {
 		add_measurement(current[ik],data_arr[ik+nwalk],
-				w_current[ik],false,mh_success,wgts);
+				w_current[ik],false,mh_success);
 	      }
 	      if (debug) {
-		cout << step_flags[ik] << " Adding old: "
-		     << current[ik][0] << " " << w_current[ik] << " "
-		     << tab_mvsr->max("gm") << std::endl;
+		std::cout << step_flags[ik] << " Adding old: "
+		     << current[ik][0] << " " << w_current[ik]
+		     << std::endl;
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
 		add_measurement(current[0],data_arr[0],
-				w_current,false,mh_success,wgts);
+				w_current,false,mh_success);
 	      } else {
 		add_measurement(current[0],data_arr[1],
-				w_current,false,mh_success,wgts);
+				w_current,false,mh_success);
 	      }
 	      if (debug) {
-		cout << step_flags[0] << " Adding old: "
-		     << current[0][0] << " " << w_current << " "
-		     << tab_mvsr->max("gm") << std::endl;
+		std::cout << step_flags[0] << " Adding old: "
+			  << current[0][0] << " " << w_current[0] << " "
+			  << std::endl;
 	      }
 	    }
 	  }
@@ -1065,7 +1075,9 @@ namespace mcmc_namespace {
 	  if (w_next>w_best) {
 	    best=next;
 	    w_best=w_next;
-	    output_best(best,w_best,tab_eos,tab_mvsr,wgts);
+	    //output_best(best,w_best,data_arr[0]);
+	    std::cout << "fixme." << std::endl;
+	    exit(-1);
 	    force_file_update=true;
 	    scr_out << "Best point with rejected step: " << w_next << " " 
 		    << w_best << std::endl;
@@ -1135,7 +1147,8 @@ namespace mcmc_namespace {
 
 	  if (((int)mcmc_iterations)+1>max_iters) {
 	    scr_out << "Iteration count, " << mcmc_iterations 
-		    << ", exceed maximum number, " << max_iters << "." << std::endl;
+		    << ", exceed maximum number, " << max_iters << "."
+		    << std::endl;
 	    main_done=true;
 	  }
 	
@@ -1223,6 +1236,12 @@ namespace mcmc_namespace {
 
   mcmc_class() {
 
+    file_opened=false;
+    first_file_update=false;
+    
+    first_point_file="";
+    first_point_type=fp_unspecified;
+
     // Parameters
     prefix="mcmc";
     file_update_iters=40;
@@ -1245,6 +1264,9 @@ namespace mcmc_namespace {
     mpi_rank=0;
     chain_size=0;
     n_chains=0;
+    
+    ret_codes.resize(100);
+    for(size_t i=0;i<100;i++) ret_codes[i]=0;
   }
     
   };

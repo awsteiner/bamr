@@ -49,7 +49,6 @@
 
 #include "mcmc.h"
 #include "nstar_cold2.h"
-#include "entry.h"
 #include "models.h"
 
 /** \brief Main namespace
@@ -98,7 +97,7 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class : public mcmc_class<model_data,model> {
+  class bamr_class : public mcmc_namespace::mcmc_class<model_data,model> {
     
   protected:
 
@@ -241,11 +240,6 @@ namespace bamr {
     std::vector<double> first_mass;
     //@}
 
-    /// \name Parameter limits
-    //@{
-    entry low, high;
-    //@}
-
     /// Number of bins for all histograms (default 100)
     int grid_size;
 
@@ -298,9 +292,6 @@ namespace bamr {
 
     /// \name Internal functions 
     //@{
-    /// The function which selects the next neutron star masses
-    virtual void select_mass(entry &e_current, entry &e_next, double mmax);
-
     /// Setup column names and units for data table
     virtual void table_names_units(std::string &s, std::string &u);
 
@@ -314,40 +305,30 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
-    /** \brief Decide to accept or reject the step 
-     */
-    virtual bool make_step(double w_current, double w_next, bool debug,
-			   bool warm_up, int iteration,
-			   double q_current, double q_next, double z);
-
     /** \brief Initialize the expectation value objects
 
 	This function is called by mcmc().
     */
-    virtual void init_grids_table(entry &low, entry &high);
+    virtual void init_grids_table(ubvector &low, ubvector &high);
 
     /** \brief Further preparations of the EOS before calling the TOV 
 	solver
 	
 	This function is empty by default.
     */
-    virtual void prepare_eos(entry &e, eos_tov &dat, int &success);
+    virtual void prepare_eos(ubvector &pars, model_data &dat, int &success);
 
     /** \brief Add a measurement
      */
-    virtual void add_measurement
-      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
-       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
-       double weight, bool new_meas, size_t n_meas, ubvector &weights);
+    void add_measurement(ubvector &pars, double weight, model_data &dat,
+			 bool new_meas, size_t n_meas);
 
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
-    virtual void fill_line
-      (entry &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
-       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
-       double weight, bool new_meas, size_t n_meas, ubvector &weights,
-       std::vector<double> &line);
+    virtual void fill_line(ubvector &pars, double weight, model_data &dat,
+			   bool new_meas, size_t n_meas,
+			   std::vector<double> &line);
     
     /** \brief Write initial data to HDF file
      */
@@ -355,7 +336,7 @@ namespace bamr {
     
     /** \brief Write histogram data to files with prefix \c fname
      */
-    virtual void update_files(model &modp, entry &e_current);
+    virtual void update_files(ubvector &current);
     
     /** \brief Set up the 'cli' object
 
@@ -367,35 +348,13 @@ namespace bamr {
      */
     virtual void load_mc();
   
-    /** \brief Compute \f$ P(M|D) \f$ from parameters in entry \c e
-	
-	Called by mcmc().
-    */
-    virtual double compute_weight(entry &e, eos_tov &dat, int &success,
-				  ubvector &wgts, bool warm_up);
-
-  public:
-    
-    /** \brief Tabulate EOS and then use in cold_nstar
-	
-	Called by compute_weight().
-
-	\todo Temporarily made public for drdp project hack
-    */
-    virtual void compute_star(entry &e, eos_tov &dat, int &success);
-    
   protected:
     
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
     
     /// Output the "best" EOS obtained so far (called by mcmc())
-    virtual void output_best
-      (entry &e_best, double w_best,
-       std::shared_ptr<o2scl::table_units<> > tab_eos,
-       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
-       ubvector &wgts);
-    //@}
+    void output_best(ubvector &best, double w_best, model_data &dat);
 
   public:
 
@@ -403,12 +362,17 @@ namespace bamr {
 
     virtual ~bamr_class();
 
+    /// Desc
+    void run(int argc, char *argv[]) {
+      mcmc_class::run(argc,argv);
+      return;
+    }
+
+    
     /// \name Return codes for each point
     //@{
-    static const int ix_success=0;
-    static const int ix_mr_outside=1;
-    static const int ix_r_outside=2;
-    static const int ix_zero_wgt=3;
+    static const int ix_mr_outside=2;
+    static const int ix_r_outside=3;
     static const int ix_press_dec=4;
     static const int ix_nb_problem=5;
     static const int ix_nb_problem2=6;

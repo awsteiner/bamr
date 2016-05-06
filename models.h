@@ -47,9 +47,12 @@ namespace bamr {
     /// Radii
     ubvector rad;
     
+    /// Weights
+    ubvector wgts;
+    
     model_data() {
     }
-
+    
   private:
     
     /** \brief Desc
