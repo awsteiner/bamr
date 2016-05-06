@@ -35,10 +35,9 @@
 #include <o2scl/prob_dens_func.h>
 
 #include "nstar_cold2.h"
-#include "entry.h"
 
 namespace bamr {
-
+  
   /** \brief Base class for an EOS parameterization
    */
   class model {
@@ -69,15 +68,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out)=0;
-
-    /// Compute the M-R curve directly
-    virtual void compute_mr
-      (entry &e, std::ofstream &scr_out,
-       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
-       int &success) {
-      return;
-    }
+    virtual void compute_point(ubvector &pars, int &success,
+			       std::ofstream &scr_out, eos_tov &dat)=0;
 
     /** \brief A point to calibrate the baryon density with
      */
@@ -89,7 +81,13 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e) {
+    virtual void first_point(ubvector &pars) {
+      ubvector low(nparams), high(nparams);
+      low_limits(low);
+      high_limits(high);
+      for(size_t i=0;i<nparams;i++) {
+	pars[i]=(low[i]+high[i])/2.0;
+      }
       return;
     }
 
@@ -98,12 +96,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e)=0;
+    virtual void low_limits(ubvector &e)=0;
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e)=0;
+    virtual void high_limits(ubvector &e)=0;
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i)=0;
@@ -226,12 +224,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -243,11 +241,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
 
   };
 
@@ -284,12 +282,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -301,11 +299,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
   
   };
 
@@ -357,12 +355,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -374,11 +372,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);  
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);  
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
 
   };
 
@@ -458,12 +456,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -475,11 +473,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
 
   };
 
@@ -537,12 +535,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
   
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
   
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -554,11 +552,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
 
   };
 
@@ -638,12 +636,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
         masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
     
     /** \brief Set the upper boundaries for all the parameters,
         masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -655,11 +653,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
         \c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
   };
   
   /** \brief QMC + three polytropes created for \ref Steiner15un
@@ -732,12 +730,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
     
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
     
     /// Return the name of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -749,11 +747,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
   
   };
 
@@ -832,12 +830,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
     
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -849,11 +847,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
   
   };
   
@@ -889,12 +887,12 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(entry &e);
+    virtual void low_limits(ubvector &e);
     
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(entry &e);
+    virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
     virtual std::string param_name(size_t i);
@@ -906,11 +904,11 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void first_point(ubvector &e);
   
   };
 
