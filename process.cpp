@@ -1209,20 +1209,40 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
       }
 	  
       // Add data to table for this file
-      for(size_t k=((size_t)line_start);k<tab.get_nlines();k+=thin_factor) {
-	vector<double> line;
-	for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
-	  line.push_back(tab.get(tab.get_column_name(ell),k));
-	}
-	full.line_of_data(line.size(),line);
-      }
+      
+      if (j==0) {
 
-      cout << "Added table " << tab_name << " lines: " 
-	   << tab.get_nlines();
-      if (line_start>0) {
-	cout << " skipped: " << line_start;
+	// For the first chain, we want to skip according to line_start
+	for(size_t k=((size_t)line_start);k<tab.get_nlines();k+=thin_factor) {
+	  vector<double> line;
+	  for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
+	    line.push_back(tab.get(tab.get_column_name(ell),k));
+	  }
+	  full.line_of_data(line.size(),line);
+	}
+	
+	cout << "Added table " << tab_name << " lines: " 
+	     << tab.get_nlines();
+	if (line_start>0) {
+	  cout << " skipped: " << line_start;
+	}
+	cout << endl;
+
+      } else {
+
+	// For the remaining chains we don't skip any, we just
+	// start at the first row
+	for(size_t k=0;k<tab.get_nlines();k+=thin_factor) {
+	  vector<double> line;
+	  for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
+	    line.push_back(tab.get(tab.get_column_name(ell),k));
+	  }
+	  full.line_of_data(line.size(),line);
+	}
+	
+	cout << "Added table " << tab_name << " lines: " 
+	     << tab.get_nlines() << endl;
       }
-      cout << endl;
 
       // Go to next chain
     }
