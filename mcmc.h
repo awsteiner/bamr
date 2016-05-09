@@ -41,8 +41,9 @@
 #include <o2scl/exception.h>
 #include <o2scl/prob_dens_func.h>
 #include <o2scl/cholesky.h>
+#include <o2scl/vector.h>
 
-#ifndef O2SCL_READLINE
+#ifdef O2SCL_READLINE
 #include <o2scl/cli_readline.h>
 #else
 #include <o2scl/cli.h>
@@ -127,14 +128,14 @@ namespace mcmc_namespace {
     
   public:
   
-    /// \name Member data for the Metropolis-Hastings step
-    //@{
-    /// Return the approximate likelihood
+  /// \name Member data for the Metropolis-Hastings step
+  //@{
+  /// Return the approximate likelihood
   double approx_like(ubvector &pars) {
     double ret=hg_norm;
     ubvector q(nparams), vtmp(nparams);
     for(size_t i=0;i<nparams;i++) {
-      q[i]=e.params[i]-hg_best[i];
+      q[i]=pars[i]-hg_best[i];
     }
     vtmp=prod(hg_covar_inv,q);
     ret*=exp(-0.5*inner_prod(q,vtmp));
@@ -409,14 +410,245 @@ namespace mcmc_namespace {
 
   /** \brief Desc
    */
+  int hastings(std::vector<std::string> &sv, 
+	       bool itive_com) {
+
+#ifdef NEVER_DEFINED
+    bool debug=true;
+
+    if (file_opened==false) {
+      // Open main output file
+      scr_out.open((prefix+"_"+std::to_string(mpi_rank)+"_scr").c_str());
+      scr_out.setf(ios::scientific);
+      file_opened=true;
+      scr_out << "Opened main file in command 'hastings'." << endl;
+    }
+
+    if (sv.size()<2) {
+      cout << "No arguments given to 'hastings'." << endl;
+      return exc_efailed;
+    }
+
+    if (model_type.length()==0) {
+      cout << "No model selected in 'hastings'." << endl;
+      return exc_efailed;
+    }
+
+#ifndef BAMR_NO_MPI
+    int buffer=0, tag=0;
+    if (mpi_nprocs>1 && mpi_rank>0) {
+      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
+	       MPI_STATUS_IGNORE);
+    }
+#endif
+  
+    // Read the data file
+    std::string fname=sv[1];
+    scr_out << "Opening file " << fname << " for hastings." << endl;
+    hdf_file hf;
+    hf.open(fname);
+    table_units<> file_tab;
+    hdf_input(hf,file_tab,"markov_chain0");
+    hf.close();
+    scr_out << "Done opening file " << fname << " for hastings." << endl;
+
+#ifndef BAMR_NO_MPI
+    if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
+    }
+#endif
+
+    // Create a new column equal to mult times weight
+    file_tab.function_column("mult*weight","mwgt");
+  
+    // Remove
+    double max_mwgt=file_tab.max("mwgt");
+    if (debug) scr_out << "lines: " << file_tab.get_nlines() << endl;
+    file_tab.add_constant("max_mwgt",max_mwgt);
+    file_tab.delete_rows("mwgt<0.1*max_mwgt");
+    if (debug) scr_out << "lines: " << file_tab.get_nlines() << endl;
+  
+    // The total number of variables
+    size_t nv=nparams+nsources;
+    if (debug) {
+      scr_out << nparams << " parameters and " << nsources << " sources."
+	      << endl;
+    }
+    hg_best.resize(nv);
+  
+    // Find the average values
+    for(size_t i=0;i<nparams;i++) {
+      string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
+      hg_best[i]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
+			      file_tab["mwgt"]);
+    }
+    for(size_t i=0;i<nsources;i++) {
+      string str_i=((string)"Mns_")+source_names[i];
+      hg_best[i+nparams]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
+				      file_tab["mwgt"]);
+    }
+  
+    // Construct the covariance matrix
+    ubmatrix covar(nv,nv);
+    for(size_t i=0;i<nparams;i++) {
+      string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
+      for(size_t j=i;j<nparams;j++) {
+	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
+	covar(i,j)=wvector_covariance(file_tab.get_nlines(),
+				      file_tab[str_i],file_tab[str_j],
+				      file_tab["mult"]);
+	if (debug) {
+	  scr_out << "Covar: " << i << " " << j << " "
+		  << covar(i,j) << endl;
+	}
+	covar(j,i)=covar(i,j);
+      }
+      for(size_t j=0;j<nsources;j++) {
+	string str_j=((string)"Mns_")+source_names[j];
+	covar(i,j+nparams)=wvector_covariance(file_tab.get_nlines(),
+					      file_tab[str_i],file_tab[str_j],
+					      file_tab["mult"]);
+	if (debug) {
+	  scr_out << "Covar: " << i << " " << j+nparams << " "
+		  << covar(i,j+nparams) << endl;
+	}
+	covar(j+nparams,i)=covar(i,j+nparams);
+      }
+    }
+    for(size_t i=0;i<nsources;i++) {
+      string str_i=((string)"Mns_")+source_names[i];
+      for(size_t j=i;j<nsources;j++) {
+	string str_j=((string)"Mns_")+source_names[j];
+	covar(i+nparams,j+nparams)=wvector_covariance(file_tab.get_nlines(),
+						      file_tab[str_i],file_tab[str_j],
+						      file_tab["mult"]);
+	if (debug) {
+	  scr_out << "Covar: " << i+nparams << " " << j+nparams << " "
+		  << covar(i+nparams,j+nparams) << endl;
+	}
+	covar(j+nparams,i+nparams)=covar(i+nparams,j+nparams);
+      }
+    }
+
+    // Perform the Cholesky decomposition
+    hg_chol=covar;
+    o2scl_linalg::cholesky_decomp(nv,hg_chol);
+
+    // Find the inverse
+    hg_covar_inv=hg_chol;
+    o2scl_linalg::cholesky_invert<ubmatrix>(nv,hg_covar_inv);
+  
+    // Force hg_chol to be lower triangular
+    for(size_t i=0;i<nv;i++) {
+      for(size_t j=0;j<nv;j++) {
+	if (i<j) hg_chol(i,j)=0.0;
+      }
+    }
+
+    // Compute the normalization, weighted by the likelihood function
+    hg_norm=1.0;
+    size_t step=file_tab.get_nlines()/20;
+    if (step<1) step=1;
+    double renorm=0.0;
+    double wgt_sum=0.0;
+    for(size_t i=0;i<file_tab.get_nlines();i+=step) {
+      ubvector e(nparams,nsources);
+      for(size_t j=0;j<nparams;j++) {
+	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
+	e.params[j]=file_tab.get(str_j,i);
+      }
+      for(size_t j=0;j<nsources;j++) {
+	string str_j=((string)"Mns_")+source_names[j];
+	e.mass[j]=file_tab.get(str_j,i);
+      }
+      double wgt=file_tab.get("mult",i)*file_tab.get("weight",i);
+      double rat=wgt/approx_like(e);
+      renorm+=wgt*wgt/approx_like(e);
+      if (debug) {
+	scr_out << wgt << " " << approx_like(e) << " " << rat << endl;
+      }
+      wgt_sum+=wgt;
+    }
+    renorm/=((double)wgt_sum);
+    hg_norm*=renorm;
+    if (debug) {
+      scr_out << "New normalization: " << hg_norm << endl;
+    }
+
+    step=file_tab.get_nlines()/20;
+    if (step<1) step=1;
+    for(size_t i=0;i<file_tab.get_nlines();i+=step) {
+      ubvector e(nparams,nsources);
+      for(size_t j=0;j<nparams;j++) {
+	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
+	e.params[j]=file_tab.get(str_j,i);
+      }
+      for(size_t j=0;j<nsources;j++) {
+	string str_j=((string)"Mns_")+source_names[j];
+	e.mass[j]=file_tab.get(str_j,i);
+      }
+      double wgt=file_tab.get("mult",i)*file_tab.get("weight",i);
+      double rat=wgt/approx_like(e);
+      if (debug) {
+	scr_out << wgt << " " << approx_like(e) << " " << rat << endl;
+      }
+    }
+    hg_mode=1;
+
+#endif
+  
+    return 0;
+  }
+
+  int set_first_point(std::vector<std::string> &sv, 
+		      bool itive_com) {
+
+#ifdef NEVER_DEFINED
+
+    if (sv.size()<2) {
+      cout << "No arguments given to 'first-point'." << endl;
+      return exc_efailed;
+    }
+
+    if (sv[1]==((string)"values")) {
+
+      first_point.resize(sv.size()-1);
+      for(size_t i=2;i<sv.size();i++) {
+	first_point[i-2]=o2scl::function_to_double(sv[i]);
+      }
+      first_point_type=fp_unspecified;
+
+    } else if (sv[1]==((string)"prefix")) {
+  
+      first_point_type=fp_last;
+      first_point_file=sv[2]+((std::string)"_")+std::to_string(mpi_rank)+"_out";
+
+    } else if (sv[1]==((string)"last")) {
+      first_point_type=fp_last;
+      first_point_file=sv[2];
+    } else if (sv[1]==((string)"best")) {
+      first_point_type=fp_best;
+      first_point_file=sv[2];
+    } else if (sv[1]==((string)"N")) {
+      first_point_type=o2scl::stoi(sv[2]);
+      first_point_file=sv[3];
+    }
+
+#endif
+  
+    return 0;
+  }
+
+  /** \brief Desc
+   */
   int mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     bool debug=false;
     
     // Get model object
     typename std::map<std::string,model_t,
-      std::greater<std::string> >::const_iterator model_it=
-      model_arr.find(curr_model);
+    std::greater<std::string> >::const_iterator model_it=
+    model_arr.find(curr_model);
     if (model_it==model_arr.end()) {
       std::cerr << "Model type " << curr_model << " unknown." << std::endl;
       return 2;
@@ -446,7 +678,7 @@ namespace mcmc_namespace {
     // Fix file_update_iters if necessary
     if (file_update_iters<1) {
       scr_out << "Parameter 'file_update_iters' less than 1. Set equal to 1."
-	      << std::endl;
+      << std::endl;
       file_update_iters=1;
     }
       
@@ -475,8 +707,8 @@ namespace mcmc_namespace {
     gr.set_seed(seed);
     pdg.set_seed(seed);
     scr_out << "Using seed " << seed 
-	    << " for processor " << mpi_rank+1 << "/" 
-	    << mpi_nprocs << "." << std::endl;
+    << " for processor " << mpi_rank+1 << "/" 
+    << mpi_nprocs << "." << std::endl;
     scr_out.precision(12);
     scr_out << " Start time: " << mpi_start_time << std::endl;
     scr_out.precision(6);
@@ -514,7 +746,7 @@ namespace mcmc_namespace {
 
 	// Read file 
 	scr_out << "Reading last point from file '" << first_point_file
-		<< "'." << std::endl;
+	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
 	hf.open(first_point_file);
       
@@ -522,7 +754,7 @@ namespace mcmc_namespace {
 	size_t file_n_chains;
 	hf.get_szt("n_chains",file_n_chains);
 	std::string chain_name=std::string("markov_chain")+
-	  o2scl::szttos(file_n_chains-1);
+	o2scl::szttos(file_n_chains-1);
 	o2scl::table_units<> file_tab;
 	hdf_input(hf,file_tab,chain_name);
 	size_t last_line=file_tab.get_nlines()-1;
@@ -547,7 +779,7 @@ namespace mcmc_namespace {
 	hf.getd_vec("best_point",best_point);
 	hf.close();
 	scr_out << "Reading best point from file '" << first_point_file
-		<< "'." << std::endl;
+	<< "'." << std::endl;
 	for(size_t i=0;i<nparams;i++) {
 	  current[0][i]=best_point[i];
 	  scr_out << "Parameter " << i << " : " << current[0][i] << std::endl;
@@ -559,8 +791,8 @@ namespace mcmc_namespace {
 
 	// Read file 
 	scr_out << "Reading " << first_point_type << "th point from file '" 
-		<< first_point_file
-		<< "'." << std::endl;
+	<< first_point_file
+	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
 	hf.open(first_point_file);
       
@@ -580,7 +812,7 @@ namespace mcmc_namespace {
 	}
 	if (row>=file_tab.get_nlines()) {
 	  scr_out << "Couldn't find point " << first_point_type 
-		  << " in file. Using last point." << std::endl;
+	  << " in file. Using last point." << std::endl;
 	  row=file_tab.get_nlines()-1;
 	}
       
@@ -589,7 +821,7 @@ namespace mcmc_namespace {
 	  std::string pname=((std::string)"param_")+m.param_name(i);
 	  current[0][i]=file_tab.get(pname,row);
 	  scr_out << "Parameter named " << m.param_name(i) << " " 
-		  << current[0][i] << std::endl;
+	  << current[0][i] << std::endl;
 	}
       
 	// Finish up
@@ -620,7 +852,7 @@ namespace mcmc_namespace {
 #endif
 
     scr_out << "First point: ";
-    vector_out(scr_out,current[0],true);
+    o2scl::vector_out(scr_out,current[0],true);
 
     // Determine initial masses
     std::cout << "fixme." << std::endl;
@@ -688,8 +920,9 @@ namespace mcmc_namespace {
 	
 	  // Compute the weight
 	  w_current[ij]=m.compute_point(current[ij],scr_out,suc,data_arr[ij]);
-	  scr_out << "SM Init: " << ij << " "
-		  << current[ij] << " " << w_current[ij] << std::endl;
+	  scr_out << "SM Init: " << ij << " ";
+	  o2scl::vector_out(scr_out,current[ij]);
+	  scr_out << " " << w_current[ij] << std::endl;
 
 	  // Keep track of the best point and the best index
 	  if (ij==0) {
@@ -733,7 +966,7 @@ namespace mcmc_namespace {
       // Compute weight for initial point
       w_current[0]=m.compute_point(current[0],scr_out,suc,data_arr[0]);
       ret_codes[suc]++;
-      scr_out << "Initial weight: " << w_current << std::endl;
+      scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
 	scr_out << "Initial weight zero. Aborting." << std::endl;
 	exit(-1);
@@ -898,8 +1131,8 @@ namespace mcmc_namespace {
 
       // Output the next point
       if (output_next) {
-	scr_out << "Iteration, next: " << mcmc_iterations << " " 
-		<< next << std::endl;
+	scr_out << "Iteration, next: " << mcmc_iterations << " " ;
+	o2scl::vector_out(scr_out,next,true);
       }
       
       // ---------------------------------------------------
@@ -936,7 +1169,7 @@ namespace mcmc_namespace {
 
 	if (debug) {
 	  std::cout << step_flags[0] << " Next: " 
-	       << next[0] << " " << w_next << std::endl;
+		    << next[0] << " " << w_next << std::endl;
 	}
       
 	bool accept=false;
@@ -944,22 +1177,22 @@ namespace mcmc_namespace {
 
 	// Metropolis algorithm
 	if (use_smove) {
-	  if (r<pow(z,((double)nwalk)-1.0)*w_next/w_current) {
+	  if (r<pow(smove_z,((double)nwalk)-1.0)*w_next/w_current[ik]) {
 	    accept=true;
 	  }
 	} else if (hg_mode>0) {
-	  if (r<w_next*q_current/w_current/q_next) {
+	  if (r<w_next*q_current/w_current[0]/q_next) {
 	    accept=true;
 	  }
 	} else {
-	  if (r<w_next/w_current) {
+	  if (r<w_next/w_current[0]) {
 	    accept=true;
 	  }
 	}
 	
 	if (debug) {
-	  cout << "Metropolis: " << r << " " << w_next/w_current << " " 
-	       << accept << endl;
+	  std::cout << "Metropolis: " << r << " " << w_next/w_current[0] << " " 
+		    << accept << std::endl;
 	}
 	
 	if (accept) {
@@ -987,13 +1220,14 @@ namespace mcmc_namespace {
 	    }
 	    if (debug) {
 	      std::cout << step_flags[0] << " Adding new: " 
-		   << next[0] << " " << w_next << std::endl;
+			<< next[0] << " " << w_next << std::endl;
 	    }
 	  }
 
 	  // Output the new point
-	  scr_out << "MC Acc: " << mh_success << " " << next << " " 
-		  << w_next << std::endl;
+	  scr_out << "MC Acc: " << mh_success << " ";
+	  o2scl::vector_out(scr_out,next);
+	  scr_out << " " << w_next << std::endl;
 	  
 	  // Keep track of best point
 	  if (w_next>w_best) {
@@ -1043,8 +1277,8 @@ namespace mcmc_namespace {
 	      }
 	      if (debug) {
 		std::cout << step_flags[ik] << " Adding old: "
-		     << current[ik][0] << " " << w_current[ik]
-		     << std::endl;
+			  << current[ik][0] << " " << w_current[ik]
+			  << std::endl;
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
@@ -1064,11 +1298,13 @@ namespace mcmc_namespace {
 
 	  // Output the old point
 	  if (use_smove) {
-	    scr_out << "MC Rej: " << mh_success << " " << current[ik]
-		    << " " << w_current[ik] << " " << w_next << std::endl;
+	    scr_out << "MC Rej: " << mh_success << " ";
+	    o2scl::vector_out(scr_out,current[ik]);
+	    scr_out << " " << w_current[ik] << " " << w_next << std::endl;
 	  } else {
-	    scr_out << "MC Rej: " << mh_success << " " << current[0] 
-		    << " " << w_current << " " << w_next << std::endl;
+	    scr_out << "MC Rej: " << mh_success << " ";
+	    o2scl::vector_out(scr_out,current[0]);
+	    scr_out << " " << w_current[0] << " " << w_next << std::endl;
 	  }
 
 	  // Keep track of best point

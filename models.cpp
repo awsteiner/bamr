@@ -30,6 +30,819 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
+model::model() {
+  cns.nb_start=0.01;
+  ts.verbose=0;
+  ts.set_units("1/fm^4","1/fm^4","1/fm^3");
+  ts.err_nonconv=false;
+      
+  has_eos=true;
+  schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
+      
+  in_m_min=0.8;
+  in_m_max=3.0;
+  in_r_min=5.0;
+  in_r_max=18.0;
+      
+  // Default parameter values
+      
+  grid_size=100;
+  debug_load=false;
+  // Minimum allowed maximum mass
+  min_max_mass=2.0;
+  // Minimum neutron star mass
+  min_mass=0.8;
+  debug_star=false;
+  debug_line=false;
+  debug_eos=false;
+  baryon_density=true;
+  exit_mass=10.0;
+  input_dist_thresh=0.0;
+  use_crust=true;
+  best_detail=false;
+  inc_baryon_mass=false;
+  norm_max=true;
+  mvsr_pr_inc=1.1;
+      
+  // -----------------------------------------------------------
+  // Grid limits
+      
+  nb_low=0.04;
+  nb_high=1.24;
+      
+  e_low=0.3;
+  e_high=10.0;
+      
+  m_low=0.2;
+  m_high=3.0;
+      
+  teos.verbose=0;
+}
+
+void model::load_mc(std::ofstream &scr_out) {
+      
+  double tot, max;
+      
+  std::string name;
+    
+  if (nsources>0) {
+
+    source_tables.resize(nsources);
+
+#ifdef BAMR_MPI_LOAD
+
+    bool mpi_load_debug=true;
+    int buffer=0, tag=0;
+    
+    // Choose which file to read first for this rank
+    int filestart=0;
+    if (mpi_rank>mpi_nprocs-((int)nsources) && mpi_rank>0) {
+      filestart=mpi_nprocs-mpi_rank;
+    }
+    if (mpi_load_debug) {
+      scr_out << "Variable 'filestart' is " << filestart << " for rank "
+	      << mpi_rank << "." << std::endl;
+    }
+    
+    // Loop through all files
+    for(int k=0;k<((int)nsources);k++) {
+      
+      // For k=0, we choose some ranks to begin reading, the others
+      // have to wait. For k>=1, all ranks have to wait their turn.
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)nsources))) {
+	int prev=mpi_rank-1;
+	if (prev<0) prev+=mpi_nprocs;
+	if (mpi_load_debug) {
+	  scr_out << "Rank " << mpi_rank << " waiting for " 
+		  << prev << "." << std::endl;
+	}
+	MPI_Recv(&buffer,1,MPI_INT,prev,tag,MPI_COMM_WORLD,
+		 MPI_STATUS_IGNORE);
+      }
+      
+      // Determine which file to read next
+      int file=filestart+k;
+      if (file>=((int)nsources)) file-=nsources;
+
+      if (mpi_load_debug) {
+	scr_out << "Rank " << mpi_rank << " reading file " 
+		<< file << "." << std::endl;
+      }
+	  
+      o2scl_hdf::hdf_file hf;
+      hf.open(source_fnames[file]);
+      if (table_names[file].length()>0) {
+	hdf_input(hf,source_tables[file],table_names[file]);
+      } else {
+	hdf_input(hf,source_tables[file]);
+      }
+      hf.close();
+      
+      // Send a message, unless the rank is the last one to read a
+      // file.
+      if (k<((int)nsources)-1 || mpi_rank<mpi_nprocs-((int)nsources)) {
+	int next=mpi_rank+1;
+	if (next>=mpi_nprocs) next-=mpi_nprocs;
+	if (mpi_load_debug) {
+	  scr_out << "Rank " << mpi_rank << " sending to " 
+		  << next << "." << std::endl;
+	}
+	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
+      }
+      
+    }
+    
+#else
+    
+    for(size_t k=0;k<nsources;k++) {
+      
+      hdf_file hf;
+      hf.open(source_fnames[k]);
+      if (table_names[k].length()>0) {
+	hdf_input(hf,source_tables[k],table_names[k]);
+      } else {
+	hdf_input(hf,source_tables[k]);
+      }
+      hf.close();
+    }
+    
+#endif
+    
+    scr_out << "\nInput data files: " << std::endl;
+    
+    if (norm_max) {
+      scr_out << "Normalizing maximum probability to 1." << std::endl;
+    } else {
+      scr_out << "Normalizing integral of distribution to 1." << std::endl;
+    }
+
+    scr_out << "File                          name   total        "
+	    << "max          P(10,1.4)" << std::endl;
+
+    for(size_t k=0;k<nsources;k++) {
+      
+      // Update input limits
+      if (k==0) {
+	in_r_min=source_tables[k].get_grid_x(0);
+	in_r_max=source_tables[k].get_grid_x(source_tables[k].get_nx()-1);
+	in_m_min=source_tables[k].get_grid_y(0);
+	in_m_max=source_tables[k].get_grid_y(source_tables[k].get_ny()-1);
+      } else {
+	if (in_r_min>source_tables[k].get_grid_x(0)) {
+	  in_r_min=source_tables[k].get_grid_x(0);
+	}
+	if (in_r_max<source_tables[k].get_grid_x
+	    (source_tables[k].get_nx()-1)) {
+	  in_r_max=source_tables[k].get_grid_x(source_tables[k].get_nx()-1);
+	}
+	if (in_m_min>source_tables[k].get_grid_y(0)) {
+	  in_m_min=source_tables[k].get_grid_y(0);
+	}
+	if (in_m_max<source_tables[k].get_grid_y
+	    (source_tables[k].get_ny()-1)) {
+	  in_m_max=source_tables[k].get_grid_y(source_tables[k].get_ny()-1);
+	}
+      }
+
+      // Renormalize
+      tot=0.0;
+      max=0.0;
+      for(size_t i=0;i<source_tables[k].get_nx();i++) {
+	for(size_t j=0;j<source_tables[k].get_ny();j++) {
+	  tot+=source_tables[k].get(i,j,slice_names[k]);
+	  if (source_tables[k].get(i,j,slice_names[k])>max) {
+	    max=source_tables[k].get(i,j,slice_names[k]);
+	  }
+	}
+      }
+      for(size_t i=0;i<source_tables[k].get_nx();i++) {
+	for(size_t j=0;j<source_tables[k].get_ny();j++) {
+	  if (norm_max) {
+	    source_tables[k].set
+	      (i,j,slice_names[k],source_tables[k].get
+	       (i,j,slice_names[k])/max);
+		   
+	  } else {
+	    source_tables[k].set
+	      (i,j,slice_names[k],source_tables[k].get
+	       (i,j,slice_names[k])/tot);
+		   
+	  }
+	}
+      }
+
+      if (debug_load) {
+	std::cout << source_fnames[k] << std::endl;
+	for(size_t i=0;i<source_tables[k].get_nx();i++) {
+	  std::cout << i << " " << source_tables[k].get_grid_x(i)
+		    << std::endl;
+	}
+	for(size_t j=0;j<source_tables[k].get_ny();j++) {
+	  std::cout << j << " " << source_tables[k].get_grid_y(j)
+		    << std::endl;
+	}
+	for(size_t i=0;i<source_tables[k].get_nx();i++) {
+	  for(size_t j=0;j<source_tables[k].get_ny();j++) {
+	    std::cout << source_tables[k].get(i,j,slice_names[k]) << " ";
+	  }
+	  std::cout << std::endl;
+	}
+      }
+
+      scr_out.setf(std::ios::left);
+      scr_out.width(29);
+      std::string stempx=source_fnames[k].substr(0,29);
+      scr_out << stempx << " ";
+      scr_out.width(6);
+      scr_out << source_names[k] << " " << tot << " " << max << " ";
+      scr_out.unsetf(std::ios::left);
+      scr_out << source_tables[k].interp(10.0,1.4,slice_names[k])
+	      << std::endl;
+      
+    }
+    
+    scr_out << std::endl;
+  }
+
+  if (in_m_min<min_mass) in_m_min=min_mass;
+  
+#ifdef AWS_HACK
+  in_m_min=1.3;
+  in_m_max=1.5;
+#endif
+  
+  scr_out << "M limits: (" 
+	  << in_m_min << "," << in_m_max << ")" << std::endl;
+  scr_out << "R limits: ("
+	  << in_r_min << "," << in_r_max << ")" << std::endl;
+  scr_out << std::endl;
+  
+  return;
+}
+  
+int model::add_data(std::vector<std::string> &sv, bool itive_com) {
+      
+  if (sv.size()<5) {
+    std::cout << "Not enough arguments given to 'add-data'." << std::endl;
+    return o2scl::exc_efailed;
+  }
+      
+  source_names.push_back(sv[1]);
+  source_fnames.push_back(sv[2]);
+  slice_names.push_back(sv[3]);
+  first_mass.push_back(o2scl::stod(sv[4]));
+  if (sv.size()==6) {
+    table_names.push_back(sv[5]);
+  } else {
+    table_names.push_back("");
+  }
+      
+  nsources++;
+      
+  return 0;
+}
+    
+void model::compute_star(ubvector &pars, std::ofstream &scr_out, 
+			 int &success, model_data &dat) {
+
+  double hc_mev_fm=o2scl_const::hc_mev_fm;
+      
+  success=ix_success;
+
+  // Compute the EOS first
+  if (has_eos) {
+    compute_eos(pars,success,scr_out);
+    if (success!=ix_success) return;
+  }
+  
+  // Ensure we're using linear interpolation
+  std::shared_ptr<o2scl::table_units<> > tab_eos=dat.eos;
+
+  if (has_eos) {
+    tab_eos->set_interp_type(o2scl::itp_linear);
+
+    // Check that pressure is increasing. If we're using a crust EOS,
+    // choose 0.6 as an arbitrary low-density cutoff which corresponds
+    // to about n_B=0.12 fm^{-3}, and check the low-density part below
+    // instead.
+  
+    for(size_t i=0;(tab_eos->get_nlines()>0 && i<tab_eos->get_nlines()-1);
+	i++) {
+      if ((!use_crust || tab_eos->get("ed",i)>0.6) && 
+	  tab_eos->get("pr",i+1)<tab_eos->get("pr",i)) {
+	scr_out << "Rejected: Pressure decreasing." << std::endl;
+	scr_out << "ed=" << tab_eos->get("ed",i) 
+		<< " pr=" << tab_eos->get("pr",i) << std::endl;
+	scr_out << "ed=" << tab_eos->get("ed",i+1) 
+		<< " pr=" << tab_eos->get("pr",i+1) << std::endl;
+	success=ix_press_dec;
+	return;
+      }
+    }
+  }
+
+  // If requested, compute the baryon density automatically
+  if (has_eos && baryon_density && !tab_eos->is_column("nb")) {
+    
+    // Obtain the baryon density calibration point from the model
+    double n1, e1;
+    baryon_density_point(n1,e1);
+    
+    if (n1<=0.0 && e1<=0.0) {
+      O2SCL_ERR2("Computing the baryon density requires one ",
+		 "calibration point in compute_star().",
+		 o2scl::exc_einval);
+    }
+
+    // Compute inverse of gibbs energy density, 'igb'
+
+    tab_eos->new_column("igb");
+    tab_eos->set_unit("igb","fm^4");
+
+    for(size_t i=0;i<tab_eos->get_nlines();i++) {
+
+      if (tab_eos->get("ed",i)+tab_eos->get("pr",i)<=0.0 ||
+	  !std::isfinite(tab_eos->get("ed",i)) ||
+	  !std::isfinite(tab_eos->get("pr",i))) {
+	scr_out << "Inverse Gibbs not finite." << std::endl;
+	scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	scr_out << "ed pr" << std::endl;
+	for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	  scr_out << i << " "
+		  << tab_eos->get("ed",i) << " "
+		  << tab_eos->get("pr",i) << std::endl;
+	}
+	O2SCL_ERR("Inverse Gibbs not finite.",o2scl::exc_efailed);
+      }
+      tab_eos->set("igb",i,1.0/(tab_eos->get("ed",i)+tab_eos->get("pr",i)));
+    }
+
+    // Compute integral of 'igb' relative to ed='e1', called 'iigb'
+
+    tab_eos->new_column("iigb");
+
+    for(size_t i=0;i<tab_eos->get_nlines();i++) {
+      if (e1<=tab_eos->get("ed",i)) {
+	double val=tab_eos->integ("ed",e1,tab_eos->get("ed",i),"igb");
+	if (!std::isfinite(val)) {
+	  scr_out << "Baryon integral not finite." << std::endl;
+	  scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	  scr_out << "ed pr" << std::endl;
+	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	    scr_out << i << " "
+		    << tab_eos->get("ed",i) << " "
+		    << tab_eos->get("pr",i) << std::endl;
+	  }
+	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
+	}
+	tab_eos->set("iigb",i,val);
+      } else {
+	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),e1,"igb");
+	if (!std::isfinite(val)) {
+	  scr_out << "Baryon integral not finite (2)." << std::endl;
+	  scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	  scr_out << "ed pr" << std::endl;
+	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	    scr_out << i << " "
+		    << tab_eos->get("ed",i) << " "
+		    << tab_eos->get("pr",i) << std::endl;
+	  }
+	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
+	}
+	tab_eos->set("iigb",i,val);
+      }
+    }
+
+    // Compute normalization constant
+    double Anb=n1/exp(tab_eos->interp("ed",e1,"iigb"));
+    if (!std::isfinite(Anb) || Anb<0.0) {
+      scr_out << "Baryon density normalization problem." << std::endl;
+      success=ix_nb_problem;
+      return;
+    }
+
+    // Now compute baryon density
+
+    tab_eos->new_column("nb");
+    tab_eos->set_unit("nb","1/fm^3");
+
+    for(size_t i=0;i<tab_eos->get_nlines();i++) {      
+
+      // If the density is too low, then just use zero baryon density.
+      // This pressure (10^{-5} fm^{-4}) corresponds to a baryon 
+      // density of about 3e-3 fm^{-3}.
+
+      if (use_crust==false && tab_eos->get("pr",i)<1.0e-5) {
+
+	tab_eos->set("nb",i,0.0);
+
+      } else {
+	
+	double nbt=Anb*exp(tab_eos->get("iigb",i));
+	if (!std::isfinite(nbt)) {
+	  scr_out << "Baryon density normalization problem (2)."
+		  << std::endl;
+	  success=ix_nb_problem2;
+	  return;
+	} 
+	tab_eos->set("nb",i,nbt);
+      }
+    }
+    
+    // End of loop 'if (has_eos && baryon_density && 
+    // !tab_eos->is_column("nb")) {' 
+  }
+
+  std::shared_ptr<o2scl::table_units<> > tab_mvsr=dat.mvsr;
+
+  if (has_eos) {
+
+    // Perform any additional necessary EOS preparations
+    //prepare_eos(pars,dat,success);
+    std::cout << "fixme" << std::endl;
+    exit(-1);
+    if (success!=ix_success) {
+      return;
+    }
+
+    // Read the EOS into the tov_eos object.
+    if (baryon_density && inc_baryon_mass) {
+      tab_eos->set_unit("ed","1/fm^4");
+      tab_eos->set_unit("pr","1/fm^4");
+      tab_eos->set_unit("nb","1/fm^3");
+      teos.read_table(*tab_eos,"ed","pr","nb");
+    } else {
+      tab_eos->set_unit("ed","1/fm^4");
+      tab_eos->set_unit("pr","1/fm^4");
+      teos.read_table(*tab_eos,"ed","pr");
+    }
+    
+    if (use_crust) {
+    
+      double ed_last=0.0;
+      // This range corresponds to between about n_B=0.01 and 0.17
+      // fm^{-3}
+      for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
+	double ed, nb;
+	teos.ed_nb_from_pr(pr,ed,nb);
+	if (ed_last>1.0e-20 && ed<ed_last) {
+	  scr_out << "Stability problem near crust-core transition."
+		  << std::endl;
+	  if (has_esym) {
+	    scr_out << "S=" << tab_eos->get_constant("S")*hc_mev_fm 
+		    << " L=" << tab_eos->get_constant("L")*hc_mev_fm
+		    << std::endl;
+	  }
+	  scr_out << "Energy decreased with increasing pressure "
+		  << "at pr=" << pr << std::endl;
+	  scr_out << std::endl;
+	  scr_out << "Full EOS near transition: " << std::endl;
+	  scr_out << "pr ed" << std::endl;
+	  for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
+	    teos.ed_nb_from_pr(pr,ed,nb);
+	    scr_out << pr << " " << ed << std::endl;
+	  }
+	  scr_out << std::endl;
+	  success=ix_crust_unstable;
+	  return;
+	}
+	ed_last=ed;
+      }
+
+      // End of 'if (use_crust)'
+    }
+
+    // If necessary, output debug information (We want to make sure this
+    // is after tov_eos::read_table() so that we can debug the
+    // core-crust transition)
+    if (debug_eos) {
+      o2scl_hdf::hdf_file hfde;
+
+      hfde.open_or_create("debug_eos.o2");
+
+      // Output the core EOS
+      hdf_output(hfde,*tab_eos,"eos");
+
+      // Output core and crust EOS as reported by the tov_interp_eos object
+      o2scl::table_units<> full_eos;
+      full_eos.line_of_names("ed pr");
+      full_eos.set_unit("ed","1/fm^4");
+      full_eos.set_unit("pr","1/fm^4");
+      for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
+	double ed, nb;
+	teos.get_eden_user(pr,ed,nb);
+	double line[2]={ed,pr};
+	full_eos.line_of_data(2,line);
+	if (pr<1.0e-4) pr*=1.2;
+      }
+      hdf_output(hfde,full_eos,"full_eos");
+
+      hfde.close();
+      if (!debug_star) {
+	scr_out << "Automatically exiting since 'debug_eos' is true."
+		<< std::endl;
+	exit(-1);
+      }
+    }
+
+    // Solve for M vs. R curve
+    ts.princ=mvsr_pr_inc;
+    int info=ts.mvsr();
+    if (info!=0) {
+      scr_out << "M vs. R failed: info=" << info << std::endl;
+      success=ix_mvsr_failed;
+      return;
+    }
+    tab_mvsr=ts.get_results();
+    tab_mvsr->set_interp_type(o2scl::itp_linear);
+  
+    // If the EOS is sufficiently stiff, the TOV solver will output
+    // gibberish, i.e. masses and radii equal to zero, especially at the
+    // higher pressures. This rules these EOSs out, as they would likely
+    // be acausal anyway. If this happens frequently, it might signal
+    // a problem. 
+    size_t ir=tab_mvsr->get_nlines()-1;
+    if ((*tab_mvsr)["gm"][ir]<1.0e-10 ||
+	(*tab_mvsr)["gm"][ir-1]<1.0e-10) {
+      scr_out << "TOV failure fix." << std::endl;
+      success=ix_tov_failure;
+      return;
+    }
+
+    // Check that maximum mass is large enough,
+    double mmax=tab_mvsr->max("gm");
+    if (mmax<min_max_mass) {
+      scr_out << "Maximum mass too small: " << mmax << " < "
+	      << min_max_mass << "." << std::endl;
+      success=ix_small_max;
+      return;
+    }
+
+    // Check the radius of the maximum mass star
+    size_t ix_max=tab_mvsr->lookup("gm",mmax);
+    if (tab_mvsr->get("r",ix_max)>1.0e4) {
+      scr_out << "TOV convergence problem: " << std::endl;
+      success=ix_tov_conv;
+      return;
+    }
+
+    // Check that all stars have masses below the maximum mass
+    // of the current M vs R curve
+    bool mass_fail=false;
+    for(size_t i=0;i<nsources;i++) {
+      std::cout << "fixme" << std::endl;
+      //if (pars.mass[i]>mmax) mass_fail=true;
+    }
+
+    // If a star is too massive, readjust it's mass accordingly
+    if (mass_fail==true) {
+      scr_out << "Adjusting masses for M_{max} = " << mmax << std::endl;
+      scr_out << "Old entry: ";
+      o2scl::vector_out(scr_out,pars,true);
+      //select_mass(e,e,mmax);
+      std::cout << "fixme" << std::endl;
+      exit(-1);
+      scr_out << "New entry: ";
+      o2scl::vector_out(scr_out,pars,true);
+    }
+    
+    tab_mvsr->add_constant
+      ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
+       (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
+    /*
+      if (true) {
+      size_t ix=vector_max_index<vector<double>,double>
+      (tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]);
+      if (ix!=0 && ix<tab_mvsr->get_nlines()-1) {
+      scr_out << tab_mvsr->get("gm",ix-1) << " ";
+      scr_out << tab_mvsr->get("r",ix-1) << " ";
+      scr_out << tab_mvsr->get("nb",ix-1) << std::endl;
+      scr_out << tab_mvsr->get("gm",ix) << " ";
+      scr_out << tab_mvsr->get("r",ix) << " ";
+      scr_out << tab_mvsr->get("nb",ix) << std::endl;
+      scr_out << tab_mvsr->get("gm",ix+1) << " ";
+      scr_out << tab_mvsr->get("r",ix+1) << " ";
+      scr_out << tab_mvsr->get("nb",ix+1) << std::endl;
+      }
+      }
+    */
+    
+    tab_mvsr->add_constant
+      ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
+       (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
+
+    if (baryon_density) {
+      
+      double nb1=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
+      if (nb1>0.01) {
+	double nb2=o2scl::vector_max_quad_loc<std::vector<double>,double>
+	  (tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]);
+	tab_mvsr->add_constant("new_nb_max",nb2);
+	if (nb2>5.0) {
+	  scr_out << "nb_check: " << nb2 << " " << nb1 << std::endl;
+	  for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
+	    scr_out << i << " " << tab_mvsr->get("gm",i) << " "
+		    << tab_mvsr->get("r",i) << " " 
+		    << tab_mvsr->get("nb",i) << std::endl;
+	  }
+	}
+      } else {
+	tab_mvsr->add_constant("new_nb_max",nb1);
+      }
+    }
+      
+    // Remove table entries with pressures above the maximum pressure
+    double prmax=tab_mvsr->get("pr",
+			       tab_mvsr->lookup("gm",tab_mvsr->max("gm")));
+    tab_mvsr->delete_rows(((std::string)"pr>")+std::to_string(prmax));
+  
+    // Make sure that the M vs. R curve generated enough data. This
+    // is not typically an issue.
+    if (tab_mvsr->get_nlines()<10) {
+      scr_out << "M vs. R failed to generate lines." << std::endl;
+      success=ix_mvsr_table;
+      return;
+    }
+
+    // Compute speed of sound squared
+    tab_mvsr->deriv("ed","pr","dpde");
+
+  } else {
+
+    // If there's no EOS, then the model object gives the M-R curve
+    tab_mvsr=ts.get_results();
+    //compute_mr(e,scr_out,tab_mvsr,success);
+    std::cout << "fixme" << std::endl;
+    exit(-1);
+    if (success!=ix_success) {
+      return;
+    }
+
+  }
+  
+  // Output M vs. R curve
+  if (debug_star) {
+    o2scl_hdf::hdf_file hfds;
+    hfds.open_or_create("debug_star.o2");
+    hdf_output(hfds,*tab_mvsr,"mvsr");
+    hfds.close();
+    scr_out << "Automatically exiting since 'debug_star' is true."
+	    << std::endl;
+    exit(-1);
+  }
+
+  // Compute the radius for each source
+  for(size_t i=0;i<nsources;i++) {
+    //dat.rad[i]=tab_mvsr->interp("gm",e.mass[i],"r");
+    std::cout << "fixme" << std::endl;
+    exit(-1);
+  }
+
+  // Check causality
+  if (has_eos) {
+    
+    for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
+      if ((*tab_mvsr)["dpde"][i]>1.0) {
+	scr_out.precision(4);
+	scr_out << "Rejected: Acausal."<< std::endl;
+	scr_out << "ed_max="
+		<< tab_mvsr->max("ed") << " ed_bad="
+		<< (*tab_mvsr)["ed"][i] << " pr_max=" 
+		<< tab_mvsr->max("pr") << " pr_bad=" 
+		<< (*tab_mvsr)["pr"][i] << std::endl;
+	scr_out.precision(6);
+	success=ix_acausal;
+	return;
+      }
+    }
+
+  } else {
+
+    for(size_t i=0;i<nsources;i++) {
+      std::cout << "fixme" << std::endl;
+      exit(-1);
+      /*
+	if (e.rad[i]<2.94*schwarz_km/2.0*e.mass[i]) {
+	scr_out << "Source " << source_names[i] << " acausal."
+	<< std::endl;
+	success=ix_acausal_mr;
+	return;
+	}
+      */
+    }
+
+  }
+
+  return;
+}
+
+double model::compute_point(ubvector &pars, std::ofstream &scr_out, 
+			    int &success, model_data &dat) {
+      
+  // Compute the M vs R curve and return if it failed
+  compute_star(pars,scr_out,success,dat);
+  if (success!=ix_success) {
+    return 0.0;
+  }
+      
+  bool mr_fail=false;
+  /*
+    for(size_t i=0;i<nsources;i++) {
+    if (e.mass[i]<in_m_min || e.mass[i]>in_m_max ||
+    e.rad[i]<in_r_min || e.rad[i]>in_r_max) {
+    mr_fail=true;
+    }
+    }
+      
+    if (mr_fail==true) {
+    scr_out << "Rejected: Mass or radius outside range." << std::endl;
+    if (nsources>0) {
+    scr_out.precision(2);
+    scr_out.setf(ios::showpos);
+    for(size_t i=0;i<nsources;i++) {
+    scr_out << e.mass[i] << " ";
+    }
+    scr_out << std::endl;
+    for(size_t i=0;i<nsources;i++) {
+    scr_out << e.rad[i] << " ";
+    }
+    scr_out << std::endl;
+    scr_out.precision(6);
+    scr_out.unsetf(ios::showpos);
+    }
+    success=ix_mr_outside;
+    return 0.0;
+    }
+  */
+  std::cout << "fixme" << std::endl;
+  exit(-1);
+
+  success=ix_success;
+  double ret=1.0;
+      
+  std::shared_ptr<o2scl::table_units<> > tab_mvsr=dat.mvsr;
+  tab_mvsr->set_interp_type(o2scl::itp_linear);
+  double m_max_current=tab_mvsr->max("gm");
+
+#ifdef NEVER_DEFINED
+  
+  // -----------------------------------------------
+  // Compute the weights for each source
+      
+  if (debug_star) scr_out << "Name M R Weight" << std::endl;
+      
+  for(size_t i=0;i<nsources;i++) {
+	
+    // Double check that current M and R is in the range of
+    // the provided input data
+    if (e.rad[i]<source_tables[i].get_x_data()[0] ||
+	e.rad[i]>source_tables[i].get_x_data()
+	[source_tables[i].get_nx()-1] ||
+	e.mass[i]<source_tables[i].get_y_data()[0] ||
+	e.mass[i]>source_tables[i].get_y_data()
+	[source_tables[i].get_ny()-1]) {
+      wgts[i]=0.0;
+    } else {
+      // If it is, compute the weight
+      wgts[i]=source_tables[i].interp(e.rad[i],e.mass[i],slice_names[i]);
+    }
+	
+    // If the weight is lower than the threshold, set it equal
+    // to the threshold
+    if (wgts[i]<input_dist_thresh) wgts[i]=input_dist_thresh;
+	
+    // Include the weight for this source 
+    ret*=wgts[i];
+	
+    if (debug_star) {
+      scr_out << source_names[i] << " " << e.mass[i] << " " 
+	      << e.rad[i] << " " << wgts[i] << std::endl;
+    }
+	
+    // Go to the next source
+  }
+      
+  if (debug_star) scr_out << std::endl;
+      
+  // -----------------------------------------------
+  // Exit if the current maximum mass is too large
+      
+  if (m_max_current>exit_mass) {
+    scr_out.setf(ios::scientific);
+    scr_out << "Exiting because maximum mass (" << m_max_current 
+	    << ") larger than exit_mass (" << exit_mass << ")." 
+	    << std::endl;
+    scr_out.precision(12);
+    scr_out << "e,ret: " << e << " " << ret << std::endl;
+    scr_out.precision(6);
+    exit(-1);
+  }
+
+#endif
+  
+  return ret;
+}
+
 void two_polytropes::setup_params(o2scl::cli &cl) {
   p_kin_sym.d=&se.a;
   p_kin_sym.help="Kinetic part of symmetry energy.";
@@ -140,10 +953,10 @@ void two_polytropes::first_point(ubvector &params) {
 
 void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
   
@@ -179,7 +992,7 @@ void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=bamr_class::ix_neg_pressure;
+    success=ix_neg_pressure;
     return;
   }
 
@@ -202,7 +1015,7 @@ void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
 
@@ -220,7 +1033,7 @@ void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
   
@@ -235,7 +1048,7 @@ void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    success=bamr_class::ix_neg_pressure;
+    success=ix_neg_pressure;
     return;
   }
 
@@ -291,10 +1104,10 @@ void alt_polytropes::first_point(ubvector &params) {
 
 void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
   
-  success=bamr_class::ix_success;
+  success=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -333,7 +1146,7 @@ void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=bamr_class::ix_neg_pressure;
+    success=ix_neg_pressure;
     return;
   }
 
@@ -356,7 +1169,7 @@ void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
 
@@ -374,7 +1187,7 @@ void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
 
@@ -389,7 +1202,7 @@ void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_o
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    success=bamr_class::ix_neg_pressure;
+    success=ix_neg_pressure;
     return;
   }
 
@@ -462,7 +1275,7 @@ void fixed_pressure::first_point(ubvector &params) {
 
 void fixed_pressure::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
@@ -627,7 +1440,7 @@ void generic_quarks::first_point(ubvector &params) {
 
 void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
@@ -672,7 +1485,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_o
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=bamr_class::ix_neg_pressure;
+    success=ix_neg_pressure;
     return;
   }
 
@@ -695,7 +1508,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that low-density EOS has statistics
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
   
@@ -720,7 +1533,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_o
   // Check that matching didn't fail
   if (tab_eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=bamr_class::ix_no_eos_table;
+    success=ix_no_eos_table;
     return;
   }
 
@@ -753,7 +1566,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_o
       mu_start=sqrt(musq2);
     } else {
       scr_out << "Rejected: Neither mu^2 is positive." << endl;
-      success=bamr_class::ix_eos_solve_failed;
+      success=ix_eos_solve_failed;
       return;
     }
   }
@@ -786,7 +1599,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_o
     double dPde=(a2+2.0*a4*musq)/(a2+6.0*a4*musq);
     if (dPde<0.0) {
       scr_out << "Rejected: dPdeps<0.0 in quarks." << endl;
-      success=bamr_class::ix_acausal;
+      success=ix_acausal;
       return;
     }
 
@@ -881,7 +1694,7 @@ void quark_star::first_point(ubvector &params) {
 
 void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_out) {
   
-  success=bamr_class::ix_success;
+  success=ix_success;
 
   B=params[0];
   c=params[1];
@@ -911,7 +1724,7 @@ void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_
   }
 
   if (mu_0<dmu+1.0e-6) {
-    success=bamr_class::ix_eos_solve_failed;
+    success=ix_eos_solve_failed;
     scr_out << "No zero pressure solution." << std::endl;
     return;
   }
@@ -926,7 +1739,7 @@ void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_
   int ret=gmh.msolve(1,x,fmf);
   if (ret!=0) {
     scr_out << "Solver failed in qstar." << std::endl;
-    success=bamr_class::ix_eos_solve_failed;
+    success=ix_eos_solve_failed;
     return;
   }
   mu_0=x[0];
@@ -961,7 +1774,7 @@ void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_
     // Check that energy density is increasing
     if (ed<ed_last) {
       scr_out << "Energy density decreasing in quark_star." << std::endl;
-      success=bamr_class::ix_acausal;
+      success=ix_acausal;
       return;
     }
 
@@ -976,7 +1789,7 @@ void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
 	scr_out << "Not absolutely stable." << std::endl;
-	success=bamr_class::ix_param_mismatch;
+	success=ix_param_mismatch;
 	return;
       }
 
@@ -1100,7 +1913,7 @@ void qmc_neut::first_point(ubvector &params) {
 
 void qmc_neut::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
   
   // Hack to start with a fresh table
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
@@ -1161,7 +1974,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
   // polytropes
   if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1291,7 +2104,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) 
 
   bool debug=false;
 
-  success=bamr_class::ix_success;
+  success=ix_success;
   
   // Hack to start with a fresh table
   shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
@@ -1316,11 +2129,11 @@ void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) 
     This is based on limits from two lines, as in Jim and I's EPJA
     review. In (S,L) space, the lower line is (29,0) to (35,55),
     and the upper line is (26.5,0) to (33.5,100)
-   */
+  */
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range: " << Stmp << " " << Ltmp << endl;
     scr_out << 9.17*Stmp-266.0 << " " << 14.3*Stmp-379.0 << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1329,7 +2142,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) 
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
   if (debug) {
@@ -1379,7 +2192,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) 
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1535,7 +2348,7 @@ void qmc_fixp::first_point(ubvector &params) {
 
 void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
   bool debug=false;
   
   // Hack to start with a fresh table
@@ -1555,7 +2368,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1564,7 +2377,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
   
@@ -1587,7 +2400,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
-	    ("kg","1/fm",o2scl_mks::mass_neutron));
+	   ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     double line[2]={ed,pr};
@@ -1611,7 +2424,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1779,7 +2592,7 @@ void qmc_twolines::first_point(ubvector &params) {
 
 void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
-  success=bamr_class::ix_success;
+  success=ix_success;
   bool debug=false;
   
   // Hack to start with a fresh table
@@ -1799,7 +2612,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1808,7 +2621,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
   
@@ -1822,7 +2635,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
-    success=bamr_class::ix_param_mismatch;
+    success=ix_param_mismatch;
     return;
   }
 
@@ -1838,7 +2651,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
-	    ("kg","1/fm",o2scl_mks::mass_neutron));
+	   ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
     if (ed>ed1) {

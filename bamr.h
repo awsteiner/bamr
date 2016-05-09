@@ -98,6 +98,8 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class bamr_class : public mcmc_namespace::mcmc_class<model_data,model> {
+
+#ifdef O2SCL_NEVER_DEFINED
     
   protected:
 
@@ -126,137 +128,14 @@ namespace bamr {
     o2scl::cli::parameter_string p_prefix;
     //@}
 
-    /** \name Histogram limits
-     */
-    //@{
-    double nb_low;
-    double nb_high;
-    double e_low;
-    double e_high;
-    double m_low;
-    double m_high;
     //@}
-
-    /// \name Grids
-    //@{
-    o2scl::uniform_grid<double> nb_grid;
-    o2scl::uniform_grid<double> e_grid;
-    o2scl::uniform_grid<double> m_grid;
-    //@}
-
-    /// \name Other parameters accessed by 'set' and 'get'
-    //@{
-    /// Pressure increment for the M vs. R curve (default 1.1)
-    double mvsr_pr_inc;
-
-    /** \brief If true, normalize the data distributions so that the
-	max is one, otherwise, normalize so that the integral is one
-	(default true)
-    */
-    bool norm_max;
-
-    /// If true, use the default crust (default true)
-    bool use_crust;
-
-    /** \brief If true, output debug information about the input data 
-	files (default false)
-    */
-    bool debug_load;
-
-    /** \brief If true, output each line of the table as it's stored
-	(default false)
-    */
-    bool debug_line;
-    
-    /// If true, output stellar properties for debugging (default false)
-    bool debug_star;
-    
-    /// If true, output equation of state for debugging (default false)
-    bool debug_eos;
-
-    /// If true, compute the baryon density (default true)
-    bool baryon_density;
-
-    /// The lower threshold for the input distributions (default 0.0)
-    double input_dist_thresh;
-
-    /// The upper mass threshold (default 10.0)
-    double exit_mass;
-
-    /** \brief Minimum mass allowed for any of the individual neutron
-	stars (default 0.8)
-    */
-    double min_mass;
-  
-    /// Minimum allowed maximum mass (default 2.0)
-    double min_max_mass;
-
-    /** \brief If true, output more detailed information about the 
-	best point (default false)
-    */
-    bool best_detail;
-    
-    /** \brief If true, output information about the baryon mass
-	as well as the gravitational mass (default false)
-    */
-    bool inc_baryon_mass;
-    //@}
-
-    /** \name Limits on mass and radius from source data files
-
-	These are automatically computed in load_mc() as the
-	smallest rectangle in the \f$ (M,R) \f$ plane which
-	encloses all of the user-specified source data
-    */
-    //@{
-    double in_m_min;
-    double in_m_max;
-    double in_r_min;
-    double in_r_max;
-    //@}
-
-    /// \name Input neutron star data
-    //@{
-    /// Input probability distributions
-    std::vector<o2scl::table3d> source_tables;
-
-    /// The names for each source
-    std::vector<std::string> source_names;
-
-    /// The names of the table in the data file
-    std::vector<std::string> table_names;
-
-    /// File names for each source
-    std::vector<std::string> source_fnames;
-
-    /// Slice names for each source
-    std::vector<std::string> slice_names;
-
-    /** \brief The number of sources
-     */
-    size_t nsources;
-
-    /// The initial set of neutron star masses
-    std::vector<double> first_mass;
-    //@}
-
-    /// Number of bins for all histograms (default 100)
-    int grid_size;
 
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
-    /// True if the model provides S and L
-    bool has_esym;
-
-    /// True if the model has an EOS
-    bool has_eos;
-
     /// Number of parameters, set in \ref set_model()
     size_t nparams;
     
-    /// Schwarzchild radius (set in constructor)
-    double schwarz_km;
     //@}
 
     /// \name Main functions called from the command-line interface
@@ -350,9 +229,6 @@ namespace bamr {
   
   protected:
     
-    /// EOS interpolation object for TOV solver
-    o2scl::eos_tov_interp teos;
-    
     /// Output the "best" EOS obtained so far (called by mcmc())
     void output_best(ubvector &best, double w_best, model_data &dat);
 
@@ -369,27 +245,8 @@ namespace bamr {
     }
 
     
-    /// \name Return codes for each point
-    //@{
-    static const int ix_mr_outside=2;
-    static const int ix_r_outside=3;
-    static const int ix_press_dec=4;
-    static const int ix_nb_problem=5;
-    static const int ix_nb_problem2=6;
-    static const int ix_crust_unstable=7;
-    static const int ix_mvsr_failed=8;
-    static const int ix_tov_failure=9;
-    static const int ix_small_max=10;
-    static const int ix_tov_conv=11;
-    static const int ix_mvsr_table=12;
-    static const int ix_acausal=13;
-    static const int ix_acausal_mr=14;
-    static const int ix_param_mismatch=15;
-    static const int ix_neg_pressure=16;
-    static const int ix_no_eos_table=17;
-    static const int ix_eos_solve_failed=18;
-    //@}
-
+#endif
+    
   };
 
 }
