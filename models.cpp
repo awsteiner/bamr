@@ -951,7 +951,8 @@ void two_polytropes::first_point(ubvector &params) {
   return;
 }
 
-void two_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void two_polytropes::compute_eos(ubvector &params, int &success,
+				 ofstream &scr_out) {
 
   success=ix_success;
   if (params[4]>params[6]) {
@@ -1102,7 +1103,8 @@ void alt_polytropes::first_point(ubvector &params) {
   return;
 }
 
-void alt_polytropes::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void alt_polytropes::compute_eos(ubvector &params, int &success,
+				 ofstream &scr_out) {
   
   success=ix_success;
   if (params[4]>params[6]) {
@@ -1273,7 +1275,8 @@ void fixed_pressure::first_point(ubvector &params) {
   return;
 }
 
-void fixed_pressure::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void fixed_pressure::compute_eos(ubvector &params, int &success,
+				 ofstream &scr_out) {
 
   success=ix_success;
 
@@ -1438,7 +1441,8 @@ void generic_quarks::first_point(ubvector &params) {
   return;
 }
 
-void generic_quarks::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void generic_quarks::compute_eos(ubvector &params, int &success,
+				 ofstream &scr_out) {
 
   success=ix_success;
 
@@ -1692,7 +1696,8 @@ void quark_star::first_point(ubvector &params) {
   return;
 }
 
-void quark_star::compute_eos(ubvector &params, int &success, std::ofstream &scr_out) {
+void quark_star::compute_eos(ubvector &params, int &success,
+			     std::ofstream &scr_out) {
   
   success=ix_success;
 
@@ -2100,7 +2105,8 @@ void qmc_threep::first_point(ubvector &params) {
   return;
 }
 
-void qmc_threep::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void qmc_threep::compute_eos(ubvector &params, int &success,
+			     ofstream &scr_out) {
 
   bool debug=false;
 
@@ -2346,7 +2352,8 @@ void qmc_fixp::first_point(ubvector &params) {
   return;
 }
 
-void qmc_fixp::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void qmc_fixp::compute_eos(ubvector &params, int &success,
+			   ofstream &scr_out) {
 
   success=ix_success;
   bool debug=false;
@@ -2590,7 +2597,8 @@ void qmc_twolines::first_point(ubvector &params) {
   return;
 }
 
-void qmc_twolines::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void qmc_twolines::compute_eos(ubvector &params, int &success,
+			       ofstream &scr_out) {
 
   success=ix_success;
   bool debug=false;

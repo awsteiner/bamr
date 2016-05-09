@@ -274,7 +274,9 @@ namespace bamr {
     virtual ~model() {}
 
     virtual void compute_eos(ubvector &pars, int &success,
-			     std::ofstream &scr_out)=0;
+			     std::ofstream &scr_out) {
+      return;
+    }
 
     void load_mc(std::ofstream &scr_out);
   
@@ -314,18 +316,26 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(ubvector &e)=0;
+    virtual void low_limits(ubvector &e) {
+      return;
+    }
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(ubvector &e)=0;
+    virtual void high_limits(ubvector &e) {
+      return;
+    }
 
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i)=0;
+    virtual std::string param_name(size_t i) {
+      return "";
+    }
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i)=0;
+    virtual std::string param_unit(size_t i) {
+      return "";
+    }
     //@}
 
     /// \name Functions for model parameters fixed during the MCMC run
@@ -459,7 +469,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(ubvector &e, int &success,
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -590,7 +601,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(ubvector &e, int &success, std::ofstream &scr_out);  
+    virtual void compute_eos(ubvector &e, int &success,
+			     std::ofstream &scr_out);  
 
     /** \brief Function to compute the initial guess
      */
