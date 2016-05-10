@@ -35,12 +35,6 @@ using namespace bamr;
 
 #ifdef NEVER_DEFINED
 
-bamr_class::bamr_class() {
-}
-
-bamr_class::~bamr_class() {
-}
-
 void bamr_class::table_names_units(std::string &s, std::string &u) {
   s="N mult ";
   u+=". . ";
@@ -444,205 +438,6 @@ void bamr_class::update_files(model &modp, ubvector &e_current) {
 }
 
 
-int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
-  // We cannot use scr_out here because it isn't set until the call
-  // to mcmc().
-  if (sv.size()<2) {
-    cerr << "Model name not given." << endl;
-    return exc_efailed;
-  }
-  model_type=sv[1];
-  if (data_arr.size()>0) {
-    data_arr[0].modp->remove_params(cl);
-    for(size_t i=0;i<data_arr.size();i++) {
-      delete data_arr[i].modp;
-    }
-    data_arr.clear();
-  }
-  if (sv[1]==((string)"twop")) {
-    nparams=8;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new two_polytropes;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new two_polytropes;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"altp")) {
-    nparams=8;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new alt_polytropes;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new alt_polytropes;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"fixp")) {
-    nparams=8;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new fixed_pressure;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new fixed_pressure;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"qstar")) {
-    nparams=4;
-    has_esym=false;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new quark_star;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new quark_star;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"genq")) {
-    nparams=9;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new generic_quarks;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new generic_quarks;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"qmc")) {
-    nparams=7;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new qmc_neut;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new qmc_neut;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"qmc_threep")) {
-    nparams=9;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new qmc_threep;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new qmc_threep;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"qmc_fixp")) {
-    nparams=8;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new qmc_fixp;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new qmc_fixp;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else if (sv[1]==((string)"qmc_twolines")) {
-    nparams=8;
-    has_esym=true;
-    has_eos=true;
-
-    if (use_smove) {
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<2*nwalk;i++) {
-	data_arr[i].modp=new qmc_twolines;
-	data_arr[i].ts.set_eos(teos);
-      }
-    } else {
-      data_arr.resize(2);
-      for(size_t i=0;i<2;i++) {
-	data_arr[i].modp=new qmc_twolines;
-	data_arr[i].ts.set_eos(teos);
-      }
-    }
-
-  } else {
-    cerr << "Model unknown." << endl;
-    nparams=0;
-    model_type="";
-    has_esym=true;
-    has_eos=true;
-    return exc_efailed;
-  }
-  data_arr[0].modp->setup_params(cl);
-
-  return 0;
-}
-
 void bamr_class::output_best(ubvector &e_best, double w_best,
 			     shared_ptr<table_units<> > tab_eos,
 			     shared_ptr<table_units<> > tab_mvsr,
@@ -848,3 +643,53 @@ void bamr_class::setup_cli() {
 }
 
 #endif
+
+int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
+  // We cannot use scr_out here because it isn't set until the call
+  // to mcmc().
+  if (sv.size()<2) {
+    cerr << "Model name not given." << endl;
+    return exc_efailed;
+  }
+  if (model_type==sv[1]) {
+    cerr << "Model already set to " << sv[1] << endl;
+    return 0;
+  }
+  mod->remove_params(cl);
+  model_type=sv[1];
+  if (sv[1]==((string)"twop")) {
+    std::shared_ptr<model> mnew(new two_polytropes);
+    mod=mnew;
+  } else if (sv[1]==((string)"altp")) {
+    std::shared_ptr<model> mnew(new alt_polytropes);
+    mod=mnew;
+  } else if (sv[1]==((string)"fixp")) {
+    std::shared_ptr<model> mnew(new fixed_pressure);
+    mod=mnew;
+  } else if (sv[1]==((string)"qstar")) {
+    std::shared_ptr<model> mnew(new quark_star);
+    mod=mnew;
+  } else if (sv[1]==((string)"genq")) {
+    std::shared_ptr<model> mnew(new generic_quarks);
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc")) {
+    std::shared_ptr<model> mnew(new qmc_neut);
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_threep")) {
+    std::shared_ptr<model> mnew(new qmc_threep);
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_fixp")) {
+    std::shared_ptr<model> mnew(new qmc_fixp);
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_twolines")) {
+    std::shared_ptr<model> mnew(new qmc_twolines);
+    mod=mnew;
+  } else {
+    cerr << "Model unknown." << endl;
+    return exc_efailed;
+  }
+  mod->setup_params(cl);
+
+  return 0;
+}
+

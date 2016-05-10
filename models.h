@@ -94,6 +94,30 @@ namespace bamr {
 
   protected:
 
+    /// \name Parameter objects for the 'set' command
+    //@{
+    o2scl::cli::parameter_double p_min_max_mass;
+    o2scl::cli::parameter_double p_exit_mass;
+    o2scl::cli::parameter_double p_input_dist_thresh;
+    o2scl::cli::parameter_double p_min_mass;
+    o2scl::cli::parameter_int p_grid_size;
+    o2scl::cli::parameter_bool p_debug_star;
+    o2scl::cli::parameter_bool p_debug_line;
+    o2scl::cli::parameter_bool p_debug_load;
+    o2scl::cli::parameter_bool p_debug_eos;
+    o2scl::cli::parameter_bool p_baryon_density;
+    o2scl::cli::parameter_bool p_use_crust;
+    o2scl::cli::parameter_bool p_inc_baryon_mass;
+    o2scl::cli::parameter_bool p_norm_max;
+    o2scl::cli::parameter_double p_nb_low;
+    o2scl::cli::parameter_double p_nb_high;
+    o2scl::cli::parameter_double p_e_low;
+    o2scl::cli::parameter_double p_e_high;
+    o2scl::cli::parameter_double p_m_low;
+    o2scl::cli::parameter_double p_m_high;
+    o2scl::cli::parameter_double p_mvsr_pr_inc;
+    //@}
+    
     /// The fiducial baryon density
     double nb_n1;
     

@@ -99,50 +99,22 @@ namespace bamr {
   */
   class bamr_class : public mcmc_namespace::mcmc_class<model_data,model> {
 
-#ifdef O2SCL_NEVER_DEFINED
-    
-  protected:
-
-    /// \name Parameter objects for the 'set' command
-    //@{
-    o2scl::cli::parameter_double p_min_max_mass;
-    o2scl::cli::parameter_double p_exit_mass;
-    o2scl::cli::parameter_double p_input_dist_thresh;
-    o2scl::cli::parameter_double p_min_mass;
-    o2scl::cli::parameter_int p_grid_size;
-    o2scl::cli::parameter_bool p_debug_star;
-    o2scl::cli::parameter_bool p_debug_line;
-    o2scl::cli::parameter_bool p_debug_load;
-    o2scl::cli::parameter_bool p_debug_eos;
-    o2scl::cli::parameter_bool p_baryon_density;
-    o2scl::cli::parameter_bool p_use_crust;
-    o2scl::cli::parameter_bool p_inc_baryon_mass;
-    o2scl::cli::parameter_bool p_norm_max;
-    o2scl::cli::parameter_double p_nb_low;
-    o2scl::cli::parameter_double p_nb_high;
-    o2scl::cli::parameter_double p_e_low;
-    o2scl::cli::parameter_double p_e_high;
-    o2scl::cli::parameter_double p_m_low;
-    o2scl::cli::parameter_double p_m_high;
-    o2scl::cli::parameter_double p_mvsr_pr_inc;
-    o2scl::cli::parameter_string p_prefix;
-    //@}
-
-    //@}
-
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
-    
-    /// Number of parameters, set in \ref set_model()
-    size_t nparams;
-    
-    //@}
 
+    /// The default model
+    std::shared_ptr<model> def_mod;
+    
     /// \name Main functions called from the command-line interface
     //@{
     /** \brief Set the model for the EOS to use
      */
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
+    //@}
+
+#ifdef O2SCL_NEVER_DEFINED
+    
+  protected:
 
     /** \brief Set the first point in the parameter space
      */
@@ -156,21 +128,6 @@ namespace bamr {
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
-    /** \brief Run a MCMC simulation
-
-	In order to save the code from copying results over if a step
-	is rejected, the Metropolis steps alternate between two kinds.
-	In the first kind of step, \ref modp is the previous point and
-	\ref modp2 is the new point to be considered, and in the
-	second kind of step, \ref modp2 is the old point and \ref modp
-	is the new point to be considered. This two-step procedure is
-	also why there are two TOV solvers, i.e. \ref ts and \ref ts2.
-    */
-    virtual int mcmc(std::vector<std::string> &sv, bool itive_com);
-    //@}
-
-    /// \name Internal functions 
-    //@{
     /// Setup column names and units for data table
     virtual void table_names_units(std::string &s, std::string &u);
 
@@ -189,13 +146,6 @@ namespace bamr {
 	This function is called by mcmc().
     */
     virtual void init_grids_table(ubvector &low, ubvector &high);
-
-    /** \brief Further preparations of the EOS before calling the TOV 
-	solver
-	
-	This function is empty by default.
-    */
-    virtual void prepare_eos(ubvector &pars, model_data &dat, int &success);
 
     /** \brief Add a measurement
      */
@@ -223,30 +173,22 @@ namespace bamr {
     */
     virtual void setup_cli();
     
-    /** \brief Load input probability distributions (called by mcmc())
-     */
-    virtual void load_mc();
-  
   protected:
     
     /// Output the "best" EOS obtained so far (called by mcmc())
     void output_best(ubvector &best, double w_best, model_data &dat);
 
-  public:
-
-    bamr_class();
-
-    virtual ~bamr_class();
-
-    /// Desc
-    void run(int argc, char *argv[]) {
-      mcmc_class::run(argc,argv);
-      return;
-    }
-
-    
 #endif
     
+  public:
+
+  bamr_class() : def_mod(new two_polytropes),
+      mcmc_class<model_data,model>(def_mod) {
+    }
+
+    virtual ~bamr_class() {
+    }
+
   };
 
 }

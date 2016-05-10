@@ -314,17 +314,27 @@ namespace mcmc_namespace {
   /// Vector of data objects
   std::vector<data_t> data_arr;
   
-  /// Map of model objects
-  std::map<std::string,model_t,std::greater<std::string> > model_arr;
+  /// Model object (initialized in constructor)
+  std::shared_ptr<model_t> mod;
 
-  /// Current model
-  std::string curr_model;
-  
   /** \brief Set up the 'cli' object
       
       This function just adds the four commands and the 'set' parameters
   */
   void setup_cli() {
+
+    // ---------------------------------------
+    // Set commands/options
+
+    comm_option_s options[1]={
+      {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
+       0,0,"",((string)"This is the main part of ")+
+       "the code which performs the simulation. Make sure to set the "+
+       "model first using the 'model' command first.",
+       new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
+       cli::comm_option_both}
+    };
+    cl.set_comm_option_vec(1,options);
 
     // ---------------------------------------
     // Set parameters
@@ -645,18 +655,8 @@ namespace mcmc_namespace {
 
     bool debug=false;
     
-    // Get model object
-    typename std::map<std::string,model_t,
-    std::greater<std::string> >::const_iterator model_it=
-    model_arr.find(curr_model);
-    if (model_it==model_arr.end()) {
-      std::cerr << "Model type " << curr_model << " unknown." << std::endl;
-      return 2;
-    }
-    model_t &m=model_it->second;
-
     // Set number of parameters
-    nparams=m.nparams;
+    nparams=mod->nparams;
     
     // Make sure that first_update() is called when necessary
     first_file_update=false;
@@ -761,9 +761,9 @@ namespace mcmc_namespace {
       
 	// Get parameters
 	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+m.param_name(i);
+	  std::string pname=((std::string)"param_")+mod->param_name(i);
 	  current[0][i]=file_tab.get(pname,last_line);
-	  scr_out << "Parameter named " << m.param_name(i) << " " 
+	  scr_out << "Parameter named " << mod->param_name(i) << " " 
 		  << current[0][i] << std::endl;
 	}
       
@@ -818,9 +818,9 @@ namespace mcmc_namespace {
       
 	// Get parameters
 	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+m.param_name(i);
+	  std::string pname=((std::string)"param_")+mod->param_name(i);
 	  current[0][i]=file_tab.get(pname,row);
-	  scr_out << "Parameter named " << m.param_name(i) << " " 
+	  scr_out << "Parameter named " << mod->param_name(i) << " " 
 	  << current[0][i] << std::endl;
 	}
       
@@ -841,7 +841,7 @@ namespace mcmc_namespace {
     } else {
     
       scr_out << "First point from default." << std::endl;
-      m.first_point(current[0]);
+      mod->first_point(current[0]);
 
     }
 
@@ -865,8 +865,8 @@ namespace mcmc_namespace {
 
     // Set lower and upper bounds for parameters
     ubvector low(nparams), high(nparams);
-    m.low_limits(low);
-    m.high_limits(high);
+    mod->low_limits(low);
+    mod->high_limits(high);
 
     n_chains=0;
 
@@ -907,7 +907,7 @@ namespace mcmc_namespace {
 
 	  // Begin with the intial point
 	  ubvector first(nparams);
-	  m.first_point(first);
+	  mod->first_point(first);
 
 	  // Make a perturbation from the initial point
 	  for(size_t ik=0;ik<nparams;ik++) {
@@ -919,7 +919,7 @@ namespace mcmc_namespace {
 	  }
 	
 	  // Compute the weight
-	  w_current[ij]=m.compute_point(current[ij],scr_out,suc,data_arr[ij]);
+	  w_current[ij]=mod->compute_point(current[ij],scr_out,suc,data_arr[ij]);
 	  scr_out << "SM Init: " << ij << " ";
 	  o2scl::vector_out(scr_out,current[ij]);
 	  scr_out << " " << w_current[ij] << std::endl;
@@ -964,7 +964,7 @@ namespace mcmc_namespace {
       // Normal or Metropolis-Hastings steps
 
       // Compute weight for initial point
-      w_current[0]=m.compute_point(current[0],scr_out,suc,data_arr[0]);
+      w_current[0]=mod->compute_point(current[0],scr_out,suc,data_arr[0]);
       ret_codes[suc]++;
       scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
@@ -1470,7 +1470,7 @@ namespace mcmc_namespace {
     return;
   }    
 
-  mcmc_class() {
+  mcmc_class(std::shared_ptr<model_t> &m) {
 
     file_opened=false;
     first_file_update=false;
@@ -1503,6 +1503,9 @@ namespace mcmc_namespace {
     
     ret_codes.resize(100);
     for(size_t i=0;i<100;i++) ret_codes[i]=0;
+
+    mod=m;
+    mod->setup_params(cl);
   }
     
   };
