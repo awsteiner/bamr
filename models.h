@@ -40,6 +40,12 @@
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_io.h>
 
+#ifdef BAMR_READLINE
+#include <o2scl/cli_readline.h>
+#else
+#include <o2scl/cli.h>
+#endif
+
 #include "nstar_cold2.h"
 #include "mcmc.h"
 
@@ -67,14 +73,16 @@ namespace bamr {
       eos(new o2scl::table_units<>) {
     }
     
-  private:
-    
     /** \brief Desc
      */
-    model_data(const model_data &e);
-    //{
-    //modp=0;
-    //}
+    model_data(const model_data &md) {
+      rad=md.rad;
+      wgts=md.wgts;
+      mvsr=md.mvsr;
+      eos=md.eos;
+    }
+    
+  private:
     
     /** \brief Desc
      */
@@ -87,12 +95,48 @@ namespace bamr {
     //}
     
   };
-  
-  /** \brief Base class for an EOS parameterization
-   */
-  class model {
 
-  protected:
+  /** \brief Desc
+   */
+  class settings {
+
+  public:
+
+    settings() {
+      grid_size=100;
+      debug_load=false;
+      // Minimum allowed maximum mass
+      min_max_mass=2.0;
+      // Minimum neutron star mass
+      min_mass=0.8;
+      debug_star=false;
+      debug_line=false;
+      debug_eos=false;
+      baryon_density=true;
+      exit_mass=10.0;
+      input_dist_thresh=0.0;
+      use_crust=true;
+      best_detail=false;
+      inc_baryon_mass=false;
+      norm_max=true;
+      mvsr_pr_inc=1.1;
+      
+      // -----------------------------------------------------------
+      // Grid limits
+      
+      nb_low=0.04;
+      nb_high=1.24;
+      
+      e_low=0.3;
+      e_high=10.0;
+      
+      m_low=0.2;
+      m_high=3.0;
+      
+    }
+    
+    /// Number of bins for all histograms (default 100)
+    int grid_size;
 
     /// \name Parameter objects for the 'set' command
     //@{
@@ -117,6 +161,198 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
     //@}
+    
+    /// \name Other parameters accessed by 'set' and 'get'
+    //@{
+    /// Pressure increment for the M vs. R curve (default 1.1)
+    double mvsr_pr_inc;
+
+    /** \brief If true, normalize the data distributions so that the
+	max is one, otherwise, normalize so that the integral is one
+	(default true)
+    */
+    bool norm_max;
+
+    /// If true, use the default crust (default true)
+    bool use_crust;
+
+    /** \brief If true, output debug information about the input data 
+	files (default false)
+    */
+    bool debug_load;
+
+    /** \brief If true, output each line of the table as it's stored
+	(default false)
+    */
+    bool debug_line;
+    
+    /// If true, output stellar properties for debugging (default false)
+    bool debug_star;
+    
+    /// If true, output equation of state for debugging (default false)
+    bool debug_eos;
+
+    /// If true, compute the baryon density (default true)
+    bool baryon_density;
+
+    /// The lower threshold for the input distributions (default 0.0)
+    double input_dist_thresh;
+
+    /// The upper mass threshold (default 10.0)
+    double exit_mass;
+
+    /** \brief Minimum mass allowed for any of the individual neutron
+	stars (default 0.8)
+    */
+    double min_mass;
+  
+    /// Minimum allowed maximum mass (default 2.0)
+    double min_max_mass;
+
+    /** \brief If true, output more detailed information about the 
+	best point (default false)
+    */
+    bool best_detail;
+    
+    /** \brief If true, output information about the baryon mass
+	as well as the gravitational mass (default false)
+    */
+    bool inc_baryon_mass;
+    //@}
+
+    /** \name Histogram limits
+     */
+    //@{
+    double nb_low;
+    double nb_high;
+    double e_low;
+    double e_high;
+    double m_low;
+    double m_high;
+    //@}
+
+    void setup_cli(o2scl::cli &cl) {
+      
+      // ---------------------------------------
+      // Set parameters
+      
+      p_grid_size.i=&grid_size;
+      p_grid_size.help="Grid size (default 100).";
+      cl.par_list.insert(std::make_pair("grid_size",&p_grid_size));
+      
+      p_min_max_mass.d=&min_max_mass;
+      p_min_max_mass.help=((std::string)"Minimum maximum mass ")
+	+"(in solar masses, default 2.0).";
+      cl.par_list.insert(std::make_pair("min_max_mass",&p_min_max_mass));
+      
+      p_min_mass.d=&min_mass;
+      p_min_mass.help=((std::string)"Minimum possible mass for any of individual ")+
+	"neutron stars in solar masses. The default is 0.8 solar masses.";
+      cl.par_list.insert(std::make_pair("min_mass",&p_min_mass));
+      
+      p_exit_mass.d=&exit_mass;
+      p_exit_mass.help=((std::string)"Upper limit on maximum mass ")+
+	"(default 10.0). When the maximum mass is larger than this value, "+
+	"the current point in the parameter space is output to 'cout' and "+
+	"execution is aborted. This is sometimes useful in debugging the "+
+	"initial guess.";
+      cl.par_list.insert(std::make_pair("exit_mass",&p_exit_mass));
+      
+      p_input_dist_thresh.d=&input_dist_thresh;
+      p_input_dist_thresh.help=((std::string)"Input distribution threshold. ")+
+	"This is the artificial lower limit for the (renormalized) "+
+	"probability of a (R,M) pair as reported by the data file. If the "+
+	"weight is smaller than or equal to this value, an exception is "+
+	"thrown. Changing this value is sometimes "+
+	"useful to gracefully avoid zero probabilities in the input "+
+	"data files. The default is 0.";
+      cl.par_list.insert(std::make_pair("input_dist_thresh",&p_input_dist_thresh));
+      
+      p_debug_star.b=&debug_star;
+      p_debug_star.help=((std::string)"If true, output stellar properties ")+
+	"to file with suffix '_scr' at each point (default false).";
+      cl.par_list.insert(std::make_pair("debug_star",&p_debug_star));
+      
+      p_norm_max.b=&norm_max;
+      p_norm_max.help=((std::string)"If true, normalize by max probability ")+
+	"or if false, normalize by total integral (default true).";
+      cl.par_list.insert(std::make_pair("norm_max",&p_norm_max));
+      
+      p_debug_load.b=&debug_load;
+      p_debug_load.help=((std::string)"If true, output info on loaded data ")+
+	"(default false).";
+      cl.par_list.insert(std::make_pair("debug_load",&p_debug_load));
+      
+      p_debug_line.b=&debug_line;
+      p_debug_line.help=((std::string)"If true, output each line as its stored ")+
+	"(default false).";
+      cl.par_list.insert(std::make_pair("debug_line",&p_debug_line));
+      
+      p_debug_eos.b=&debug_eos;
+      p_debug_eos.help=((std::string)"If true, output initial equation of state ")+
+	"to file 'debug_eos.o2' and abort (default false).";
+      cl.par_list.insert(std::make_pair("debug_eos",&p_debug_eos));
+      
+      p_baryon_density.b=&baryon_density;
+      p_baryon_density.help=((std::string)"If true, compute baryon density ")+
+	"and associated profiles (default true).";
+      cl.par_list.insert(std::make_pair("baryon_density",&p_baryon_density));
+      
+      p_use_crust.b=&use_crust;
+      p_use_crust.help=((std::string)"If true, use the default crust (default ")+
+	"true).";
+      cl.par_list.insert(std::make_pair("use_crust",&p_use_crust));
+      
+      p_inc_baryon_mass.b=&inc_baryon_mass;
+      p_inc_baryon_mass.help=((std::string)"If true, compute the baryon mass ")+
+	"(default false)";
+      cl.par_list.insert(std::make_pair("inc_baryon_mass",&p_inc_baryon_mass));
+      
+      p_mvsr_pr_inc.d=&mvsr_pr_inc;
+      p_mvsr_pr_inc.help=((std::string)"The multiplicative pressure increment for ")+
+	"the TOV solver (default 1.1).";
+      cl.par_list.insert(std::make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
+      
+      // --------------------------------------------------------
+      
+      p_nb_low.d=&nb_low;
+      p_nb_low.help=
+	"Smallest baryon density grid point in 1/fm^3 (default 0.04).";
+      cl.par_list.insert(std::make_pair("nb_low",&p_nb_low));
+      
+      p_nb_high.d=&nb_high;
+      p_nb_high.help=
+	"Largest baryon density grid point in 1/fm^3 (default 1.24).";
+      cl.par_list.insert(std::make_pair("nb_high",&p_nb_high));
+      
+      p_e_low.d=&e_low;
+      p_e_low.help=
+	"Smallest energy density grid point in 1/fm^4 (default 0.3).";
+      cl.par_list.insert(std::make_pair("e_low",&p_e_low));
+      
+      p_e_high.d=&e_high;
+      p_e_high.help=
+	"Largest energy density grid point in 1/fm^4 (default 10.0).";
+      cl.par_list.insert(std::make_pair("e_high",&p_e_high));
+      
+      p_m_low.d=&m_low;
+      p_m_low.help="Smallest mass grid point in Msun (default 0.2).";
+      cl.par_list.insert(std::make_pair("m_low",&p_m_low));
+      
+      p_m_high.d=&m_high;
+      p_m_high.help="Largest mass grid point in Msun (default 3.0).";
+      cl.par_list.insert(std::make_pair("m_high",&p_m_high));
+      
+      return;
+    }
+    
+  };
+  
+  /** \brief Base class for an EOS parameterization
+   */
+  class model {
+    
+  public:
     
     /// The fiducial baryon density
     double nb_n1;
@@ -201,87 +437,15 @@ namespace bamr {
     /// Schwarzchild radius (set in constructor)
     double schwarz_km;
 
-    /// Number of bins for all histograms (default 100)
-    int grid_size;
-
     /// True if the model provides S and L
     bool has_esym;
 
     /// The initial set of neutron star masses
     std::vector<double> first_mass;
 
-    /// \name Other parameters accessed by 'set' and 'get'
-    //@{
-    /// Pressure increment for the M vs. R curve (default 1.1)
-    double mvsr_pr_inc;
-
-    /** \brief If true, normalize the data distributions so that the
-	max is one, otherwise, normalize so that the integral is one
-	(default true)
-    */
-    bool norm_max;
-
-    /// If true, use the default crust (default true)
-    bool use_crust;
-
-    /** \brief If true, output debug information about the input data 
-	files (default false)
-    */
-    bool debug_load;
-
-    /** \brief If true, output each line of the table as it's stored
-	(default false)
-    */
-    bool debug_line;
-    
-    /// If true, output stellar properties for debugging (default false)
-    bool debug_star;
-    
-    /// If true, output equation of state for debugging (default false)
-    bool debug_eos;
-
-    /// If true, compute the baryon density (default true)
-    bool baryon_density;
-
-    /// The lower threshold for the input distributions (default 0.0)
-    double input_dist_thresh;
-
-    /// The upper mass threshold (default 10.0)
-    double exit_mass;
-
-    /** \brief Minimum mass allowed for any of the individual neutron
-	stars (default 0.8)
-    */
-    double min_mass;
-  
-    /// Minimum allowed maximum mass (default 2.0)
-    double min_max_mass;
-
-    /** \brief If true, output more detailed information about the 
-	best point (default false)
-    */
-    bool best_detail;
-    
-    /** \brief If true, output information about the baryon mass
-	as well as the gravitational mass (default false)
-    */
-    bool inc_baryon_mass;
-    //@}
-
     size_t mpi_nprocs;
     
     size_t mpi_rank;
-
-    /** \name Histogram limits
-     */
-    //@{
-    double nb_low;
-    double nb_high;
-    double e_low;
-    double e_high;
-    double m_low;
-    double m_high;
-    //@}
 
     /// \name Grids
     //@{
@@ -292,8 +456,10 @@ namespace bamr {
 
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
+
+    settings &set;
     
-    model();
+    model(settings &s);
 
     virtual ~model() {}
 
@@ -467,7 +633,7 @@ namespace bamr {
     //@}
 
     /// Create a model object
-    two_polytropes();
+    two_polytropes(settings &s);
 
     virtual ~two_polytropes() {}
 
@@ -528,6 +694,9 @@ namespace bamr {
 
   public:
 
+  alt_polytropes(settings &s) : two_polytropes(s) {
+    }
+    
     virtual ~alt_polytropes() {}
 
     /// \name Functions for MCMC parameters
@@ -601,6 +770,9 @@ namespace bamr {
 
   public:
 
+  fixed_pressure(settings &s) : two_polytropes(s) {
+    }
+    
     virtual ~fixed_pressure() {}
 
     /// \name Functions for MCMC parameters
@@ -703,6 +875,8 @@ namespace bamr {
   
   public:
   
+  generic_quarks(settings &s) : two_polytropes(s) {
+    }
     virtual ~generic_quarks() {}
 
     /// \name Functions for MCMC parameters
@@ -773,7 +947,7 @@ namespace bamr {
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
 
-    quark_star() {
+  quark_star(settings &s) : model(s) {
     }
 
     virtual ~quark_star() {}
@@ -859,7 +1033,7 @@ namespace bamr {
 
   public:
   
-    qmc_neut();
+    qmc_neut(settings &s);
     
     virtual ~qmc_neut();
     
@@ -969,7 +1143,7 @@ namespace bamr {
 
   public:
   
-    qmc_threep();
+    qmc_threep(settings &s);
     
     virtual ~qmc_threep();
     
@@ -1059,7 +1233,7 @@ namespace bamr {
 
   public:
   
-    qmc_fixp();
+    qmc_fixp(settings &s);
     
     virtual ~qmc_fixp();
 
@@ -1126,7 +1300,7 @@ namespace bamr {
 
   public:
   
-    qmc_twolines();
+    qmc_twolines(settings &s);
     
     virtual ~qmc_twolines();
 

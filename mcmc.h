@@ -321,18 +321,18 @@ namespace mcmc_namespace {
       
       This function just adds the four commands and the 'set' parameters
   */
-  void setup_cli() {
+  virtual void setup_cli() {
 
     // ---------------------------------------
     // Set commands/options
-
-    comm_option_s options[1]={
+    
+    o2scl::comm_option_s options[1]={
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-       0,0,"",((string)"This is the main part of ")+
+       0,0,"",((std::string)"This is the main part of ")+
        "the code which performs the simulation. Make sure to set the "+
        "model first using the 'model' command first.",
-       new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
-       cli::comm_option_both}
+       new o2scl::comm_option_mfptr<mcmc_class>(this,&mcmc_class::mcmc),
+       o2scl::cli::comm_option_both}
     };
     cl.set_comm_option_vec(1,options);
 
@@ -401,26 +401,26 @@ namespace mcmc_namespace {
 
   /** \brief Desc
    */
-  int mcmc_init() {
+  virtual int mcmc_init() {
     return 0;
   };
   
   /** \brief Desc
    */
-  void output_best(ubvector &best, double w_best, data_t &dat) {
+  virtual void output_best(ubvector &best, double w_best, data_t &dat) {
     return;
   }
   
   /** \brief Desc
    */
-  void add_measurement(ubvector &pars, double weight, data_t &dat,
+  virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
 		       bool new_meas, size_t n_meas) {
     return;
   };
 
   /** \brief Desc
    */
-  int hastings(std::vector<std::string> &sv, 
+  virtual int hastings(std::vector<std::string> &sv, 
 	       bool itive_com) {
 
 #ifdef NEVER_DEFINED
@@ -529,9 +529,10 @@ namespace mcmc_namespace {
       string str_i=((string)"Mns_")+source_names[i];
       for(size_t j=i;j<nsources;j++) {
 	string str_j=((string)"Mns_")+source_names[j];
-	covar(i+nparams,j+nparams)=wvector_covariance(file_tab.get_nlines(),
-						      file_tab[str_i],file_tab[str_j],
-						      file_tab["mult"]);
+	covar(i+nparams,j+nparams)=
+	  wvector_covariance(file_tab.get_nlines(),
+			     file_tab[str_i],file_tab[str_j],
+			     file_tab["mult"]);
 	if (debug) {
 	  scr_out << "Covar: " << i+nparams << " " << j+nparams << " "
 		  << covar(i+nparams,j+nparams) << endl;
@@ -651,7 +652,7 @@ namespace mcmc_namespace {
 
   /** \brief Desc
    */
-  int mcmc(std::vector<std::string> &sv, bool itive_com) {
+  virtual int mcmc(std::vector<std::string> &sv, bool itive_com) {
 
     bool debug=false;
     
@@ -919,7 +920,8 @@ namespace mcmc_namespace {
 	  }
 	
 	  // Compute the weight
-	  w_current[ij]=mod->compute_point(current[ij],scr_out,suc,data_arr[ij]);
+	  w_current[ij]=mod->compute_point(current[ij],scr_out,
+					   suc,data_arr[ij]);
 	  scr_out << "SM Init: " << ij << " ";
 	  o2scl::vector_out(scr_out,current[ij]);
 	  scr_out << " " << w_current[ij] << std::endl;
@@ -981,7 +983,7 @@ namespace mcmc_namespace {
       {
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  add_measurement(current[0],w_current,data_arr[0],
+	  add_measurement(current[0],w_current[0],data_arr[0],
 			  true,mh_success);
 	}
 	best=current[0];
@@ -1140,15 +1142,15 @@ namespace mcmc_namespace {
 
       if (use_smove) {
 	if (step_flags[ik]==false) {
-	  w_next=compute_point(next,scr_out,suc,data_arr[ik+nwalk]);
+	  w_next=mod->compute_point(next,scr_out,suc,data_arr[ik+nwalk]);
 	} else {
-	  w_next=compute_point(next,scr_out,suc,data_arr[ik]);
+	  w_next=mod->compute_point(next,scr_out,suc,data_arr[ik]);
 	}
       } else {
 	if (step_flags[0]) {
-	  w_next=compute_point(next,scr_out,suc,data_arr[1]);
+	  w_next=mod->compute_point(next,scr_out,suc,data_arr[1]);
 	} else {
-	  w_next=compute_point(next,scr_out,suc,data_arr[0]);
+	  w_next=mod->compute_point(next,scr_out,suc,data_arr[0]);
 	}
       }
       ret_codes[suc]++;
@@ -1203,18 +1205,18 @@ namespace mcmc_namespace {
 	  if (!warm_up) {
 	    if (use_smove) {
 	      if (step_flags[ik]==false) {
-		add_measurement(next,data_arr[ik+nwalk],w_next,true,
+		add_measurement(next,w_next,data_arr[ik+nwalk],true,
 				mh_success);
 	      } else {
-		add_measurement(next,data_arr[ik],w_next,true,
+		add_measurement(next,w_next,data_arr[ik],true,
 				mh_success);
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(next,data_arr[1],w_next,true,
+		add_measurement(next,w_next,data_arr[1],true,
 				mh_success);
 	      } else {
-		add_measurement(next,data_arr[0],w_next,true,
+		add_measurement(next,w_next,data_arr[0],true,
 				mh_success);
 	      }
 	    }
@@ -1269,11 +1271,11 @@ namespace mcmc_namespace {
 	  if (!warm_up) {
 	    if (use_smove) {
 	      if (step_flags[ik]==false) {
-		add_measurement(current[ik],data_arr[ik],
-				w_current[ik],false,mh_success);
+		add_measurement(current[ik],w_current[ik],data_arr[ik],
+				false,mh_success);
 	      } else {
-		add_measurement(current[ik],data_arr[ik+nwalk],
-				w_current[ik],false,mh_success);
+		add_measurement(current[ik],w_current[ik],data_arr[ik+nwalk],
+				false,mh_success);
 	      }
 	      if (debug) {
 		std::cout << step_flags[ik] << " Adding old: "
@@ -1282,11 +1284,11 @@ namespace mcmc_namespace {
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(current[0],data_arr[0],
-				w_current,false,mh_success);
+		add_measurement(current[0],w_current[0],data_arr[0],
+				false,mh_success);
 	      } else {
-		add_measurement(current[0],data_arr[1],
-				w_current,false,mh_success);
+		add_measurement(current[0],w_current[0],data_arr[1],
+				false,mh_success);
 	      }
 	      if (debug) {
 		std::cout << step_flags[0] << " Adding old: "
@@ -1353,7 +1355,8 @@ namespace mcmc_namespace {
 	      (elapsed>max_time && block_counter==19)) {
 	    force_file_update=true;
 	    block_counter++;
-	    scr_out << "Finished block " << block_counter << " of 20." << std::endl;
+	    scr_out << "Finished block " << block_counter
+		    << " of 20." << std::endl;
 	  }
 
 	  // Output elapsed time every 10 iterations. The value of
@@ -1402,7 +1405,9 @@ namespace mcmc_namespace {
 		       ((int)tc.get_nlines())==max_chain_size || 
 		       (mcmc_iterations+1) % file_update_iters==0)) {
 	scr_out << "Updating files." << std::endl;
-	update_files(*(data_arr[0].modp),current[0]);
+	//update_files(*(data_arr[0].modp),current[0]);
+	std::cout << "fixme." << std::endl;
+	exit(-1);
 	scr_out << "Done updating files." << std::endl;
       }
 
@@ -1436,7 +1441,7 @@ namespace mcmc_namespace {
   }
 
   /// Main wrapper for parsing command-line arguments
-  void run(int argc, char *argv[]) {
+  virtual void run(int argc, char *argv[]) {
   
     // ---------------------------------------
     // Set error handler for this thread

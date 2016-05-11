@@ -167,12 +167,6 @@ namespace bamr {
      */
     virtual void update_files(ubvector &current);
     
-    /** \brief Set up the 'cli' object
-
-	This function just adds the four commands and the 'set' parameters
-    */
-    virtual void setup_cli();
-    
   protected:
     
     /// Output the "best" EOS obtained so far (called by mcmc())
@@ -182,13 +176,22 @@ namespace bamr {
     
   public:
 
-  bamr_class() : def_mod(new two_polytropes),
+  bamr_class() : def_mod(new two_polytropes(set)),
       mcmc_class<model_data,model>(def_mod) {
     }
 
     virtual ~bamr_class() {
     }
 
+    /// Desc
+    settings set;
+    
+    /** \brief Set up the 'cli' object
+
+	This function just adds the four commands and the 'set' parameters
+    */
+    virtual void setup_cli();
+    
   };
 
 }

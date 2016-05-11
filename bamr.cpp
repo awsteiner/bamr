@@ -477,12 +477,63 @@ int bamr_class::mcmc_init() {
   return 0;
 }
 
+#endif
+
+int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
+  // We cannot use scr_out here because it isn't set until the call
+  // to mcmc().
+  if (sv.size()<2) {
+    cerr << "Model name not given." << endl;
+    return exc_efailed;
+  }
+  if (model_type==sv[1]) {
+    cerr << "Model already set to " << sv[1] << endl;
+    return 0;
+  }
+  mod->remove_params(cl);
+  model_type=sv[1];
+  if (sv[1]==((string)"twop")) {
+    std::shared_ptr<model> mnew(new two_polytropes(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"altp")) {
+    std::shared_ptr<model> mnew(new alt_polytropes(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"fixp")) {
+    std::shared_ptr<model> mnew(new fixed_pressure(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"qstar")) {
+    std::shared_ptr<model> mnew(new quark_star(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"genq")) {
+    std::shared_ptr<model> mnew(new generic_quarks(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc")) {
+    std::shared_ptr<model> mnew(new qmc_neut(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_threep")) {
+    std::shared_ptr<model> mnew(new qmc_threep(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_fixp")) {
+    std::shared_ptr<model> mnew(new qmc_fixp(set));
+    mod=mnew;
+  } else if (sv[1]==((string)"qmc_twolines")) {
+    std::shared_ptr<model> mnew(new qmc_twolines(set));
+    mod=mnew;
+  } else {
+    cerr << "Model unknown." << endl;
+    return exc_efailed;
+  }
+  mod->setup_params(cl);
+
+  return 0;
+}
+
 void bamr_class::setup_cli() {
 
   // ---------------------------------------
   // Set options
     
-  static const int nopt=5;
+  static const int nopt=4;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      0,0,"",((string)"This is the main part of ")+
@@ -497,7 +548,7 @@ void bamr_class::setup_cli() {
      "model must be chosen before a MCMC run.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
      cli::comm_option_both},
-    {'a',"add-data","Add data source to the list.",
+    /*    {'a',"add-data","Add data source to the list.",
      4,5,"<name> <file> <slice> <initial mass> [obj name]",
      ((string)"Specify data as a table3d object in a HDF5 file. ")+
      "The string <name> is the name used, <file> is the filename, "+
@@ -507,6 +558,7 @@ void bamr_class::setup_cli() {
      "If [obj name] is not specified, then the first table3d object "+
      "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
+    */
     {'f',"first-point","Set the starting point in the parameter space",
      1,-1,"<mode> [...]",
      ((string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+
@@ -529,167 +581,10 @@ void bamr_class::setup_cli() {
   };
   cl.set_comm_option_vec(nopt,options);
 
-  // ---------------------------------------
-  // Set parameters
-    
-  p_grid_size.i=&grid_size;
-  p_grid_size.help="Grid size (default 100).";
-  cl.par_list.insert(make_pair("grid_size",&p_grid_size));
-
-  p_min_max_mass.d=&min_max_mass;
-  p_min_max_mass.help=((string)"Minimum maximum mass ")
-    +"(in solar masses, default 2.0).";
-  cl.par_list.insert(make_pair("min_max_mass",&p_min_max_mass));
-
-  p_min_mass.d=&min_mass;
-  p_min_mass.help=((string)"Minimum possible mass for any of individual ")+
-    "neutron stars in solar masses. The default is 0.8 solar masses.";
-  cl.par_list.insert(make_pair("min_mass",&p_min_mass));
-
-  p_exit_mass.d=&exit_mass;
-  p_exit_mass.help=((string)"Upper limit on maximum mass ")+
-    "(default 10.0). When the maximum mass is larger than this value, "+
-    "the current point in the parameter space is output to 'cout' and "+
-    "execution is aborted. This is sometimes useful in debugging the "+
-    "initial guess.";
-  cl.par_list.insert(make_pair("exit_mass",&p_exit_mass));
-
-  p_input_dist_thresh.d=&input_dist_thresh;
-  p_input_dist_thresh.help=((string)"Input distribution threshold. ")+
-    "This is the artificial lower limit for the (renormalized) "+
-    "probability of a (R,M) pair as reported by the data file. If the "+
-    "weight is smaller than or equal to this value, an exception is "+
-    "thrown. Changing this value is sometimes "+
-    "useful to gracefully avoid zero probabilities in the input "+
-    "data files. The default is 0.";
-  cl.par_list.insert(make_pair("input_dist_thresh",&p_input_dist_thresh));
-
-  p_debug_star.b=&debug_star;
-  p_debug_star.help=((string)"If true, output stellar properties ")+
-    "to file with suffix '_scr' at each point (default false).";
-  cl.par_list.insert(make_pair("debug_star",&p_debug_star));
-
-  p_norm_max.b=&norm_max;
-  p_norm_max.help=((string)"If true, normalize by max probability ")+
-    "or if false, normalize by total integral (default true).";
-  cl.par_list.insert(make_pair("norm_max",&p_norm_max));
-
-  p_debug_load.b=&debug_load;
-  p_debug_load.help=((string)"If true, output info on loaded data ")+
-    "(default false).";
-  cl.par_list.insert(make_pair("debug_load",&p_debug_load));
-  
-  p_debug_line.b=&debug_line;
-  p_debug_line.help=((string)"If true, output each line as its stored ")+
-    "(default false).";
-  cl.par_list.insert(make_pair("debug_line",&p_debug_line));
-  
-  p_debug_eos.b=&debug_eos;
-  p_debug_eos.help=((string)"If true, output initial equation of state ")+
-    "to file 'debug_eos.o2' and abort (default false).";
-  cl.par_list.insert(make_pair("debug_eos",&p_debug_eos));
-
-  p_baryon_density.b=&baryon_density;
-  p_baryon_density.help=((string)"If true, compute baryon density ")+
-    "and associated profiles (default true).";
-  cl.par_list.insert(make_pair("baryon_density",&p_baryon_density));
-
-  p_use_crust.b=&use_crust;
-  p_use_crust.help=((string)"If true, use the default crust (default ")+
-    "true).";
-  cl.par_list.insert(make_pair("use_crust",&p_use_crust));
-
-  p_inc_baryon_mass.b=&inc_baryon_mass;
-  p_inc_baryon_mass.help=((string)"If true, compute the baryon mass ")+
-    "(default false)";
-  cl.par_list.insert(make_pair("inc_baryon_mass",&p_inc_baryon_mass));
-
-  p_mvsr_pr_inc.d=&mvsr_pr_inc;
-  p_mvsr_pr_inc.help=((string)"The multiplicative pressure increment for ")+
-    "the TOV solver (default 1.1).";
-  cl.par_list.insert(make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
-
-  // --------------------------------------------------------
-
-  p_nb_low.d=&nb_low;
-  p_nb_low.help="Smallest baryon density grid point in 1/fm^3 (default 0.04).";
-  cl.par_list.insert(make_pair("nb_low",&p_nb_low));
-
-  p_nb_high.d=&nb_high;
-  p_nb_high.help="Largest baryon density grid point in 1/fm^3 (default 1.24).";
-  cl.par_list.insert(make_pair("nb_high",&p_nb_high));
-
-  p_e_low.d=&e_low;
-  p_e_low.help="Smallest energy density grid point in 1/fm^4 (default 0.3).";
-  cl.par_list.insert(make_pair("e_low",&p_e_low));
-
-  p_e_high.d=&e_high;
-  p_e_high.help="Largest energy density grid point in 1/fm^4 (default 10.0).";
-  cl.par_list.insert(make_pair("e_high",&p_e_high));
-  
-  p_m_low.d=&m_low;
-  p_m_low.help="Smallest mass grid point in Msun (default 0.2).";
-  cl.par_list.insert(make_pair("m_low",&p_m_low));
-
-  p_m_high.d=&m_high;
-  p_m_high.help="Largest mass grid point in Msun (default 3.0).";
-  cl.par_list.insert(make_pair("m_high",&p_m_high));
-
   // --------------------------------------------------------
   
   mcmc_class::setup_cli();
   
   return;
-}
-
-#endif
-
-int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
-  // We cannot use scr_out here because it isn't set until the call
-  // to mcmc().
-  if (sv.size()<2) {
-    cerr << "Model name not given." << endl;
-    return exc_efailed;
-  }
-  if (model_type==sv[1]) {
-    cerr << "Model already set to " << sv[1] << endl;
-    return 0;
-  }
-  mod->remove_params(cl);
-  model_type=sv[1];
-  if (sv[1]==((string)"twop")) {
-    std::shared_ptr<model> mnew(new two_polytropes);
-    mod=mnew;
-  } else if (sv[1]==((string)"altp")) {
-    std::shared_ptr<model> mnew(new alt_polytropes);
-    mod=mnew;
-  } else if (sv[1]==((string)"fixp")) {
-    std::shared_ptr<model> mnew(new fixed_pressure);
-    mod=mnew;
-  } else if (sv[1]==((string)"qstar")) {
-    std::shared_ptr<model> mnew(new quark_star);
-    mod=mnew;
-  } else if (sv[1]==((string)"genq")) {
-    std::shared_ptr<model> mnew(new generic_quarks);
-    mod=mnew;
-  } else if (sv[1]==((string)"qmc")) {
-    std::shared_ptr<model> mnew(new qmc_neut);
-    mod=mnew;
-  } else if (sv[1]==((string)"qmc_threep")) {
-    std::shared_ptr<model> mnew(new qmc_threep);
-    mod=mnew;
-  } else if (sv[1]==((string)"qmc_fixp")) {
-    std::shared_ptr<model> mnew(new qmc_fixp);
-    mod=mnew;
-  } else if (sv[1]==((string)"qmc_twolines")) {
-    std::shared_ptr<model> mnew(new qmc_twolines);
-    mod=mnew;
-  } else {
-    cerr << "Model unknown." << endl;
-    return exc_efailed;
-  }
-  mod->setup_params(cl);
-
-  return 0;
 }
 

@@ -30,7 +30,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-model::model() {
+model::model(settings &s) : set(s) {
   cns.nb_start=0.01;
   ts.verbose=0;
   ts.set_units("1/fm^4","1/fm^4","1/fm^3");
@@ -45,36 +45,6 @@ model::model() {
   in_r_max=18.0;
       
   // Default parameter values
-      
-  grid_size=100;
-  debug_load=false;
-  // Minimum allowed maximum mass
-  min_max_mass=2.0;
-  // Minimum neutron star mass
-  min_mass=0.8;
-  debug_star=false;
-  debug_line=false;
-  debug_eos=false;
-  baryon_density=true;
-  exit_mass=10.0;
-  input_dist_thresh=0.0;
-  use_crust=true;
-  best_detail=false;
-  inc_baryon_mass=false;
-  norm_max=true;
-  mvsr_pr_inc=1.1;
-      
-  // -----------------------------------------------------------
-  // Grid limits
-      
-  nb_low=0.04;
-  nb_high=1.24;
-      
-  e_low=0.3;
-  e_high=10.0;
-      
-  m_low=0.2;
-  m_high=3.0;
       
   teos.verbose=0;
 }
@@ -170,7 +140,7 @@ void model::load_mc(std::ofstream &scr_out) {
     
     scr_out << "\nInput data files: " << std::endl;
     
-    if (norm_max) {
+    if (set.norm_max) {
       scr_out << "Normalizing maximum probability to 1." << std::endl;
     } else {
       scr_out << "Normalizing integral of distribution to 1." << std::endl;
@@ -217,7 +187,7 @@ void model::load_mc(std::ofstream &scr_out) {
       }
       for(size_t i=0;i<source_tables[k].get_nx();i++) {
 	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  if (norm_max) {
+	  if (set.norm_max) {
 	    source_tables[k].set
 	      (i,j,slice_names[k],source_tables[k].get
 	       (i,j,slice_names[k])/max);
@@ -231,7 +201,7 @@ void model::load_mc(std::ofstream &scr_out) {
 	}
       }
 
-      if (debug_load) {
+      if (set.debug_load) {
 	std::cout << source_fnames[k] << std::endl;
 	for(size_t i=0;i<source_tables[k].get_nx();i++) {
 	  std::cout << i << " " << source_tables[k].get_grid_x(i)
@@ -264,7 +234,7 @@ void model::load_mc(std::ofstream &scr_out) {
     scr_out << std::endl;
   }
 
-  if (in_m_min<min_mass) in_m_min=min_mass;
+  if (in_m_min<set.min_mass) in_m_min=set.min_mass;
   
 #ifdef AWS_HACK
   in_m_min=1.3;
@@ -328,7 +298,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   
     for(size_t i=0;(tab_eos->get_nlines()>0 && i<tab_eos->get_nlines()-1);
 	i++) {
-      if ((!use_crust || tab_eos->get("ed",i)>0.6) && 
+      if ((!set.use_crust || tab_eos->get("ed",i)>0.6) && 
 	  tab_eos->get("pr",i+1)<tab_eos->get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << std::endl;
 	scr_out << "ed=" << tab_eos->get("ed",i) 
@@ -342,7 +312,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   }
 
   // If requested, compute the baryon density automatically
-  if (has_eos && baryon_density && !tab_eos->is_column("nb")) {
+  if (has_eos && set.baryon_density && !tab_eos->is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
     double n1, e1;
@@ -432,7 +402,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       // This pressure (10^{-5} fm^{-4}) corresponds to a baryon 
       // density of about 3e-3 fm^{-3}.
 
-      if (use_crust==false && tab_eos->get("pr",i)<1.0e-5) {
+      if (set.use_crust==false && tab_eos->get("pr",i)<1.0e-5) {
 
 	tab_eos->set("nb",i,0.0);
 
@@ -466,7 +436,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     }
 
     // Read the EOS into the tov_eos object.
-    if (baryon_density && inc_baryon_mass) {
+    if (set.baryon_density && set.inc_baryon_mass) {
       tab_eos->set_unit("ed","1/fm^4");
       tab_eos->set_unit("pr","1/fm^4");
       tab_eos->set_unit("nb","1/fm^3");
@@ -477,7 +447,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       teos.read_table(*tab_eos,"ed","pr");
     }
     
-    if (use_crust) {
+    if (set.use_crust) {
     
       double ed_last=0.0;
       // This range corresponds to between about n_B=0.01 and 0.17
@@ -509,13 +479,13 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	ed_last=ed;
       }
 
-      // End of 'if (use_crust)'
+      // End of 'if (set.use_crust)'
     }
 
     // If necessary, output debug information (We want to make sure this
     // is after tov_eos::read_table() so that we can debug the
     // core-crust transition)
-    if (debug_eos) {
+    if (set.debug_eos) {
       o2scl_hdf::hdf_file hfde;
 
       hfde.open_or_create("debug_eos.o2");
@@ -538,7 +508,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfde,full_eos,"full_eos");
 
       hfde.close();
-      if (!debug_star) {
+      if (!set.debug_star) {
 	scr_out << "Automatically exiting since 'debug_eos' is true."
 		<< std::endl;
 	exit(-1);
@@ -546,7 +516,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     }
 
     // Solve for M vs. R curve
-    ts.princ=mvsr_pr_inc;
+    ts.princ=set.mvsr_pr_inc;
     int info=ts.mvsr();
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
@@ -571,9 +541,9 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Check that maximum mass is large enough,
     double mmax=tab_mvsr->max("gm");
-    if (mmax<min_max_mass) {
+    if (mmax<set.min_max_mass) {
       scr_out << "Maximum mass too small: " << mmax << " < "
-	      << min_max_mass << "." << std::endl;
+	      << set.min_max_mass << "." << std::endl;
       success=ix_small_max;
       return;
     }
@@ -631,7 +601,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
        (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
 
-    if (baryon_density) {
+    if (set.baryon_density) {
       
       double nb1=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
       if (nb1>0.01) {
@@ -681,7 +651,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   }
   
   // Output M vs. R curve
-  if (debug_star) {
+  if (set.debug_star) {
     o2scl_hdf::hdf_file hfds;
     hfds.open_or_create("debug_star.o2");
     hdf_output(hfds,*tab_mvsr,"mvsr");
@@ -789,7 +759,7 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
   // -----------------------------------------------
   // Compute the weights for each source
       
-  if (debug_star) scr_out << "Name M R Weight" << std::endl;
+  if (set.debug_star) scr_out << "Name M R Weight" << std::endl;
       
   for(size_t i=0;i<nsources;i++) {
 	
@@ -814,7 +784,7 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
     // Include the weight for this source 
     ret*=wgts[i];
 	
-    if (debug_star) {
+    if (set.debug_star) {
       scr_out << source_names[i] << " " << e.mass[i] << " " 
 	      << e.rad[i] << " " << wgts[i] << std::endl;
     }
@@ -822,7 +792,7 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
     // Go to the next source
   }
       
-  if (debug_star) scr_out << std::endl;
+  if (set.debug_star) scr_out << std::endl;
       
   // -----------------------------------------------
   // Exit if the current maximum mass is too large
@@ -867,7 +837,7 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
   return;
 }
 
-two_polytropes::two_polytropes() {
+two_polytropes::two_polytropes(settings &s) : model(s) {
   se.kpp=0.0;
   se.n0=0.16;
   se.eoa=-16.0/hc_mev_fm;
@@ -1817,7 +1787,7 @@ void quark_star::compute_eos(ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_neut::qmc_neut() {
+qmc_neut::qmc_neut(settings &s) : model(s) {
   rho0=0.16;
 
   // Set sigma for Gaussian distribution
@@ -2023,7 +1993,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
 
 // --------------------------------------------------------------
 
-qmc_threep::qmc_threep() {
+qmc_threep::qmc_threep(settings &s) : model(s) {
   rho0=0.16;
   rho_trans=0.16;
 }
@@ -2266,7 +2236,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_fixp::qmc_fixp() {
+qmc_fixp::qmc_fixp(settings &s) : model(s) {
   nb0=0.16;
   nb_trans=0.16;
 
@@ -2520,7 +2490,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_twolines::qmc_twolines() {
+qmc_twolines::qmc_twolines(settings &s) : model(s) {
   nb0=0.16;
   nb_trans=0.16;
 }
