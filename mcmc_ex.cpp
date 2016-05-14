@@ -22,57 +22,54 @@
 */
 #include "mcmc.h"
 
-class model {
+using namespace std;
+using namespace mcmc_namespace;
 
-  virtual void init() {
-    return;
-  };
-    
-  /** \brief Desc
-   */
-  size_t nparams;
+typedef boost::numeric::ublas::vector<double> ubvector;
 
+/** \brief Desc
+ */
+class model_ex : public mcmc_namespace::default_model {
+  
+public:
+  
   /** \brief Desc
    */
   virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
-			       int &success, ubvector &dat)=0;
-    
-  /** \brief Desc
-   */
-  virtual void first_point(ubvector &pars) {
-    ubvector low(nparams), high(nparams);
-    low_limits(low);
-    high_limits(high);
-    for(size_t i=0;i<nparams;i++) {
-      pars[i]=(low[i]+high[i])/2.0;
-    }
-    return;
+			       int &success, ubvector &dat) {
+    return exp(-pars[0]*pars[0]/2.0);
   }
     
   /// \name Functions for MCMC parameters
   //@{
   /** \brief Set the lower boundaries for all the parameters
    */
-  virtual void low_limits(ubvector &pars)=0;
+  virtual void low_limits(ubvector &pars) {
+    pars[0]=-5.0;
+    return;
+  }
 
   /** \brief Set the upper boundaries for all the parameters
    */
-  virtual void high_limits(ubvector &pars)=0;
+  virtual void high_limits(ubvector &pars) {
+    pars[0]=5.0;
+    return;
+  }
 
   /// Return the name of parameter with index \c i
   virtual std::string param_name(size_t i) {
+    return "x";
   }
 
   /// Return the unit of parameter with index \c i
   virtual std::string param_unit(size_t i) {
+    return "";
   }
   //@}
 
-
 };
 
-
-int main(void) {
+int main(int argc, char *argv[]) {
 
   // ---------------------------------------
   // Init MPI
@@ -83,8 +80,9 @@ int main(void) {
 
   // ---------------------------------------
   // Main bamr object 
-  
-  mcmc_class<ubvector,model> mcmc;
+
+  std::shared_ptr<model_ex> m(new model_ex);
+  mcmc_class<ubvector,model_ex> mcmc(m);
   mcmc.run(argc,argv);
   
   // ---------------------------------------
@@ -94,7 +92,5 @@ int main(void) {
   MPI_Finalize();
 #endif
 
-  return;
+  return 0;
 }
-
-#endif

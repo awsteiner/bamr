@@ -63,7 +63,9 @@ namespace mcmc_namespace {
   /** \brief Desc
    */
   class default_model {
-
+    
+  public:
+    
     virtual void init() {
       return;
     };
@@ -164,7 +166,7 @@ namespace mcmc_namespace {
   /// Maximum number of iterations (default 0)
   int max_iters;
 
-  /// MCMC stepsize factor (default 15.0)
+  /// MCMC stepsize factor (default 10.0)
   double step_fac;
 
   /** \brief Number of warm up steps (successful steps not
@@ -286,7 +288,7 @@ namespace mcmc_namespace {
     // MC step parameters
     use_smove=false;
     hg_mode=0;
-    step_fac=15.0;
+    step_fac=10.0;
     nwalk=10;
 
     // Initial values
@@ -317,7 +319,7 @@ namespace mcmc_namespace {
     p_step_fac.help=
       ((std::string)"MCMC step factor. The step size for each ")+
       "variable is taken as the difference between the high and low "+
-      "limits divided by this factor (default 15.0). This factor can "+
+      "limits divided by this factor (default 10.0). This factor can "+
       "be increased if the acceptance rate is too small, but care must "+
       "be taken, e.g. if the conditional probability is multimodal. If "+
       "this step size is smaller than 1.0, it is reset to 1.0 .";
@@ -744,10 +746,12 @@ namespace mcmc_namespace {
    */
   virtual int mcmc(std::vector<std::string> &sv, bool itive_com) {
 
+    model_t &m=*this->mod;
+    
     bool debug=false;
     
     // Set number of parameters
-    this->nparams=this->mod->nparams;
+    this->nparams=m.nparams;
     
     // Make sure that first_update() is called when necessary
     first_file_update=false;
@@ -853,10 +857,10 @@ namespace mcmc_namespace {
       
 	// Get parameters
 	for(size_t i=0;i<this->nparams;i++) {
-	  std::string pname=((std::string)"param_")+this->mod->param_name(i);
+	  std::string pname=((std::string)"param_")+m.param_name(i);
 	  current[0][i]=file_tab.get(pname,last_line);
 	  this->scr_out << "Parameter named "
-			<< this->mod->param_name(i) << " " 
+			<< m.param_name(i) << " " 
 			<< current[0][i] << std::endl;
 	}
       
@@ -914,10 +918,10 @@ namespace mcmc_namespace {
       
 	// Get parameters
 	for(size_t i=0;i<this->nparams;i++) {
-	  std::string pname=((std::string)"param_")+this->mod->param_name(i);
+	  std::string pname=((std::string)"param_")+m.param_name(i);
 	  current[0][i]=file_tab.get(pname,row);
 	  this->scr_out << "Parameter named "
-	  << this->mod->param_name(i) << " " 
+	  << m.param_name(i) << " " 
 	  << current[0][i] << std::endl;
 	}
       
@@ -938,7 +942,7 @@ namespace mcmc_namespace {
     } else {
     
       this->scr_out << "First point from default." << std::endl;
-      this->mod->first_point(current[0]);
+      m.first_point(current[0]);
 
     }
 
@@ -962,8 +966,8 @@ namespace mcmc_namespace {
 
     // Set lower and upper bounds for parameters
     ubvector low(this->nparams), high(this->nparams);
-    this->mod->low_limits(low);
-    this->mod->high_limits(high);
+    m.low_limits(low);
+    m.high_limits(high);
 
     n_chains=0;
 
@@ -1004,7 +1008,7 @@ namespace mcmc_namespace {
 
 	  // Begin with the intial point
 	  ubvector first(this->nparams);
-	  this->mod->first_point(first);
+	  m.first_point(first);
 
 	  // Make a perturbation from the initial point
 	  for(size_t ik=0;ik<this->nparams;ik++) {
@@ -1016,7 +1020,7 @@ namespace mcmc_namespace {
 	  }
 	
 	  // Compute the weight
-	  w_current[ij]=this->mod->compute_point(current[ij],this->scr_out,
+	  w_current[ij]=m.compute_point(current[ij],this->scr_out,
 					   suc,this->data_arr[ij]);
 	  this->scr_out << "SM Init: " << ij << " ";
 	  o2scl::vector_out(this->scr_out,current[ij]);
@@ -1063,7 +1067,7 @@ namespace mcmc_namespace {
       // Normal or Metropolis-Hastings steps
 
       // Compute weight for initial point
-      w_current[0]=this->mod->compute_point
+      w_current[0]=m.compute_point
       (current[0],this->scr_out,suc,this->data_arr[0]);
       ret_codes[suc]++;
       this->scr_out << "Initial weight: " << w_current[0] << std::endl;
@@ -1242,19 +1246,17 @@ namespace mcmc_namespace {
 
       if (this->use_smove) {
 	if (step_flags[ik]==false) {
-	  w_next=this->mod->compute_point(next,this->scr_out,suc,
-				    this->data_arr[ik+this->nwalk]);
+	  w_next=m.compute_point(next,this->scr_out,suc,
+				 this->data_arr[ik+this->nwalk]);
 	} else {
-	  w_next=this->mod->compute_point(next,this->scr_out,suc,
-					  this->data_arr[ik]);
+	  w_next=m.compute_point(next,this->scr_out,suc,
+				 this->data_arr[ik]);
 	}
       } else {
 	if (step_flags[0]) {
-	  w_next=this->mod->compute_point(next,this->scr_out,suc,
-					  this->data_arr[1]);
+	  w_next=m.compute_point(next,this->scr_out,suc,this->data_arr[1]);
 	} else {
-	  w_next=this->mod->compute_point(next,this->scr_out,suc,
-					  this->data_arr[0]);
+	  w_next=m.compute_point(next,this->scr_out,suc,this->data_arr[0]);
 	}
       }
       ret_codes[suc]++;

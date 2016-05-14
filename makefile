@@ -63,6 +63,15 @@ bamr.o: bamr.cpp bamr.h models.o main.o nstar_cold2.o mcmc.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
+
+mcmc_ex.o: mcmc_ex.cpp mcmc.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_ex.o -c mcmc_ex.cpp
+
+mcmc_ex: mcmc_ex.o mcmc.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o mcmc_ex \
+		mcmc_ex.o $(LIB) 
+
+# ----------------------------------------------------------------------
 # Help target
 # ----------------------------------------------------------------------
 
