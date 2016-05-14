@@ -98,7 +98,9 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class bamr_class : public mcmc_namespace::mcmc_class<model_data,model> {
-
+    
+  public:
+    
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
@@ -112,25 +114,20 @@ namespace bamr {
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
     //@}
 
-#ifdef O2SCL_NEVER_DEFINED
-    
-  protected:
-
-    /** \brief Set the first point in the parameter space
-     */
-    virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
-
-    /** \brief Prepare for MCMC using Metropolis-Hastings
-     */
-    virtual int hastings(std::vector<std::string> &sv, bool itive_com);
-			 
-    /** \brief Add a data distribution to the list
-     */
-    virtual int add_data(std::vector<std::string> &sv, bool itive_com);
-
     /// Setup column names and units for data table
     virtual void table_names_units(std::string &s, std::string &u);
 
+    /** \brief Fill vector in <tt>line</tt> with data from the
+	current Monte Carlo point
+    */
+    virtual void fill_line(ubvector &pars, double weight, model_data &dat,
+			   std::vector<double> &line);
+
+    /** \brief Write initial data to HDF file
+     */
+    virtual void first_update(o2scl_hdf::hdf_file &hf);
+    
+    
     /** \brief Make any necessary preparations for the mcmc() function
 
 	This is called by \ref mcmc(). If the return value is non-zero
@@ -141,36 +138,17 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
-    /** \brief Initialize the expectation value objects
-
-	This function is called by mcmc().
-    */
-    virtual void init_grids_table(ubvector &low, ubvector &high);
-
-    /** \brief Add a measurement
-     */
-    void add_measurement(ubvector &pars, double weight, model_data &dat,
-			 bool new_meas, size_t n_meas);
-
-    /** \brief Fill vector in <tt>line</tt> with data from the
-	current Monte Carlo point
-    */
-    virtual void fill_line(ubvector &pars, double weight, model_data &dat,
-			   bool new_meas, size_t n_meas,
-			   std::vector<double> &line);
-    
-    /** \brief Write initial data to HDF file
-     */
-    virtual void first_update(o2scl_hdf::hdf_file &hf, model &modp);
-    
-    /** \brief Write histogram data to files with prefix \c fname
-     */
-    virtual void update_files(ubvector &current);
+#ifdef O2SCL_NEVER_DEFINED
     
   protected:
-    
-    /// Output the "best" EOS obtained so far (called by mcmc())
-    void output_best(ubvector &best, double w_best, model_data &dat);
+
+    /** \brief Set the first point in the parameter space
+     */
+    virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Add a data distribution to the list
+     */
+    virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
 #endif
     

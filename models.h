@@ -231,6 +231,8 @@ namespace bamr {
     double m_high;
     //@}
 
+    /** \brief Desc
+     */
     void setup_cli(o2scl::cli &cl) {
       
       // ---------------------------------------
@@ -246,7 +248,8 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("min_max_mass",&p_min_max_mass));
       
       p_min_mass.d=&min_mass;
-      p_min_mass.help=((std::string)"Minimum possible mass for any of individual ")+
+      p_min_mass.help=
+	((std::string)"Minimum possible mass for any of individual ")+
 	"neutron stars in solar masses. The default is 0.8 solar masses.";
       cl.par_list.insert(std::make_pair("min_mass",&p_min_mass));
       
@@ -266,7 +269,8 @@ namespace bamr {
 	"thrown. Changing this value is sometimes "+
 	"useful to gracefully avoid zero probabilities in the input "+
 	"data files. The default is 0.";
-      cl.par_list.insert(std::make_pair("input_dist_thresh",&p_input_dist_thresh));
+      cl.par_list.insert(std::make_pair("input_dist_thresh",
+					&p_input_dist_thresh));
       
       p_debug_star.b=&debug_star;
       p_debug_star.help=((std::string)"If true, output stellar properties ")+
@@ -284,12 +288,14 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("debug_load",&p_debug_load));
       
       p_debug_line.b=&debug_line;
-      p_debug_line.help=((std::string)"If true, output each line as its stored ")+
+      p_debug_line.help=((std::string)
+			 "If true, output each line as its stored ")+
 	"(default false).";
       cl.par_list.insert(std::make_pair("debug_line",&p_debug_line));
       
       p_debug_eos.b=&debug_eos;
-      p_debug_eos.help=((std::string)"If true, output initial equation of state ")+
+      p_debug_eos.help=((std::string)
+			"If true, output initial equation of state ")+
 	"to file 'debug_eos.o2' and abort (default false).";
       cl.par_list.insert(std::make_pair("debug_eos",&p_debug_eos));
       
@@ -299,17 +305,20 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("baryon_density",&p_baryon_density));
       
       p_use_crust.b=&use_crust;
-      p_use_crust.help=((std::string)"If true, use the default crust (default ")+
+      p_use_crust.help=((std::string)
+			"If true, use the default crust (default ")+
 	"true).";
       cl.par_list.insert(std::make_pair("use_crust",&p_use_crust));
       
       p_inc_baryon_mass.b=&inc_baryon_mass;
-      p_inc_baryon_mass.help=((std::string)"If true, compute the baryon mass ")+
+      p_inc_baryon_mass.help=((std::string)
+			      "If true, compute the baryon mass ")+
 	"(default false)";
       cl.par_list.insert(std::make_pair("inc_baryon_mass",&p_inc_baryon_mass));
       
       p_mvsr_pr_inc.d=&mvsr_pr_inc;
-      p_mvsr_pr_inc.help=((std::string)"The multiplicative pressure increment for ")+
+      p_mvsr_pr_inc.help=((std::string)
+			  "The multiplicative pressure increment for ")+
 	"the TOV solver (default 1.1).";
       cl.par_list.insert(std::make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
       
@@ -491,7 +500,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &pars) {
+    virtual void initial_point(ubvector &pars) {
       ubvector low(nparams), high(nparams);
       low_limits(low);
       high_limits(high);
@@ -517,14 +526,12 @@ namespace bamr {
       return;
     }
 
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i) {
-      return "";
+    virtual void param_names(std::vector<std::string> &pnames) {
+      return;
     }
 
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i) {
-      return "";
+    virtual void param_units(std::vector<std::string> &punits) {
+      return;
     }
     //@}
 
@@ -664,7 +671,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -725,7 +732,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
   
   };
 
@@ -802,7 +809,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -905,7 +912,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -984,7 +991,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -1085,7 +1092,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
   };
   
   /** \brief QMC + three polytropes created for \ref Steiner15un
@@ -1179,7 +1186,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
   
   };
 
@@ -1279,7 +1286,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
   
   };
   
@@ -1336,7 +1343,7 @@ namespace bamr {
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(ubvector &e);
+    virtual void initial_point(ubvector &e);
   
   };
 

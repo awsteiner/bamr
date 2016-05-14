@@ -79,9 +79,9 @@ namespace mcmc_namespace {
     virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 				 int &success, ubvector &dat)=0;
     
-    /** \brief Desc
+    /** \brief Specify an initial point
      */
-    virtual void first_point(ubvector &pars) {
+    virtual void initial_point(size_t ix, ubvector &pars) {
       ubvector low(nparams), high(nparams);
       low_limits(low);
       high_limits(high);
@@ -123,14 +123,16 @@ namespace mcmc_namespace {
 
   };
 
-  /** \brief Desc
+  /** \brief A generic MCMC simulator
    */
   template<class data_t=ubvector,
     class model_t=default_model> class mcmc_base {
 
   protected:
 
+  /// Parameter lower limits
   ubvector low;
+  /// Parameter upper limits
   ubvector high;
   
   /// Number of parameters
@@ -145,7 +147,9 @@ namespace mcmc_namespace {
   /// If true, use affine-invariant Monte Carlo
   bool aff_inv;
   
-  /// Number of walkers for affine-invariant MC or 1 otherwise 
+  /** \brief Number of walkers for affine-invariant MC or 1 
+      otherwise (default 1)
+  */
   size_t nwalk;
 
   /// \name Member data for the Metropolis-Hastings step
@@ -402,7 +406,7 @@ namespace mcmc_namespace {
 
   };
 
-  /** \brief Desc
+  /** \brief A generic MCMC simulator with HDF5 file I/O
    */
   template<class data_t=ubvector,
     class model_t=default_model> class mcmc_class : 
@@ -413,14 +417,14 @@ namespace mcmc_namespace {
   /// \name Other variables
   //@{
   /// The first point in the parameter space
-  ubvector first_point;
+  ubvector initial_point;
     
   /// The file containing the initial point
-  std::string first_point_file;
+  std::string initial_point_file;
 
   /// \name Integer designating how to set the initial point
   //@{
-  int first_point_type;
+  int initial_point_type;
   static const int fp_unspecified=-1;
   static const int fp_last=-2;
   static const int fp_best=-3;
@@ -492,7 +496,7 @@ namespace mcmc_namespace {
        "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
        "to ensure they do not get confused with other options.",
        new o2scl::comm_option_mfptr<mcmc_class>
-       (this,&mcmc_class::set_first_point),
+       (this,&mcmc_class::set_initial_point),
        o2scl::cli::comm_option_both}
       /*
 	{'s',"hastings","Specify distribution for M-H step",
@@ -542,9 +546,9 @@ namespace mcmc_namespace {
     //hf.seti("debug_line",debug_line);
     hf.seti("file_update_iters",file_update_iters);
     hf.seti("output_next",this->output_next);
-    hf.seti("first_point_type",first_point_type);
-    hf.sets("first_point_file",first_point_file);
-    hf.setd_vec_copy("first_point",first_point);
+    hf.seti("initial_point_type",initial_point_type);
+    hf.sets("initial_point_file",initial_point_file);
+    hf.setd_vec_copy("initial_point",initial_point);
     
     hf.setd_vec_copy("low",this->low);
     hf.setd_vec_copy("high",this->high);
@@ -572,7 +576,7 @@ namespace mcmc_namespace {
     return;
   }
 
-  /** \brief Desc
+  /** \brief Create strings which contain column names and units
    */
   virtual void table_names_units(std::string &s, std::string &u) {
     s="mult weight ";
@@ -588,7 +592,7 @@ namespace mcmc_namespace {
     return;
   }
 
-  /** \brief Desc
+  /** \brief Fill \c line with data for insertion into the table
    */
   virtual void fill_line(ubvector &pars, double weight, data_t &dat,
 			 std::vector<double> &line) {
@@ -603,7 +607,7 @@ namespace mcmc_namespace {
     return;
   }
   
-  /** \brief Desc
+  /** \brief Update the files
    */
   void update_files() {
     
@@ -639,7 +643,7 @@ namespace mcmc_namespace {
     return;
   }
 
-  /** \brief Desc
+  /** \brief Add a measurement to the table
    */
   virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
 			       bool new_meas) {
@@ -689,7 +693,7 @@ namespace mcmc_namespace {
     return;
   };
 
-  /** \brief Desc
+  /** \brief Choose a Metropolis-Hastings step
    */
   virtual int hastings(std::vector<std::string> &sv, 
 		       bool itive_com) {
@@ -882,9 +886,9 @@ namespace mcmc_namespace {
     return 0;
   }
 
-  /** \brief Desc
+  /** \brief Set the first point
    */
-  int set_first_point(std::vector<std::string> &sv, 
+  int set_initial_point(std::vector<std::string> &sv, 
 		      bool itive_com) {
 
     if (sv.size()<2) {
@@ -894,27 +898,27 @@ namespace mcmc_namespace {
 
     if (sv[1]==((std::string)"values")) {
 
-      first_point.resize(sv.size()-1);
+      initial_point.resize(sv.size()-1);
       for(size_t i=2;i<sv.size();i++) {
-	first_point[i-2]=o2scl::function_to_double(sv[i]);
+	initial_point[i-2]=o2scl::function_to_double(sv[i]);
       }
-      first_point_type=fp_unspecified;
+      initial_point_type=fp_unspecified;
 
     } else if (sv[1]==((std::string)"prefix")) {
   
-      first_point_type=fp_last;
-      first_point_file=sv[2]+((std::string)"_")+
+      initial_point_type=fp_last;
+      initial_point_file=sv[2]+((std::string)"_")+
       std::to_string(this->mpi_rank)+"_out";
       
     } else if (sv[1]==((std::string)"last")) {
-      first_point_type=fp_last;
-      first_point_file=sv[2];
+      initial_point_type=fp_last;
+      initial_point_file=sv[2];
     } else if (sv[1]==((std::string)"best")) {
-      first_point_type=fp_best;
-      first_point_file=sv[2];
+      initial_point_type=fp_best;
+      initial_point_file=sv[2];
     } else if (sv[1]==((std::string)"N")) {
-      first_point_type=o2scl::stoi(sv[2]);
-      first_point_file=sv[3];
+      initial_point_type=o2scl::stoi(sv[2]);
+      initial_point_file=sv[3];
     }
 
     return 0;
@@ -1048,15 +1052,15 @@ namespace mcmc_namespace {
     }
 #endif
 
-    if (first_point_file.length()>0) {
+    if (initial_point_file.length()>0) {
   
-      if (first_point_type==fp_last) {
+      if (initial_point_type==fp_last) {
 
 	// Read file 
-	this->scr_out << "Reading last point from file '" << first_point_file
+	this->scr_out << "Reading last point from file '" << initial_point_file
 	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
-	hf.open(first_point_file);
+	hf.open(initial_point_file);
       
 	// Read table
 	size_t file_n_chains;
@@ -1080,14 +1084,14 @@ namespace mcmc_namespace {
 	this->scr_out << std::endl;
 	hf.close();
 
-      } else if (first_point_type==fp_best) {
+      } else if (initial_point_type==fp_best) {
 	
 	std::vector<double> best_point;
 	o2scl_hdf::hdf_file hf;
-	hf.open(first_point_file);
+	hf.open(initial_point_file);
 	hf.getd_vec("best_point",best_point);
 	hf.close();
-	this->scr_out << "Reading best point from file '" << first_point_file
+	this->scr_out << "Reading best point from file '" << initial_point_file
 	<< "'." << std::endl;
 	for(size_t i=0;i<this->nparams;i++) {
 	  current[0][i]=best_point[i];
@@ -1102,14 +1106,14 @@ namespace mcmc_namespace {
 
 	// Read file 
 	this->scr_out << "Reading "
-	<< first_point_type << "th point from file '" 
-	<< first_point_file
+	<< initial_point_type << "th point from file '" 
+	<< initial_point_file
 	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
-	hf.open(first_point_file);
+	hf.open(initial_point_file);
       
 	// Read table
-	size_t file_n_chains, row=first_point_type;
+	size_t file_n_chains, row=initial_point_type;
 	hf.get_szt("n_chains",file_n_chains);
       
 	o2scl::table_units<> file_tab;
@@ -1123,7 +1127,7 @@ namespace mcmc_namespace {
 	  }
 	}
 	if (row>=file_tab.get_nlines()) {
-	  this->scr_out << "Couldn't find point " << first_point_type 
+	  this->scr_out << "Couldn't find point " << initial_point_type 
 	  << " in file. Using last point." << std::endl;
 	  row=file_tab.get_nlines()-1;
 	}
@@ -1142,11 +1146,11 @@ namespace mcmc_namespace {
 	hf.close();
       }
 
-    } else if (first_point.size()>0) {
+    } else if (initial_point.size()>0) {
     
       this->scr_out << "First point from command-line." << std::endl;
       for(size_t i=0;i<this->nparams;i++) {
-	current[0][i]=first_point[i];
+	current[0][i]=initial_point[i];
 	this->scr_out << current[0][i] << std::endl;
       }
       this->scr_out << std::endl;
@@ -1154,7 +1158,7 @@ namespace mcmc_namespace {
     } else {
 
       this->scr_out << "First point from default." << std::endl;
-      m.first_point(current[0]);
+      m.initial_point(current[0]);
 
     }
 
@@ -1212,7 +1216,7 @@ namespace mcmc_namespace {
 
 	  // Begin with the intial point
 	  ubvector first(this->nparams);
-	  m.first_point(first);
+	  m.initial_point(first);
 
 	  // Make a perturbation from the initial point
 	  for(size_t ik=0;ik<this->nparams;ik++) {
@@ -1747,8 +1751,8 @@ namespace mcmc_namespace {
 
     first_file_update=false;
     
-    first_point_file="";
-    first_point_type=fp_unspecified;
+    initial_point_file="";
+    initial_point_type=fp_unspecified;
 
     file_update_iters=40;
     max_chain_size=10000;

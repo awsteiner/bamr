@@ -909,7 +909,7 @@ string two_polytropes::param_unit(size_t i) {
   return ".";
 }
 
-void two_polytropes::first_point(ubvector &params) {
+void two_polytropes::initial_point(ubvector &params) {
   params[0]=1.0;
   params[1]=-3.0;
   params[2]=0.165;
@@ -1061,7 +1061,7 @@ string alt_polytropes::param_unit(size_t i) {
   return two_polytropes::param_unit(i);
 }
 
-void alt_polytropes::first_point(ubvector &params) {
+void alt_polytropes::initial_point(ubvector &params) {
   params[0]=1.0;
   params[1]=-2.66;
   params[2]=0.165;
@@ -1233,7 +1233,7 @@ string fixed_pressure::param_unit(size_t i) {
   return two_polytropes::param_unit(i);
 }
 
-void fixed_pressure::first_point(ubvector &params) {
+void fixed_pressure::initial_point(ubvector &params) {
   params[0]=1.0;
   params[1]=-2.5;
   params[2]=0.165;
@@ -1398,7 +1398,7 @@ string generic_quarks::param_unit(size_t i) {
   return ".";
 }
 
-void generic_quarks::first_point(ubvector &params) {
+void generic_quarks::initial_point(ubvector &params) {
   params[0]=1.19;
   params[1]=-2.52;
   params[2]=0.188;
@@ -1658,7 +1658,7 @@ std::string quark_star::param_unit(size_t i) {
   return "1/fm";
 }
   
-void quark_star::first_point(ubvector &params) {
+void quark_star::initial_point(ubvector &params) {
   params[0]=0.2446;
   params[1]=0.0740;
   params[2]=0.00289;
@@ -1873,7 +1873,7 @@ string qmc_neut::param_unit(size_t i) {
   return ".";
 }
 
-void qmc_neut::first_point(ubvector &params) {
+void qmc_neut::initial_point(ubvector &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
@@ -2060,7 +2060,7 @@ string qmc_threep::param_unit(size_t i) {
   return ".";
 }
 
-void qmc_threep::first_point(ubvector &params) {
+void qmc_threep::initial_point(ubvector &params) {
 
   params[0]=13.0;
   params[1]=0.5;
@@ -2308,7 +2308,7 @@ string qmc_fixp::param_unit(size_t i) {
   return "1/fm^4";
 }
 
-void qmc_fixp::first_point(ubvector &params) {
+void qmc_fixp::initial_point(ubvector &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
@@ -2553,7 +2553,7 @@ string qmc_twolines::param_unit(size_t i) {
   return "1/fm^4";
 }
 
-void qmc_twolines::first_point(ubvector &params) {
+void qmc_twolines::initial_point(ubvector &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;

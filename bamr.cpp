@@ -33,83 +33,81 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-#ifdef NEVER_DEFINED
-
 void bamr_class::table_names_units(std::string &s, std::string &u) {
-  s="N mult ";
-  u+=". . ";
-  s+="weight ";
-  if (norm_max) {
+
+  model &m=*this->mod;
+  
+  mcmc_class::table_names_units(s,u);
+  
+  if (set.norm_max) {
     u+=". ";
   } else {
-    u+=((string)"1/km^")+szttos(nsources)+"/Msun^"+
-      szttos(nsources)+" ";
+    u+=((std::string)"1/km^")+std::to_string(m.nsources)+"/Msun^"+
+      std::to_string(m.nsources)+" ";
   }
-  for(size_t i=0;i<nsources;i++) {
-    s+=((string)"wgt_")+source_names[i]+" ";
-    if (norm_max) {
+  for(size_t i=0;i<m.nsources;i++) {
+    s+=((std::string)"wgt_")+m.source_names[i]+" ";
+    if (set.norm_max) {
       u+=". ";
     } else {
       u+="1/km/Msun ";
     }
   }
-  for(size_t i=0;i<nparams;i++) {
-    s+=((string)"param_")+data_arr[0].modp->param_name(i)+" ";
-    u+=data_arr[0].modp->param_unit(i)+" ";
-  }
-
+  
   // It is important here that all of these columns which store values
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(size_t i=0;i<nsources;i++) {
-    s+=((string)"Rns_")+source_names[i]+" ";
+  for(size_t i=0;i<m.nsources;i++) {
+    s+=((std::string)"Rns_")+m.source_names[i]+" ";
     u+="km ";
   }
-  for(size_t i=0;i<nsources;i++) {
-    s+=((string)"Mns_")+source_names[i]+" ";
+  for(size_t i=0;i<m.nsources;i++) {
+    s+=((std::string)"Mns_")+m.source_names[i]+" ";
     u+="Msun ";
   }
-  if (has_eos) {
-    for(int i=0;i<grid_size;i++) {
-      s+=((string)"P_")+szttos(i)+" ";
+  
+  if (m.has_eos) {
+    for(int i=0;i<set.grid_size;i++) {
+      s+=((string)"P_")+std::to_string(i)+" ";
       u+="1/fm^4 ";
     }
   }
-  for(int i=0;i<grid_size;i++) {
-    s+=((string)"R_")+szttos(i)+" ";
+  
+  for(int i=0;i<set.grid_size;i++) {
+    s+=((string)"R_")+std::to_string(i)+" ";
     u+="km ";
-    if (has_eos) {
-      s+=((string)"PM_")+szttos(i)+" ";
+    if (m.has_eos) {
+      s+=((string)"PM_")+std::to_string(i)+" ";
       u+="1/fm^4 ";
     }
   }
-  if (has_eos) {
-    if (baryon_density) {
-      for(int i=0;i<grid_size;i++) {
-	s+=((string)"Pnb_")+szttos(i)+" ";
+  if (m.has_eos) {
+    if (set.baryon_density) {
+      for(int i=0;i<set.grid_size;i++) {
+	s+=((string)"Pnb_")+std::to_string(i)+" ";
 	u+="1/fm^4 ";
-	s+=((string)"EoA_")+szttos(i)+" ";
+	s+=((string)"EoA_")+std::to_string(i)+" ";
 	u+="MeV ";
       }
     }
-    if (has_esym) {
+    if (m.has_esym) {
       s+="S L ";
       u+="MeV MeV ";
     }
     s+="R_max M_max P_max e_max ";
     u+="km Msun 1/fm^4 1/fm^4 ";
-    if (baryon_density) {
+    if (set.baryon_density) {
       s+="nb_max ";
       u+="1/fm^3 ";
     }
-    for(size_t i=0;i<nsources;i++) {
-      s+=((string)"ce_")+source_names[i]+" ";
+    for(size_t i=0;i<m.nsources;i++) {
+      s+=((string)"ce_")+m.source_names[i]+" ";
       u+="1/fm^4 ";
     }
-    if (baryon_density) {
-      for(size_t i=0;i<nsources;i++) {
-	s+=((string)"cnb_")+source_names[i]+" ";
+    if (set.baryon_density) {
+      for(size_t i=0;i<m.nsources;i++) {
+	s+=((string)"cnb_")+m.source_names[i]+" ";
 	u+="1/fm^3 ";
       }
     }
@@ -118,54 +116,19 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   return;
 }
 
-void bamr_class::init_grids_table(ubvector &low, ubvector &high) {
+void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
+			   std::vector<double> &line) {
+
+  mcmc_class::fill_line(pars,weight,dat,line);
+
+  model &m=*this->mod;
   
-  if (low.np==0 || high.np==0) {
-    O2SCL_ERR("No parameters in bamr_class::init().",exc_einval);
-  }
-
-  // -----------------------------------------------------------
-  // Make grids
-
-  nb_grid=uniform_grid_end<double>(nb_low,nb_high,grid_size-1);
-  e_grid=uniform_grid_end<double>(e_low,e_high,grid_size-1);
-  m_grid=uniform_grid_end<double>(m_low,m_high,grid_size-1);
-
-  // -----------------------------------------------------------
-  // Init table
-
-  std::string s, u;
-  table_names_units(s,u);
-  tc.line_of_names(s);
-
-  {
-    size_t ctr=0;
-    std::string unit;
-    std::istringstream is(u);
-    while(is >> unit) {
-      if (unit!=((string)".")) {
-	tc.set_unit(tc.get_column_name(ctr),unit);
-      }
-      ctr++;
-    } 
-    if (ctr!=tc.get_ncolumns()) {
-      O2SCL_ERR("Column/unit alignment in bamr_class::init_grids_table().",
-		exc_esanity);
-    }
-  }
-
-  return;
-}
-
-void bamr_class::fill_line
-(ubvector &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
- std::shared_ptr<o2scl::table_units<> > tab_mvsr,
- double weight, bool new_meas, size_t n_meas, ubvector &wgts,
- std::vector<double> &line) {
-
+  shared_ptr<table_units<> > tab_eos=dat.eos;
+  shared_ptr<table_units<> > tab_mvsr=dat.mvsr;
+  
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
-  if (has_eos) {
+  if (m.has_eos) {
 
     // The highest baryon density in the EOS table
     nbmax2=tab_eos->max("nb");
@@ -178,7 +141,7 @@ void bamr_class::fill_line
     // The radius of the maximum mass star
     rmax=tab_mvsr->get_constant("new_r_max");
     
-    if (baryon_density) {
+    if (set.baryon_density) {
       // The central baryon density in the maximum mass configuration
       nbmax=tab_mvsr->get_constant("new_nb_max");
     }
@@ -189,24 +152,18 @@ void bamr_class::fill_line
     mmax=3.0;
   }
 
-  line.push_back(n_meas);
-  line.push_back(1.0);
-  line.push_back(weight);
-  for(size_t i=0;i<nsources;i++) {
-    line.push_back(wgts[i]);
+  for(size_t i=0;i<m.nsources;i++) {
+    line.push_back(dat.wgts[i]);
   }
   for(size_t i=0;i<nparams;i++) {
-    line.push_back(e.params[i]);
+    line.push_back(pars[i]);
   }
-  for(size_t i=0;i<nsources;i++) {
-    line.push_back(e.rad[i]);
+  for(size_t i=0;i<m.nsources;i++) {
+    line.push_back(dat.rad[i]);
   }
-  for(size_t i=0;i<nsources;i++) {
-    line.push_back(e.mass[i]);
-  }
-  if (has_eos) {
-    for(int i=0;i<grid_size;i++) {
-      double eval=e_grid[i];
+  if (m.has_eos) {
+    for(int i=0;i<set.grid_size;i++) {
+      double eval=m.e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
       double emax2=tab_eos->max("ed");
@@ -227,24 +184,24 @@ void bamr_class::fill_line
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(int i=0;i<grid_size;i++) {
-    double mval=m_grid[i];
+  for(int i=0;i<set.grid_size;i++) {
+    double mval=m.m_grid[i];
     if (mval<mmax) {
       line.push_back(tab_mvsr->interp("gm",mval,"r"));
-      if (has_eos) {
+      if (m.has_eos) {
 	line.push_back(tab_mvsr->interp("gm",mval,"pr"));
       }
     } else {
       line.push_back(0.0);
-      if (has_eos) {
+      if (m.has_eos) {
 	line.push_back(0.0);
       }
     }
   }
-  if (has_eos) {
-    if (baryon_density) {
-      for(int i=0;i<grid_size;i++) {
-	double nbval=nb_grid[i];
+  if (m.has_eos) {
+    if (set.baryon_density) {
+      for(int i=0;i<set.grid_size;i++) {
+	double nbval=m.nb_grid[i];
 	if (nbval<nbmax2) {
 	  double pres_temp=tab_eos->interp("nb",nbval,"pr");
 	  if (pres_temp<pmax) {
@@ -261,7 +218,7 @@ void bamr_class::fill_line
 	}
       }
     }
-    if (has_esym) {
+    if (m.has_esym) {
       line.push_back(tab_eos->get_constant("S"));
       line.push_back(tab_eos->get_constant("L"));
     }
@@ -269,13 +226,13 @@ void bamr_class::fill_line
     line.push_back(mmax);
     line.push_back(pmax);
     line.push_back(emax);
-    if (baryon_density) line.push_back(nbmax);
-    for(size_t i=0;i<nsources;i++) {
-      line.push_back(tab_mvsr->interp("gm",e.mass[i],"ed"));
+    if (set.baryon_density) line.push_back(nbmax);
+    for(size_t i=0;i<m.nsources;i++) {
+      line.push_back(tab_mvsr->interp("gm",pars[nparams-m.nsources+i],"ed"));
     }
-    if (baryon_density) {
-      for(size_t i=0;i<nsources;i++) {
-	line.push_back(tab_mvsr->interp("gm",e.mass[i],"nb"));
+    if (set.baryon_density) {
+      for(size_t i=0;i<m.nsources;i++) {
+	line.push_back(tab_mvsr->interp("gm",pars[nparams-m.nsources+i],"nb"));
       }
     }
   }
@@ -283,201 +240,56 @@ void bamr_class::fill_line
   return;
 }
 
-void bamr_class::add_measurement
-(ubvector &e, std::shared_ptr<o2scl::table_units<> > tab_eos,
- std::shared_ptr<o2scl::table_units<> > tab_mvsr,
- double weight, bool new_meas, size_t n_meas, ubvector &wgts) {
+void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
-  // Test to see if we need to add a new line of data or
-  // increment the weight on the previous line
-  if (tc.get_nlines()==0 || new_meas==true) {
-    
-    std::vector<double> line;
-    fill_line(e,tab_eos,tab_mvsr,weight,new_meas,n_meas,wgts,line);
-    
-    // Done adding values, check size and add to table
-    if (line.size()!=tc.get_ncolumns()) {
-      scr_out << "line.size(): " << line.size() << endl;
-      scr_out << "tc.get_ncolumns(): " << tc.get_ncolumns() << endl;
-      for(size_t i=0;i<line.size() && i<tc.get_ncolumns();i++) {
-	scr_out << line[i] << " " << tc.get_column_name(i) << endl;
-      }
-      O2SCL_ERR("Alignment problem.",exc_efailed);
-    }
-    tc.line_of_data(line.size(),line);
+  mcmc_class::first_update(hf);
 
-    if (debug_line) {
-      vector<string> sc_in, sc_out;
-      for(size_t k=0;k<line.size();k++) {
-	sc_in.push_back(tc.get_column_name(k)+": "+o2scl::dtos(line[k]));
-      }
-      o2scl::screenify(line.size(),sc_in,sc_out);
-      for(size_t k=0;k<sc_out.size();k++) {
-	cout << sc_out[k] << endl;
-      }
-      cout << "Press a key and enter to continue." << endl;
-      char ch;
-      cin >> ch;
-    }
-    
-  } else if (tc.get_nlines()>0) {
-    tc.set("mult",tc.get_nlines()-1,
-	   tc.get("mult",tc.get_nlines()-1)+1.0);
-  }
+  model &m=*this->mod;
   
-  return;
-}
+  hf.sets_vec("source_names",m.source_names);
+  hf.sets_vec("source_fnames",m.source_fnames);
+  hf.sets_vec("slice_names",m.slice_names);
 
-void bamr_class::first_update(hdf_file &hf, model &modp) {
-
-  vector<string> param_names;
-  for(size_t i=0;i<nparams;i++) {
-    param_names.push_back(modp.param_name(i));
-  }
-  hf.sets_vec("param_names",param_names);
-
-  hf.sets_vec("source_names",source_names);
-  hf.sets_vec("source_fnames",source_fnames);
-  hf.sets_vec("slice_names",slice_names);
-
-  hf.set_szt("grid_size",grid_size);
-  hf.set_szt("nparams",nparams);
-  hf.set_szt("nsources",nsources);
+  hf.set_szt("grid_size",set.grid_size);
+  hf.set_szt("nsources",m.nsources);
   hf.sets("model",model_type);
-  hf.setd("max_time",max_time);
-  hf.seti("user_seed",user_seed);
-  hf.seti("n_warm_up",n_warm_up);
-  hf.setd("min_mass",min_mass);
-  hf.setd("exit_mass",exit_mass);
-  hf.setd("min_max_mass",min_max_mass);
-  hf.setd("step_fac",step_fac);
-  hf.setd("input_dist_thresh",input_dist_thresh);
-  hf.seti("use_crust",use_crust);
-  hf.seti("baryon_density",baryon_density);
-  hf.seti("max_iters",max_iters);
-  hf.seti("debug_load",debug_load);
-  hf.seti("debug_line",debug_line);
-  hf.seti("debug_eos",debug_eos);
-  hf.seti("debug_star",debug_star);
-  hf.seti("best_detail",best_detail);
-  hf.seti("file_update_iters",file_update_iters);
-  hf.seti("inc_baryon_mass",inc_baryon_mass);
-  hf.seti("output_next",output_next);
-  hf.setd("nb_low",nb_low);
-  hf.setd("nb_high",nb_high);
-  hf.setd("e_low",e_low);
-  hf.setd("e_high",e_high);
-  hf.setd("m_low",m_low);
-  hf.setd("m_high",m_high);
-  hf.seti("first_point_type",first_point_type);
-  hf.sets("first_point_file",first_point_file);
-  hf.setd_vec_copy("first_point",first_point);
+  hf.setd("min_mass",set.min_mass);
+  hf.setd("exit_mass",set.exit_mass);
+  hf.setd("min_max_mass",set.min_max_mass);
+  //hf.setd("input_dist_thresh",input_dist_thresh);
+  hf.seti("use_crust",set.use_crust);
+  hf.seti("baryon_density",set.baryon_density);
+  hf.seti("debug_load",set.debug_load);
+  hf.seti("debug_eos",set.debug_eos);
+  hf.seti("debug_star",set.debug_star);
+  hf.seti("inc_baryon_mass",set.inc_baryon_mass);
+  hf.setd("nb_low",set.nb_low);
+  hf.setd("nb_high",set.nb_high);
+  hf.setd("e_low",set.e_low);
+  hf.setd("e_high",set.e_high);
+  hf.setd("m_low",set.m_low);
+  hf.setd("m_high",set.m_high);
 
-  hdf_output(hf,nb_grid,"nb_grid");
-  hdf_output(hf,e_grid,"e_grid");
-  hdf_output(hf,m_grid,"m_grid");
+  hdf_output(hf,m.nb_grid,"nb_grid");
+  hdf_output(hf,m.e_grid,"e_grid");
+  hdf_output(hf,m.m_grid,"m_grid");
     
-  std::vector<double> low_vec, high_vec;
-  for(size_t i=0;i<nparams;i++) {
-    low_vec.push_back(low.params[i]);
-    high_vec.push_back(high.params[i]);
-  }
-  for(size_t i=0;i<nsources;i++) {
-    low_vec.push_back(low.mass[i]);
-    high_vec.push_back(high.mass[i]);
-  }
-  for(size_t i=0;i<nsources;i++) {
-    low_vec.push_back(low.rad[i]);
-    high_vec.push_back(high.rad[i]);
-  }
-  hf.setd_vec_copy("low",low_vec);
-  hf.setd_vec_copy("high",high_vec);
-
-  hf.sets_vec("cl_args",cl_args);
-
-  return;
-}
-
-void bamr_class::update_files(model &modp, ubvector &e_current) {
-
-  hdf_file hf;
-
-  // Open main update file
-  hf.open_or_create(prefix+"_"+std::to_string(mpi_rank)+"_out");
-    
-  // First time, output some initial quantities
-  if (first_file_update==false) {
-    first_update(hf,modp);
-    first_file_update=true;
-  }
-
-  hf.set_szt("mh_success",mh_success);
-  hf.set_szt("mh_failure",mh_failure);
-  hf.set_szt("mcmc_iterations",mcmc_iterations);
-  hf.seti_vec("ret_codes",ret_codes);
-  
-  // Store Markov chain
-  if (n_chains==0) n_chains++;
-  hf.set_szt("n_chains",n_chains);
-  string ch_name="markov_chain"+szttos(n_chains-1);
-  hdf_output(hf,tc,ch_name);
-  if (((int)tc.get_nlines())==max_chain_size) {
-    tc.clear_data();
-    n_chains++;
-
-    // 03/04/16 - I don't think this is necessary
-    // Store the new empty chain in the HDF5 file just in case we
-    // stop before the next call to update_files().
-    //string ch_name="markov_chain"+szttos(n_chains-1);
-    //hdf_output(hf,tc,ch_name);
-  }
-
-  hf.close();
-
-  return;
-}
-
-
-void bamr_class::output_best(ubvector &e_best, double w_best,
-			     shared_ptr<table_units<> > tab_eos,
-			     shared_ptr<table_units<> > tab_mvsr,
-			     ubvector &wgts) {
-  
-  scr_out << "Best: " << e_best << " " << w_best << endl;
-
-  string fname_best_out=prefix+"_"+std::to_string(mpi_rank)+"_out";
-  hdf_file hf;
-  hf.open_or_create(fname_best_out);
-  std::vector<double> best_point;
-  for(size_t i=0;i<nparams;i++) {
-    best_point.push_back(e_best.params[i]);
-  }
-  for(size_t i=0;i<nsources;i++) {
-    best_point.push_back(e_best.mass[i]);
-  }
-  best_point.push_back(w_best);
-  hf.setd_vec("best_point",best_point);
-
-  if (best_detail) {
-
-    // "Best" EOS
-    hdf_output(hf,*tab_eos,"best_eos");
-    
-    // "Best" M vs. R curve
-    hdf_output(hf,*tab_mvsr,"best_mvsr");
-
-  }
-
-  hf.close();
-
   return;
 }
 
 int bamr_class::mcmc_init() {
+
+  // -----------------------------------------------------------
+  // Make grids
+
+  model &m=*this->mod;
+  
+  m.nb_grid=uniform_grid_end<double>(set.nb_low,set.nb_high,set.grid_size-1);
+  m.e_grid=uniform_grid_end<double>(set.e_low,set.e_high,set.grid_size-1);
+  m.m_grid=uniform_grid_end<double>(set.m_low,set.m_high,set.grid_size-1);
+
   return 0;
 }
-
-#endif
 
 int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   // We cannot use scr_out here because it isn't set until the call
