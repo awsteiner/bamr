@@ -27,16 +27,21 @@ using namespace mcmc_namespace;
 
 typedef boost::numeric::ublas::vector<double> ubvector;
 
-/** \brief Desc
+/** \brief A very simple function to simulate
  */
 class model_ex : public mcmc_namespace::default_model {
   
 public:
+
+  model_ex() {
+    nparams=1;
+  }
   
-  /** \brief Desc
+  /** \brief Compute the function
    */
   virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 			       int &success, ubvector &dat) {
+    success=0;
     return exp(-pars[0]*pars[0]/2.0);
   }
     
@@ -52,18 +57,21 @@ public:
   /** \brief Set the upper boundaries for all the parameters
    */
   virtual void high_limits(ubvector &pars) {
-    pars[0]=5.0;
+    pars[0]=4.0;
     return;
   }
-
-  /// Return the name of parameter with index \c i
-  virtual std::string param_name(size_t i) {
-    return "x";
+  
+  /// Set up the parameter names
+  virtual void param_names(std::vector<std::string> &names) {
+    names.resize(1);
+    names[0]="x";
+    return;
   }
-
-  /// Return the unit of parameter with index \c i
-  virtual std::string param_unit(size_t i) {
-    return "";
+  
+  /// Set up the parameter units
+  virtual void param_units(std::vector<std::string> &units) {
+    units.resize(1);
+    return;
   }
   //@}
 
@@ -71,24 +79,26 @@ public:
 
 int main(int argc, char *argv[]) {
 
-  // ---------------------------------------
+#ifndef MCMC_NO_MPI
   // Init MPI
-  
-#ifndef BAMR_NO_MPI
   MPI_Init(&argc,&argv);
 #endif
 
   // ---------------------------------------
-  // Main bamr object 
-
+  
+  // Model object
   std::shared_ptr<model_ex> m(new model_ex);
+  
+  // MCMC object 
   mcmc_class<ubvector,model_ex> mcmc(m);
+
+  // Run!
   mcmc.run(argc,argv);
   
   // ---------------------------------------
-  // Finalize MPI
 
-#ifndef BAMR_NO_MPI
+#ifndef MCMC_NO_MPI
+  // Finalize MPI
   MPI_Finalize();
 #endif
 

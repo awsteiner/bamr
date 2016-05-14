@@ -390,8 +390,8 @@ void bamr_class::first_update(hdf_file &hf, model &modp) {
     low_vec.push_back(low.rad[i]);
     high_vec.push_back(high.rad[i]);
   }
-  hf.setd_vec("low",low_vec);
-  hf.setd_vec("high",high_vec);
+  hf.setd_vec_copy("low",low_vec);
+  hf.setd_vec_copy("high",high_vec);
 
   hf.sets_vec("cl_args",cl_args);
 
@@ -559,25 +559,6 @@ void bamr_class::setup_cli() {
      "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
     */
-    {'f',"first-point","Set the starting point in the parameter space",
-     1,-1,"<mode> [...]",
-     ((string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+
-     "If mode is 'best', then it uses the point with the largest "+
-     "weight and the second argument specifies the file. If mode is "+
-     "'last' then it uses the last point and the second argument "+
-     "specifies the file. If mode is 'N' then it uses the Nth point, "+
-     "the second argument specifies the value of N and the third "+
-     "argument specifies the file. If mode is 'values', then the remaining "+
-     "arguments specify all the parameter values. On the command-line, "+
-     "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
-     "to ensure they do not get confused with other options.",
-     new comm_option_mfptr<bamr_class>(this,&bamr_class::set_first_point),
-     cli::comm_option_both},
-    {'s',"hastings","Specify distribution for M-H step",
-     1,1,"<filename>",
-     ((string)"Desc. ")+"Desc2.",
-     new comm_option_mfptr<bamr_class>(this,&bamr_class::hastings),
-     cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
 
