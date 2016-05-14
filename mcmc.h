@@ -124,51 +124,10 @@ namespace mcmc_namespace {
   /** \brief Desc
    */
   template<class data_t=ubvector,
-    class model_t=default_model> class mcmc_class {
-    
+    class model_t=default_model> class mcmc_base {
+
   public:
-  
-  /// \name Member data for the Metropolis-Hastings step
-  //@{
-  /// Return the approximate likelihood
-  double approx_like(ubvector &pars) {
-    double ret=hg_norm;
-    ubvector q(nparams), vtmp(nparams);
-    for(size_t i=0;i<nparams;i++) {
-      q[i]=pars[i]-hg_best[i];
-    }
-    vtmp=prod(hg_covar_inv,q);
-    ret*=exp(-0.5*inner_prod(q,vtmp));
-    return ret;
-  }
-  //@}
 
-  /// \name Other variables
-  //@{
-  /// The first point in the parameter space
-  ubvector first_point;
-    
-  /// The file containing the initial point
-  std::string first_point_file;
-
-  /// \name Integer designating how to set the initial point
-  //@{
-  int first_point_type;
-  static const int fp_unspecified=-1;
-  static const int fp_last=-2;
-  static const int fp_best=-3;
-  //@}
-
-  /// \name Desc
-  //@{
-  std::vector<int> ret_codes;
-  static const int ix_success=0;
-  static const int ix_zero_wgt=1;
-  //@}
-  
-  /// If true, then \ref first_update() has been called
-  bool first_file_update;
-  
   /// Desc
   size_t nparams;
   
@@ -202,38 +161,6 @@ namespace mcmc_namespace {
   ubvector hg_best;
   //@}
 
-  /** \brief Error handler for each thread
-   */
-  o2scl::err_hnd_cpp error_handler;
-
-  /** \brief Prefix for output filenames
-   */
-  std::string prefix;
-    
-  /// \name Parameter objects for the 'set' command
-  //@{
-  o2scl::cli::parameter_double p_max_time;
-  o2scl::cli::parameter_double p_step_fac;
-  o2scl::cli::parameter_int p_n_warm_up;
-  o2scl::cli::parameter_int p_grid_size;
-  o2scl::cli::parameter_int p_user_seed;
-  o2scl::cli::parameter_int p_max_iters;
-  o2scl::cli::parameter_int p_file_update_iters;
-  o2scl::cli::parameter_int p_max_chain_size;
-  o2scl::cli::parameter_bool p_output_next;
-  o2scl::cli::parameter_bool p_use_smove;
-  o2scl::cli::parameter_string p_prefix;
-  //@}
-
-  /** \brief The number of MCMC successes between file updates
-      (default 40)
-  */
-  int file_update_iters;
-
-  /** \brief Maximum size of Markov chain (default 10000)
-   */
-  int max_chain_size;
-    
   /// Maximum number of iterations (default 0)
   int max_iters;
 
@@ -278,12 +205,32 @@ namespace mcmc_namespace {
   /// Total number of mcmc iterations
   size_t mcmc_iterations;
 
-  /// Number of Markov chain segments
-  size_t n_chains;
+  /** \brief Error handler for each thread
+   */
+  o2scl::err_hnd_cpp error_handler;
 
-  /// Number of chains
-  size_t chain_size;
-  
+  /** \brief Prefix for output filenames
+   */
+  std::string prefix;
+    
+  /// If true, scr_out has been opened
+  bool file_opened;
+
+  /// \name Member data for the Metropolis-Hastings step
+  //@{
+  /// Return the approximate likelihood
+  double approx_like(ubvector &pars) {
+    double ret=hg_norm;
+    ubvector q(nparams), vtmp(nparams);
+    for(size_t i=0;i<nparams;i++) {
+      q[i]=pars[i]-hg_best[i];
+    }
+    vtmp=prod(hg_covar_inv,q);
+    ret*=exp(-0.5*inner_prod(q,vtmp));
+    return ret;
+  }
+  //@}
+
 #ifdef O2SCL_READLINE
   /// Command-line interface
   o2scl::cli_readline cl;
@@ -292,17 +239,11 @@ namespace mcmc_namespace {
   o2scl::cli cl;
 #endif
 
-  /// Main data table for Markov chain
-  o2scl::table_units<> tc;
-    
   /// Random number generator
   o2scl::rng_gsl gr;
   
   /// The screen output file
   std::ofstream scr_out;
-
-  /// If true, scr_out has been opened
-  bool file_opened;
 
   /// If true, output next point (default true)
   bool output_next;
@@ -317,12 +258,206 @@ namespace mcmc_namespace {
   /// Model object (initialized in constructor)
   std::shared_ptr<model_t> mod;
 
+  /// \name Parameter objects for the 'set' command
+  //@{
+  o2scl::cli::parameter_double p_max_time;
+  o2scl::cli::parameter_double p_step_fac;
+  o2scl::cli::parameter_int p_n_warm_up;
+  o2scl::cli::parameter_int p_grid_size;
+  o2scl::cli::parameter_int p_user_seed;
+  o2scl::cli::parameter_int p_max_iters;
+  o2scl::cli::parameter_bool p_output_next;
+  o2scl::cli::parameter_bool p_use_smove;
+  o2scl::cli::parameter_string p_prefix;
+  //@}
+
+  mcmc_base(std::shared_ptr<model_t> &m) {
+
+    // Parameters
+    prefix="mcmc";
+    max_iters=0;
+    user_seed=0;
+    n_warm_up=0;
+
+    // Default to 24 hours
+    max_time=3.6e3*24;
+    output_next=true;
+
+    // MC step parameters
+    use_smove=false;
+    hg_mode=0;
+    step_fac=15.0;
+    nwalk=10;
+
+    // Initial values
+    mpi_nprocs=1;
+    mpi_rank=0;
+
+    file_opened=false;
+
+    mod=m;
+    mod->setup_params(this->cl);
+  }
+  
   /** \brief Set up the 'cli' object
       
       This function just adds the four commands and the 'set' parameters
   */
   virtual void setup_cli() {
 
+    // ---------------------------------------
+    // Set parameters
+    
+    p_max_time.d=&this->max_time;
+    p_max_time.help=
+      "Maximum run time in seconds (default 86400 sec or 1 day).";
+    this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
+    
+    p_step_fac.d=&this->step_fac;
+    p_step_fac.help=
+      ((std::string)"MCMC step factor. The step size for each ")+
+      "variable is taken as the difference between the high and low "+
+      "limits divided by this factor (default 15.0). This factor can "+
+      "be increased if the acceptance rate is too small, but care must "+
+      "be taken, e.g. if the conditional probability is multimodal. If "+
+      "this step size is smaller than 1.0, it is reset to 1.0 .";
+    this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
+
+    p_n_warm_up.i=&this->n_warm_up;
+    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
+      "(default 0).";
+    this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
+
+    p_user_seed.i=&this->user_seed;
+    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
+      "generator. If zero is given (the default), then mcmc() uses "+
+      "time(0) to generate a random seed.";
+    this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
+
+    p_max_iters.i=&this->max_iters;
+    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
+      "iterations to be less than the specified number (default zero).";
+    this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
+
+    p_output_next.b=&this->output_next;
+    p_output_next.help=((std::string)"If true, output next point ")+
+      "to the '_scr' file before calling TOV solver (default true).";
+    this->cl.par_list.insert(std::make_pair("output_next",&p_output_next));
+
+    p_use_smove.b=&this->use_smove;
+    p_use_smove.help="";
+    this->cl.par_list.insert(std::make_pair("use_smove",&p_use_smove));
+
+    p_prefix.str=&this->prefix;
+    p_prefix.help="Output file prefix (default 'bamr').";
+    this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
+
+    return;
+  }    
+
+  /// Main wrapper for parsing command-line arguments
+  virtual void run(int argc, char *argv[]) {
+  
+    // ---------------------------------------
+    // Set error handler for this thread
+  
+    o2scl::err_hnd=&this->error_handler;
+  
+    // ---------------------------------------
+    // Process command-line arguments and run
+  
+    setup_cli();
+
+#ifndef NO_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&this->mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&this->mpi_nprocs);
+#endif
+
+    // Process arguments
+    for(int i=0;i<argc;i++) {
+      this->cl_args.push_back(argv[i]);
+    }
+
+    this->cl.prompt="mcmc> ";
+    this->cl.run_auto(argc,argv);
+
+    if (file_opened) {
+      // Close main output file
+      this->scr_out.close();
+    }
+ 
+    return;
+  }    
+
+  };
+
+  /** \brief Desc
+   */
+  template<class data_t=ubvector,
+    class model_t=default_model> class mcmc_class : 
+    public mcmc_base<data_t,model_t> {
+    
+  public:
+  
+  /// \name Other variables
+  //@{
+  /// The first point in the parameter space
+  ubvector first_point;
+    
+  /// The file containing the initial point
+  std::string first_point_file;
+
+  /// \name Integer designating how to set the initial point
+  //@{
+  int first_point_type;
+  static const int fp_unspecified=-1;
+  static const int fp_last=-2;
+  static const int fp_best=-3;
+  //@}
+
+  /// \name Desc
+  //@{
+  std::vector<int> ret_codes;
+  static const int ix_success=0;
+  static const int ix_zero_wgt=1;
+  //@}
+  
+  /// If true, then \ref first_update() has been called
+  bool first_file_update;
+  
+  /// \name Parameter objects for the 'set' command
+  //@{
+  o2scl::cli::parameter_int p_max_chain_size;
+  o2scl::cli::parameter_int p_file_update_iters;
+  //@}
+  
+  /** \brief The number of MCMC successes between file updates
+      (default 40)
+  */
+  int file_update_iters;
+
+  /** \brief Maximum size of Markov chain (default 10000)
+   */
+  int max_chain_size;
+    
+  /// Number of Markov chain segments
+  size_t n_chains;
+
+  /// Number of chains
+  size_t chain_size;
+  
+  /// Main data table for Markov chain
+  o2scl::table_units<> tc;
+    
+  /** \brief Set up the 'cli' object
+      
+      This function just adds the four commands and the 'set' parameters
+  */
+  virtual void setup_cli() {
+
+    mcmc_base<data_t,model_t>::setup_cli();
+    
     // ---------------------------------------
     // Set commands/options
     
@@ -334,71 +469,25 @@ namespace mcmc_namespace {
        new o2scl::comm_option_mfptr<mcmc_class>(this,&mcmc_class::mcmc),
        o2scl::cli::comm_option_both}
     };
-    cl.set_comm_option_vec(1,options);
-
-    // ---------------------------------------
-    // Set parameters
-    
-    p_max_time.d=&max_time;
-    p_max_time.help=
-      "Maximum run time in seconds (default 86400 sec or 1 day).";
-    cl.par_list.insert(std::make_pair("max_time",&p_max_time));
-    
-    p_step_fac.d=&step_fac;
-    p_step_fac.help=
-      ((std::string)"MCMC step factor. The step size for each ")+
-      "variable is taken as the difference between the high and low "+
-      "limits divided by this factor (default 15.0). This factor can "+
-      "be increased if the acceptance rate is too small, but care must "+
-      "be taken, e.g. if the conditional probability is multimodal. If "+
-      "this step size is smaller than 1.0, it is reset to 1.0 .";
-    cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
-
-    p_n_warm_up.i=&n_warm_up;
-    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
-      "(default 0).";
-    cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
+    this->cl.set_comm_option_vec(1,options);
 
     p_file_update_iters.i=&file_update_iters;
     p_file_update_iters.help=
       ((std::string)"Number of MCMC successes between ")+
       "file upates (default 10, minimum value 1).";
-    cl.par_list.insert(std::make_pair("file_update_iters",
-				      &p_file_update_iters));
-
-    p_user_seed.i=&user_seed;
-    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-      "generator. If zero is given (the default), then mcmc() uses "+
-      "time(0) to generate a random seed.";
-    cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
-
-    p_max_iters.i=&max_iters;
-    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-      "iterations to be less than the specified number (default zero).";
-    cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
-
-    p_output_next.b=&output_next;
-    p_output_next.help=((std::string)"If true, output next point ")+
-      "to the '_scr' file before calling TOV solver (default true).";
-    cl.par_list.insert(std::make_pair("output_next",&p_output_next));
-
-    p_use_smove.b=&use_smove;
-    p_use_smove.help="";
-    cl.par_list.insert(std::make_pair("use_smove",&p_use_smove));
+    this->cl.par_list.insert(std::make_pair("file_update_iters",
+					    &p_file_update_iters));
 
     p_max_chain_size.i=&max_chain_size;
     p_max_chain_size.help=
       ((std::string)"Maximum Markov chain size (default ")+
       "10000).";
-    cl.par_list.insert(std::make_pair("max_chain_size",&p_max_chain_size));
-
-    p_prefix.str=&prefix;
-    p_prefix.help="Output file prefix (default 'bamr').";
-    cl.par_list.insert(std::make_pair("prefix",&p_prefix));
+    this->cl.par_list.insert(std::make_pair("max_chain_size",
+					    &p_max_chain_size));
 
     return;
-  }    
-
+  }
+ 
   /** \brief Desc
    */
   virtual int mcmc_init() {
@@ -414,14 +503,14 @@ namespace mcmc_namespace {
   /** \brief Desc
    */
   virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
-		       bool new_meas, size_t n_meas) {
+			       bool new_meas, size_t n_meas) {
     return;
   };
 
   /** \brief Desc
    */
   virtual int hastings(std::vector<std::string> &sv, 
-	       bool itive_com) {
+		       bool itive_com) {
 
 #ifdef NEVER_DEFINED
     bool debug=true;
@@ -632,8 +721,9 @@ namespace mcmc_namespace {
     } else if (sv[1]==((string)"prefix")) {
   
       first_point_type=fp_last;
-      first_point_file=sv[2]+((std::string)"_")+std::to_string(mpi_rank)+"_out";
-
+      first_point_file=sv[2]+((std::string)"_")+
+      std::to_string(mpi_rank)+"_out";
+      
     } else if (sv[1]==((string)"last")) {
       first_point_type=fp_last;
       first_point_file=sv[2];
@@ -657,29 +747,30 @@ namespace mcmc_namespace {
     bool debug=false;
     
     // Set number of parameters
-    nparams=mod->nparams;
+    this->nparams=this->mod->nparams;
     
     // Make sure that first_update() is called when necessary
     first_file_update=false;
       
 #ifndef NO_MPI
-    mpi_start_time=MPI_Wtime();
+    this->mpi_start_time=MPI_Wtime();
 #else
-    mpi_start_time=time(0);
+    this->mpi_start_time=time(0);
 #endif
       
-    if (file_opened==false) {
+    if (this->file_opened==false) {
       // Open main output file
-      scr_out.open((prefix+"_"+std::to_string(mpi_rank)+"_scr").c_str());
-      scr_out.setf(std::ios::scientific);
-      file_opened=true;
-      scr_out << "Opened main file in command 'mcmc'." << std::endl;
+      this->scr_out.open((this->prefix+"_"+
+			  std::to_string(this->mpi_rank)+"_scr").c_str());
+      this->scr_out.setf(std::ios::scientific);
+      this->file_opened=true;
+      this->scr_out << "Opened main file in command 'mcmc'." << std::endl;
     }
       
     // Fix file_update_iters if necessary
     if (file_update_iters<1) {
-      scr_out << "Parameter 'file_update_iters' less than 1. Set equal to 1."
-      << std::endl;
+      this->scr_out << "Parameter 'file_update_iters' less "
+      << "than 1. Set equal to 1." << std::endl;
       file_update_iters=1;
     }
       
@@ -689,45 +780,45 @@ namespace mcmc_namespace {
     }
       
     // Fix step_fac if it's too small
-    if (step_fac<1.0) {
-      step_fac=1.0;
-      scr_out << "Fixed 'step_fac' to 1.0." << std::endl;
+    if (this->step_fac<1.0) {
+      this->step_fac=1.0;
+      this->scr_out << "Fixed 'step_fac' to 1.0." << std::endl;
     }
       
     // Run init() function (have to make sure to do this after opening
-    // scr_out). 
+    // this->scr_out). 
     int iret=mcmc_init();
     if (iret!=0) return iret;
       
     // Set RNG seed
     unsigned long int seed=time(0);
-    if (user_seed!=0) {
-      seed=user_seed;
+    if (this->user_seed!=0) {
+      seed=this->user_seed;
     }
-    seed*=(mpi_rank+1);
-    gr.set_seed(seed);
-    pdg.set_seed(seed);
-    scr_out << "Using seed " << seed 
-    << " for processor " << mpi_rank+1 << "/" 
-    << mpi_nprocs << "." << std::endl;
-    scr_out.precision(12);
-    scr_out << " Start time: " << mpi_start_time << std::endl;
-    scr_out.precision(6);
+    seed*=(this->mpi_rank+1);
+    this->gr.set_seed(seed);
+    this->pdg.set_seed(seed);
+    this->scr_out << "Using seed " << seed 
+    << " for processor " << this->mpi_rank+1 << "/" 
+    << this->mpi_nprocs << "." << std::endl;
+    this->scr_out.precision(12);
+    this->scr_out << " Start time: " << this->mpi_start_time << std::endl;
+    this->scr_out.precision(6);
       
     // First MC point
     std::vector<ubvector> current(1);
     std::vector<double> w_current(1);
     std::vector<bool> step_flags(1);
-    data_arr.resize(2);
+    this->data_arr.resize(2);
     w_current[0]=0.0;
 
     // For stretch-moves, allocate for each walker
-    if (use_smove) {
-      current.resize(nwalk);
-      w_current.resize(nwalk);
-      step_flags.resize(nwalk);
-      data_arr.resize(2*nwalk);
-      for(size_t i=0;i<nwalk;i++) {
+    if (this->use_smove) {
+      current.resize(this->nwalk);
+      w_current.resize(this->nwalk);
+      step_flags.resize(this->nwalk);
+      this->data_arr.resize(2*this->nwalk);
+      for(size_t i=0;i<this->nwalk;i++) {
 	step_flags[i]=false;
 	w_current[i]=0.0;
       }
@@ -735,8 +826,8 @@ namespace mcmc_namespace {
 
 #ifndef NO_MPI
     int buffer=0, tag=0;
-    if (mpi_nprocs>1 && mpi_rank>0) {
-      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
+    if (this->mpi_nprocs>1 && this->mpi_rank>0) {
+      MPI_Recv(&buffer,1,MPI_INT,this->mpi_rank-1,tag,MPI_COMM_WORLD,
 	       MPI_STATUS_IGNORE);
     }
 #endif
@@ -746,7 +837,7 @@ namespace mcmc_namespace {
       if (first_point_type==fp_last) {
 
 	// Read file 
-	scr_out << "Reading last point from file '" << first_point_file
+	this->scr_out << "Reading last point from file '" << first_point_file
 	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
 	hf.open(first_point_file);
@@ -761,15 +852,16 @@ namespace mcmc_namespace {
 	size_t last_line=file_tab.get_nlines()-1;
       
 	// Get parameters
-	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+mod->param_name(i);
+	for(size_t i=0;i<this->nparams;i++) {
+	  std::string pname=((std::string)"param_")+this->mod->param_name(i);
 	  current[0][i]=file_tab.get(pname,last_line);
-	  scr_out << "Parameter named " << mod->param_name(i) << " " 
-		  << current[0][i] << std::endl;
+	  this->scr_out << "Parameter named "
+			<< this->mod->param_name(i) << " " 
+			<< current[0][i] << std::endl;
 	}
       
 	// Finish up
-	scr_out << std::endl;
+	this->scr_out << std::endl;
 	hf.close();
 
       } else if (first_point_type==fp_best) {
@@ -779,19 +871,22 @@ namespace mcmc_namespace {
 	hf.open(first_point_file);
 	hf.getd_vec("best_point",best_point);
 	hf.close();
-	scr_out << "Reading best point from file '" << first_point_file
+	this->scr_out << "Reading best point from file '" << first_point_file
 	<< "'." << std::endl;
-	for(size_t i=0;i<nparams;i++) {
+	for(size_t i=0;i<this->nparams;i++) {
 	  current[0][i]=best_point[i];
-	  scr_out << "Parameter " << i << " : " << current[0][i] << std::endl;
+	  this->scr_out << "Parameter " << i << " : "
+			<< current[0][i] << std::endl;
 	}
-	scr_out << "Best weight: " << best_point[nparams] << std::endl;
-	scr_out << std::endl;
+	this->scr_out << "Best weight: "
+	<< best_point[this->nparams] << std::endl;
+	this->scr_out << std::endl;
 
       } else {
 
 	// Read file 
-	scr_out << "Reading " << first_point_type << "th point from file '" 
+	this->scr_out << "Reading "
+	<< first_point_type << "th point from file '" 
 	<< first_point_file
 	<< "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
@@ -812,48 +907,49 @@ namespace mcmc_namespace {
 	  }
 	}
 	if (row>=file_tab.get_nlines()) {
-	  scr_out << "Couldn't find point " << first_point_type 
+	  this->scr_out << "Couldn't find point " << first_point_type 
 	  << " in file. Using last point." << std::endl;
 	  row=file_tab.get_nlines()-1;
 	}
       
 	// Get parameters
-	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+mod->param_name(i);
+	for(size_t i=0;i<this->nparams;i++) {
+	  std::string pname=((std::string)"param_")+this->mod->param_name(i);
 	  current[0][i]=file_tab.get(pname,row);
-	  scr_out << "Parameter named " << mod->param_name(i) << " " 
+	  this->scr_out << "Parameter named "
+	  << this->mod->param_name(i) << " " 
 	  << current[0][i] << std::endl;
 	}
       
 	// Finish up
-	scr_out << std::endl;
+	this->scr_out << std::endl;
 	hf.close();
       }
 
     } else if (first_point.size()>0) {
     
-      scr_out << "First point from command-line." << std::endl;
-      for(size_t i=0;i<nparams;i++) {
+      this->scr_out << "First point from command-line." << std::endl;
+      for(size_t i=0;i<this->nparams;i++) {
 	current[0][i]=first_point[i];
-	scr_out << current[0][i] << std::endl;
+	this->scr_out << current[0][i] << std::endl;
       }
-      scr_out << std::endl;
+      this->scr_out << std::endl;
 
     } else {
     
-      scr_out << "First point from default." << std::endl;
-      mod->first_point(current[0]);
+      this->scr_out << "First point from default." << std::endl;
+      this->mod->first_point(current[0]);
 
     }
 
 #ifndef NO_MPI
-    if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
-      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
+    if (this->mpi_nprocs>1 && this->mpi_rank<this->mpi_nprocs-1) {
+      MPI_Send(&buffer,1,MPI_INT,this->mpi_rank+1,tag,MPI_COMM_WORLD);
     }
 #endif
 
-    scr_out << "First point: ";
-    o2scl::vector_out(scr_out,current[0],true);
+    this->scr_out << "First point: ";
+    o2scl::vector_out(this->scr_out,current[0],true);
 
     // Determine initial masses
     std::cout << "fixme." << std::endl;
@@ -865,15 +961,15 @@ namespace mcmc_namespace {
     //}
 
     // Set lower and upper bounds for parameters
-    ubvector low(nparams), high(nparams);
-    mod->low_limits(low);
-    mod->high_limits(high);
+    ubvector low(this->nparams), high(this->nparams);
+    this->mod->low_limits(low);
+    this->mod->high_limits(high);
 
     n_chains=0;
 
     // Entry objects (Must be after read_input() since nsources is set
     // in that function.)
-    ubvector next(nparams), best(nparams);
+    ubvector next(this->nparams), best(this->nparams);
 
     // Weights for each entry
     double w_next=0.0, w_best=0.0;
@@ -881,11 +977,11 @@ namespace mcmc_namespace {
     // Warm-up flag, not to be confused with 'n_warm_up', i.e. the
     // number of warm_up iterations.
     bool warm_up=true;
-    if (n_warm_up==0) warm_up=false;
+    if (this->n_warm_up==0) warm_up=false;
 
     // Keep track of successful and failed MH moves
-    mh_success=0;
-    mh_failure=0;
+    this->mh_success=0;
+    this->mh_failure=0;
 
     // ---------------------------------------------------
     // Compute initial point and initial weights
@@ -893,13 +989,13 @@ namespace mcmc_namespace {
     int suc;
     double q_current=0.0, q_next=0.0;
 
-    if (use_smove) {
+    if (this->use_smove) {
       // Stretch-move steps
 
       size_t ij_best=0;
 
       // Initialize each walker in turn
-      for(size_t ij=0;ij<nwalk;ij++) {
+      for(size_t ij=0;ij<this->nwalk;ij++) {
 
 	size_t init_iters=0;
 	bool done=false;
@@ -907,24 +1003,24 @@ namespace mcmc_namespace {
 	while (!done) {
 
 	  // Begin with the intial point
-	  ubvector first(nparams);
-	  mod->first_point(first);
+	  ubvector first(this->nparams);
+	  this->mod->first_point(first);
 
 	  // Make a perturbation from the initial point
-	  for(size_t ik=0;ik<nparams;ik++) {
+	  for(size_t ik=0;ik<this->nparams;ik++) {
 	    do {
 	      current[ij][ik]=first[ik]+
-		(gr.random()*2.0-1.0)*(high[ik]-low[ik])/100.0;
+		(this->gr.random()*2.0-1.0)*(high[ik]-low[ik])/100.0;
 	    } while (current[ij][ik]>=high[ik] ||
 		     current[ij][ik]<=low[ik]);
 	  }
 	
 	  // Compute the weight
-	  w_current[ij]=mod->compute_point(current[ij],scr_out,
-					   suc,data_arr[ij]);
-	  scr_out << "SM Init: " << ij << " ";
-	  o2scl::vector_out(scr_out,current[ij]);
-	  scr_out << " " << w_current[ij] << std::endl;
+	  w_current[ij]=this->mod->compute_point(current[ij],this->scr_out,
+					   suc,this->data_arr[ij]);
+	  this->scr_out << "SM Init: " << ij << " ";
+	  o2scl::vector_out(this->scr_out,current[ij]);
+	  this->scr_out << " " << w_current[ij] << std::endl;
 
 	  // Keep track of the best point and the best index
 	  if (ij==0) {
@@ -942,7 +1038,8 @@ namespace mcmc_namespace {
 	    done=true;
 	    ret_codes[suc]++;
 	  } else if (init_iters>1000) {
-	    scr_out << "Failed to construct initial walkers." << std::endl;
+	    this->scr_out << "Failed to construct initial walkers."
+			  << std::endl;
 	    return 1;
 	  }
 	}
@@ -951,44 +1048,45 @@ namespace mcmc_namespace {
 	// to the result table
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  add_measurement(current[ij],w_current[ij],data_arr[ij],
-			  true,mh_success);
+	  add_measurement(current[ij],w_current[ij],this->data_arr[ij],
+			  true,this->mh_success);
 	}
       }
 
       // Output the best initial walker if necessary
       {
 	best=current[ij_best];
-	output_best(best,w_best,data_arr[ij_best]);
+	output_best(best,w_best,this->data_arr[ij_best]);
       }
 
     } else {
       // Normal or Metropolis-Hastings steps
 
       // Compute weight for initial point
-      w_current[0]=mod->compute_point(current[0],scr_out,suc,data_arr[0]);
+      w_current[0]=this->mod->compute_point
+      (current[0],this->scr_out,suc,this->data_arr[0]);
       ret_codes[suc]++;
-      scr_out << "Initial weight: " << w_current[0] << std::endl;
+      this->scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
-	scr_out << "Initial weight zero. Aborting." << std::endl;
+	this->scr_out << "Initial weight zero. Aborting." << std::endl;
 	exit(-1);
       }
 
       // Compute the initial Hastings proposal weight
-      if (hg_mode>0) {
-	q_current=approx_like(current[0]);
+      if (this->hg_mode>0) {
+	q_current=this->approx_like(current[0]);
       }
 
       // Add measurement to output table and output best 
       {
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  add_measurement(current[0],w_current[0],data_arr[0],
-			  true,mh_success);
+	  add_measurement(current[0],w_current[0],this->data_arr[0],
+			  true,this->mh_success);
 	}
 	best=current[0];
 	w_best=w_current[0];
-	output_best(current[0],w_current[0],data_arr[0]);
+	output_best(current[0],w_current[0],this->data_arr[0]);
       }
     
     }
@@ -1005,7 +1103,7 @@ namespace mcmc_namespace {
     // Keep track of total number of different points in the parameter
     // space that are considered (some of them may not result in TOV
     // calls because, for example, the EOS was acausal).
-    mcmc_iterations=0;
+    this->mcmc_iterations=0;
 
     // Main loop
     bool main_done=false;
@@ -1023,10 +1121,10 @@ namespace mcmc_namespace {
       // ---------------------------------------------------
       // Select next point
     
-      if (use_smove) {
+      if (this->use_smove) {
 
 	// Choose walker to move
-	ik=mcmc_iterations % nwalk;
+	ik=this->mcmc_iterations % this->nwalk;
       
 	bool in_bounds;
 	size_t step_iters=0;
@@ -1038,16 +1136,16 @@ namespace mcmc_namespace {
 	  // Choose jth walker
 	  size_t ij;
 	  do {
-	    ij=((size_t)(gr.random()*((double)nwalk)));
-	  } while (ij==ik || ij>=nwalk);
+	    ij=((size_t)(this->gr.random()*((double)this->nwalk)));
+	  } while (ij==ik || ij>=this->nwalk);
 	
 	  // Select z 
-	  double p=gr.random();
-	  double a=step_fac;
+	  double p=this->gr.random();
+	  double a=this->step_fac;
 	  smove_z=(1.0-2.0*p+2.0*a*p+p*p-2.0*a*p*p+a*a*p*p)/a;
 	
 	  // Create new trial point
-	  for(size_t i=0;i<nparams;i++) {
+	  for(size_t i=0;i<this->nparams;i++) {
 	    next[i]=current[ij][i]+smove_z*(current[ik][i]-current[ij][i]);
 	    if (next[i]>=high[i] || next[i]<=low[i]) {
 	      in_bounds=false;
@@ -1056,7 +1154,8 @@ namespace mcmc_namespace {
 	
 	  step_iters++;
 	  if (step_iters==1000) {
-	    scr_out << "Failed to find suitable step at point 1." << std::endl;
+	    this->scr_out << "Failed to find suitable step at point 1."
+			  << std::endl;
 	    std::cerr << "Failed to find suitable step at point 1."
 		      << std::endl;
 	    return 2;
@@ -1064,27 +1163,27 @@ namespace mcmc_namespace {
 
 	} while (in_bounds==false);
 
-      } else if (hg_mode>0) {
+      } else if (this->hg_mode>0) {
       
 	// Make a Metropolis-Hastings step based on previous data
       
-	ubvector hg_temp(nparams), hg_z(nparams);
+	ubvector hg_temp(this->nparams), hg_z(this->nparams);
       
 	bool out_of_range;
 	int hg_it=0;
       
 	do {
 	
-	  for(size_t k=0;k<nparams;k++) {
-	    hg_z[k]=pdg.sample();
+	  for(size_t k=0;k<this->nparams;k++) {
+	    hg_z[k]=this->pdg.sample();
 	  }
-	  hg_temp=prod(hg_chol,hg_z);
-	  for(size_t k=0;k<nparams;k++) {
-	    next[k]=hg_best[k]+hg_temp[k];
+	  hg_temp=prod(this->hg_chol,hg_z);
+	  for(size_t k=0;k<this->nparams;k++) {
+	    next[k]=this->hg_best[k]+hg_temp[k];
 	  }
 	
 	  out_of_range=false;
-	  for(size_t k=0;k<nparams;k++) {
+	  for(size_t k=0;k<this->nparams;k++) {
 	    if (next[k]<low[k] || next[k]>high[k]) {
 	      out_of_range=true;
 	    }
@@ -1097,22 +1196,22 @@ namespace mcmc_namespace {
 
 	} while (out_of_range==true);
 
-	q_next=approx_like(next);
+	q_next=this->approx_like(next);
 
       } else {
 
 	// Make a step, ensure that we're in bounds and that
 	// the masses are not too large
-	for(size_t k=0;k<nparams;k++) {
+	for(size_t k=0;k<this->nparams;k++) {
 	
-	  next[k]=current[0][k]+(gr.random()*2.0-1.0)*
-	    (high[k]-low[k])/step_fac;
+	  next[k]=current[0][k]+(this->gr.random()*2.0-1.0)*
+	    (high[k]-low[k])/this->step_fac;
 	
 	  // If it's out of range, redo step near boundary
 	  if (next[k]<low[k]) {
-	    next[k]=low[k]+gr.random()*(high[k]-low[k])/step_fac;
+	    next[k]=low[k]+this->gr.random()*(high[k]-low[k])/this->step_fac;
 	  } else if (next[k]>high[k]) {
-	    next[k]=high[k]-gr.random()*(high[k]-low[k])/step_fac;
+	    next[k]=high[k]-this->gr.random()*(high[k]-low[k])/this->step_fac;
 	  }
 	  
 	  if (next[k]<low[k] || next[k]>high[k]) {
@@ -1132,25 +1231,30 @@ namespace mcmc_namespace {
       // ---------------------------------------------------
 
       // Output the next point
-      if (output_next) {
-	scr_out << "Iteration, next: " << mcmc_iterations << " " ;
-	o2scl::vector_out(scr_out,next,true);
+      if (this->output_next) {
+	this->scr_out << "Iteration, next: "
+		      << this->mcmc_iterations << " " ;
+	o2scl::vector_out(this->scr_out,next,true);
       }
       
       // ---------------------------------------------------
       // Compute next weight
 
-      if (use_smove) {
+      if (this->use_smove) {
 	if (step_flags[ik]==false) {
-	  w_next=mod->compute_point(next,scr_out,suc,data_arr[ik+nwalk]);
+	  w_next=this->mod->compute_point(next,this->scr_out,suc,
+				    this->data_arr[ik+this->nwalk]);
 	} else {
-	  w_next=mod->compute_point(next,scr_out,suc,data_arr[ik]);
+	  w_next=this->mod->compute_point(next,this->scr_out,suc,
+					  this->data_arr[ik]);
 	}
       } else {
 	if (step_flags[0]) {
-	  w_next=mod->compute_point(next,scr_out,suc,data_arr[1]);
+	  w_next=this->mod->compute_point(next,this->scr_out,suc,
+					  this->data_arr[1]);
 	} else {
-	  w_next=mod->compute_point(next,scr_out,suc,data_arr[0]);
+	  w_next=this->mod->compute_point(next,this->scr_out,suc,
+					  this->data_arr[0]);
 	}
       }
       ret_codes[suc]++;
@@ -1159,7 +1263,7 @@ namespace mcmc_namespace {
     
       // Test to ensure new point is good
       if (suc==ix_success && w_next<=0.0) {
-	scr_out << "Rejected: Zero weight." << std::endl;
+	this->scr_out << "Rejected: Zero weight." << std::endl;
 	suc=ix_zero_wgt;
       }
 
@@ -1173,16 +1277,16 @@ namespace mcmc_namespace {
 	  std::cout << step_flags[0] << " Next: " 
 		    << next[0] << " " << w_next << std::endl;
 	}
-      
+	
 	bool accept=false;
-	double r=gr.random();
+	double r=this->gr.random();
 
 	// Metropolis algorithm
-	if (use_smove) {
-	  if (r<pow(smove_z,((double)nwalk)-1.0)*w_next/w_current[ik]) {
+	if (this->use_smove) {
+	  if (r<pow(smove_z,((double)this->nwalk)-1.0)*w_next/w_current[ik]) {
 	    accept=true;
 	  }
-	} else if (hg_mode>0) {
+	} else if (this->hg_mode>0) {
 	  if (r<w_next*q_current/w_current[0]/q_next) {
 	    accept=true;
 	  }
@@ -1193,31 +1297,31 @@ namespace mcmc_namespace {
 	}
 	
 	if (debug) {
-	  std::cout << "Metropolis: " << r << " " << w_next/w_current[0] << " " 
-		    << accept << std::endl;
+	  std::cout << "Metropolis: " << r << " "
+		    << w_next/w_current[0] << " " << accept << std::endl;
 	}
 	
 	if (accept) {
 
-	  mh_success++;
+	  this->mh_success++;
 
 	  // Store results from new point
 	  if (!warm_up) {
-	    if (use_smove) {
+	    if (this->use_smove) {
 	      if (step_flags[ik]==false) {
-		add_measurement(next,w_next,data_arr[ik+nwalk],true,
-				mh_success);
+		add_measurement(next,w_next,this->data_arr[ik+this->nwalk],
+				true,this->mh_success);
 	      } else {
-		add_measurement(next,w_next,data_arr[ik],true,
-				mh_success);
+		add_measurement(next,w_next,this->data_arr[ik],true,
+				this->mh_success);
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(next,w_next,data_arr[1],true,
-				mh_success);
+		add_measurement(next,w_next,this->data_arr[1],true,
+				this->mh_success);
 	      } else {
-		add_measurement(next,w_next,data_arr[0],true,
-				mh_success);
+		add_measurement(next,w_next,this->data_arr[0],true,
+				this->mh_success);
 	      }
 	    }
 	    if (debug) {
@@ -1227,22 +1331,22 @@ namespace mcmc_namespace {
 	  }
 
 	  // Output the new point
-	  scr_out << "MC Acc: " << mh_success << " ";
-	  o2scl::vector_out(scr_out,next);
-	  scr_out << " " << w_next << std::endl;
+	  this->scr_out << "MC Acc: " << this->mh_success << " ";
+	  o2scl::vector_out(this->scr_out,next);
+	  this->scr_out << " " << w_next << std::endl;
 	  
 	  // Keep track of best point
 	  if (w_next>w_best) {
 	    best=next;
 	    w_best=w_next;
-	    //output_best(best,w_best,data_arr[0]);
+	    //output_best(best,w_best,this->data_arr[0]);
 	    std::cout << "fixme." << std::endl;
 	    exit(-1);
 	    force_file_update=true;
 	  }
 
 	  // Prepare for next point
-	  if (use_smove) {
+	  if (this->use_smove) {
 	    current[ik]=next;
 	    w_current[ik]=w_next;
 	  } else {
@@ -1251,7 +1355,7 @@ namespace mcmc_namespace {
 	  }
 
 	  // Flip "first_half" parameter
-	  if (use_smove) {
+	  if (this->use_smove) {
 	    step_flags[ik]=!(step_flags[ik]);
 	  } else {
 	    step_flags[0]=!(step_flags[0]);
@@ -1264,18 +1368,19 @@ namespace mcmc_namespace {
 	    
 	  // Point was rejected
 	  
-	  mh_failure++;
+	  this->mh_failure++;
 
 
 	  // Repeat measurement of old point
 	  if (!warm_up) {
-	    if (use_smove) {
+	    if (this->use_smove) {
 	      if (step_flags[ik]==false) {
-		add_measurement(current[ik],w_current[ik],data_arr[ik],
-				false,mh_success);
+		add_measurement(current[ik],w_current[ik],this->data_arr[ik],
+				false,this->mh_success);
 	      } else {
-		add_measurement(current[ik],w_current[ik],data_arr[ik+nwalk],
-				false,mh_success);
+		add_measurement(current[ik],w_current[ik],
+				this->data_arr[ik+this->nwalk],
+				false,this->mh_success);
 	      }
 	      if (debug) {
 		std::cout << step_flags[ik] << " Adding old: "
@@ -1284,11 +1389,11 @@ namespace mcmc_namespace {
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(current[0],w_current[0],data_arr[0],
-				false,mh_success);
+		add_measurement(current[0],w_current[0],this->data_arr[0],
+				false,this->mh_success);
 	      } else {
-		add_measurement(current[0],w_current[0],data_arr[1],
-				false,mh_success);
+		add_measurement(current[0],w_current[0],this->data_arr[1],
+				false,this->mh_success);
 	      }
 	      if (debug) {
 		std::cout << step_flags[0] << " Adding old: "
@@ -1299,26 +1404,28 @@ namespace mcmc_namespace {
 	  }
 
 	  // Output the old point
-	  if (use_smove) {
-	    scr_out << "MC Rej: " << mh_success << " ";
-	    o2scl::vector_out(scr_out,current[ik]);
-	    scr_out << " " << w_current[ik] << " " << w_next << std::endl;
+	  if (this->use_smove) {
+	    this->scr_out << "MC Rej: " << this->mh_success << " ";
+	    o2scl::vector_out(this->scr_out,current[ik]);
+	    this->scr_out << " " << w_current[ik] << " "
+			  << w_next << std::endl;
 	  } else {
-	    scr_out << "MC Rej: " << mh_success << " ";
-	    o2scl::vector_out(scr_out,current[0]);
-	    scr_out << " " << w_current[0] << " " << w_next << std::endl;
+	    this->scr_out << "MC Rej: " << this->mh_success << " ";
+	    o2scl::vector_out(this->scr_out,current[0]);
+	    this->scr_out << " " << w_current[0] << " "
+			  << w_next << std::endl;
 	  }
 
 	  // Keep track of best point
 	  if (w_next>w_best) {
 	    best=next;
 	    w_best=w_next;
-	    //output_best(best,w_best,data_arr[0]);
+	    //output_best(best,w_best,this->data_arr[0]);
 	    std::cout << "fixme." << std::endl;
 	    exit(-1);
 	    force_file_update=true;
-	    scr_out << "Best point with rejected step: " << w_next << " " 
-		    << w_best << std::endl;
+	    this->scr_out << "Best point with rejected step: "
+			  << w_next << " " << w_best << std::endl;
 	  }
 
 	}
@@ -1341,32 +1448,33 @@ namespace mcmc_namespace {
 
 	// If 'max_iters' is zero, then presume we're running over
 	// a fixed time interval
-	if (max_iters==0) {
+	if (this->max_iters==0) {
 
 	  // Determine time elapsed
 #ifndef NO_MPI
-	  double elapsed=MPI_Wtime()-mpi_start_time;
+	  double elapsed=MPI_Wtime()-this->mpi_start_time;
 #else
-	  double elapsed=time(0)-mpi_start_time;
+	  double elapsed=time(0)-this->mpi_start_time;
 #endif
 	  // Force a file update when we've finished a block or if
 	  // we've run out of time
-	  if (elapsed>max_time/((double)20)*((double)(block_counter+1)) ||
-	      (elapsed>max_time && block_counter==19)) {
+	  if (elapsed>this->max_time/
+	      ((double)20)*((double)(block_counter+1)) ||
+	      (elapsed>this->max_time && block_counter==19)) {
 	    force_file_update=true;
 	    block_counter++;
-	    scr_out << "Finished block " << block_counter
-		    << " of 20." << std::endl;
+	    this->scr_out << "Finished block " << block_counter
+			  << " of 20." << std::endl;
 	  }
 
 	  // Output elapsed time every 10 iterations. The value of
 	  // mcmc_iterations isn't increased until later.
-	  if ((mcmc_iterations+1)%10==0) {
-	    scr_out << "Elapsed time: " << elapsed << " of " << max_time
-		    << " seconds" << std::endl;
+	  if ((this->mcmc_iterations+1)%10==0) {
+	    this->scr_out << "Elapsed time: " << elapsed << " of "
+			  << this->max_time << " seconds" << std::endl;
 	  }
 	
-	  if (elapsed>max_time) {
+	  if (elapsed>this->max_time) {
 	    main_done=true;
 	  }
 
@@ -1376,18 +1484,21 @@ namespace mcmc_namespace {
 	  // a fixed number of iterations.
 
 	  // Force a file update when we've finished a block
-	  if (((int)mcmc_iterations)+1>max_iters*(((int)block_counter)+1)/20) {
+	  if (((int)this->mcmc_iterations)+1>
+	      this->max_iters*(((int)block_counter)+1)/20) {
 	    force_file_update=true;
 	    block_counter++;
-	    scr_out << "Iteration " << mcmc_iterations+1 << " of " 
-		    << max_iters << ", and finished block " 
-		    << block_counter << " of 20." << std::endl;
+	    this->scr_out << "Iteration "
+			  << this->mcmc_iterations+1 << " of " 
+			  << this->max_iters << ", and finished block " 
+			  << block_counter << " of 20." << std::endl;
 	  }
 
-	  if (((int)mcmc_iterations)+1>max_iters) {
-	    scr_out << "Iteration count, " << mcmc_iterations 
-		    << ", exceed maximum number, " << max_iters << "."
-		    << std::endl;
+	  if (((int)this->mcmc_iterations)+1>this->max_iters) {
+	    this->scr_out << "Iteration count, " << this->mcmc_iterations 
+			  << ", exceed maximum number, "
+			  << this->max_iters << "."
+			  << std::endl;
 	    main_done=true;
 	  }
 	
@@ -1403,35 +1514,38 @@ namespace mcmc_namespace {
     
       if (!warm_up && (force_file_update ||
 		       ((int)tc.get_nlines())==max_chain_size || 
-		       (mcmc_iterations+1) % file_update_iters==0)) {
-	scr_out << "Updating files." << std::endl;
-	//update_files(*(data_arr[0].modp),current[0]);
+		       (this->mcmc_iterations+1) % file_update_iters==0)) {
+	this->scr_out << "Updating files." << std::endl;
+	//update_files(*(this->data_arr[0].modp),current[0]);
 	std::cout << "fixme." << std::endl;
 	exit(-1);
-	scr_out << "Done updating files." << std::endl;
+	this->scr_out << "Done updating files." << std::endl;
       }
 
       // --------------------------------------------------------------
 
       // Increment iteration counter
-      mcmc_iterations++;
+      this->mcmc_iterations++;
 
       // Leave warm_up mode if necessary
-      if (((int)mcmc_iterations)>n_warm_up && warm_up==true) {
+      if (((int)this->mcmc_iterations)>this->n_warm_up && warm_up==true) {
 	warm_up=false;
-	scr_out << "Setting warm_up to false. Reset start time." << std::endl;
+	this->scr_out << "Setting warm_up to false. Reset start time."
+		      << std::endl;
 #ifndef NO_MPI
-	max_time-=MPI_Wtime()-mpi_start_time;
-	scr_out << "Resetting max_time to : " << max_time << std::endl;
-	mpi_start_time=MPI_Wtime();
+	this->max_time-=MPI_Wtime()-this->mpi_start_time;
+	this->scr_out << "Resetting max_time to : " << this->max_time
+		      << std::endl;
+	this->mpi_start_time=MPI_Wtime();
 #else
-	max_time-=time(0)-mpi_start_time;
-	scr_out << "Resetting max_time to : " << max_time << std::endl;
-	mpi_start_time=time(0);
+	this->max_time-=time(0)-this->mpi_start_time;
+	this->scr_out << "Resetting max_time to : " << this->max_time
+		      << std::endl;
+	this->mpi_start_time=time(0);
 #endif
-	scr_out.precision(12);
-	scr_out << " Start time: " << mpi_start_time << std::endl;
-	scr_out.precision(6);
+	this->scr_out.precision(12);
+	this->scr_out << " Start time: " << this->mpi_start_time << std::endl;
+	this->scr_out.precision(6);
       }
     
       // End of main loop
@@ -1440,79 +1554,24 @@ namespace mcmc_namespace {
     return 0;
   }
 
-  /// Main wrapper for parsing command-line arguments
-  virtual void run(int argc, char *argv[]) {
-  
-    // ---------------------------------------
-    // Set error handler for this thread
-  
-    o2scl::err_hnd=&error_handler;
-  
-    // ---------------------------------------
-    // Process command-line arguments and run
-  
-    setup_cli();
+  mcmc_class(std::shared_ptr<model_t> &m) : mcmc_base<data_t,model_t>(m) {
 
-#ifndef NO_MPI
-    // Get MPI rank, etc.
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&mpi_nprocs);
-#endif
-
-    // Process arguments
-    for(int i=0;i<argc;i++) {
-      cl_args.push_back(argv[i]);
-    }
-
-    cl.prompt="mcmc> ";
-    cl.run_auto(argc,argv);
-
-    if (file_opened) {
-      // Close main output file
-      scr_out.close();
-    }
- 
-    return;
-  }    
-
-  mcmc_class(std::shared_ptr<model_t> &m) {
-
-    file_opened=false;
     first_file_update=false;
     
     first_point_file="";
     first_point_type=fp_unspecified;
 
-    // Parameters
-    prefix="mcmc";
     file_update_iters=40;
     max_chain_size=10000;
-    max_iters=0;
-    user_seed=0;
-    n_warm_up=0;
-    // Default to 24 hours
-    max_time=3.6e3*24;
-    output_next=true;
 
-    // MC step parameters
-    use_smove=false;
-    hg_mode=0;
-    step_fac=15.0;
-    nwalk=10;
-
-    // Initial values
-    mpi_nprocs=1;
-    mpi_rank=0;
     chain_size=0;
     n_chains=0;
     
     ret_codes.resize(100);
     for(size_t i=0;i<100;i++) ret_codes[i]=0;
 
-    mod=m;
-    mod->setup_params(cl);
   }
-    
+
   };
 
   // End of mcmc_namespace namespace
