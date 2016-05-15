@@ -118,31 +118,32 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
 			   std::vector<double> &line) {
 
+  std::cout << "In fill_line()." << std::endl;
+  
   mcmc_class::fill_line(pars,weight,dat,line);
 
   model &m=*this->mod;
-  
-  shared_ptr<table_units<> > tab_eos=dat.eos;
-  shared_ptr<table_units<> > tab_mvsr=dat.mvsr;
   
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
   if (m.has_eos) {
 
     // The highest baryon density in the EOS table
-    nbmax2=tab_eos->max("nb");
+    std::cout << "I1." << std::endl;
+    nbmax2=dat.eos->max("nb");
+    std::cout << "I2." << std::endl;
     // The central energy density in the maximum mass configuration
-    emax=tab_mvsr->max("ed");
+    emax=dat.mvsr->max("ed");
     // The central pressure in the maximum mass configuration
-    pmax=tab_mvsr->max("pr");
+    pmax=dat.mvsr->max("pr");
     // The maximum mass
-    mmax=tab_mvsr->get_constant("new_max");
+    mmax=dat.mvsr->get_constant("new_max");
     // The radius of the maximum mass star
-    rmax=tab_mvsr->get_constant("new_r_max");
+    rmax=dat.mvsr->get_constant("new_r_max");
     
     if (set.baryon_density) {
       // The central baryon density in the maximum mass configuration
-      nbmax=tab_mvsr->get_constant("new_nb_max");
+      nbmax=dat.mvsr->get_constant("new_nb_max");
     }
 
   } else {
@@ -163,9 +164,9 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
       double eval=m.e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
-      double emax2=tab_eos->max("ed");
+      double emax2=dat.eos->max("ed");
       if (eval<emax2) {
-	double pres_temp=tab_eos->interp("ed",eval,"pr");
+	double pres_temp=dat.eos->interp("ed",eval,"pr");
 	//if (pres_temp<pmax) {
 	line.push_back(pres_temp);
 	//} else {
@@ -184,9 +185,9 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
   for(int i=0;i<set.grid_size;i++) {
     double mval=m.m_grid[i];
     if (mval<mmax) {
-      line.push_back(tab_mvsr->interp("gm",mval,"r"));
+      line.push_back(dat.mvsr->interp("gm",mval,"r"));
       if (m.has_eos) {
-	line.push_back(tab_mvsr->interp("gm",mval,"pr"));
+	line.push_back(dat.mvsr->interp("gm",mval,"pr"));
       }
     } else {
       line.push_back(0.0);
@@ -200,13 +201,13 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
       for(int i=0;i<set.grid_size;i++) {
 	double nbval=m.nb_grid[i];
 	if (nbval<nbmax2) {
-	  double pres_temp=tab_eos->interp("nb",nbval,"pr");
+	  double pres_temp=dat.eos->interp("nb",nbval,"pr");
 	  if (pres_temp<pmax) {
 	    line.push_back(pres_temp);
 	  } else {
 	    line.push_back(0.0);
 	  }
-	  double eval2=tab_eos->interp("nb",nbval,"ed");
+	  double eval2=dat.eos->interp("nb",nbval,"ed");
 	  double eoa_val2=eval2/nbval-939.0/o2scl_const::hc_mev_fm;
 	  line.push_back(eoa_val2);
 	} else {
@@ -216,8 +217,8 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
       }
     }
     if (m.has_esym) {
-      line.push_back(tab_eos->get_constant("S"));
-      line.push_back(tab_eos->get_constant("L"));
+      line.push_back(dat.eos->get_constant("S"));
+      line.push_back(dat.eos->get_constant("L"));
     }
     line.push_back(rmax);
     line.push_back(mmax);
@@ -225,11 +226,11 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
     line.push_back(emax);
     if (set.baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<m.nsources;i++) {
-      line.push_back(tab_mvsr->interp("gm",pars[nparams-m.nsources+i],"ed"));
+      line.push_back(dat.mvsr->interp("gm",pars[nparams-m.nsources+i],"ed"));
     }
     if (set.baryon_density) {
       for(size_t i=0;i<m.nsources;i++) {
-	line.push_back(tab_mvsr->interp("gm",pars[nparams-m.nsources+i],"nb"));
+	line.push_back(dat.mvsr->interp("gm",pars[nparams-m.nsources+i],"nb"));
       }
     }
   }

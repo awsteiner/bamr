@@ -31,25 +31,25 @@ using namespace bamr;
 
 int main(int argc, char *argv[]) {
 
-  // ---------------------------------------
-  // Init MPI
-  
 #ifndef MCMC_NO_MPI
+  // Init MPI
   MPI_Init(&argc,&argv);
 #endif
 
-  // ---------------------------------------
-  // Main bamr object 
-  
+  // Settings object
   settings set;
+
+  // Default model
   std::shared_ptr<model> def_mod(new two_polytropes(set));
+
+  // Main bamr object
   bamr::bamr_class b(set,def_mod);
+
+  // Run!
   b.run(argc,argv);
   
-  // ---------------------------------------
-  // Finalize MPI
-
 #ifndef MCMC_NO_MPI
+  // Finalize MPI
   MPI_Finalize();
 #endif
 

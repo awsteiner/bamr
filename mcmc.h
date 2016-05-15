@@ -292,10 +292,10 @@ namespace mcmc_namespace {
     max_iters=0;
     user_seed=0;
     n_warm_up=0;
+    output_next=true;
 
     // Default to 24 hours
     max_time=3.6e3*24;
-    output_next=true;
 
     // MC step parameters
     aff_inv=false;
@@ -303,10 +303,11 @@ namespace mcmc_namespace {
     step_fac=10.0;
     nwalk=1;
 
-    // Initial values
+    // Initial values for MPI paramers
     mpi_nprocs=1;
     mpi_rank=0;
 
+    // True if scr_out has been opened
     file_opened=false;
 
     mod=m;
@@ -323,18 +324,17 @@ namespace mcmc_namespace {
     // Set parameters
     
     p_max_time.d=&this->max_time;
-    p_max_time.help=
-      "Maximum run time in seconds (default 86400 sec or 1 day).";
+    p_max_time.help=((std::string)"Maximum run time in seconds ")+
+    "(default 86400 sec or 1 day).";
     this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
     
     p_step_fac.d=&this->step_fac;
-    p_step_fac.help=
-      ((std::string)"MCMC step factor. The step size for each ")+
-      "variable is taken as the difference between the high and low "+
-      "limits divided by this factor (default 10.0). This factor can "+
-      "be increased if the acceptance rate is too small, but care must "+
-      "be taken, e.g. if the conditional probability is multimodal. If "+
-      "this step size is smaller than 1.0, it is reset to 1.0 .";
+    p_step_fac.help=((std::string)"MCMC step factor. The step size for ")+
+    "each variable is taken as the difference between the high and low "+
+    "limits divided by this factor (default 10.0). This factor can "+
+    "be increased if the acceptance rate is too small, but care must "+
+    "be taken, e.g. if the conditional probability is multimodal. If "+
+    "this step size is smaller than 1.0, it is reset to 1.0 .";
     this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
     p_n_warm_up.i=&this->n_warm_up;
@@ -344,24 +344,25 @@ namespace mcmc_namespace {
 
     p_user_seed.i=&this->user_seed;
     p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-      "generator. If zero is given (the default), then mcmc() uses "+
-      "time(0) to generate a random seed.";
+    "generator. If zero is given (the default), then mcmc() uses "+
+    "time(0) to generate a random seed.";
     this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
-
+    
     p_max_iters.i=&this->max_iters;
     p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-      "iterations to be less than the specified number (default zero).";
+    "iterations to be less than the specified number (default zero).";
     this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
-
+    
     p_output_next.b=&this->output_next;
     p_output_next.help=((std::string)"If true, output next point ")+
       "to the '_scr' file before calling TOV solver (default true).";
     this->cl.par_list.insert(std::make_pair("output_next",&p_output_next));
-
+    
     p_aff_inv.b=&this->aff_inv;
-    p_aff_inv.help="";
+    p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
+    "sampling (default false).";
     this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
-
+    
     p_prefix.str=&this->prefix;
     p_prefix.help="Output file prefix (default 'mcmc\').";
     this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
@@ -444,6 +445,7 @@ namespace mcmc_namespace {
   //@{
   o2scl::cli::parameter_int p_max_chain_size;
   o2scl::cli::parameter_int p_file_update_iters;
+  o2scl::cli::parameter_bool p_debug_line;
   //@}
   
   /** \brief The number of MCMC successes between file updates
@@ -457,12 +459,17 @@ namespace mcmc_namespace {
     
   /// Number of Markov chain segments
   size_t n_chains;
-
+  
   /// Number of chains
   size_t chain_size;
   
   /// Main data table for Markov chain
   o2scl::table_units<> tc;
+    
+  /** \brief If true, output each line of the table as it's stored
+      (default false)
+  */
+  bool debug_line;
     
   /** \brief Set up the 'cli' object
       
@@ -509,19 +516,23 @@ namespace mcmc_namespace {
     this->cl.set_comm_option_vec(nopt,options);
 
     p_file_update_iters.i=&file_update_iters;
-    p_file_update_iters.help=
-      ((std::string)"Number of MCMC successes between ")+
-      "file upates (default 40, minimum value 1).";
+    p_file_update_iters.help=((std::string)"Number of MCMC successes ")+
+      "between file upates (default 40, minimum value 1).";
     this->cl.par_list.insert(std::make_pair("file_update_iters",
 					    &p_file_update_iters));
     
     p_max_chain_size.i=&max_chain_size;
-    p_max_chain_size.help=
-      ((std::string)"Maximum Markov chain size (default ")+
-      "10000).";
+    p_max_chain_size.help=((std::string)"Maximum Markov chain size ")+
+      "(default 10000).";
     this->cl.par_list.insert(std::make_pair("max_chain_size",
 					    &p_max_chain_size));
-
+    
+    p_debug_line.b=&debug_line;
+    p_debug_line.help=((std::string)
+		       "If true, output each line as its stored ")+
+      "(default false).";
+    this->cl.par_list.insert(std::make_pair("debug_line",&p_debug_line));
+      
     return;
   }
  
@@ -531,7 +542,7 @@ namespace mcmc_namespace {
     return 0;
   };
   
-  /** \brief Desc
+  /** \brief Initial write to HDF5 file 
    */
   virtual void first_update(o2scl_hdf::hdf_file &hf) {
     
@@ -543,7 +554,7 @@ namespace mcmc_namespace {
     hf.seti("n_warm_up",this->n_warm_up);
     hf.setd("step_fac",this->step_fac);
     hf.seti("max_iters",this->max_iters);
-    //hf.seti("debug_line",debug_line);
+    hf.seti("debug_line",debug_line);
     hf.seti("file_update_iters",file_update_iters);
     hf.seti("output_next",this->output_next);
     hf.seti("initial_point_type",initial_point_type);
@@ -669,7 +680,7 @@ namespace mcmc_namespace {
       }
       tc.line_of_data(line.size(),line);
       
-      if (false) {
+      if (debug_line) {
 	std::vector<std::string> sc_in, sc_out;
 	for(size_t k=0;k<line.size();k++) {
 	  sc_in.push_back(tc.get_column_name(k)+": "+o2scl::dtos(line[k]));
@@ -1317,6 +1328,9 @@ namespace mcmc_namespace {
     
     }
 
+    // Separate output header from main output
+    this->scr_out << std::endl;
+    
     // ---------------------------------------------------
 
     // Keep track of total number of different points in the parameter

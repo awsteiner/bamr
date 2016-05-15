@@ -35,6 +35,7 @@ model::model(settings &s) : set(s) {
   ts.verbose=0;
   ts.set_units("1/fm^4","1/fm^4","1/fm^3");
   ts.err_nonconv=false;
+  ts.set_eos(teos);
       
   has_eos=true;
   schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
@@ -245,7 +246,6 @@ void model::load_mc(std::ofstream &scr_out) {
 	  << in_m_min << "," << in_m_max << ")" << std::endl;
   scr_out << "R limits: ("
 	  << in_r_min << "," << in_r_max << ")" << std::endl;
-  scr_out << std::endl;
   
   return;
 }
@@ -281,7 +281,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
   // Compute the EOS first
   if (has_eos) {
-    compute_eos(pars,success,scr_out);
+    compute_eos(pars,success,scr_out,dat);
     if (success!=ix_success) return;
   }
   
@@ -315,10 +315,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   if (has_eos && set.baryon_density && !tab_eos->is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
-    double n1, e1;
-    baryon_density_point(n1,e1);
-    
-    if (n1<=0.0 && e1<=0.0) {
+    if (nb_n1<=0.0 && nb_e1<=0.0) {
       O2SCL_ERR2("Computing the baryon density requires one ",
 		 "calibration point in compute_star().",
 		 o2scl::exc_einval);
@@ -335,7 +332,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	  !std::isfinite(tab_eos->get("ed",i)) ||
 	  !std::isfinite(tab_eos->get("pr",i))) {
 	scr_out << "Inverse Gibbs not finite." << std::endl;
-	scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	scr_out << "ed pr" << std::endl;
 	for(size_t i=0;i<tab_eos->get_nlines();i++) {
 	  scr_out << i << " "
@@ -352,11 +349,11 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     tab_eos->new_column("iigb");
 
     for(size_t i=0;i<tab_eos->get_nlines();i++) {
-      if (e1<=tab_eos->get("ed",i)) {
-	double val=tab_eos->integ("ed",e1,tab_eos->get("ed",i),"igb");
+      if (nb_e1<=tab_eos->get("ed",i)) {
+	double val=tab_eos->integ("ed",nb_e1,tab_eos->get("ed",i),"igb");
 	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite." << std::endl;
-	  scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	  scr_out << "ed pr" << std::endl;
 	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
 	    scr_out << i << " "
@@ -367,10 +364,10 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	}
 	tab_eos->set("iigb",i,val);
       } else {
-	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),e1,"igb");
+	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),nb_e1,"igb");
 	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite (2)." << std::endl;
-	  scr_out << "n1=" << n1 << " e1=" << e1 << std::endl;
+	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	  scr_out << "ed pr" << std::endl;
 	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
 	    scr_out << i << " "
@@ -384,7 +381,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     }
 
     // Compute normalization constant
-    double Anb=n1/exp(tab_eos->interp("ed",e1,"iigb"));
+    double Anb=nb_n1/exp(tab_eos->interp("ed",nb_e1,"iigb"));
     if (!std::isfinite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << std::endl;
       success=ix_nb_problem;
@@ -515,6 +512,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Solve for M vs. R curve
     ts.princ=set.mvsr_pr_inc;
+    ts.set_table(dat.mvsr);
     int info=ts.mvsr();
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
@@ -904,7 +902,7 @@ void two_polytropes::initial_point(ubvector &params) {
 }
 
 void two_polytropes::compute_eos(ubvector &params, int &success,
-				 ofstream &scr_out) {
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   if (params[4]>params[6]) {
@@ -923,12 +921,12 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
+  cns.set_eos_table(dat.eos);
   cns.calc_eos();
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",params[2]);
-  tab_eos->add_constant("L",se.fesym_slope(0.16));
+  dat.eos->add_constant("S",params[2]);
+  dat.eos->add_constant("L",se.fesym_slope(0.16));
   
   // Transition densities
   double ed1=params[4];
@@ -936,8 +934,8 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
 
   // Boundary baryon density and pressure by interpolating
   // the table
-  double nb1=tab_eos->interp("ed",ed1,"nb");
-  double pr1=tab_eos->interp("ed",ed1,"pr");
+  double nb1=dat.eos->interp("ed",ed1,"nb");
+  double pr1=dat.eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
   double coeff1=pr1/pow(ed1,1.0+1.0/params[5]);
@@ -951,22 +949,22 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
 
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
-  double ed_last=tab_eos->max("ed");
+  double ed_last=dat.eos->max("ed");
   if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope " << endl;
     O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
-  for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>ed1) {
-      tab_eos->delete_row(i);
+  for(size_t i=0;i<dat.eos->get_nlines();i++) {
+    if ((*dat.eos)["ed"][i]>ed1) {
+      dat.eos->delete_row(i);
       i=0;
     }
   }
 
   // Check that low-density EOS has statistics
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
     success=ix_no_eos_table;
     return;
@@ -980,11 +978,11 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
     double nb=nb1*pow(ed/ed1,1.0+params[5])/
       pow((ed+pr)/(ed1+pr1),params[5]);
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
     success=ix_no_eos_table;
     return;
@@ -1011,7 +1009,7 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
     double nb=nb2*pow(ed/ed2,1.0+params[7])/
       pow((ed+pr)/(ed2+pr2),params[7]);
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
   
   return;
@@ -1055,7 +1053,7 @@ void alt_polytropes::initial_point(ubvector &params) {
 }
 
 void alt_polytropes::compute_eos(ubvector &params, int &success,
-				 ofstream &scr_out) {
+				 ofstream &scr_out, model_data &dat) {
   
   success=ix_success;
   if (params[4]>params[6]) {
@@ -1222,7 +1220,7 @@ void fixed_pressure::initial_point(ubvector &params) {
 }
 
 void fixed_pressure::compute_eos(ubvector &params, int &success,
-				 ofstream &scr_out) {
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
 
@@ -1375,7 +1373,7 @@ void generic_quarks::initial_point(ubvector &params) {
 }
 
 void generic_quarks::compute_eos(ubvector &params, int &success,
-				 ofstream &scr_out) {
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
 
@@ -1627,7 +1625,7 @@ void quark_star::initial_point(ubvector &params) {
 }
 
 void quark_star::compute_eos(ubvector &params, int &success,
-			     std::ofstream &scr_out) {
+			     std::ofstream &scr_out, model_data &dat) {
   
   success=ix_success;
 
@@ -1837,7 +1835,8 @@ void qmc_neut::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_neut::compute_eos(ubvector &params, int &success, ofstream &scr_out) {
+void qmc_neut::compute_eos(ubvector &params, int &success,
+			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   
@@ -2014,7 +2013,7 @@ void qmc_threep::initial_point(ubvector &params) {
 }
 
 void qmc_threep::compute_eos(ubvector &params, int &success,
-			     ofstream &scr_out) {
+			     ofstream &scr_out, model_data &dat) {
 
   bool debug=false;
 
@@ -2250,7 +2249,7 @@ void qmc_fixp::initial_point(ubvector &params) {
 }
 
 void qmc_fixp::compute_eos(ubvector &params, int &success,
-			   ofstream &scr_out) {
+			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   bool debug=false;
@@ -2484,7 +2483,7 @@ void qmc_twolines::initial_point(ubvector &params) {
 }
 
 void qmc_twolines::compute_eos(ubvector &params, int &success,
-			       ofstream &scr_out) {
+			       ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   bool debug=false;
