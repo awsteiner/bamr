@@ -104,9 +104,6 @@ namespace bamr {
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
-    /// The default model
-    std::shared_ptr<model> def_mod;
-    
     /// \name Main functions called from the command-line interface
     //@{
     /** \brief Set the model for the EOS to use
@@ -138,31 +135,20 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
-#ifdef O2SCL_NEVER_DEFINED
-    
-  protected:
-
-    /** \brief Set the first point in the parameter space
-     */
-    virtual int set_first_point(std::vector<std::string> &sv, bool itive_com);
-
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
-#endif
-    
-  public:
-
-  bamr_class() : def_mod(new two_polytropes(set)),
-      mcmc_class<model_data,model>(def_mod) {
+  bamr_class(settings &s, std::shared_ptr<model> &m) :
+    mcmc_class<model_data,model>(m), set(s) {
+      
     }
-
+    
     virtual ~bamr_class() {
     }
-
-    /// Desc
-    settings set;
+    
+    /// Settings object
+    settings &set;
     
     /** \brief Set up the 'cli' object
 

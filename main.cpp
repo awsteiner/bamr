@@ -20,31 +20,36 @@
 
   -------------------------------------------------------------------
 */
-#ifndef BAMR_NO_MPI
+#ifndef MCMC_NO_MPI
 #include <mpi.h>
 #endif
 
+#include "models.h"
 #include "bamr.h"
+
+using namespace bamr;
 
 int main(int argc, char *argv[]) {
 
   // ---------------------------------------
   // Init MPI
   
-#ifndef BAMR_NO_MPI
+#ifndef MCMC_NO_MPI
   MPI_Init(&argc,&argv);
 #endif
 
   // ---------------------------------------
   // Main bamr object 
   
-  bamr::bamr_class b;
+  settings set;
+  std::shared_ptr<model> def_mod(new two_polytropes(set));
+  bamr::bamr_class b(set,def_mod);
   b.run(argc,argv);
   
   // ---------------------------------------
   // Finalize MPI
 
-#ifndef BAMR_NO_MPI
+#ifndef MCMC_NO_MPI
   MPI_Finalize();
 #endif
 

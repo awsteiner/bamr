@@ -38,13 +38,16 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   model &m=*this->mod;
   
   mcmc_class::table_names_units(s,u);
-  
-  if (set.norm_max) {
+
+  /*
+    if (set.norm_max) {
     u+=". ";
-  } else {
+    } else {
     u+=((std::string)"1/km^")+std::to_string(m.nsources)+"/Msun^"+
-      std::to_string(m.nsources)+" ";
-  }
+    std::to_string(m.nsources)+" ";
+    }
+  */
+  
   for(size_t i=0;i<m.nsources;i++) {
     s+=((std::string)"wgt_")+m.source_names[i]+" ";
     if (set.norm_max) {
@@ -61,10 +64,6 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   for(size_t i=0;i<m.nsources;i++) {
     s+=((std::string)"Rns_")+m.source_names[i]+" ";
     u+="km ";
-  }
-  for(size_t i=0;i<m.nsources;i++) {
-    s+=((std::string)"Mns_")+m.source_names[i]+" ";
-    u+="Msun ";
   }
   
   if (m.has_eos) {
@@ -155,12 +154,10 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
   for(size_t i=0;i<m.nsources;i++) {
     line.push_back(dat.wgts[i]);
   }
-  for(size_t i=0;i<nparams;i++) {
-    line.push_back(pars[i]);
-  }
   for(size_t i=0;i<m.nsources;i++) {
     line.push_back(dat.rad[i]);
   }
+  
   if (m.has_eos) {
     for(int i=0;i<set.grid_size;i++) {
       double eval=m.e_grid[i];
@@ -288,6 +285,19 @@ int bamr_class::mcmc_init() {
   m.e_grid=uniform_grid_end<double>(set.e_low,set.e_high,set.grid_size-1);
   m.m_grid=uniform_grid_end<double>(set.m_low,set.m_high,set.grid_size-1);
 
+  // -----------------------------------------------------------
+  // Prepare data objects
+
+  for(size_t i=0;i<data_arr.size();i++) {
+    data_arr[i].rad.resize(m.nsources);
+    data_arr[i].wgts.resize(m.nsources);
+  }
+  
+  // -----------------------------------------------------------
+  // Load data
+
+  m.load_mc(this->scr_out);
+
   return 0;
 }
 
@@ -340,19 +350,22 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-void bamr_class::setup_cli() {
+int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
+  this->mod->add_data(sv,itive_com);
+  return 0;
+}
 
+void bamr_class::setup_cli() {
+  
+  mcmc_class::setup_cli();
+
+  set.setup_cli(cl);
+  
   // ---------------------------------------
   // Set options
     
-  static const int nopt=4;
+  static const int nopt=2;
   comm_option_s options[nopt]={
-    {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-     0,0,"",((string)"This is the main part of ")+
-     "the code which performs the simulation. Make sure to set the "+
-     "model first using the 'model' command first.",
-     new comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc),
-     cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
      "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
@@ -360,7 +373,7 @@ void bamr_class::setup_cli() {
      "model must be chosen before a MCMC run.",
      new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
      cli::comm_option_both},
-    /*    {'a',"add-data","Add data source to the list.",
+    {'a',"add-data","Add data source to the list.",
      4,5,"<name> <file> <slice> <initial mass> [obj name]",
      ((string)"Specify data as a table3d object in a HDF5 file. ")+
      "The string <name> is the name used, <file> is the filename, "+
@@ -370,13 +383,10 @@ void bamr_class::setup_cli() {
      "If [obj name] is not specified, then the first table3d object "+
      "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
      cli::comm_option_both},
-    */
   };
   cl.set_comm_option_vec(nopt,options);
 
   // --------------------------------------------------------
-  
-  mcmc_class::setup_cli();
   
   return;
 }

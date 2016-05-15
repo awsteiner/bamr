@@ -51,7 +51,7 @@
 
 namespace bamr {
   
-  /** \brief Desc
+  /** \brief Data at each MC point
    */
   class model_data {
     
@@ -73,30 +73,26 @@ namespace bamr {
       eos(new o2scl::table_units<>) {
     }
     
-    /** \brief Desc
+    /** \brief Copy constructor
      */
     model_data(const model_data &md) {
-      rad=md.rad;
-      wgts=md.wgts;
-      mvsr=md.mvsr;
-      eos=md.eos;
+      std::shared_ptr<o2scl::table_units<> >
+	mvsr_new(new o2scl::table_units<>);
+      mvsr=mvsr_new;
+      std::shared_ptr<o2scl::table_units<> >
+	eos_new(new o2scl::table_units<>);
+      eos=eos_new;
     }
     
   private:
     
-    /** \brief Desc
+    /** \brief Make operator= copy constructor private
      */
     model_data &operator=(const model_data &e);
-    //{
-    //if (this!=&e) {
-    //modp=0;
-    //}
-    //return *this;
-    //}
     
   };
 
-  /** \brief Desc
+  /** \brief Settings object
    */
   class settings {
 
@@ -105,9 +101,7 @@ namespace bamr {
     settings() {
       grid_size=100;
       debug_load=false;
-      // Minimum allowed maximum mass
       min_max_mass=2.0;
-      // Minimum neutron star mass
       min_mass=0.8;
       debug_star=false;
       debug_line=false;
@@ -120,24 +114,14 @@ namespace bamr {
       inc_baryon_mass=false;
       norm_max=true;
       mvsr_pr_inc=1.1;
-      
-      // -----------------------------------------------------------
-      // Grid limits
-      
       nb_low=0.04;
       nb_high=1.24;
-      
       e_low=0.3;
       e_high=10.0;
-      
       m_low=0.2;
       m_high=3.0;
-      
     }
     
-    /// Number of bins for all histograms (default 100)
-    int grid_size;
-
     /// \name Parameter objects for the 'set' command
     //@{
     o2scl::cli::parameter_double p_min_max_mass;
@@ -164,6 +148,9 @@ namespace bamr {
     
     /// \name Other parameters accessed by 'set' and 'get'
     //@{
+    /// Number of bins for all histograms (default 100)
+    int grid_size;
+
     /// Pressure increment for the M vs. R curve (default 1.1)
     double mvsr_pr_inc;
 
@@ -231,7 +218,7 @@ namespace bamr {
     double m_high;
     //@}
 
-    /** \brief Desc
+    /** \brief Add parameters to the \ref o2scl::cli object
      */
     void setup_cli(o2scl::cli &cl) {
       
@@ -427,7 +414,7 @@ namespace bamr {
     static const int ix_eos_solve_failed=18;
     //@}
 
-    /// Desc
+    /// Number of parameters (EOS parameters plus mass of each source)
     size_t nparams;
     
     /** \brief TOV solver
@@ -452,8 +439,10 @@ namespace bamr {
     /// The initial set of neutron star masses
     std::vector<double> first_mass;
 
+    /// Total number of processors
     size_t mpi_nprocs;
-    
+
+    /// Current processor rank
     size_t mpi_rank;
 
     /// \name Grids
@@ -466,21 +455,31 @@ namespace bamr {
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
 
+    /// Reference to settings object
     settings &set;
     
     model(settings &s);
 
     virtual ~model() {}
 
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
     virtual void compute_eos(ubvector &pars, int &success,
 			     std::ofstream &scr_out) {
       return;
     }
 
+    /** \brief Load input probability distributions
+     */
     void load_mc(std::ofstream &scr_out);
   
+    /** \brief Add a data distribution to the list
+     */
     int add_data(std::vector<std::string> &sv, bool itive_com);
     
+    /** \brief Tabulate EOS and then use in cold_nstar
+     */
     virtual void compute_star(ubvector &pars, std::ofstream &scr_out, 
 			      int &success, model_data &dat);
 
@@ -515,24 +514,18 @@ namespace bamr {
     /** \brief Set the lower boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void low_limits(ubvector &e) {
-      return;
-    }
+    virtual void low_limits(ubvector &e)=0;
 
     /** \brief Set the upper boundaries for all the parameters,
 	masses, and radii
     */
-    virtual void high_limits(ubvector &e) {
-      return;
-    }
+    virtual void high_limits(ubvector &e)=0;
 
-    virtual void param_names(std::vector<std::string> &pnames) {
-      return;
-    }
+    /// Set up the parameter names
+    virtual void param_names(std::vector<std::string> &pnames)=0;
 
-    virtual void param_units(std::vector<std::string> &punits) {
-      return;
-    }
+    /// Set up the parameter units
+    virtual void param_units(std::vector<std::string> &punits)=0;
     //@}
 
     /// \name Functions for model parameters fixed during the MCMC run
@@ -657,10 +650,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -719,10 +712,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -795,10 +788,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -899,10 +892,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
 
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -978,10 +971,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
   
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
   
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
 
     /** \brief Compute the EOS corresponding to parameters in 
@@ -1079,10 +1072,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
@@ -1173,10 +1166,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
     
     /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
@@ -1273,10 +1266,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
     
     /** \brief Compute the EOS corresponding to parameters in 
@@ -1330,10 +1323,10 @@ namespace bamr {
     virtual void high_limits(ubvector &e);
     
     /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
+    virtual void param_names(std::vector<std::string> &pnames);
 
     /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
+    virtual void param_units(std::vector<std::string> &punits);
     //@}
     
     /** \brief Compute the EOS corresponding to parameters in 

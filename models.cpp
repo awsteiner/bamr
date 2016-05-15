@@ -44,9 +44,9 @@ model::model(settings &s) : set(s) {
   in_r_min=5.0;
   in_r_max=18.0;
       
-  // Default parameter values
-      
   teos.verbose=0;
+
+  nsources=0;
 }
 
 void model::load_mc(std::ofstream &scr_out) {
@@ -429,11 +429,9 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Perform any additional necessary EOS preparations
     //prepare_eos(pars,dat,success);
-    std::cout << "fixme" << std::endl;
-    exit(-1);
-    if (success!=ix_success) {
-      return;
-    }
+    //if (success!=ix_success) {
+    //return;
+    //}
 
     // Read the EOS into the tov_eos object.
     if (set.baryon_density && set.inc_baryon_mass) {
@@ -560,8 +558,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     // of the current M vs R curve
     bool mass_fail=false;
     for(size_t i=0;i<nsources;i++) {
-      std::cout << "fixme" << std::endl;
-      //if (pars.mass[i]>mmax) mass_fail=true;
+      if (pars[this->nparams-nsources+i]>mmax) mass_fail=true;
     }
 
     // If a star is too massive, readjust it's mass accordingly
@@ -663,9 +660,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
   // Compute the radius for each source
   for(size_t i=0;i<nsources;i++) {
-    //dat.rad[i]=tab_mvsr->interp("gm",e.mass[i],"r");
-    std::cout << "fixme" << std::endl;
-    exit(-1);
+    dat.rad[i]=tab_mvsr->interp("gm",pars[this->nparams-nsources+i],"r");
   }
 
   // Check causality
@@ -689,16 +684,12 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   } else {
 
     for(size_t i=0;i<nsources;i++) {
-      std::cout << "fixme" << std::endl;
-      exit(-1);
-      /*
-	if (e.rad[i]<2.94*schwarz_km/2.0*e.mass[i]) {
+      if (dat.rad[i]<2.94*schwarz_km/2.0*pars[this->nparams-nsources+i]) {
 	scr_out << "Source " << source_names[i] << " acausal."
-	<< std::endl;
+		<< std::endl;
 	success=ix_acausal_mr;
 	return;
-	}
-      */
+      }
     }
 
   }
@@ -716,36 +707,33 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
   }
       
   bool mr_fail=false;
-  /*
-    for(size_t i=0;i<nsources;i++) {
-    if (e.mass[i]<in_m_min || e.mass[i]>in_m_max ||
-    e.rad[i]<in_r_min || e.rad[i]>in_r_max) {
-    mr_fail=true;
+  for(size_t i=0;i<nsources;i++) {
+    if (pars[this->nparams-nsources+i]<in_m_min ||
+	pars[this->nparams-nsources+i]>in_m_max ||
+	dat.rad[i]<in_r_min || dat.rad[i]>in_r_max) {
+      mr_fail=true;
     }
-    }
-      
-    if (mr_fail==true) {
+  }
+  
+  if (mr_fail==true) {
     scr_out << "Rejected: Mass or radius outside range." << std::endl;
     if (nsources>0) {
-    scr_out.precision(2);
-    scr_out.setf(ios::showpos);
-    for(size_t i=0;i<nsources;i++) {
-    scr_out << e.mass[i] << " ";
-    }
-    scr_out << std::endl;
-    for(size_t i=0;i<nsources;i++) {
-    scr_out << e.rad[i] << " ";
-    }
-    scr_out << std::endl;
-    scr_out.precision(6);
-    scr_out.unsetf(ios::showpos);
+      scr_out.precision(2);
+      scr_out.setf(ios::showpos);
+      for(size_t i=0;i<nsources;i++) {
+	scr_out << pars[this->nparams-nsources+i] << " ";
+      }
+      scr_out << std::endl;
+      for(size_t i=0;i<nsources;i++) {
+	scr_out << dat.rad[i] << " ";
+      }
+      scr_out << std::endl;
+      scr_out.precision(6);
+      scr_out.unsetf(ios::showpos);
     }
     success=ix_mr_outside;
     return 0.0;
-    }
-  */
-  std::cout << "fixme" << std::endl;
-  exit(-1);
+  }
 
   success=ix_success;
   double ret=1.0;
@@ -754,8 +742,6 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
   tab_mvsr->set_interp_type(o2scl::itp_linear);
   double m_max_current=tab_mvsr->max("gm");
 
-#ifdef NEVER_DEFINED
-  
   // -----------------------------------------------
   // Compute the weights for each source
       
@@ -765,28 +751,33 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
 	
     // Double check that current M and R is in the range of
     // the provided input data
-    if (e.rad[i]<source_tables[i].get_x_data()[0] ||
-	e.rad[i]>source_tables[i].get_x_data()
+    if (dat.rad[i]<source_tables[i].get_x_data()[0] ||
+	dat.rad[i]>source_tables[i].get_x_data()
 	[source_tables[i].get_nx()-1] ||
-	e.mass[i]<source_tables[i].get_y_data()[0] ||
-	e.mass[i]>source_tables[i].get_y_data()
+	pars[this->nparams-nsources+i]<source_tables[i].get_y_data()[0] ||
+	pars[this->nparams-nsources+i]>source_tables[i].get_y_data()
 	[source_tables[i].get_ny()-1]) {
-      wgts[i]=0.0;
+      dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
-      wgts[i]=source_tables[i].interp(e.rad[i],e.mass[i],slice_names[i]);
+      dat.wgts[i]=source_tables[i].interp
+	(dat.rad[i],pars[this->nparams-nsources+i],slice_names[i]);
+				      
     }
 	
     // If the weight is lower than the threshold, set it equal
     // to the threshold
-    if (wgts[i]<input_dist_thresh) wgts[i]=input_dist_thresh;
+    if (dat.wgts[i]<set.input_dist_thresh) {
+      dat.wgts[i]=set.input_dist_thresh;
+    }
 	
     // Include the weight for this source 
-    ret*=wgts[i];
+    ret*=dat.wgts[i];
 	
     if (set.debug_star) {
-      scr_out << source_names[i] << " " << e.mass[i] << " " 
-	      << e.rad[i] << " " << wgts[i] << std::endl;
+      scr_out << source_names[i] << " "
+	      << pars[this->nparams-nsources+i] << " " 
+	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
 	
     // Go to the next source
@@ -797,19 +788,18 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
   // -----------------------------------------------
   // Exit if the current maximum mass is too large
       
-  if (m_max_current>exit_mass) {
+  if (m_max_current>set.exit_mass) {
     scr_out.setf(ios::scientific);
     scr_out << "Exiting because maximum mass (" << m_max_current 
-	    << ") larger than exit_mass (" << exit_mass << ")." 
+	    << ") larger than exit_mass (" << set.exit_mass << ")." 
 	    << std::endl;
     scr_out.precision(12);
-    scr_out << "e,ret: " << e << " " << ret << std::endl;
+    vector_out(scr_out,pars);
+    scr_out << " " << ret << std::endl;
     scr_out.precision(6);
     exit(-1);
   }
 
-#endif
-  
   return ret;
 }
 
@@ -838,6 +828,7 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
 }
 
 two_polytropes::two_polytropes(settings &s) : model(s) {
+
   se.kpp=0.0;
   se.n0=0.16;
   se.eoa=-16.0/hc_mev_fm;
@@ -851,6 +842,8 @@ two_polytropes::two_polytropes(settings &s) : model(s) {
   cns.set_n_and_p(neut,prot);
   // We include muons by default, but they rarely appear at low-density
   cns.include_muons=true;
+
+  this->nparams=8;
 }
 
 void two_polytropes::low_limits(ubvector &params) {
@@ -887,26 +880,15 @@ void two_polytropes::high_limits(ubvector &params) {
   return;
 }
 
-string two_polytropes::param_name(size_t i) {
-  if (i==0) return "comp";
-  else if (i==1) return "kprime";
-  else if (i==2) return "esym";
-  else if (i==3) return "gamma";
-  else if (i==4) return "trans1";
-  else if (i==5) return "index1";
-  else if (i==6) return "trans2";
-  return "index2";
+void two_polytropes::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string two_polytropes::param_unit(size_t i) {
-  if (i==0) return "1/fm";
-  else if (i==1) return "1/fm";
-  else if (i==2) return "1/fm";
-  else if (i==3) return ".";
-  else if (i==4) return "1/fm^4";
-  else if (i==5) return ".";
-  else if (i==6) return "1/fm^4";
-  return ".";
+void two_polytropes::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void two_polytropes::initial_point(ubvector &params) {
@@ -1049,16 +1031,15 @@ void alt_polytropes::high_limits(ubvector &params) {
   return;
 }
 
-string alt_polytropes::param_name(size_t i) {
-  if (i==5) return "exp1";
-  else if (i==7) return "exp2";
-  return two_polytropes::param_name(i);
+void alt_polytropes::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string alt_polytropes::param_unit(size_t i) {
-  if (i==5) return ".";
-  else if (i==7) return ".";
-  return two_polytropes::param_unit(i);
+void alt_polytropes::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void alt_polytropes::initial_point(ubvector &params) {
@@ -1217,20 +1198,15 @@ void fixed_pressure::high_limits(ubvector &params) {
   return;
 }
 
-string fixed_pressure::param_name(size_t i) {
-  if (i==4) return "pres1";
-  else if (i==5) return "pres2";
-  else if (i==6) return "pres3";
-  else if (i==7) return "pres4";
-  return two_polytropes::param_name(i);
+void fixed_pressure::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string fixed_pressure::param_unit(size_t i) {
-  if (i==4) return "1/fm^4";
-  else if (i==5) return "1/fm^4";
-  else if (i==6) return "1/fm^4";
-  else if (i==7) return "1/fm^4";
-  return two_polytropes::param_unit(i);
+void fixed_pressure::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void fixed_pressure::initial_point(ubvector &params) {
@@ -1374,28 +1350,15 @@ void generic_quarks::high_limits(ubvector &params) {
   return;
 }
 
-string generic_quarks::param_name(size_t i) {
-  if (i==0) return "comp";
-  else if (i==1) return "kprime";
-  else if (i==2) return "esym";
-  else if (i==3) return "gamma";
-  else if (i==4) return "trans1";
-  else if (i==5) return "exp1";
-  else if (i==6) return "trans2";
-  else if (i==7) return "a2";
-  return "a4";
+void generic_quarks::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string generic_quarks::param_unit(size_t i) {
-  if (i==0) return "1/fm";
-  else if (i==1) return "1/fm";
-  else if (i==2) return "1/fm";
-  else if (i==3) return ".";
-  else if (i==4) return "1/fm^4";
-  else if (i==5) return ".";
-  else if (i==6) return "1/fm^4";
-  else if (i==7) return "1/fm^2";
-  return ".";
+void generic_quarks::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void generic_quarks::initial_point(ubvector &params) {
@@ -1644,20 +1607,17 @@ void quark_star::high_limits(ubvector &params) {
   return;
 }
 
-std::string quark_star::param_name(size_t i) {
-  if (i==0) return "B";
-  else if (i==1) return "c";
-  else if (i==2) return "Delta";
-  return "ms";
+void quark_star::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-std::string quark_star::param_unit(size_t i) {
-  if (i==0) return "1/fm";
-  else if (i==1) return ".";
-  else if (i==2) return "1/fm";
-  return "1/fm";
+void quark_star::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
-  
+
 void quark_star::initial_point(ubvector &params) {
   params[0]=0.2446;
   params[1]=0.0740;
@@ -1853,24 +1813,15 @@ void qmc_neut::high_limits(ubvector &params) {
   return;
 }
 
-string qmc_neut::param_name(size_t i) {
-  if (i==0) return "a";
-  else if (i==1) return "alpha";
-  else if (i==2) return "b";
-  else if (i==3) return "beta";
-  else if (i==4) return "index1";
-  else if (i==5) return "trans1";
-  return "index2";
+void qmc_neut::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string qmc_neut::param_unit(size_t i) {
-  if (i==0) return "MeV";
-  else if (i==1) return ".";
-  else if (i==2) return "MeV";
-  else if (i==3) return ".";
-  else if (i==4) return ".";
-  else if (i==5) return "1/fm^4";
-  return ".";
+void qmc_neut::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void qmc_neut::initial_point(ubvector &params) {
@@ -2036,28 +1987,15 @@ void qmc_threep::high_limits(ubvector &params) {
   return;
 }
 
-string qmc_threep::param_name(size_t i) {
-  if (i==0) return "a";
-  else if (i==1) return "alpha";
-  else if (i==2) return "S";
-  else if (i==3) return "L";
-  else if (i==4) return "index1";
-  else if (i==5) return "trans1";
-  else if (i==6) return "index2";
-  else if (i==7) return "trans2";
-  return "index3";
+void qmc_threep::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string qmc_threep::param_unit(size_t i) {
-  if (i==0) return "MeV";
-  else if (i==1) return ".";
-  else if (i==2) return "MeV";
-  else if (i==3) return "MeV";
-  else if (i==4) return ".";
-  else if (i==5) return "1/fm^4";
-  else if (i==6) return ".";
-  else if (i==7) return "1/fm^4";
-  return ".";
+void qmc_threep::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void qmc_threep::initial_point(ubvector &params) {
@@ -2286,26 +2224,15 @@ void qmc_fixp::high_limits(ubvector &params) {
   return;
 }
 
-string qmc_fixp::param_name(size_t i) {
-  if (i==0) return "a";
-  else if (i==1) return "alpha";
-  else if (i==2) return "S";
-  else if (i==3) return "L";
-  else if (i==4) return "pres1";
-  else if (i==5) return "pres2";
-  else if (i==6) return "pres3";
-  return "pres4";
+void qmc_fixp::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string qmc_fixp::param_unit(size_t i) {
-  if (i==0) return "MeV";
-  else if (i==1) return ".";
-  else if (i==2) return "MeV";
-  else if (i==3) return "MeV";
-  else if (i==4) return "1/fm^4";
-  else if (i==5) return "1/fm^4";
-  else if (i==6) return "1/fm^4";
-  return "1/fm^4";
+void qmc_fixp::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void qmc_fixp::initial_point(ubvector &params) {
@@ -2531,26 +2458,15 @@ void qmc_twolines::high_limits(ubvector &params) {
   return;
 }
 
-string qmc_twolines::param_name(size_t i) {
-  if (i==0) return "a";
-  else if (i==1) return "alpha";
-  else if (i==2) return "S";
-  else if (i==3) return "L";
-  else if (i==4) return "pres1";
-  else if (i==5) return "ed1";
-  else if (i==6) return "pres2";
-  return "ed2";
+void qmc_twolines::param_names(std::vector<std::string> &pnames) {
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  return;
 }
 
-string qmc_twolines::param_unit(size_t i) {
-  if (i==0) return "MeV";
-  else if (i==1) return ".";
-  else if (i==2) return "MeV";
-  else if (i==3) return "MeV";
-  else if (i==4) return "1/fm^4";
-  else if (i==5) return "1/fm^4";
-  else if (i==6) return "1/fm^4";
-  return "1/fm^4";
+void qmc_twolines::param_units(std::vector<std::string> &punits) {
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  return;
 }
 
 void qmc_twolines::initial_point(ubvector &params) {

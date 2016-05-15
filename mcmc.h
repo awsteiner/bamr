@@ -363,9 +363,9 @@ namespace mcmc_namespace {
     this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
 
     p_prefix.str=&this->prefix;
-    p_prefix.help="Output file prefix (default 'bamr').";
+    p_prefix.help="Output file prefix (default 'mcmc\').";
     this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
-
+    
     return;
   }    
 
@@ -379,7 +379,7 @@ namespace mcmc_namespace {
   
     // ---------------------------------------
     // Process command-line arguments and run
-  
+
     setup_cli();
 
 #ifndef NO_MPI
@@ -511,7 +511,7 @@ namespace mcmc_namespace {
     p_file_update_iters.i=&file_update_iters;
     p_file_update_iters.help=
       ((std::string)"Number of MCMC successes between ")+
-      "file upates (default 10, minimum value 1).";
+      "file upates (default 40, minimum value 1).";
     this->cl.par_list.insert(std::make_pair("file_update_iters",
 					    &p_file_update_iters));
     
@@ -973,8 +973,10 @@ namespace mcmc_namespace {
     }
 
     // Get parameter names and units
+    std::cout << "H1." << std::endl;
     m.param_names(this->param_names);
     m.param_units(this->param_units);
+    std::cout << "H2." << std::endl;
     
     // -----------------------------------------------------------
     // Init table
@@ -998,13 +1000,10 @@ namespace mcmc_namespace {
 		  o2scl::exc_esanity);
       }
     }
+
+    std::cout << "H3." << std::endl;
     // -----------------------------------------------------------
     
-    // Run init() function (have to make sure to do this after opening
-    // this->scr_out). 
-    int iret=mcmc_init();
-    if (iret!=0) return iret;
-      
     // Set RNG seed
     unsigned long int seed=time(0);
     if (this->user_seed!=0) {
@@ -1041,6 +1040,7 @@ namespace mcmc_namespace {
 
     // Allocate memory for in all points
     for(size_t i=0;i<this->nwalk;i++) {
+      std::cout << "Here: " << this->nparams << std::endl;
       current[i].resize(this->nparams);
     }
 
@@ -1156,10 +1156,14 @@ namespace mcmc_namespace {
       this->scr_out << std::endl;
 
     } else {
-
+      
+      std::cout << "H4." << std::endl;
       this->scr_out << "First point from default." << std::endl;
+      std::cout << "H5 " << current.size() << std::endl;
+      std::cout << "H5 " << current[0].size() << std::endl;
       m.initial_point(current[0]);
-
+      std::cout << "H6." << std::endl;
+      
     }
 
 #ifndef NO_MPI
@@ -1194,6 +1198,12 @@ namespace mcmc_namespace {
     // Keep track of successful and failed MH moves
     this->mc_accept=0;
     this->mc_reject=0;
+
+    // Run init() function
+    int iret=mcmc_init();
+    if (iret!=0) return iret;
+      
+    std::cout << "H7." << std::endl;
 
     // ---------------------------------------------------
     // Compute initial point and initial weights
@@ -1277,9 +1287,11 @@ namespace mcmc_namespace {
       // Normal or Metropolis-Hastings steps
 
       // Compute weight for initial point
+      std::cout << "H8." << std::endl;
       w_current[0]=m.compute_point
       (current[0],this->scr_out,suc,this->data_arr[0]);
       ret_codes[suc]++;
+      std::cout << "H9." << std::endl;
       this->scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
 	this->scr_out << "Initial weight zero. Aborting." << std::endl;
