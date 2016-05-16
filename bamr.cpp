@@ -118,8 +118,6 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
 			   std::vector<double> &line) {
 
-  std::cout << "In fill_line()." << std::endl;
-  
   mcmc_class::fill_line(pars,weight,dat,line);
 
   model &m=*this->mod;
@@ -129,9 +127,7 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
   if (m.has_eos) {
 
     // The highest baryon density in the EOS table
-    std::cout << "I1." << std::endl;
     nbmax2=dat.eos->max("nb");
-    std::cout << "I2." << std::endl;
     // The central energy density in the maximum mass configuration
     emax=dat.mvsr->max("ed");
     // The central pressure in the maximum mass configuration
@@ -287,6 +283,13 @@ int bamr_class::mcmc_init() {
   m.m_grid=uniform_grid_end<double>(set.m_low,set.m_high,set.grid_size-1);
 
   // -----------------------------------------------------------
+  // Load data
+
+  m.mpi_rank=mpi_rank;
+  m.mpi_nprocs=mpi_nprocs;
+  m.load_mc(this->scr_out);
+
+  // -----------------------------------------------------------
   // Prepare data objects
 
   for(size_t i=0;i<data_arr.size();i++) {
@@ -294,11 +297,6 @@ int bamr_class::mcmc_init() {
     data_arr[i].wgts.resize(m.nsources);
   }
   
-  // -----------------------------------------------------------
-  // Load data
-
-  m.load_mc(this->scr_out);
-
   return 0;
 }
 

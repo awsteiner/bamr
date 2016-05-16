@@ -260,6 +260,9 @@ namespace mcmc_namespace {
   /// If true, output next point (default true)
   bool output_next;
 
+  /// If true, output MC accepts and rejects (default true)
+  bool output_mc;
+
   /** \brief The arguments sent to the command-line
    */
   std::vector<std::string> cl_args;
@@ -279,6 +282,7 @@ namespace mcmc_namespace {
   o2scl::cli::parameter_int p_user_seed;
   o2scl::cli::parameter_int p_max_iters;
   o2scl::cli::parameter_bool p_output_next;
+  o2scl::cli::parameter_bool p_output_mc;
   o2scl::cli::parameter_bool p_aff_inv;
   o2scl::cli::parameter_string p_prefix;
   //@}
@@ -327,6 +331,11 @@ namespace mcmc_namespace {
       "to the '_scr' file before calling TOV solver (default true).";
     this->cl.par_list.insert(std::make_pair("output_next",&p_output_next));
     
+    p_output_mc.b=&this->output_mc;
+    p_output_mc.help=((std::string)"If true, output MC accept ")+
+      "and reject steps (default true).";
+    this->cl.par_list.insert(std::make_pair("output_mc",&p_output_mc));
+    
     p_aff_inv.b=&this->aff_inv;
     p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
     "sampling (default false).";
@@ -351,6 +360,7 @@ namespace mcmc_namespace {
     user_seed=0;
     n_warm_up=0;
     output_next=true;
+    output_mc=true;
 
     // Default to 24 hours
     max_time=3.6e3*24;
@@ -559,6 +569,7 @@ namespace mcmc_namespace {
     hf.seti("debug_line",debug_line);
     hf.seti("file_update_iters",file_update_iters);
     hf.seti("output_next",this->output_next);
+    hf.seti("output_mc",this->output_mc);
     hf.seti("initial_point_type",initial_point_type);
     hf.sets("initial_point_file",initial_point_file);
     hf.setd_vec_copy("initial_point",initial_point);
@@ -660,9 +671,6 @@ namespace mcmc_namespace {
    */
   virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
 			       bool new_meas) {
-
-    std::cout.setf(std::ios::scientific);
-    std::cout << "Add_meas: " << new_meas << " " << pars[0] << std::endl;
 
     // Test to see if we need to add a new line of data or
     // increment the weight on the previous line
@@ -948,6 +956,9 @@ namespace mcmc_namespace {
     model_t &m=*this->mod;
     
     bool debug=true;
+    if (debug) {
+      std::cout.setf(std::ios::scientific);
+    }
     
     // Set number of parameters
     this->nparams=m.nparams;
@@ -1036,6 +1047,7 @@ namespace mcmc_namespace {
     std::vector<ubvector> current(1);
     std::vector<double> w_current(1);
     std::vector<bool> step_flags(1);
+    step_flags[0]=false;
     this->data_arr.resize(2);
     w_current[0]=0.0;
     
@@ -1277,7 +1289,6 @@ namespace mcmc_namespace {
 	// to the result table
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  std::cout << "K1" << std::endl;
 	  add_measurement(current[ij],w_current[ij],this->data_arr[ij],
 			  true);
 	}
@@ -1312,7 +1323,6 @@ namespace mcmc_namespace {
       {
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  std::cout << "K2" << std::endl;
 	  add_measurement(current[0],w_current[0],this->data_arr[0],
 			  true);
 	}
@@ -1473,7 +1483,7 @@ namespace mcmc_namespace {
 				 this->data_arr[ik]);
 	}
       } else {
-	if (step_flags[0]) {
+	if (step_flags[0]==false) {
 	  w_next=m.compute_point(next,this->scr_out,suc,this->data_arr[1]);
 	} else {
 	  w_next=m.compute_point(next,this->scr_out,suc,this->data_arr[0]);
@@ -1485,7 +1495,9 @@ namespace mcmc_namespace {
     
       // Test to ensure new point is good
       if (suc==ix_success && w_next<=0.0) {
-	this->scr_out << "Rejected: Zero weight." << std::endl;
+	if (this->output_mc) {
+	  this->scr_out << "Rejected: Zero weight." << std::endl;
+	}
 	suc=ix_zero_wgt;
       }
 
@@ -1496,8 +1508,9 @@ namespace mcmc_namespace {
       if (suc==ix_success) {
 
 	if (debug) {
-	  std::cout << step_flags[0] << " Next: " 
-		    << next[0] << " " << w_next << std::endl;
+	  std::cout << "MC debug: step_flags[0]: " << step_flags[0]
+		    << " next[0]: " << next[0] << " w_next: "
+		    << w_next << std::endl;
 	}
 	
 	bool accept=false;
@@ -1519,8 +1532,9 @@ namespace mcmc_namespace {
 	}
 	
 	if (debug) {
-	  std::cout << "Metropolis: " << r << " "
-		    << w_next/w_current[0] << " " << accept << std::endl;
+	  std::cout << "MC debug: r: " << r << " ratio: "
+		    << w_next/w_current[0] << " accept: " << accept
+		    << std::endl;
 	}
 	
 	if (accept) {
@@ -1536,25 +1550,31 @@ namespace mcmc_namespace {
 	      } else {
 		add_measurement(next,w_next,this->data_arr[ik],true);
 	      }
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
+			  << step_flags[ik] << " next[0]: " 
+			  << next[0] << "\n w_next: " << w_next << std::endl;
+	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		std::cout << "K3" << std::endl;
 		add_measurement(next,w_next,this->data_arr[1],true);
 	      } else {
-		std::cout << "K4" << std::endl;
 		add_measurement(next,w_next,this->data_arr[0],true);
 	      }
-	    }
-	    if (debug) {
-	      std::cout << step_flags[0] << " Adding new: " 
-			<< next[0] << " " << w_next << std::endl;
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
+			  << step_flags[0] << " next[0]: " 
+			  << next[0] << "\n w_next: " << w_next << std::endl;
+	      }
 	    }
 	  }
 
 	  // Output the new point
-	  this->scr_out << "MC Acc: " << this->mc_accept << " ";
-	  o2scl::vector_out(this->scr_out,next);
-	  this->scr_out << " " << w_next << std::endl;
+	  if (this->output_mc) {
+	    this->scr_out << "MC Acc: " << this->mc_accept << " ";
+	    o2scl::vector_out(this->scr_out,next);
+	    this->scr_out << " " << w_next << std::endl;
+	  }
 	  
 	  // Keep track of best point
 	  if (w_next>w_best) {
@@ -1578,9 +1598,6 @@ namespace mcmc_namespace {
 	    step_flags[ik]=!(step_flags[ik]);
 	  } else {
 	    step_flags[0]=!(step_flags[0]);
-	    if (debug) {
-	      std::cout << "Flip: " << step_flags[0] << std::endl;
-	    }
 	  }
 	  
 	} else {
@@ -1601,51 +1618,47 @@ namespace mcmc_namespace {
 				false);
 	      }
 	      if (debug) {
-		std::cout << step_flags[ik] << " Adding old: "
-			  << current[ik][0] << " " << w_current[ik]
-			  << std::endl;
+		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
+			  << step_flags[ik] << " current[ik][0]: " 
+			  << current[ik][0] << "\n w_current[ik]: "
+			  << w_current[ik] << std::endl;
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		std::cout << "K5" << std::endl;
 		add_measurement(current[0],w_current[0],this->data_arr[0],
 				false);
 	      } else {
-		std::cout << "K6" << std::endl;
 		add_measurement(current[0],w_current[0],this->data_arr[1],
 				false);
 	      }
 	      if (debug) {
-		std::cout << step_flags[0] << " Adding old: "
-			  << current[0][0] << " " << w_current[0] << " "
-			  << std::endl;
+		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
+			  << step_flags[0] << " current[0][0]: " 
+			  << current[0][0] << "\n w_current[0]: "
+			  << w_current[ik] << std::endl;
 	      }
 	    }
 	  }
 
 	  // Output the old point
-	  if (this->aff_inv) {
-	    this->scr_out << "MC Rej: " << this->mc_accept << " ";
-	    o2scl::vector_out(this->scr_out,current[ik]);
-	    this->scr_out << " " << w_current[ik] << " "
-			  << w_next << std::endl;
-	  } else {
-	    this->scr_out << "MC Rej: " << this->mc_accept << " ";
-	    o2scl::vector_out(this->scr_out,current[0]);
-	    this->scr_out << " " << w_current[0] << " "
-			  << w_next << std::endl;
+	  if (this->output_mc) {
+	    if (this->aff_inv) {
+	      this->scr_out << "MC Rej: " << this->mc_accept << " ";
+	      o2scl::vector_out(this->scr_out,current[ik]);
+	      this->scr_out << " " << w_current[ik] << " "
+			    << w_next << std::endl;
+	    } else {
+	      this->scr_out << "MC Rej: " << this->mc_accept << " ";
+	      o2scl::vector_out(this->scr_out,current[0]);
+	      this->scr_out << " " << w_current[0] << " "
+			    << w_next << std::endl;
+	    }
 	  }
 
 	  // Keep track of best point
 	  if (w_next>w_best) {
-	    best=next;
-	    w_best=w_next;
-	    //output_best(best,w_best,this->data_arr[0]);
-	    std::cout << "fixme." << std::endl;
-	    exit(-1);
-	    force_file_update=true;
-	    this->scr_out << "Best point with rejected step: "
-			  << w_next << " " << w_best << std::endl;
+	    O2SCL_ERR("Best point with rejected step.",
+		      o2scl::exc_esanity);
 	  }
 
 	}

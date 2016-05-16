@@ -55,7 +55,12 @@ void model::load_mc(std::ofstream &scr_out) {
   double tot, max;
       
   std::string name;
-    
+
+  if (source_names.size()!=source_fnames.size() ||
+      source_names.size()!=first_mass.size()) {
+    O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
+  }
+  
   if (nsources>0) {
 
     source_tables.resize(nsources);
@@ -99,7 +104,7 @@ void model::load_mc(std::ofstream &scr_out) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
 		<< file << "." << std::endl;
       }
-	  
+
       o2scl_hdf::hdf_file hf;
       hf.open(source_fnames[file]);
       if (table_names[file].length()>0) {
@@ -138,7 +143,7 @@ void model::load_mc(std::ofstream &scr_out) {
     }
     
 #endif
-    
+
     scr_out << "\nInput data files: " << std::endl;
     
     if (set.norm_max) {
