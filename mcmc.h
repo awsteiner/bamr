@@ -81,7 +81,7 @@ namespace mcmc_namespace {
     
     /** \brief Specify an initial point
      */
-    virtual void initial_point(size_t ix, ubvector &pars) {
+    virtual void initial_point(ubvector &pars) {
       ubvector low(nparams), high(nparams);
       low_limits(low);
       high_limits(high);
@@ -283,37 +283,6 @@ namespace mcmc_namespace {
   o2scl::cli::parameter_string p_prefix;
   //@}
 
-  public:
-  
-  mcmc_base(std::shared_ptr<model_t> &m) {
-
-    // Parameters
-    prefix="mcmc";
-    max_iters=0;
-    user_seed=0;
-    n_warm_up=0;
-    output_next=true;
-
-    // Default to 24 hours
-    max_time=3.6e3*24;
-
-    // MC step parameters
-    aff_inv=false;
-    hg_mode=0;
-    step_fac=10.0;
-    nwalk=1;
-
-    // Initial values for MPI paramers
-    mpi_nprocs=1;
-    mpi_rank=0;
-
-    // True if scr_out has been opened
-    file_opened=false;
-
-    mod=m;
-    mod->setup_params(this->cl);
-  }
-  
   /** \brief Set up the 'cli' object
       
       This function just adds the four commands and the 'set' parameters
@@ -370,6 +339,39 @@ namespace mcmc_namespace {
     return;
   }    
 
+  public:
+
+  /** \brief Create a new MCMC object with model \c m 
+   */
+  mcmc_base(std::shared_ptr<model_t> &m) {
+
+    // Parameters
+    prefix="mcmc";
+    max_iters=0;
+    user_seed=0;
+    n_warm_up=0;
+    output_next=true;
+
+    // Default to 24 hours
+    max_time=3.6e3*24;
+
+    // MC step parameters
+    aff_inv=false;
+    hg_mode=0;
+    step_fac=10.0;
+    nwalk=1;
+
+    // Initial values for MPI paramers
+    mpi_nprocs=1;
+    mpi_rank=0;
+
+    // True if scr_out has been opened
+    file_opened=false;
+
+    mod=m;
+    mod->setup_params(this->cl);
+  }
+  
   /// Main wrapper for parsing command-line arguments
   virtual void run(int argc, char *argv[]) {
 
@@ -659,6 +661,9 @@ namespace mcmc_namespace {
   virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
 			       bool new_meas) {
 
+    std::cout.setf(std::ios::scientific);
+    std::cout << "Add_meas: " << new_meas << " " << pars[0] << std::endl;
+
     // Test to see if we need to add a new line of data or
     // increment the weight on the previous line
     if (tc.get_nlines()<=(this->nwalk-1) || new_meas==true) {
@@ -942,7 +947,7 @@ namespace mcmc_namespace {
     // Shortcut for this->mod
     model_t &m=*this->mod;
     
-    bool debug=false;
+    bool debug=true;
     
     // Set number of parameters
     this->nparams=m.nparams;
@@ -984,10 +989,8 @@ namespace mcmc_namespace {
     }
 
     // Get parameter names and units
-    std::cout << "H1." << std::endl;
     m.param_names(this->param_names);
     m.param_units(this->param_units);
-    std::cout << "H2." << std::endl;
     
     // -----------------------------------------------------------
     // Init table
@@ -1012,7 +1015,6 @@ namespace mcmc_namespace {
       }
     }
 
-    std::cout << "H3." << std::endl;
     // -----------------------------------------------------------
     
     // Set RNG seed
@@ -1051,7 +1053,6 @@ namespace mcmc_namespace {
 
     // Allocate memory for in all points
     for(size_t i=0;i<this->nwalk;i++) {
-      std::cout << "Here: " << this->nparams << std::endl;
       current[i].resize(this->nparams);
     }
 
@@ -1168,12 +1169,8 @@ namespace mcmc_namespace {
 
     } else {
       
-      std::cout << "H4." << std::endl;
       this->scr_out << "First point from default." << std::endl;
-      std::cout << "H5 " << current.size() << std::endl;
-      std::cout << "H5 " << current[0].size() << std::endl;
       m.initial_point(current[0]);
-      std::cout << "H6." << std::endl;
       
     }
 
@@ -1214,8 +1211,6 @@ namespace mcmc_namespace {
     int iret=mcmc_init();
     if (iret!=0) return iret;
       
-    std::cout << "H7." << std::endl;
-
     // ---------------------------------------------------
     // Compute initial point and initial weights
 
@@ -1282,6 +1277,7 @@ namespace mcmc_namespace {
 	// to the result table
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
+	  std::cout << "K1" << std::endl;
 	  add_measurement(current[ij],w_current[ij],this->data_arr[ij],
 			  true);
 	}
@@ -1298,11 +1294,9 @@ namespace mcmc_namespace {
       // Normal or Metropolis-Hastings steps
 
       // Compute weight for initial point
-      std::cout << "H8." << std::endl;
       w_current[0]=m.compute_point
       (current[0],this->scr_out,suc,this->data_arr[0]);
       ret_codes[suc]++;
-      std::cout << "H9." << std::endl;
       this->scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
 	this->scr_out << "Initial weight zero. Aborting." << std::endl;
@@ -1318,6 +1312,7 @@ namespace mcmc_namespace {
       {
 	if (warm_up==false) {
 	  // Add the initial point if there's no warm up
+	  std::cout << "K2" << std::endl;
 	  add_measurement(current[0],w_current[0],this->data_arr[0],
 			  true);
 	}
@@ -1543,8 +1538,10 @@ namespace mcmc_namespace {
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
+		std::cout << "K3" << std::endl;
 		add_measurement(next,w_next,this->data_arr[1],true);
 	      } else {
+		std::cout << "K4" << std::endl;
 		add_measurement(next,w_next,this->data_arr[0],true);
 	      }
 	    }
@@ -1610,9 +1607,11 @@ namespace mcmc_namespace {
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
+		std::cout << "K5" << std::endl;
 		add_measurement(current[0],w_current[0],this->data_arr[0],
 				false);
 	      } else {
+		std::cout << "K6" << std::endl;
 		add_measurement(current[0],w_current[0],this->data_arr[1],
 				false);
 	      }
@@ -1782,6 +1781,7 @@ namespace mcmc_namespace {
 
     file_update_iters=40;
     max_chain_size=10000;
+    debug_line=false;
 
     chain_size=0;
     n_chains=0;

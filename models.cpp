@@ -278,33 +278,31 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
   success=ix_success;
-
+  
   // Compute the EOS first
   if (has_eos) {
     compute_eos(pars,success,scr_out,dat);
     if (success!=ix_success) return;
   }
   
-  // Ensure we're using linear interpolation
-  std::shared_ptr<o2scl::table_units<> > tab_eos=dat.eos;
-
   if (has_eos) {
-    tab_eos->set_interp_type(o2scl::itp_linear);
+    // Ensure we're using linear interpolation
+    dat.eos->set_interp_type(o2scl::itp_linear);
 
     // Check that pressure is increasing. If we're using a crust EOS,
     // choose 0.6 as an arbitrary low-density cutoff which corresponds
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
     // instead.
   
-    for(size_t i=0;(tab_eos->get_nlines()>0 && i<tab_eos->get_nlines()-1);
+    for(size_t i=0;(dat.eos->get_nlines()>0 && i<dat.eos->get_nlines()-1);
 	i++) {
-      if ((!set.use_crust || tab_eos->get("ed",i)>0.6) && 
-	  tab_eos->get("pr",i+1)<tab_eos->get("pr",i)) {
+      if ((!set.use_crust || dat.eos->get("ed",i)>0.6) && 
+	  dat.eos->get("pr",i+1)<dat.eos->get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << std::endl;
-	scr_out << "ed=" << tab_eos->get("ed",i) 
-		<< " pr=" << tab_eos->get("pr",i) << std::endl;
-	scr_out << "ed=" << tab_eos->get("ed",i+1) 
-		<< " pr=" << tab_eos->get("pr",i+1) << std::endl;
+	scr_out << "ed=" << dat.eos->get("ed",i) 
+		<< " pr=" << dat.eos->get("pr",i) << std::endl;
+	scr_out << "ed=" << dat.eos->get("ed",i+1) 
+		<< " pr=" << dat.eos->get("pr",i+1) << std::endl;
 	success=ix_press_dec;
 	return;
       }
@@ -312,7 +310,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   }
 
   // If requested, compute the baryon density automatically
-  if (has_eos && set.baryon_density && !tab_eos->is_column("nb")) {
+  if (has_eos && set.baryon_density && !dat.eos->is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
     if (nb_n1<=0.0 && nb_e1<=0.0) {
@@ -323,65 +321,65 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Compute inverse of gibbs energy density, 'igb'
 
-    tab_eos->new_column("igb");
-    tab_eos->set_unit("igb","fm^4");
+    dat.eos->new_column("igb");
+    dat.eos->set_unit("igb","fm^4");
 
-    for(size_t i=0;i<tab_eos->get_nlines();i++) {
+    for(size_t i=0;i<dat.eos->get_nlines();i++) {
 
-      if (tab_eos->get("ed",i)+tab_eos->get("pr",i)<=0.0 ||
-	  !std::isfinite(tab_eos->get("ed",i)) ||
-	  !std::isfinite(tab_eos->get("pr",i))) {
+      if (dat.eos->get("ed",i)+dat.eos->get("pr",i)<=0.0 ||
+	  !std::isfinite(dat.eos->get("ed",i)) ||
+	  !std::isfinite(dat.eos->get("pr",i))) {
 	scr_out << "Inverse Gibbs not finite." << std::endl;
 	scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	scr_out << "ed pr" << std::endl;
-	for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	for(size_t i=0;i<dat.eos->get_nlines();i++) {
 	  scr_out << i << " "
-		  << tab_eos->get("ed",i) << " "
-		  << tab_eos->get("pr",i) << std::endl;
+		  << dat.eos->get("ed",i) << " "
+		  << dat.eos->get("pr",i) << std::endl;
 	}
 	O2SCL_ERR("Inverse Gibbs not finite.",o2scl::exc_efailed);
       }
-      tab_eos->set("igb",i,1.0/(tab_eos->get("ed",i)+tab_eos->get("pr",i)));
+      dat.eos->set("igb",i,1.0/(dat.eos->get("ed",i)+dat.eos->get("pr",i)));
     }
 
     // Compute integral of 'igb' relative to ed='e1', called 'iigb'
 
-    tab_eos->new_column("iigb");
+    dat.eos->new_column("iigb");
 
-    for(size_t i=0;i<tab_eos->get_nlines();i++) {
-      if (nb_e1<=tab_eos->get("ed",i)) {
-	double val=tab_eos->integ("ed",nb_e1,tab_eos->get("ed",i),"igb");
+    for(size_t i=0;i<dat.eos->get_nlines();i++) {
+      if (nb_e1<=dat.eos->get("ed",i)) {
+	double val=dat.eos->integ("ed",nb_e1,dat.eos->get("ed",i),"igb");
 	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite." << std::endl;
 	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	  scr_out << "ed pr" << std::endl;
-	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	  for(size_t i=0;i<dat.eos->get_nlines();i++) {
 	    scr_out << i << " "
-		    << tab_eos->get("ed",i) << " "
-		    << tab_eos->get("pr",i) << std::endl;
+		    << dat.eos->get("ed",i) << " "
+		    << dat.eos->get("pr",i) << std::endl;
 	  }
 	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
 	}
-	tab_eos->set("iigb",i,val);
+	dat.eos->set("iigb",i,val);
       } else {
-	double val=-tab_eos->integ("ed",tab_eos->get("ed",i),nb_e1,"igb");
+	double val=-dat.eos->integ("ed",dat.eos->get("ed",i),nb_e1,"igb");
 	if (!std::isfinite(val)) {
 	  scr_out << "Baryon integral not finite (2)." << std::endl;
 	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
 	  scr_out << "ed pr" << std::endl;
-	  for(size_t i=0;i<tab_eos->get_nlines();i++) {
+	  for(size_t i=0;i<dat.eos->get_nlines();i++) {
 	    scr_out << i << " "
-		    << tab_eos->get("ed",i) << " "
-		    << tab_eos->get("pr",i) << std::endl;
+		    << dat.eos->get("ed",i) << " "
+		    << dat.eos->get("pr",i) << std::endl;
 	  }
 	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
 	}
-	tab_eos->set("iigb",i,val);
+	dat.eos->set("iigb",i,val);
       }
     }
 
     // Compute normalization constant
-    double Anb=nb_n1/exp(tab_eos->interp("ed",nb_e1,"iigb"));
+    double Anb=nb_n1/exp(dat.eos->interp("ed",nb_e1,"iigb"));
     if (!std::isfinite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << std::endl;
       success=ix_nb_problem;
@@ -390,34 +388,34 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Now compute baryon density
 
-    tab_eos->new_column("nb");
-    tab_eos->set_unit("nb","1/fm^3");
+    dat.eos->new_column("nb");
+    dat.eos->set_unit("nb","1/fm^3");
 
-    for(size_t i=0;i<tab_eos->get_nlines();i++) {      
+    for(size_t i=0;i<dat.eos->get_nlines();i++) {      
 
       // If the density is too low, then just use zero baryon density.
       // This pressure (10^{-5} fm^{-4}) corresponds to a baryon 
       // density of about 3e-3 fm^{-3}.
 
-      if (set.use_crust==false && tab_eos->get("pr",i)<1.0e-5) {
+      if (set.use_crust==false && dat.eos->get("pr",i)<1.0e-5) {
 
-	tab_eos->set("nb",i,0.0);
+	dat.eos->set("nb",i,0.0);
 
       } else {
 	
-	double nbt=Anb*exp(tab_eos->get("iigb",i));
+	double nbt=Anb*exp(dat.eos->get("iigb",i));
 	if (!std::isfinite(nbt)) {
 	  scr_out << "Baryon density normalization problem (2)."
 		  << std::endl;
 	  success=ix_nb_problem2;
 	  return;
 	} 
-	tab_eos->set("nb",i,nbt);
+	dat.eos->set("nb",i,nbt);
       }
     }
     
     // End of loop 'if (has_eos && baryon_density && 
-    // !tab_eos->is_column("nb")) {' 
+    // !dat.eos->is_column("nb")) {' 
   }
 
   std::shared_ptr<o2scl::table_units<> > tab_mvsr=dat.mvsr;
@@ -432,14 +430,14 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
     // Read the EOS into the tov_eos object.
     if (set.baryon_density && set.inc_baryon_mass) {
-      tab_eos->set_unit("ed","1/fm^4");
-      tab_eos->set_unit("pr","1/fm^4");
-      tab_eos->set_unit("nb","1/fm^3");
-      teos.read_table(*tab_eos,"ed","pr","nb");
+      dat.eos->set_unit("ed","1/fm^4");
+      dat.eos->set_unit("pr","1/fm^4");
+      dat.eos->set_unit("nb","1/fm^3");
+      teos.read_table(*dat.eos,"ed","pr","nb");
     } else {
-      tab_eos->set_unit("ed","1/fm^4");
-      tab_eos->set_unit("pr","1/fm^4");
-      teos.read_table(*tab_eos,"ed","pr");
+      dat.eos->set_unit("ed","1/fm^4");
+      dat.eos->set_unit("pr","1/fm^4");
+      teos.read_table(*dat.eos,"ed","pr");
     }
     
     if (set.use_crust) {
@@ -454,8 +452,8 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	  scr_out << "Stability problem near crust-core transition."
 		  << std::endl;
 	  if (has_esym) {
-	    scr_out << "S=" << tab_eos->get_constant("S")*hc_mev_fm 
-		    << " L=" << tab_eos->get_constant("L")*hc_mev_fm
+	    scr_out << "S=" << dat.eos->get_constant("S")*hc_mev_fm 
+		    << " L=" << dat.eos->get_constant("L")*hc_mev_fm
 		    << std::endl;
 	  }
 	  scr_out << "Energy decreased with increasing pressure "
@@ -486,7 +484,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       hfde.open_or_create("debug_eos.o2");
 
       // Output the core EOS
-      hdf_output(hfde,*tab_eos,"eos");
+      hdf_output(hfde,*dat.eos,"eos");
 
       // Output core and crust EOS as reported by the tov_interp_eos object
       o2scl::table_units<> full_eos;
@@ -519,24 +517,24 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_failed;
       return;
     }
-    tab_mvsr=ts.get_results();
-    tab_mvsr->set_interp_type(o2scl::itp_linear);
+    dat.mvsr=ts.get_results();
+    dat.mvsr->set_interp_type(o2scl::itp_linear);
   
     // If the EOS is sufficiently stiff, the TOV solver will output
     // gibberish, i.e. masses and radii equal to zero, especially at the
     // higher pressures. This rules these EOSs out, as they would likely
     // be acausal anyway. If this happens frequently, it might signal
     // a problem. 
-    size_t ir=tab_mvsr->get_nlines()-1;
-    if ((*tab_mvsr)["gm"][ir]<1.0e-10 ||
-	(*tab_mvsr)["gm"][ir-1]<1.0e-10) {
+    size_t ir=dat.mvsr->get_nlines()-1;
+    if ((*dat.mvsr)["gm"][ir]<1.0e-10 ||
+	(*dat.mvsr)["gm"][ir-1]<1.0e-10) {
       scr_out << "TOV failure fix." << std::endl;
       success=ix_tov_failure;
       return;
     }
 
     // Check that maximum mass is large enough,
-    double mmax=tab_mvsr->max("gm");
+    double mmax=dat.mvsr->max("gm");
     if (mmax<set.min_max_mass) {
       scr_out << "Maximum mass too small: " << mmax << " < "
 	      << set.min_max_mass << "." << std::endl;
@@ -545,8 +543,8 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     }
 
     // Check the radius of the maximum mass star
-    size_t ix_max=tab_mvsr->lookup("gm",mmax);
-    if (tab_mvsr->get("r",ix_max)>1.0e4) {
+    size_t ix_max=dat.mvsr->lookup("gm",mmax);
+    if (dat.mvsr->get("r",ix_max)>1.0e4) {
       scr_out << "TOV convergence problem: " << std::endl;
       success=ix_tov_conv;
       return;
@@ -571,72 +569,72 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       o2scl::vector_out(scr_out,pars,true);
     }
     
-    tab_mvsr->add_constant
+    dat.mvsr->add_constant
       ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
-       (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
+       (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
     /*
       if (true) {
       size_t ix=vector_max_index<vector<double>,double>
-      (tab_mvsr->get_nlines(),(*tab_mvsr)["gm"]);
-      if (ix!=0 && ix<tab_mvsr->get_nlines()-1) {
-      scr_out << tab_mvsr->get("gm",ix-1) << " ";
-      scr_out << tab_mvsr->get("r",ix-1) << " ";
-      scr_out << tab_mvsr->get("nb",ix-1) << std::endl;
-      scr_out << tab_mvsr->get("gm",ix) << " ";
-      scr_out << tab_mvsr->get("r",ix) << " ";
-      scr_out << tab_mvsr->get("nb",ix) << std::endl;
-      scr_out << tab_mvsr->get("gm",ix+1) << " ";
-      scr_out << tab_mvsr->get("r",ix+1) << " ";
-      scr_out << tab_mvsr->get("nb",ix+1) << std::endl;
+      (dat.mvsr->get_nlines(),(*dat.mvsr)["gm"]);
+      if (ix!=0 && ix<dat.mvsr->get_nlines()-1) {
+      scr_out << dat.mvsr->get("gm",ix-1) << " ";
+      scr_out << dat.mvsr->get("r",ix-1) << " ";
+      scr_out << dat.mvsr->get("nb",ix-1) << std::endl;
+      scr_out << dat.mvsr->get("gm",ix) << " ";
+      scr_out << dat.mvsr->get("r",ix) << " ";
+      scr_out << dat.mvsr->get("nb",ix) << std::endl;
+      scr_out << dat.mvsr->get("gm",ix+1) << " ";
+      scr_out << dat.mvsr->get("r",ix+1) << " ";
+      scr_out << dat.mvsr->get("nb",ix+1) << std::endl;
       }
       }
     */
     
-    tab_mvsr->add_constant
+    dat.mvsr->add_constant
       ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
-       (tab_mvsr->get_nlines(),(*tab_mvsr)["r"],(*tab_mvsr)["gm"]));
+       (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
 
     if (set.baryon_density) {
       
-      double nb1=tab_mvsr->get("nb",tab_mvsr->lookup("gm",mmax));
+      double nb1=dat.mvsr->get("nb",dat.mvsr->lookup("gm",mmax));
       if (nb1>0.01) {
 	double nb2=o2scl::vector_max_quad_loc<std::vector<double>,double>
-	  (tab_mvsr->get_nlines(),(*tab_mvsr)["nb"],(*tab_mvsr)["gm"]);
-	tab_mvsr->add_constant("new_nb_max",nb2);
+	  (dat.mvsr->get_nlines(),(*dat.mvsr)["nb"],(*dat.mvsr)["gm"]);
+	dat.mvsr->add_constant("new_nb_max",nb2);
 	if (nb2>5.0) {
 	  scr_out << "nb_check: " << nb2 << " " << nb1 << std::endl;
-	  for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
-	    scr_out << i << " " << tab_mvsr->get("gm",i) << " "
-		    << tab_mvsr->get("r",i) << " " 
-		    << tab_mvsr->get("nb",i) << std::endl;
+	  for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
+	    scr_out << i << " " << dat.mvsr->get("gm",i) << " "
+		    << dat.mvsr->get("r",i) << " " 
+		    << dat.mvsr->get("nb",i) << std::endl;
 	  }
 	}
       } else {
-	tab_mvsr->add_constant("new_nb_max",nb1);
+	dat.mvsr->add_constant("new_nb_max",nb1);
       }
     }
       
     // Remove table entries with pressures above the maximum pressure
-    double prmax=tab_mvsr->get("pr",
-			       tab_mvsr->lookup("gm",tab_mvsr->max("gm")));
-    tab_mvsr->delete_rows(((std::string)"pr>")+std::to_string(prmax));
+    double prmax=dat.mvsr->get("pr",
+			       dat.mvsr->lookup("gm",dat.mvsr->max("gm")));
+    dat.mvsr->delete_rows(((std::string)"pr>")+std::to_string(prmax));
   
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
-    if (tab_mvsr->get_nlines()<10) {
+    if (dat.mvsr->get_nlines()<10) {
       scr_out << "M vs. R failed to generate lines." << std::endl;
       success=ix_mvsr_table;
       return;
     }
 
     // Compute speed of sound squared
-    tab_mvsr->deriv("ed","pr","dpde");
+    dat.mvsr->deriv("ed","pr","dpde");
 
   } else {
 
     // If there's no EOS, then the model object gives the M-R curve
-    tab_mvsr=ts.get_results();
-    //compute_mr(e,scr_out,tab_mvsr,success);
+    dat.mvsr=ts.get_results();
+    //compute_mr(e,scr_out,dat.mvsr,success);
     std::cout << "fixme" << std::endl;
     exit(-1);
     if (success!=ix_success) {
@@ -649,7 +647,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   if (set.debug_star) {
     o2scl_hdf::hdf_file hfds;
     hfds.open_or_create("debug_star.o2");
-    hdf_output(hfds,*tab_mvsr,"mvsr");
+    hdf_output(hfds,*dat.mvsr,"mvsr");
     hfds.close();
     scr_out << "Automatically exiting since 'debug_star' is true."
 	    << std::endl;
@@ -658,21 +656,21 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
   // Compute the radius for each source
   for(size_t i=0;i<nsources;i++) {
-    dat.rad[i]=tab_mvsr->interp("gm",pars[this->nparams-nsources+i],"r");
+    dat.rad[i]=dat.mvsr->interp("gm",pars[this->nparams-nsources+i],"r");
   }
 
   // Check causality
   if (has_eos) {
     
-    for(size_t i=0;i<tab_mvsr->get_nlines();i++) {
-      if ((*tab_mvsr)["dpde"][i]>1.0) {
+    for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
+      if ((*dat.mvsr)["dpde"][i]>1.0) {
 	scr_out.precision(4);
 	scr_out << "Rejected: Acausal."<< std::endl;
 	scr_out << "ed_max="
-		<< tab_mvsr->max("ed") << " ed_bad="
-		<< (*tab_mvsr)["ed"][i] << " pr_max=" 
-		<< tab_mvsr->max("pr") << " pr_bad=" 
-		<< (*tab_mvsr)["pr"][i] << std::endl;
+		<< dat.mvsr->max("ed") << " ed_bad="
+		<< (*dat.mvsr)["ed"][i] << " pr_max=" 
+		<< dat.mvsr->max("pr") << " pr_bad=" 
+		<< (*dat.mvsr)["pr"][i] << std::endl;
 	scr_out.precision(6);
 	success=ix_acausal;
 	return;
@@ -736,9 +734,8 @@ double model::compute_point(ubvector &pars, std::ofstream &scr_out,
   success=ix_success;
   double ret=1.0;
       
-  std::shared_ptr<o2scl::table_units<> > tab_mvsr=dat.mvsr;
-  tab_mvsr->set_interp_type(o2scl::itp_linear);
-  double m_max_current=tab_mvsr->max("gm");
+  dat.mvsr->set_interp_type(o2scl::itp_linear);
+  double m_max_current=dat.mvsr->max("gm");
 
   // -----------------------------------------------
   // Compute the weights for each source
@@ -1030,8 +1027,8 @@ void alt_polytropes::high_limits(ubvector &params) {
 }
 
 void alt_polytropes::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"comp","kprime","esym","gamma","trans1","exp1",
+	  "trans2","exp2"};
   return;
 }
 
@@ -1076,11 +1073,10 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",params[2]);
-  tab_eos->add_constant("L",se.fesym_slope(0.16));
+  dat.eos->add_constant("S",params[2]);
+  dat.eos->add_constant("L",se.fesym_slope(0.16));
 
   // Transition densities
   double ed1=params[4];
@@ -1088,8 +1084,8 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
 
   // Boundary baryon density and pressure by interpolating
   // the table
-  double nb1=tab_eos->interp("ed",ed1,"nb");
-  double pr1=tab_eos->interp("ed",ed1,"pr");
+  double nb1=dat.eos->interp("ed",ed1,"nb");
+  double pr1=dat.eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
   double coeff1=pr1/pow(ed1,params[5]);
@@ -1103,22 +1099,22 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
 
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
-  double ed_last=tab_eos->max("ed");
+  double ed_last=dat.eos->max("ed");
   if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope. " << endl;
     O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
-  for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>ed1) {
-      tab_eos->delete_row(i);
+  for(size_t i=0;i<dat.eos->get_nlines();i++) {
+    if ((*dat.eos)["ed"][i]>ed1) {
+      dat.eos->delete_row(i);
       i=0;
     }
   }
 
   // Check that low-density EOS has statistics
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
     success=ix_no_eos_table;
     return;
@@ -1132,11 +1128,11 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
     double nb=nb1*pow(ed/ed1,params[5]/(params[5]-1.0))*
       pow((ed+pr)/(ed1+pr1),1.0/(1.0-params[5]));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
     success=ix_no_eos_table;
     return;
@@ -1163,7 +1159,7 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
     double nb=nb2*pow(ed/ed2,params[7]/(params[7]-1.0))*
       pow((ed+pr)/(ed2+pr2),1.0/(1.0-params[7]));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   return;
@@ -1197,13 +1193,13 @@ void fixed_pressure::high_limits(ubvector &params) {
 }
 
 void fixed_pressure::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"comp","kprime","esym","gamma","pres1","pres2","pres3",
+	  "pres4"};
   return;
 }
 
 void fixed_pressure::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   return;
 }
 
@@ -1238,21 +1234,20 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",params[2]);
-  tab_eos->add_constant("L",se.fesym_slope(0.16));
+  dat.eos->add_constant("S",params[2]);
+  dat.eos->add_constant("L",se.fesym_slope(0.16));
   
   // Compute boundary energy density, baryon density and pressure
   double ed_last=1.0;
-  double nb_last=tab_eos->interp("ed",1.0,"nb");
-  double pr_last=tab_eos->interp("ed",1.0,"pr");
+  double nb_last=dat.eos->interp("ed",1.0,"nb");
+  double pr_last=dat.eos->interp("ed",1.0,"pr");
     
   // Remove extra rows from EOS near saturation
-  for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>1.0) {
-      tab_eos->delete_row(i);
+  for(size_t i=0;i<dat.eos->get_nlines();i++) {
+    if ((*dat.eos)["ed"][i]>1.0) {
+      dat.eos->delete_row(i);
       i=0;
     }
   }
@@ -1274,7 +1269,7 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
     double nb=nb_last*pow((ed+pr_last+cs2_1*(ed-ed_last))/
 			  (ed_last+pr_last),1.0/(1.0+cs2_1));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
   double nb2=nb_last*pow((2.0+pr_last+cs2_1*(2.0-ed_last))/
 			 (ed_last+pr_last),1.0/(1.0+cs2_1));
@@ -1284,7 +1279,7 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
     double pr=p2+params[5]*(ed-2.0)/(3.0-2.0);
     double nb=nb2*pow((ed+p2+cs2_2*(ed-2.0))/(2.0+p2),1.0/(1.0+cs2_2));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
   double nb3=nb2*pow((3.0+p2+cs2_2*(3.0-2.0))/(2.0+p2),1.0/(1.0+cs2_2));
 
@@ -1293,7 +1288,7 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
     double pr=p3+params[6]*(ed-3.0)/(5.0-3.0);
     double nb=nb3*pow((ed+p3+cs2_3*(ed-3.0))/(3.0+p3),1.0/(1.0+cs2_3));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
   double nb5=nb3*pow((5.0+p3+cs2_3*(5.0-3.0))/(3.0+p3),1.0/(1.0+cs2_3));
 
@@ -1302,7 +1297,7 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
     double pr=p5+params[7]*(ed-5.0)/(7.0-5.0);
     double nb=nb5*pow((ed+p5+cs2_4*(ed-5.0))/(5.0+p5),1.0/(1.0+cs2_4));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   return;
@@ -1349,13 +1344,13 @@ void generic_quarks::high_limits(ubvector &params) {
 }
 
 void generic_quarks::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"comp","kprime","esym","gamma","trans1","exp1",
+	  "trans2","a2","a4"};
   return;
 }
 
 void generic_quarks::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","1/fm^2","."};
   return;
 }
 
@@ -1391,15 +1386,14 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->set_interp_type(itp_linear);
 
-  tab_eos->add_constant("S",params[2]);
-  tab_eos->add_constant("L",se.fesym_slope(0.16));
+  dat.eos->add_constant("S",params[2]);
+  dat.eos->add_constant("L",se.fesym_slope(0.16));
 
   // Double check that the table is non-empty (we have to do this
   // especially for the size_t index in the for loop below)
-  if (tab_eos->get_nlines()==0) {
+  if (dat.eos->get_nlines()==0) {
     O2SCL_ERR("Table empty in generic quarks.",exc_efailed);
   }
 
@@ -1408,14 +1402,14 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
 
   // Boundary baryon density and pressure by interpolating
   // the table
-  double nb1=tab_eos->interp("ed",ed1,"nb");
-  double pr1=tab_eos->interp("ed",ed1,"pr");
+  double nb1=dat.eos->interp("ed",ed1,"nb");
+  double pr1=dat.eos->interp("ed",ed1,"pr");
 
   // Determine 1st polytrope coefficient
   double coeff1=pr1/pow(ed1,params[5]);
   
   // Store the transition pressure for later use
-  tab_eos->add_constant("pr_pt",pr1);
+  dat.eos->add_constant("pr_pt",pr1);
   
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
@@ -1426,22 +1420,22 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
 
   // Double check that there is no gap in density between
   // the low-density EOS and the first polytrope
-  double ed_last=tab_eos->max("ed");
+  double ed_last=dat.eos->max("ed");
   if (ed_last<ed1) {
     scr_out << "Gap between low-density EOS and polytrope. " << endl;
     O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 
   // Remove rows beyond 1st transition
-  for(size_t i=0;i<tab_eos->get_nlines();i++) {
-    if ((*tab_eos)["ed"][i]>ed1) {
-      tab_eos->delete_row(i);
+  for(size_t i=0;i<dat.eos->get_nlines();i++) {
+    if ((*dat.eos)["ed"][i]>ed1) {
+      dat.eos->delete_row(i);
       i=0;
     }
   }
 
   // Check that low-density EOS has statistics
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
     success=ix_no_eos_table;
     return;
@@ -1454,7 +1448,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
     pow((ed_trans+pr_trans)/(ed1+pr1),1.0/(1.0-params[5]));
 
   // Store the transition pressure for later use
-  tab_eos->add_constant("pr_q",pr_trans);
+  dat.eos->add_constant("pr_q",pr_trans);
 
   // Add first polytrope to table
   for(double ed=ed1;ed<=ed_trans;ed+=0.05) {
@@ -1462,11 +1456,11 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
     double nb=nb1*pow(ed/ed1,params[5]/(params[5]-1.0))*
       pow((ed+pr)/(ed1+pr1),1.0/(1.0-params[5]));
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   // Check that matching didn't fail
-  if (tab_eos->get_nlines()<3) {
+  if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
     success=ix_no_eos_table;
     return;
@@ -1542,7 +1536,7 @@ void generic_quarks::compute_eos(ubvector &params, int &success,
     double pr=-bag+a2*musq+a4*musq*musq;
     double nb=(2.0*a2*mu+4.0*a4*mu*musq)/3.0*nb_corr;
     double line[3]={ed,pr,nb};
-    tab_eos->line_of_data(3,line);
+    dat.eos->line_of_data(3,line);
   }
 
   return;
@@ -1606,13 +1600,12 @@ void quark_star::high_limits(ubvector &params) {
 }
 
 void quark_star::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"B","c","Delta","ms"};
   return;
 }
 
 void quark_star::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"1/fm",".","1/fm","1/fm"};
   return;
 }
 
@@ -1634,8 +1627,6 @@ void quark_star::compute_eos(ubvector &params, int &success,
   Delta=params[2];
   ms=params[3];
 
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-    
   // Compute chemical potential at zero pressure
   ubvector x(1), y(1);
 
@@ -1678,13 +1669,13 @@ void quark_star::compute_eos(ubvector &params, int &success,
   mu_0=x[0];
   //grb.solve_bkt(mu_1,mu_0,fmf);
     
-  tab_eos->clear_table();
-  tab_eos->new_column("ed");
-  tab_eos->new_column("pr");
-  tab_eos->new_column("nb");
-  tab_eos->set_unit("ed","1/fm^4");
-  tab_eos->set_unit("pr","1/fm^4");
-  tab_eos->set_unit("nb","1/fm^3");
+  dat.eos->clear_table();
+  dat.eos->new_column("ed");
+  dat.eos->new_column("pr");
+  dat.eos->new_column("nb");
+  dat.eos->set_unit("ed","1/fm^4");
+  dat.eos->set_unit("pr","1/fm^4");
+  dat.eos->set_unit("nb","1/fm^3");
 
   double ed_last=0.0;
   double mu_max=mu_0*2.0;
@@ -1728,12 +1719,12 @@ void quark_star::compute_eos(ubvector &params, int &success,
 
       // Fix the first point at exactly zero pressure
       double line[3]={ed,0.0,nb};
-      tab_eos->line_of_data(3,line);
+      dat.eos->line_of_data(3,line);
 	
     } else {
 	
       double line[3]={ed,pr,nb};
-      tab_eos->line_of_data(3,line);
+      dat.eos->line_of_data(3,line);
 
     }
 
@@ -1812,13 +1803,12 @@ void qmc_neut::high_limits(ubvector &params) {
 }
 
 void qmc_neut::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"a","alpha","b","beta","index1","trans1","index2"};
   return;
 }
 
 void qmc_neut::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"MeV",".","MeV",".",".","1/fm^4","."};
   return;
 }
 
@@ -1841,10 +1831,9 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
   success=ix_success;
   
   // Hack to start with a fresh table
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->clear_table();
-  tab_eos->line_of_names("ed pr");
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->clear_table();
+  dat.eos->line_of_names("ed pr");
+  dat.eos->set_interp_type(itp_linear);
 
   // Add the QMC calculations over the suggested range, but go a
   // little bit lower in density to make sure we extend all the way
@@ -1856,8 +1845,8 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
   double beta=params[3];
     
   double L=3.0*(a*alpha+b*beta);
-  tab_eos->add_constant("S",(a+b+16.0)/hc_mev_fm);
-  tab_eos->add_constant("L",L/hc_mev_fm);
+  dat.eos->add_constant("S",(a+b+16.0)/hc_mev_fm);
+  dat.eos->add_constant("L",L/hc_mev_fm);
 
   double ed=0.0, pr=0.0;
 
@@ -1886,7 +1875,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
     }
       
     double line[2]={ed,pr};
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
   }
 
   // Set values for the computation of the baryon density
@@ -1920,7 +1909,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
   // Add first polytrope to table
   for(;ed<params[5];ed+=delta_ed) {
     double line[2]={ed,coeff*pow(ed,exp)};
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
   }
 
   // Compute second coefficient given index
@@ -1935,7 +1924,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
   delta_ed=(10.0-params[5])/50.01;
   for(ed=params[5];ed<10.0;ed+=delta_ed) {
     double line[2]={ed,coeff2*pow(ed,exp2)};
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
   }
 
   return;
@@ -1987,13 +1976,13 @@ void qmc_threep::high_limits(ubvector &params) {
 }
 
 void qmc_threep::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"a","alpha","S","L","index1","trans1","index2","trans2",
+	  "index3"};
   return;
 }
 
 void qmc_threep::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"MeV",".","MeV","MeV",".","1/fm^4",".","1/fm^4"};
   return;
 }
 
@@ -2020,14 +2009,13 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
   success=ix_success;
   
   // Hack to start with a fresh table
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->clear_table();
-  tab_eos->line_of_names("ed pr");
-  tab_eos->set_interp_type(itp_linear);
-  //tab_eos->set_unit("ed","1/fm^4");
-  //tab_eos->set_unit("pr","1/fm^4");
-  //tab_eos->set_unit("nb","1/fm^3");
-  //tab_eos->line_of_names("ed pr nb");
+  dat.eos->clear_table();
+  dat.eos->line_of_names("ed pr");
+  dat.eos->set_interp_type(itp_linear);
+  //dat.eos->set_unit("ed","1/fm^4");
+  //dat.eos->set_unit("pr","1/fm^4");
+  //dat.eos->set_unit("nb","1/fm^3");
+  //dat.eos->line_of_names("ed pr nb");
 
   // Add the QMC calculations over the suggested range, but go a
   // little bit lower in density to make sure we extend all the way
@@ -2062,8 +2050,8 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
     scr_out << "b=" << b << " beta=" << beta << endl;
   }
 
-  tab_eos->add_constant("S",Stmp/hc_mev_fm);
-  tab_eos->add_constant("L",Ltmp/hc_mev_fm);
+  dat.eos->add_constant("S",Stmp/hc_mev_fm);
+  dat.eos->add_constant("L",Ltmp/hc_mev_fm);
 
   double index1=params[4];
   double exp1=1.0+1.0/index1;
@@ -2087,9 +2075,9 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
     pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
     
     double line[2]={ed,pr};
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     // double line[3]={ed,pr,rho};
-    // tab_eos->line_of_data(3,line);
+    // dat.eos->line_of_data(3,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
     ed_last=ed;
     pr_last=pr;
@@ -2126,7 +2114,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
       cerr << ed << " " << pr << " " << nb_n1 << " " << nb_e1 << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
     ed_last=ed;
     pr_last=pr;
@@ -2145,7 +2133,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
     ed_last=ed;
     pr_last=pr;
@@ -2164,7 +2152,7 @@ void qmc_threep::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
   }
 
@@ -2224,13 +2212,12 @@ void qmc_fixp::high_limits(ubvector &params) {
 }
 
 void qmc_fixp::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
   return;
 }
 
 void qmc_fixp::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   return;
 }
 
@@ -2255,10 +2242,9 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
   bool debug=false;
   
   // Hack to start with a fresh table
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->clear_table();
-  tab_eos->line_of_names("ed pr");
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->clear_table();
+  dat.eos->line_of_names("ed pr");
+  dat.eos->set_interp_type(itp_linear);
 
   // Add the QMC calculations over the suggested range, but go a
   // little bit lower in density to make sure we extend all the way
@@ -2284,8 +2270,8 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
     return;
   }
   
-  tab_eos->add_constant("S",Stmp/hc_mev_fm);
-  tab_eos->add_constant("L",Ltmp/hc_mev_fm);
+  dat.eos->add_constant("S",Stmp/hc_mev_fm);
+  dat.eos->add_constant("L",Ltmp/hc_mev_fm);
 
   double ed=0.0, pr=0.0, ed_trans=0.0, pr_trans=0.0;
 
@@ -2312,7 +2298,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << ed << " " << pr << endl;
     ed_trans=ed;
     pr_trans=pr;
@@ -2351,7 +2337,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) cout << endl;
@@ -2368,7 +2354,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) cout << endl;
@@ -2385,7 +2371,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) cout << endl;
@@ -2402,7 +2388,7 @@ void qmc_fixp::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) {
@@ -2458,13 +2444,12 @@ void qmc_twolines::high_limits(ubvector &params) {
 }
 
 void qmc_twolines::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+  pnames={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
   return;
 }
 
 void qmc_twolines::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  punits={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   return;
 }
 
@@ -2489,10 +2474,9 @@ void qmc_twolines::compute_eos(ubvector &params, int &success,
   bool debug=false;
   
   // Hack to start with a fresh table
-  shared_ptr<table_units<> > tab_eos=cns.get_eos_results();
-  tab_eos->clear_table();
-  tab_eos->line_of_names("ed pr");
-  tab_eos->set_interp_type(itp_linear);
+  dat.eos->clear_table();
+  dat.eos->line_of_names("ed pr");
+  dat.eos->set_interp_type(itp_linear);
 
   // Add the QMC calculations over the suggested range, but go a
   // little bit lower in density to make sure we extend all the way
@@ -2518,8 +2502,8 @@ void qmc_twolines::compute_eos(ubvector &params, int &success,
     return;
   }
   
-  tab_eos->add_constant("S",Stmp/hc_mev_fm);
-  tab_eos->add_constant("L",Ltmp/hc_mev_fm);
+  dat.eos->add_constant("S",Stmp/hc_mev_fm);
+  dat.eos->add_constant("L",Ltmp/hc_mev_fm);
 
   double ed=0.0, pr=0.0, ed_last=0.0, nb_last=0.0, pr_last=0.0;
 
@@ -2556,7 +2540,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success,
 	     << line[1] << endl;
 	exit(-1);
       }
-      tab_eos->line_of_data(2,line);
+      dat.eos->line_of_data(2,line);
       if (debug) cout << ed << " " << pr << endl;
       ed_last=ed;
       pr_last=pr;
@@ -2587,7 +2571,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) cout << endl;
@@ -2604,7 +2588,7 @@ void qmc_twolines::compute_eos(ubvector &params, int &success,
 	   << line[1] << endl;
       exit(-1);
     }
-    tab_eos->line_of_data(2,line);
+    dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) {
