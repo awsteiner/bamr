@@ -51,8 +51,6 @@
 
 /** \brief Main namespace
     
-    The mcmc namespace which holds all classes and functions.
-    
     This file is documented in mcmc.h .
 */
 namespace mcmc_namespace {
@@ -60,26 +58,28 @@ namespace mcmc_namespace {
   typedef boost::numeric::ublas::vector<double> ubvector;
   typedef boost::numeric::ublas::matrix<double> ubmatrix;
   
-  /** \brief Desc
+  /** \brief A model object which demonstrates the model type
+
+      User-defined model types may inherit from this class or define
+      the same set of member functions and member data.
    */
-  class default_model {
+  class model_demo {
     
   public:
     
-    virtual void init() {
-      return;
-    };
-    
-    /** \brief Desc
+    /** \brief The number of parameters
      */
     size_t nparams;
 
-    /** \brief Desc
-     */
+    /** \brief Compute the value of the function to simulate
+	at the parameter point \c pars
+    */
     virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 				 int &success, ubvector &dat)=0;
     
-    /** \brief Specify an initial point
+    /// \name Functions for MCMC parameters
+    //@{
+    /** \brief Specify the initial point
      */
     virtual void initial_point(ubvector &pars) {
       ubvector low(nparams), high(nparams);
@@ -91,8 +91,6 @@ namespace mcmc_namespace {
       return;
     }
     
-    /// \name Functions for MCMC parameters
-    //@{
     /** \brief Set the lower boundaries for all the parameters
      */
     virtual void low_limits(ubvector &pars)=0;
@@ -101,10 +99,10 @@ namespace mcmc_namespace {
      */
     virtual void high_limits(ubvector &pars)=0;
 
-    /// Set up the parameter names
+    /// Specify the parameter names
     virtual void param_names(std::vector<std::string> &names)=0;
     
-    /// Set up the parameter units
+    /// Specify the parameter units
     virtual void param_units(std::vector<std::string> &units)=0;
     //@}
 
@@ -126,7 +124,7 @@ namespace mcmc_namespace {
   /** \brief A generic MCMC simulator
    */
   template<class data_t=ubvector,
-    class model_t=default_model> class mcmc_base {
+    class model_t=model_demo> class mcmc_base {
 
   protected:
 
@@ -422,7 +420,7 @@ namespace mcmc_namespace {
   /** \brief A generic MCMC simulator with HDF5 file I/O
    */
   template<class data_t=ubvector,
-    class model_t=default_model> class mcmc_class : 
+    class model_t=model_demo> class mcmc_class : 
     public mcmc_base<data_t,model_t> {
     
   public:
@@ -443,7 +441,7 @@ namespace mcmc_namespace {
   static const int fp_best=-3;
   //@}
 
-  /// \name Desc
+  /// \name Store the possible values of the success parameter
   //@{
   std::vector<int> ret_codes;
   static const int ix_success=0;
@@ -502,7 +500,7 @@ namespace mcmc_namespace {
        "model first using the 'model' command first.",
        new o2scl::comm_option_mfptr<mcmc_class>(this,&mcmc_class::mcmc),
        o2scl::cli::comm_option_both},
-      {'f',"first-point","Set the starting point in the parameter space",
+      {'i',"initial-point","Set the starting point in the parameter space",
        1,-1,"<mode> [...]",
        ((std::string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+
        "If mode is 'best', then it uses the point with the largest "+
@@ -548,7 +546,7 @@ namespace mcmc_namespace {
     return;
   }
  
-  /** \brief Desc
+  /** \brief User-defined initialization function
    */
   virtual int mcmc_init() {
     return 0;
@@ -916,7 +914,7 @@ namespace mcmc_namespace {
 		      bool itive_com) {
 
     if (sv.size()<2) {
-      std::cout << "No arguments given to 'first-point'." << std::endl;
+      std::cout << "No arguments given to 'initial-point'." << std::endl;
       return o2scl::exc_efailed;
     }
 
@@ -948,7 +946,7 @@ namespace mcmc_namespace {
     return 0;
   }
 
-  /** \brief Desc
+  /** \brief The main MCMC function
    */
   virtual int mcmc(std::vector<std::string> &sv, bool itive_com) {
 

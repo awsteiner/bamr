@@ -299,8 +299,8 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
     // instead.
   
-    for(size_t i=0;(dat.eos->get_nlines()>0 && i<dat.eos->get_nlines()-1);
-	i++) {
+    for(size_t i=0;(dat.eos->get_nlines()>0 &&
+		    i<dat.eos->get_nlines()-1);i++) {
       if ((!set.use_crust || dat.eos->get("ed",i)>0.6) && 
 	  dat.eos->get("pr",i+1)<dat.eos->get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << std::endl;
@@ -422,8 +422,6 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     // End of loop 'if (has_eos && baryon_density && 
     // !dat.eos->is_column("nb")) {' 
   }
-
-  std::shared_ptr<o2scl::table_units<> > tab_mvsr=dat.mvsr;
 
   if (has_eos) {
 
@@ -577,23 +575,6 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant
       ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
-    /*
-      if (true) {
-      size_t ix=vector_max_index<vector<double>,double>
-      (dat.mvsr->get_nlines(),(*dat.mvsr)["gm"]);
-      if (ix!=0 && ix<dat.mvsr->get_nlines()-1) {
-      scr_out << dat.mvsr->get("gm",ix-1) << " ";
-      scr_out << dat.mvsr->get("r",ix-1) << " ";
-      scr_out << dat.mvsr->get("nb",ix-1) << std::endl;
-      scr_out << dat.mvsr->get("gm",ix) << " ";
-      scr_out << dat.mvsr->get("r",ix) << " ";
-      scr_out << dat.mvsr->get("nb",ix) << std::endl;
-      scr_out << dat.mvsr->get("gm",ix+1) << " ";
-      scr_out << dat.mvsr->get("r",ix+1) << " ";
-      scr_out << dat.mvsr->get("nb",ix+1) << std::endl;
-      }
-      }
-    */
     
     dat.mvsr->add_constant
       ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
@@ -620,9 +601,8 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
     }
       
     // Remove table entries with pressures above the maximum pressure
-    double prmax=dat.mvsr->get("pr",
-			       dat.mvsr->lookup("gm",dat.mvsr->max("gm")));
-    dat.mvsr->delete_rows(((std::string)"pr>")+std::to_string(prmax));
+    size_t row=dat.mvsr->lookup("gm",dat.mvsr->max("gm"));
+    dat.mvsr->set_nlines(row+1);
   
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
@@ -631,9 +611,6 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_table;
       return;
     }
-
-    // Compute speed of sound squared
-    dat.mvsr->deriv("ed","pr","dpde");
 
   } else {
 
@@ -667,6 +644,9 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   // Check causality
   if (has_eos) {
     
+    // Compute speed of sound squared
+    dat.mvsr->deriv("ed","pr","dpde");
+
     for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
       if ((*dat.mvsr)["dpde"][i]>1.0) {
 	scr_out.precision(4);

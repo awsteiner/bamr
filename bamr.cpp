@@ -250,7 +250,7 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
   hf.setd("min_mass",set.min_mass);
   hf.setd("exit_mass",set.exit_mass);
   hf.setd("min_max_mass",set.min_max_mass);
-  //hf.setd("input_dist_thresh",input_dist_thresh);
+  hf.setd("input_dist_thresh",set.input_dist_thresh);
   hf.seti("use_crust",set.use_crust);
   hf.seti("baryon_density",set.baryon_density);
   hf.seti("debug_load",set.debug_load);

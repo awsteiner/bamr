@@ -29,7 +29,7 @@ typedef boost::numeric::ublas::vector<double> ubvector;
 
 /** \brief A very simple function to simulate
  */
-class model_ex : public mcmc_namespace::default_model {
+class model_ex : public mcmc_namespace::model_demo {
   
 public:
 
