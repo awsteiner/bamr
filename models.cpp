@@ -520,9 +520,44 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_failed;
       return;
     }
-    dat.mvsr=ts.get_results();
     dat.mvsr->set_interp_type(o2scl::itp_linear);
   
+    // Check that maximum mass is large enough,
+    double mmax=dat.mvsr->max("gm");
+    if (mmax<set.min_max_mass) {
+      scr_out << "Maximum mass too small: " << mmax << " < "
+	      << set.min_max_mass << "." << std::endl;
+      success=ix_small_max;
+      return;
+    }
+
+    // Check that all stars have masses below the maximum mass
+    // of the current M vs R curve
+    for(size_t i=0;i<nsources;i++) {
+      if (pars[this->nparams-nsources+i]>mmax) {
+
+	ubvector low(nparams), high(nparams);
+	std::vector<std::string> names(nparams), units(nparams);
+	get_param_info(names,units,low,high);
+	
+	scr_out << "Adjusting mass. M_max = " << mmax << " obj: "
+		<< source_names[i] << " old: "
+		<< pars[this->nparams-nsources+i];
+	
+	// If a star is too massive, readjust it's mass accordingly
+	if (mmax<high[this->nparams-nsources+i]) {
+	  pars[this->nparams-nsources+i]=low[this->nparams-nsources+i]+
+	    gr.random()*(mmax-low[this->nparams-nsources+i]);
+	} else {
+	  pars[this->nparams-nsources+i]=low[this->nparams-nsources+i]+
+	    gr.random()*(high[this->nparams-nsources+i]-
+			 low[this->nparams-nsources+i]);
+	}
+	  
+	scr_out << " new: " << pars[this->nparams-nsources+i] << std::endl;
+      }
+    }
+    
     // If the EOS is sufficiently stiff, the TOV solver will output
     // gibberish, i.e. masses and radii equal to zero, especially at the
     // higher pressures. This rules these EOSs out, as they would likely
@@ -536,15 +571,6 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    // Check that maximum mass is large enough,
-    double mmax=dat.mvsr->max("gm");
-    if (mmax<set.min_max_mass) {
-      scr_out << "Maximum mass too small: " << mmax << " < "
-	      << set.min_max_mass << "." << std::endl;
-      success=ix_small_max;
-      return;
-    }
-
     // Check the radius of the maximum mass star
     size_t ix_max=dat.mvsr->lookup("gm",mmax);
     if (dat.mvsr->get("r",ix_max)>1.0e4) {
@@ -553,25 +579,6 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    // Check that all stars have masses below the maximum mass
-    // of the current M vs R curve
-    bool mass_fail=false;
-    for(size_t i=0;i<nsources;i++) {
-      if (pars[this->nparams-nsources+i]>mmax) mass_fail=true;
-    }
-
-    // If a star is too massive, readjust it's mass accordingly
-    if (mass_fail==true) {
-      scr_out << "Adjusting masses for M_{max} = " << mmax << std::endl;
-      scr_out << "Old entry: ";
-      o2scl::vector_out(scr_out,pars,true);
-      //select_mass(e,e,mmax);
-      std::cout << "fixme" << std::endl;
-      exit(-1);
-      scr_out << "New entry: ";
-      o2scl::vector_out(scr_out,pars,true);
-    }
-    
     dat.mvsr->add_constant
       ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));

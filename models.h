@@ -135,6 +135,9 @@ namespace bamr {
     o2scl::cli::parameter_bool p_use_crust;
     o2scl::cli::parameter_bool p_inc_baryon_mass;
     o2scl::cli::parameter_bool p_norm_max;
+    o2scl::cli::parameter_bool p_nt_corr;
+    o2scl::cli::parameter_bool p_compute_cthick;
+    o2scl::cli::parameter_bool p_addl_quants;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
     o2scl::cli::parameter_double p_e_low;
@@ -198,6 +201,25 @@ namespace bamr {
 	as well as the gravitational mass (default false)
     */
     bool inc_baryon_mass;
+    /** \brief If true, compute transition density using correlation 
+	with L and S (default false)
+
+	Only works if \ref compute_cthick and \ref baryon_density
+	are true and the model provides S and L.
+    */
+    bool nt_corr;
+    /// If true, compute crust thicknesses (default true)
+    bool compute_cthick;
+    /// If true (default false)
+    bool addl_quants;
+    /** \brief If true, compute a crust consistent with current 
+	value of L
+
+	Only works if \ref use_crust, \ref baryon_density, and
+	\ref compute_cthick are true and the model 
+	provides S and L.
+    */
+    bool crust_from_L;
     //@}
 
     /** \name Histogram limits
@@ -328,6 +350,26 @@ namespace bamr {
       p_m_high.help="Largest mass grid point in Msun (default 3.0).";
       cl.par_list.insert(std::make_pair("m_high",&p_m_high));
       
+      p_crust_from_L.b=&crust_from_L;
+      p_crust_from_L.help=((string)"If true, change the crust according to ")+
+	"the value of 'L' returned by the EOS.";
+      cl.par_list.insert(make_pair("crust_from_L",&p_crust_from_L));
+      
+      p_nt_corr.b=&nt_corr;
+      p_nt_corr.help=((string)"If true, compute the core-crust ")+
+	"transition density from L and S (requires a model which "+
+	"provides these quantities). This also requires baryon_density "+
+	"and compute_cthick are true.";
+      cl.par_list.insert(make_pair("nt_corr",&p_nt_corr));
+
+      p_compute_cthick.b=&compute_cthick;
+      p_compute_cthick.help="";
+      cl.par_list.insert(make_pair("compute_cthick",&p_compute_cthick));
+
+      p_addl_quants.b=&addl_quants;
+      p_addl_quants.help="";
+      cl.par_list.insert(make_pair("addl_quants",&p_addl_quants));
+
       return;
     }
     
@@ -339,6 +381,9 @@ namespace bamr {
     
   public:
     
+    /// Random number generator
+    o2scl::rng_gsl gr;
+  
     /// The fiducial baryon density
     double nb_n1;
     

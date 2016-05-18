@@ -109,6 +109,42 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 	s+=((string)"cnb_")+m.source_names[i]+" ";
 	u+="1/fm^3 ";
       }
+      s+="gm_nb1 r_nb1 ";
+      u+="Msun km ";
+      s+="gm_nb2 r_nb2 ";
+      u+="Msun km ";
+      s+="gm_nb3 r_nb3 ";
+      u+="Msun km ";
+      s+="gm_nb4 r_nb4 ";
+      u+="Msun km ";
+      s+="gm_nb5 r_nb5 ";
+      u+="Msun km ";
+    }
+    if (set.compute_cthick) {
+      if (set.nt_corr) {
+        s+="nt prt ";
+        u+="1/fm^3 1/fm^4 ";
+      }
+      for(int i=0;i<grid_size;i++) {
+        s+=((string)"ct06_")+std::to_string(i)+" ";
+        u+="km ";
+        s+=((string)"ct08_")+std::to_string(i)+" ";
+        u+="km ";
+        s+=((string)"ct10_")+std::to_string(i)+" ";
+        u+="km ";
+      }
+    }
+  }
+  if (set.addl_quants) {
+    for(int i=0;i<grid_size;i++) {
+      s+=((string)"Mb_")+std::to_string(i)+" ";
+      u+="Msun ";
+      s+=((string)"be_")+std::to_string(i)+" ";
+      u+="Msun ";
+      s+=((string)"I_")+std::to_string(i)+" ";
+      u+="Msun*km^2 ";
+      s+=((string)"lambda_")+std::to_string(i)+" ";
+      u+=". ";
     }
   }
 
@@ -231,6 +267,62 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
     }
   }
 
+    if (baryon_density) {
+      line.push_back(tab_mvsr->get_constant("gm_nb1"));
+      line.push_back(tab_mvsr->get_constant("r_nb1"));
+      line.push_back(tab_mvsr->get_constant("gm_nb2"));
+      line.push_back(tab_mvsr->get_constant("r_nb2"));
+      line.push_back(tab_mvsr->get_constant("gm_nb3"));
+      line.push_back(tab_mvsr->get_constant("r_nb3"));
+      line.push_back(tab_mvsr->get_constant("gm_nb4"));
+      line.push_back(tab_mvsr->get_constant("r_nb4"));
+      line.push_back(tab_mvsr->get_constant("gm_nb5"));
+      line.push_back(tab_mvsr->get_constant("r_nb5"));
+    }
+    if (compute_cthick) {
+      if (nt_corr) {
+	line.push_back(tab_eos->get_constant("nt"));
+	line.push_back(tab_eos->get_constant("prt"));
+      }
+      if (mi_post) {
+	line.push_back(tab_mvsr->get_constant("deltaI_14"));
+	line.push_back(tab_mvsr->get_constant("deltaI_17"));
+	line.push_back(tab_mvsr->get_constant("deltaI_20"));
+      }
+      for(int i=0;i<grid_size;i++) {
+	double mval=m_grid[i];
+	if (mval<mmax && tab_mvsr->is_column("r2")) {
+	  double rval=tab_mvsr->interp("gm",mval,"r");
+	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r0"));
+	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r1"));
+	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r2"));
+	} else {
+	  line.push_back(0.0);
+	  line.push_back(0.0);
+	  line.push_back(0.0);
+	}
+      }
+    }
+  if (epja_mode) {
+    double mmax=tab_mvsr->get_constant("new_max");
+    for(int i=0;i<grid_size;i++) {
+      double mval=m_grid[i];
+      if (mval<mmax) {
+	double bm=tab_mvsr->interp("gm",mval,"bm");
+	double rad=tab_mvsr->interp("gm",mval,"r");
+	// rjw is km^4, so dividing by km/Msun gives Msun*km^2
+	double I=tab_mvsr->interp("gm",mval,"rjw")/3.0/schwarz_km;
+	line.push_back(bm);
+	line.push_back((bm-mval)/mval);
+	// Make unitless by dividing by G^2
+	line.push_back(I/mval/mval/mval/schwarz_km/schwarz_km*4.0);
+      } else {
+	line.push_back(0.0);
+	line.push_back(0.0);
+	line.push_back(0.0);
+      }
+    }
+  }
   return;
 }
 
@@ -273,6 +365,30 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
 int bamr_class::mcmc_init() {
 
+  if (compute_cthick && !baryon_density) {
+    scr_out << "Cannot use 'compute_cthick=true' with "
+	    << "'baryon_density=false'." << endl;
+    return exc_efailed;
+  }
+  if (nt_corr && (!compute_cthick || !baryon_density)) {
+    scr_out << "Cannot use 'nt_corr=true' with "
+	    << "'compute_cthick=false' or "
+	    << "'baryon_density=false'." << endl;
+    return exc_efailed;
+  }
+  if (nt_corr && !has_esym) {
+    scr_out << "Cannot use 'nt_corr=true' with a model which does not "
+	    << "provide S and L." << endl;
+    return exc_efailed;
+  }
+  if (crust_from_L && (!has_esym || !use_crust || !baryon_density ||
+		       !compute_cthick)) {
+    scr_out << "Cannot use 'crust_from_L=true' with a model which does not "
+	    << "provide S and L or with 'use_crust=false' or with "
+	    << "'baryon_density=false or with 'compute_cthick=false'." 
+	    << endl;
+    return exc_efailed;
+  }
   // -----------------------------------------------------------
   // Make grids
 
