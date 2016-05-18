@@ -37,40 +37,31 @@ public:
     nparams=1;
   }
   
-  /** \brief Compute the function
-   */
+  /** \brief Compute the value of the function to simulate
+      at the parameter point \c pars
+  */
   virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 			       int &success, ubvector &dat) {
     success=0;
     return exp(-pars[0]*pars[0]/2.0);
   }
-    
-  /// \name Functions for MCMC parameters
-  //@{
-  /** \brief Set the lower boundaries for all the parameters
+  
+  /** \brief Specify the initial point
    */
-  virtual void low_limits(ubvector &pars) {
-    pars[0]=-5.0;
-    return;
-  }
-
-  /** \brief Set the upper boundaries for all the parameters
-   */
-  virtual void high_limits(ubvector &pars) {
-    pars[0]=4.0;
+  virtual void initial_point(ubvector &pars) {
+    pars[0]=-0.01;
     return;
   }
   
-  /// Set up the parameter names
-  virtual void param_names(std::vector<std::string> &names) {
-    names.resize(1);
+  /** \brief Set parameter information
+   */
+  virtual void get_param_info(std::vector<std::string> &names,
+			      std::vector<std::string> &units,
+			      ubvector &low, ubvector &high) {
     names[0]="x";
-    return;
-  }
-  
-  /// Set up the parameter units
-  virtual void param_units(std::vector<std::string> &units) {
-    units.resize(1);
+    units[0]="";
+    low[0]=-5.0;
+    high[0]=5.0;
     return;
   }
   //@}

@@ -826,48 +826,39 @@ two_polytropes::two_polytropes(settings &s) : model(s) {
   this->nparams=8;
 }
 
-void two_polytropes::low_limits(ubvector &params) {
-    
-  params[0]=180.0/hc_mev_fm;
-  params[1]=-1000.0/hc_mev_fm;
-  params[2]=28.0/hc_mev_fm;
-  params[3]=0.0;
+void two_polytropes::get_param_info(std::vector<std::string> &names,
+				    std::vector<std::string> &units,
+				    ubvector &low, ubvector &high) {
+
+  pnames={"comp","kprime","esym","gamma","trans1","index1",
+	  "trans2","index2"};
+  
+  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+
+  low[0]=180.0/hc_mev_fm;
+  low[1]=-1000.0/hc_mev_fm;
+  low[2]=28.0/hc_mev_fm;
+  low[3]=0.0;
   // The value 0.75 fm^{-4} is about the energy density of nuclear
   // matter
-  params[4]=0.75;
-  params[5]=0.2;
-  params[6]=0.75;
-  params[7]=0.2;
+  low[4]=0.75;
+  low[5]=0.2;
+  low[6]=0.75;
+  low[7]=0.2;
 
-  return;
-}
-
-void two_polytropes::high_limits(ubvector &params) {
-    
-  params[0]=300.0/hc_mev_fm;
+  high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
-  params[1]=-200.0/hc_mev_fm;
-  params[2]=38.0/hc_mev_fm;
-  params[3]=1.2;
+  high[1]=-200.0/hc_mev_fm;
+  high[2]=38.0/hc_mev_fm;
+  high[3]=1.2;
   // The value of high.trans1 has to be small enough because we
   // don't want to evaluate the schematic EOS to too high of a
   // density.
-  params[4]=3.0;
-  params[5]=1.5;
-  params[6]=8.0;
-  params[7]=2.0;
+  high[4]=3.0;
+  high[5]=1.5;
+  high[6]=8.0;
+  high[7]=2.0;
 
-  return;
-}
-
-void two_polytropes::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
-  return;
-}
-
-void two_polytropes::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
   return;
 }
 

@@ -276,7 +276,8 @@ namespace bamr {
       p_baryon_density.b=&baryon_density;
       p_baryon_density.help=((std::string)"If true, compute baryon density ")+
 	"and associated profiles (default true).";
-      cl.par_list.insert(std::make_pair("baryon_density",&p_baryon_density));
+      cl.par_list.insert(std::make_pair("baryon_density",
+					&p_baryon_density));
       
       p_use_crust.b=&use_crust;
       p_use_crust.help=((std::string)
@@ -288,7 +289,8 @@ namespace bamr {
       p_inc_baryon_mass.help=((std::string)
 			      "If true, compute the baryon mass ")+
 	"(default false)";
-      cl.par_list.insert(std::make_pair("inc_baryon_mass",&p_inc_baryon_mass));
+      cl.par_list.insert(std::make_pair("inc_baryon_mass",
+					&p_inc_baryon_mass));
       
       p_mvsr_pr_inc.d=&mvsr_pr_inc;
       p_mvsr_pr_inc.help=((std::string)
@@ -476,36 +478,15 @@ namespace bamr {
     virtual double compute_point(ubvector &pars, std::ofstream &scr_out, 
 				 int &success, model_data &dat);
 
-    /** \brief Function to compute the initial guess
+    /** \brief Specify the initial point
      */
-    virtual void initial_point(ubvector &pars) {
-      ubvector low(nparams), high(nparams);
-      low_limits(low);
-      high_limits(high);
-      for(size_t i=0;i<nparams;i++) {
-	pars[i]=(low[i]+high[i])/2.0;
-      }
-      return;
-    }
+    virtual void initial_point(ubvector &pars)=0;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e)=0;
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e)=0;
-
-    /// Set up the parameter names
-    virtual void param_names(std::vector<std::string> &pnames)=0;
-
-    /// Set up the parameter units
-    virtual void param_units(std::vector<std::string> &punits)=0;
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high)=0;
 
     /// \name Functions for model parameters fixed during the MCMC run
     //@{
@@ -616,24 +597,11 @@ namespace bamr {
 
     virtual ~two_polytropes() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -678,24 +646,11 @@ namespace bamr {
     
     virtual ~alt_polytropes() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -755,24 +710,11 @@ namespace bamr {
     
     virtual ~fixed_pressure() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -859,24 +801,11 @@ namespace bamr {
     }
     virtual ~generic_quarks() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -939,24 +868,11 @@ namespace bamr {
     /// Compute the pressure as a function of the chemical potential
     double pressure2(double mu);
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-  
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-  
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-  
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -1041,24 +957,11 @@ namespace bamr {
     /// Gaussian distribution for proton correction factor
     o2scl::prob_dens_gaussian pdg;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-        masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-        masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
         \c e and put output in \c tab_eos
@@ -1136,24 +1039,11 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double rho_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-    
-    /// Return the name of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -1237,24 +1127,11 @@ namespace bamr {
     */
     double nb_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -1295,24 +1172,11 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double nb_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(ubvector &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(ubvector &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual void param_names(std::vector<std::string> &pnames);
-
-    /// Return the unit of parameter with index \c i
-    virtual void param_units(std::vector<std::string> &punits);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos

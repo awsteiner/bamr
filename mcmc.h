@@ -68,6 +68,8 @@ namespace mcmc_namespace {
   public:
     
     /** \brief The number of parameters
+
+	\note This should be set in the constructor.
      */
     size_t nparams;
 
@@ -77,34 +79,15 @@ namespace mcmc_namespace {
     virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 				 int &success, ubvector &dat)=0;
     
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Specify the initial point
+    /** \brief Specify the initial point [pure virtual]
      */
-    virtual void initial_point(ubvector &pars) {
-      ubvector low(nparams), high(nparams);
-      low_limits(low);
-      high_limits(high);
-      for(size_t i=0;i<nparams;i++) {
-	pars[i]=(low[i]+high[i])/2.0;
-      }
-      return;
-    }
-    
-    /** \brief Set the lower boundaries for all the parameters
-     */
-    virtual void low_limits(ubvector &pars)=0;
+    virtual void initial_point(ubvector &pars)=0;
 
-    /** \brief Set the upper boundaries for all the parameters
+    /** \brief Set parameter information [pure virtual]
      */
-    virtual void high_limits(ubvector &pars)=0;
-
-    /// Specify the parameter names
-    virtual void param_names(std::vector<std::string> &names)=0;
-    
-    /// Specify the parameter units
-    virtual void param_units(std::vector<std::string> &units)=0;
-    //@}
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high)=0;
 
     /// \name Functions for model parameters fixed during the MCMC run
     //@{
@@ -998,8 +981,12 @@ namespace mcmc_namespace {
     }
 
     // Get parameter names and units
-    m.param_names(this->param_names);
-    m.param_units(this->param_units);
+    ubvector low, high;
+    this->param_names.resize(nparams);
+    this->param_units.resize(nparams);
+    low.resize(nparams);
+    high.resize(nparams);
+    m.get_param_info(this->param_names,this->param_units,low,high);
     
     // -----------------------------------------------------------
     // Init table
@@ -1192,12 +1179,6 @@ namespace mcmc_namespace {
 
     this->scr_out << "First point: ";
     o2scl::vector_out(this->scr_out,current[0],true);
-    
-    // Set lower and upper bounds for parameters
-    this->low.resize(this->nparams);
-    this->high.resize(this->nparams);
-    m.low_limits(this->low);
-    m.high_limits(this->high);
 
     n_chains=0;
 
