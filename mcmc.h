@@ -982,10 +982,10 @@ namespace mcmc_namespace {
 
     // Get parameter names and units
     ubvector low, high;
-    this->param_names.resize(nparams);
-    this->param_units.resize(nparams);
-    low.resize(nparams);
-    high.resize(nparams);
+    this->param_names.resize(this->nparams);
+    this->param_units.resize(this->nparams);
+    low.resize(this->nparams);
+    high.resize(this->nparams);
     m.get_param_info(this->param_names,this->param_units,low,high);
     
     // -----------------------------------------------------------

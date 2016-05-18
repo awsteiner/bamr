@@ -614,11 +614,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 
   } else {
 
-    // If there's no EOS, then the model object gives the M-R curve
-    dat.mvsr=ts.get_results();
-    //compute_mr(e,scr_out,dat.mvsr,success);
-    std::cout << "fixme" << std::endl;
-    exit(-1);
+    compute_mr(pars,success,scr_out,dat);
     if (success!=ix_success) {
       return;
     }
@@ -830,10 +826,10 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
 				    ubvector &low, ubvector &high) {
 
-  pnames={"comp","kprime","esym","gamma","trans1","index1",
+  names={"comp","kprime","esym","gamma","trans1","index1",
 	  "trans2","index2"};
   
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
 
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
@@ -988,28 +984,23 @@ void two_polytropes::compute_eos(ubvector &params, int &success,
   return;
 }
 
-void alt_polytropes::low_limits(ubvector &params) {
-  two_polytropes::low_limits(params);
-  params[5]=1.5;
-  params[7]=0.0;
-  return;
-}
+void alt_polytropes::get_param_info(std::vector<std::string> &names,
+				    std::vector<std::string> &units,
+				    ubvector &low, ubvector &high) {
 
-void alt_polytropes::high_limits(ubvector &params) {
-  two_polytropes::high_limits(params);
-  params[5]=6.0;
-  params[7]=3.0;
-  return;
-}
+  two_polytropes::get_param_info(names,units,low,high);
 
-void alt_polytropes::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","exp1",
+  low[5]=1.5;
+  low[7]=0.0;
+
+  high[5]=6.0;
+  high[7]=3.0;
+  
+  names={"comp","kprime","esym","gamma","trans1","exp1",
 	  "trans2","exp2"};
-  return;
-}
-
-void alt_polytropes::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  
+  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  
   return;
 }
 
@@ -1141,41 +1132,36 @@ void alt_polytropes::compute_eos(ubvector &params, int &success,
   return;
 }
   
-void fixed_pressure::low_limits(ubvector &params) {
-  two_polytropes::low_limits(params);
-  params[4]=0.0;
-  params[5]=0.0;
-  params[6]=0.0;
-  params[7]=0.0;
-  return;
-}
+void fixed_pressure::get_param_info(std::vector<std::string> &names,
+				    std::vector<std::string> &units,
+				    ubvector &low, ubvector &high) {
 
-void fixed_pressure::high_limits(ubvector &params) {
-  two_polytropes::high_limits(params);
-  params[4]=0.3;
+  two_polytropes::get_param_info(names,units,low,high);
+
+  low[4]=0.0;
+  low[5]=0.0;
+  low[6]=0.0;
+  low[7]=0.0;
+  
+  high[4]=0.3;
   // This parameter is the pressure at 3 fm^{-4} minus the pressure at
   // 2 fm^{-4}, thus from causality cannot be larger than 1 fm^{-4}.
-  params[5]=1.0;
+  high[5]=1.0;
   // This parameter is the pressure at 5 fm^{-4} minus the pressure at
   // 3 fm^{-4}, thus from causality cannot be larger than 2 fm^{-4}.
-  params[6]=2.0;
+  high[6]=2.0;
   // This parameter is the pressure at 7 fm^{-4} minus the pressure at
   // 5 fm^{-4}. It is not always limited by causality, because the
   // central energy density is sometimes smaller than 5 fm^{-4}. We
   // allow it to be larger than 2.0 fm^{-4}, but in practice larger
   // values are relatively rare.
-  params[7]=2.5;
-  return;
-}
+  high[7]=2.5;
 
-void fixed_pressure::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","pres1","pres2","pres3",
+  names={"comp","kprime","esym","gamma","pres1","pres2","pres3",
 	  "pres4"};
-  return;
-}
-
-void fixed_pressure::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  
+  units={"1/fm","1/fm","1/fm",".","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  
   return;
 }
 
@@ -1279,54 +1265,45 @@ void fixed_pressure::compute_eos(ubvector &params, int &success,
   return;
 }
   
-void generic_quarks::low_limits(ubvector &params) {
-    
-  params[0]=180.0/hc_mev_fm;
-  params[1]=-1000.0/hc_mev_fm;
-  params[2]=28.0/hc_mev_fm;
-  //params[3]=0.2;
-  params[3]=0.0;
+void generic_quarks::get_param_info(std::vector<std::string> &names,
+				    std::vector<std::string> &units,
+				    ubvector &low, ubvector &high) {
+
+  low[0]=180.0/hc_mev_fm;
+  low[1]=-1000.0/hc_mev_fm;
+  low[2]=28.0/hc_mev_fm;
+  //low[3]=0.2;
+  low[3]=0.0;
   // 0.75 is about the energy density of nuclear matter
-  params[4]=0.75;
-  params[5]=2.0;
-  params[6]=0.75;
+  low[4]=0.75;
+  low[5]=2.0;
+  low[6]=0.75;
   // a2
-  params[7]=-0.3;
+  low[7]=-0.3;
   // a4
-  params[8]=0.045;
-
-  return;
-}
-
-void generic_quarks::high_limits(ubvector &params) {
+  low[8]=0.045;
     
-  params[0]=300.0/hc_mev_fm;
+  high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
-  params[1]=-200.0/hc_mev_fm;
-  params[2]=38.0/hc_mev_fm;
-  params[3]=1.2;
+  high[1]=-200.0/hc_mev_fm;
+  high[2]=38.0/hc_mev_fm;
+  high[3]=1.2;
   // The value of high.trans1 has to be small enough because we
   // don't want to evaluate the schematic EOS to too high of a
   // density.
-  params[4]=3.0;
-  params[5]=12.0;
-  params[6]=4.5;
+  high[4]=3.0;
+  high[5]=12.0;
+  high[6]=4.5;
   // a2
-  params[7]=0.3;
+  high[7]=0.3;
   // a4
-  params[8]=0.08;
+  high[8]=0.08;
 
-  return;
-}
-
-void generic_quarks::param_names(std::vector<std::string> &pnames) {
-  pnames={"comp","kprime","esym","gamma","trans1","exp1",
+  names={"comp","kprime","esym","gamma","trans1","exp1",
 	  "trans2","a2","a4"};
-  return;
-}
 
-void generic_quarks::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","1/fm^2","."};
+  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","1/fm^2","."};
+  
   return;
 }
 
@@ -1547,41 +1524,32 @@ double quark_star::pressure2(double mu) {
   return pr;
 }
 
-void quark_star::low_limits(ubvector &params) {
+void quark_star::get_param_info(std::vector<std::string> &names,
+				    std::vector<std::string> &units,
+				    ubvector &low, ubvector &high) {
 
   // B
-  params[0]=-10.0;
+  low[0]=-10.0;
   // c
-  params[1]=0.0;
+  low[1]=0.0;
   // Delta
-  params[2]=0.0;
+  low[2]=0.0;
   // ms
-  params[3]=0.75;
+  low[3]=0.75;
     
-  return;
-}
-  
-void quark_star::high_limits(ubvector &params) {
-
   // B
-  params[0]=10.0;
+  high[0]=10.0;
   // c
-  params[1]=0.4;
+  high[1]=0.4;
   // Delta
-  params[2]=1.0;
+  high[2]=1.0;
   // ms
-  params[3]=2.5;
+  high[3]=2.5;
 
-  return;
-}
+  names={"B","c","Delta","ms"};
 
-void quark_star::param_names(std::vector<std::string> &pnames) {
-  pnames={"B","c","Delta","ms"};
-  return;
-}
-
-void quark_star::param_units(std::vector<std::string> &punits) {
-  punits={"1/fm",".","1/fm","1/fm"};
+  units={"1/fm",".","1/fm","1/fm"};
+  
   return;
 }
 
@@ -1752,39 +1720,30 @@ qmc_neut::qmc_neut(settings &s) : model(s) {
 qmc_neut::~qmc_neut() {
 }
 
-void qmc_neut::low_limits(ubvector &params) {
+void qmc_neut::get_param_info(std::vector<std::string> &names,
+			      std::vector<std::string> &units,
+			      ubvector &low, ubvector &high) {
 
-  params[0]=12.7;
-  params[1]=0.48;
-  params[2]=1.0;
-  params[3]=2.1;
-  params[4]=0.2;
-  params[5]=2.0;
-  params[6]=0.2;
+  low[0]=12.7;
+  low[1]=0.48;
+  low[2]=1.0;
+  low[3]=2.1;
+  low[4]=0.2;
+  low[5]=2.0;
+  low[6]=0.2;
     
-  return;
-}
-
-void qmc_neut::high_limits(ubvector &params) {
+  high[0]=13.3;
+  high[1]=0.52;
+  high[2]=5.0;
+  high[3]=2.5;
+  high[4]=4.0;
+  high[5]=8.0;
+  high[6]=4.0;
     
-  params[0]=13.3;
-  params[1]=0.52;
-  params[2]=5.0;
-  params[3]=2.5;
-  params[4]=4.0;
-  params[5]=8.0;
-  params[6]=4.0;
-    
-  return;
-}
+  names={"a","alpha","b","beta","index1","trans1","index2"};
 
-void qmc_neut::param_names(std::vector<std::string> &pnames) {
-  pnames={"a","alpha","b","beta","index1","trans1","index2"};
-  return;
-}
-
-void qmc_neut::param_units(std::vector<std::string> &punits) {
-  punits={"MeV",".","MeV",".",".","1/fm^4","."};
+  units={"MeV",".","MeV",".",".","1/fm^4","."};
+  
   return;
 }
 
@@ -1916,49 +1875,40 @@ qmc_threep::qmc_threep(settings &s) : model(s) {
 qmc_threep::~qmc_threep() {
 }
 
-void qmc_threep::low_limits(ubvector &params) {
+void qmc_threep::get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  params[0]=12.5;
+  low[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  params[1]=0.47;
-  params[2]=29.5;
-  params[3]=30.0;
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
   
-  params[4]=0.2;
-  params[5]=0.75;
-  params[6]=0.2;
-  params[7]=0.75;
-  params[8]=0.2;
+  low[4]=0.2;
+  low[5]=0.75;
+  low[6]=0.2;
+  low[7]=0.75;
+  low[8]=0.2;
     
-  return;
-}
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
 
-void qmc_threep::high_limits(ubvector &params) {
+  high[4]=8.0;
+  high[5]=8.0;
+  high[6]=8.0;
+  high[7]=8.0;
+  high[8]=8.0;
     
-  params[0]=13.5;
-  params[1]=0.53;
-  params[2]=36.1;
-  params[3]=70.0;
-
-  params[4]=8.0;
-  params[5]=8.0;
-  params[6]=8.0;
-  params[7]=8.0;
-  params[8]=8.0;
-    
-  return;
-}
-
-void qmc_threep::param_names(std::vector<std::string> &pnames) {
-  pnames={"a","alpha","S","L","index1","trans1","index2","trans2",
+  names={"a","alpha","S","L","index1","trans1","index2","trans2",
 	  "index3"};
-  return;
-}
 
-void qmc_threep::param_units(std::vector<std::string> &punits) {
-  punits={"MeV",".","MeV","MeV",".","1/fm^4",".","1/fm^4"};
+  units={"MeV",".","MeV","MeV",".","1/fm^4",".","1/fm^4"};
+  
   return;
 }
 
@@ -2150,50 +2100,41 @@ qmc_fixp::qmc_fixp(settings &s) : model(s) {
 qmc_fixp::~qmc_fixp() {
 }
 
-void qmc_fixp::low_limits(ubvector &params) {
+void qmc_fixp::get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  params[0]=12.5;
+  low[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  params[1]=0.47;
-  params[2]=29.5;
-  params[3]=30.0;
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
   
-  params[4]=0.0;
-  params[5]=0.0;
-  params[6]=0.0;
-  params[7]=0.0;
+  low[4]=0.0;
+  low[5]=0.0;
+  low[6]=0.0;
+  low[7]=0.0;
     
-  return;
-}
-
-void qmc_fixp::high_limits(ubvector &params) {
-    
-  params[0]=13.5;
-  params[1]=0.53;
-  params[2]=36.1;
-  params[3]=70.0;
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
 
   // These parameters are limited by causality, but if the user
   // changes the values of ed1, ed2, ed3, and ed4, then the upper
   // limits change accordingly. To make things easier, we just choose
   // relatively large values for these upper limits for now.
-  params[4]=0.3;
-  params[5]=1.5;
-  params[6]=2.5;
-  params[7]=2.5;
+  high[4]=0.3;
+  high[5]=1.5;
+  high[6]=2.5;
+  high[7]=2.5;
     
-  return;
-}
+  names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
 
-void qmc_fixp::param_names(std::vector<std::string> &pnames) {
-  pnames={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
-  return;
-}
-
-void qmc_fixp::param_units(std::vector<std::string> &punits) {
-  punits={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  units={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  
   return;
 }
 
@@ -2386,46 +2327,37 @@ qmc_twolines::qmc_twolines(settings &s) : model(s) {
 qmc_twolines::~qmc_twolines() {
 }
 
-void qmc_twolines::low_limits(ubvector &params) {
+void qmc_twolines::get_param_info(std::vector<std::string> &names,
+				  std::vector<std::string> &units,
+				  ubvector &low, ubvector &high) {
 
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
-  params[0]=12.5;
+  low[0]=12.5;
   // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
-  params[1]=0.47;
-  params[2]=29.5;
-  params[3]=30.0;
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
   
-  params[4]=0.0;
-  params[5]=0.0;
-  params[6]=0.0;
-  params[7]=0.0;
+  low[4]=0.0;
+  low[5]=0.0;
+  low[6]=0.0;
+  low[7]=0.0;
     
-  return;
-}
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
 
-void qmc_twolines::high_limits(ubvector &params) {
+  high[4]=0.3;
+  high[5]=1.5;
+  high[6]=2.5;
+  high[7]=2.5;
     
-  params[0]=13.5;
-  params[1]=0.53;
-  params[2]=36.1;
-  params[3]=70.0;
-
-  params[4]=0.3;
-  params[5]=1.5;
-  params[6]=2.5;
-  params[7]=2.5;
-    
-  return;
-}
-
-void qmc_twolines::param_names(std::vector<std::string> &pnames) {
-  pnames={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
-  return;
-}
-
-void qmc_twolines::param_units(std::vector<std::string> &punits) {
-  punits={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  names={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
+  
+  units={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  
   return;
 }
 

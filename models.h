@@ -459,6 +459,11 @@ namespace bamr {
       return;
     }
 
+    virtual void compute_mr(ubvector &pars, int &success,
+			    std::ofstream &scr_out, model_data &dat) {
+      return;
+    }
+
     /** \brief Load input probability distributions
      */
     void load_mc(std::ofstream &scr_out);
