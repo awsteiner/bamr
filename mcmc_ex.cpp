@@ -81,10 +81,10 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<model_ex> m(new model_ex);
   
   // MCMC object 
-  mcmc_base<ubvector,model_ex> mcmc2(m);
+  mcmc_cli<ubvector,model_ex> mcmc2(m);
 
   // MCMC object 
-  mcmc_class<ubvector,model_ex> mcmc(m);
+  mcmc_table<ubvector,model_ex> mcmc(m);
   
   // Run!
   mcmc.run(argc,argv);

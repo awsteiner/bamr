@@ -42,6 +42,7 @@
 #include <o2scl/prob_dens_func.h>
 #include <o2scl/cholesky.h>
 #include <o2scl/vector.h>
+#include <o2scl/multi_funct.h>
 
 #ifdef O2SCL_READLINE
 #include <o2scl/cli_readline.h>
@@ -74,7 +75,7 @@ namespace mcmc_namespace {
     size_t nparams;
 
     /** \brief Compute the value of the function to simulate
-	at the parameter point \c pars
+	at the parameter point \c pars [pure virtual]
     */
     virtual double compute_point(ubvector &pars, std::ofstream &scr_out,
 				 int &success, ubvector &dat)=0;
@@ -104,32 +105,17 @@ namespace mcmc_namespace {
 
   };
 
-  /** \brief A generic MCMC simulator
+  /** \brief A generic MCMC simulation class
    */
-  template<class data_t=ubvector,
-    class model_t=model_demo> class mcmc_base {
+  template<class func_t=o2scl::multi_funct11> class mcmc_base {
     
   protected:
 
-  /// \name Parameter data
+  /// \name Monte Carlo data
   //@{
   /// Number of parameters
   size_t nparams;
   
-  /// Parameter lower limits
-  ubvector low;
-  /// Parameter upper limits
-  ubvector high;
-  
-  /// Parameter names
-  std::vector<std::string> param_names;
-  
-  /// Parameter units
-  std::vector<std::string> param_units;
-  //@}
-
-  /// \name Monte Carlo data
-  //@{
   /** \brief Number of walkers for affine-invariant MC or 1 
       otherwise (default 1)
   */
@@ -184,7 +170,9 @@ namespace mcmc_namespace {
   /// If true, we are in the warm up phase
   bool warm_up;
 
-  /// \name Command-line settings
+  public:
+
+  /// \name settings
   //@{
   /// If true, use affine-invariant Monte Carlo
   bool aff_inv;
@@ -203,14 +191,655 @@ namespace mcmc_namespace {
   */
   int n_warm_up;
 
-  /** \brief Time in seconds (default is 86400 seconds or 1 day)
-   */
-  double max_time;
-
   /** \brief If non-zero, use as the seed for the random number 
       generator (default 0)
   */
   int user_seed;
+  //@}
+
+  /// Current points in parameter space
+  std::vector<ubvector> current;
+
+  bool err_nonconv;
+  
+  mcmc_base() {
+    this->max_iters=0;
+    this->user_seed=0;
+    this->n_warm_up=0;
+
+    // MC step parameters
+    this->aff_inv=false;
+    this->hg_mode=0;
+    this->step_fac=10.0;
+    this->nwalk=1;
+    err_nonconv=true;
+  }
+  
+  /// \name Interface customization
+  //@{
+  /** \brief Initializations before the MCMC 
+   */
+  virtual int mcmc_init() {
+    return 0;
+  }
+
+  /** \brief Cleanup after the MCMC
+   */
+  virtual void mcmc_cleanup() {
+    return;
+  }
+  
+  /** \brief Store a MCMC measurement
+   */
+  virtual void add_measurement(ubvector &pars, double weight, size_t ix,
+			       bool new_meas) {
+    return;
+  }
+
+  /** \brief The main MCMC function
+   */
+  virtual int mcmc(size_t npar, ubvector &init, ubvector &low,
+		   ubvector &high, func_t &func) {
+
+    nparams=npar;
+    
+    if ( step_fac<1.0) {
+       step_fac=1.0;
+    }
+    
+    // Set RNG seed
+    unsigned long int seed=time(0);
+    if ( user_seed!=0) {
+      seed= user_seed;
+    }
+     gr.set_seed(seed);
+     pdg.set_seed(seed);
+
+    std::vector<double> w_current(1);
+    std::vector<bool> step_flags(1);
+    step_flags[0]=false;
+    w_current[0]=0.0;
+    
+    // For stretch-moves, allocate for each walker
+    if ( aff_inv) {
+      current.resize( nwalk);
+      w_current.resize( nwalk);
+      step_flags.resize( nwalk);
+      for(size_t i=0;i< nwalk;i++) {
+	step_flags[i]=false;
+	w_current[i]=0.0;
+      }
+    }
+
+    // Allocate memory for in all points
+    for(size_t i=0;i< nwalk;i++) {
+      current[i].resize( nparams);
+    }
+
+    // Entry objects (Must be after read_input() since nsources is set
+    // in that function.)
+    ubvector next( nparams), best( nparams);
+
+    // Weights for each entry
+    double w_next=0.0;
+
+    // Warm-up flag, not to be confused with 'n_warm_up', i.e. the
+    // number of warm_up iterations.
+     warm_up=true;
+    if ( n_warm_up==0)  warm_up=false;
+
+    // Keep track of successful and failed MH moves
+     mc_accept=0;
+     mc_reject=0;
+
+    for(size_t i=0;i<npar;i++) {
+      current[0][i]=init[i];
+    }
+    
+    // Run init() function
+    int iret= mcmc_init();
+    if (iret!=0) return iret;
+      
+    // ---------------------------------------------------
+    // Compute initial point and initial weights
+
+    int suc;
+    double q_current=0.0, q_next=0.0;
+
+    if ( aff_inv) {
+      // Stretch-move steps
+
+      size_t ij_best=0;
+
+      // Initialize each walker in turn
+      for(size_t ij=0;ij< nwalk;ij++) {
+
+	size_t init_iters=0;
+	bool done=false;
+
+	while (!done) {
+
+	  // Make a perturbation from the initial point
+	  for(size_t ik=0;ik< nparams;ik++) {
+	    do {
+	      current[ij][ik]=init[ik]+( gr.random()*2.0-1.0)*
+		(high[ik]-low[ik])/100.0;
+	    } while (current[ij][ik]>=high[ik] || current[ij][ik]<=low[ik]);
+	  }
+	
+	  // Compute the weight
+	  w_current[ij]=func(nparams,current[ij]);
+
+	  // ------------------------------------------------
+	  
+	  // Increment iteration count
+	  init_iters++;
+
+	  // If we have a good point, stop the loop
+	  if (w_current[ij]>0.0) {
+	    done=true;
+	  } else if (init_iters>1000) {
+	    // scr_out << "Failed to construct initial walkers."
+	    //<< std::endl;
+	    if (err_nonconv) {
+	      O2SCL_ERR("Initial walkers failed.",o2scl::exc_einval);
+	    }
+	    return 1;
+	  }
+	}
+
+	// For the initial point for this walker, add it
+	// to the result table
+	if ( warm_up==false) {
+	  // Add the initial point if there's no warm up
+	  add_measurement(current[ij],w_current[ij],ij,true);
+	}
+      }
+
+    } else {
+
+      // Normal or Metropolis-Hastings steps
+
+      // Compute weight for initial point
+      w_current[0]=func(nparams,current[0]);
+      // scr_out << "Initial weight: " << w_current[0] << std::endl;
+      if (w_current[0]<=0.0) {
+	// scr_out << "Initial weight zero. Aborting." << std::endl;
+	//exit(-1);
+	if (err_nonconv) {
+	  O2SCL_ERR("Initial weight vanished.",o2scl::exc_einval);
+	}
+	return 2;
+      }
+
+      // Compute the initial Hastings proposal weight
+      if ( hg_mode>0) {
+	q_current= approx_like(current[0]);
+      }
+
+      // Add measurement to output table and output best 
+      {
+	if ( warm_up==false) {
+	  // Add the initial point if there's no warm up
+	  add_measurement(current[0],w_current[0],0,true);
+	}
+      }
+    
+    }
+
+    // ---------------------------------------------------
+
+    // Keep track of total number of different points in the parameter
+    // space that are considered (some of them may not result in TOV
+    // calls because, for example, the EOS was acausal).
+     mcmc_iterations=0;
+
+#ifdef O2SCL_NEVER_DEFINED
+
+    // Main loop
+    bool main_done=false;
+
+    // The MCMC is arbitrarily broken up into 20 'blocks', making
+    // it easier to keep track of progress and ensure file updates
+    size_t block_counter=0;
+
+    while (!main_done) {
+
+      // Walker to move for smove
+      size_t ik=0;
+      double smove_z=0.0;
+    
+      // ---------------------------------------------------
+      // Select next point
+    
+      if ( aff_inv) {
+
+	// Choose walker to move
+	ik= mcmc_iterations %  nwalk;
+      
+	bool in_bounds;
+	size_t step_iters=0;
+      
+	do {
+
+	  in_bounds=true;
+	
+	  // Choose jth walker
+	  size_t ij;
+	  do {
+	    ij=((size_t)( gr.random()*((double) nwalk)));
+	  } while (ij==ik || ij>= nwalk);
+	
+	  // Select z 
+	  double p= gr.random();
+	  double a= step_fac;
+	  smove_z=(1.0-2.0*p+2.0*a*p+p*p-2.0*a*p*p+a*a*p*p)/a;
+	
+	  // Create new trial point
+	  for(size_t i=0;i< nparams;i++) {
+	    next[i]=current[ij][i]+smove_z*(current[ik][i]-current[ij][i]);
+	    if (next[i]>= high[i] || next[i]<= low[i]) {
+	      in_bounds=false;
+	    }
+	  }
+	
+	  step_iters++;
+	  if (step_iters==1000) {
+	     scr_out << "Failed to find suitable step at point 1."
+			  << std::endl;
+	    std::cerr << "Failed to find suitable step at point 1."
+		      << std::endl;
+	    return 2;
+	  }
+
+	} while (in_bounds==false);
+
+      } else if ( hg_mode>0) {
+      
+	// Make a Metropolis-Hastings step based on previous data
+      
+	ubvector hg_temp( nparams), hg_z( nparams);
+      
+	bool out_of_range;
+	int hg_it=0;
+      
+	do {
+	
+	  for(size_t k=0;k< nparams;k++) {
+	    hg_z[k]= pdg.sample();
+	  }
+	  hg_temp=prod( hg_chol,hg_z);
+	  for(size_t k=0;k< nparams;k++) {
+	    next[k]= hg_best[k]+hg_temp[k];
+	  }
+	
+	  out_of_range=false;
+	  for(size_t k=0;k< nparams;k++) {
+	    if (next[k]< low[k] || next[k]> high[k]) {
+	      out_of_range=true;
+	    }
+	  }
+
+	  hg_it++;
+	  if (hg_it>1000) {
+	    O2SCL_ERR("Sanity check in hg step.",o2scl::exc_esanity);
+	  }
+
+	} while (out_of_range==true);
+
+	q_next= approx_like(next);
+
+      } else {
+
+	// Make a step, ensure that we're in bounds and that
+	// the masses are not too large
+	for(size_t k=0;k< nparams;k++) {
+	  
+	  next[k]=current[0][k]+( gr.random()*2.0-1.0)*
+	    ( high[k]- low[k])/ step_fac;
+	
+	  // If it's out of range, redo step near boundary
+	  if (next[k]< low[k]) {
+	    next[k]= low[k]+ gr.random()*
+	      ( high[k]- low[k])/ step_fac;
+	  } else if (next[k]> high[k]) {
+	    next[k]= high[k]- gr.random()*
+	      ( high[k]- low[k])/ step_fac;
+	  }
+	  
+	  if (next[k]< low[k] || next[k]> high[k]) {
+	    O2SCL_ERR("Sanity check in parameter step.",o2scl::exc_esanity);
+	  }
+	}
+      
+      }
+
+      // End of select next point
+      // ---------------------------------------------------
+
+      // Output the next point
+      if ( output_next) {
+	 scr_out << "Iteration, next: "
+		      <<  mcmc_iterations << " " ;
+	o2scl::vector_out( scr_out,next,true);
+      }
+      
+      // ---------------------------------------------------
+      // Compute next weight
+
+      if ( aff_inv) {
+	if (step_flags[ik]==false) {
+	  w_next=m.compute_point(next, scr_out,suc,
+				  data_arr[ik+ nwalk]);
+	} else {
+	  w_next=m.compute_point(next, scr_out,suc,
+				  data_arr[ik]);
+	}
+      } else {
+	if (step_flags[0]==false) {
+	  w_next=m.compute_point(next, scr_out,suc, data_arr[1]);
+	} else {
+	  w_next=m.compute_point(next, scr_out,suc, data_arr[0]);
+	}
+      }
+      ret_codes[suc]++;
+
+      // ---------------------------------------------------
+    
+      // Test to ensure new point is good
+      if (suc==ix_success && w_next<=0.0) {
+	if ( output_mc) {
+	   scr_out << "Rejected: Zero weight." << std::endl;
+	}
+	suc=ix_zero_wgt;
+      }
+
+      // If the new point is still good, compare with
+      // the Metropolis algorithm
+      if (suc==ix_success) {
+
+	if (debug) {
+	  std::cout << "MC debug: step_flags[0]: " << step_flags[0]
+		    << " next[0]: " << next[0] << " w_next: "
+		    << w_next << std::endl;
+	}
+	
+	bool accept=false;
+	double r= gr.random();
+
+	// Metropolis algorithm
+	if ( aff_inv) {
+	  if (r<pow(smove_z,((double) nwalk)-1.0)*w_next/w_current[ik]) {
+	    accept=true;
+	  }
+	} else if ( hg_mode>0) {
+	  if (r<w_next*q_current/w_current[0]/q_next) {
+	    accept=true;
+	  }
+	} else {
+	  if (r<w_next/w_current[0]) {
+	    accept=true;
+	  }
+	}
+	
+	if (debug) {
+	  std::cout << "MC debug: r: " << r << " ratio: "
+		    << w_next/w_current[0] << " accept: " << accept
+		    << std::endl;
+	}
+	
+	if (accept) {
+
+	   mc_accept++;
+
+	  // Store results from new point
+	  if (! warm_up) {
+	    if ( aff_inv) {
+	      if (step_flags[ik]==false) {
+		add_measurement(next,w_next, data_arr[ik+ nwalk],
+				true);
+	      } else {
+		add_measurement(next,w_next, data_arr[ik],true);
+	      }
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
+			  << step_flags[ik] << " next[0]: " 
+			  << next[0] << "\n w_next: " << w_next << std::endl;
+	      }
+	    } else {
+	      if (step_flags[0]==false) {
+		add_measurement(next,w_next, data_arr[1],true);
+	      } else {
+		add_measurement(next,w_next, data_arr[0],true);
+	      }
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
+			  << step_flags[0] << " next[0]: " 
+			  << next[0] << "\n w_next: " << w_next << std::endl;
+	      }
+	    }
+	  }
+
+	  // Output the new point
+	  if ( output_mc) {
+	     scr_out << "MC Acc: " <<  mc_accept << " ";
+	    o2scl::vector_out( scr_out,next);
+	     scr_out << " " << w_next << std::endl;
+	  }
+	  
+	  // Prepare for next point
+	  if ( aff_inv) {
+	    current[ik]=next;
+	    w_current[ik]=w_next;
+	  } else {
+	    current[0]=next;
+	    w_current[0]=w_next;
+	  }
+
+	  // Flip "first_half" parameter
+	  if ( aff_inv) {
+	    step_flags[ik]=!(step_flags[ik]);
+	  } else {
+	    step_flags[0]=!(step_flags[0]);
+	  }
+	  
+	} else {
+	    
+	  // Point was rejected
+	  
+	   mc_reject++;
+
+	  // Repeat measurement of old point
+	  if (! warm_up) {
+	    if ( aff_inv) {
+	      if (step_flags[ik]==false) {
+		add_measurement(current[ik],w_current[ik], data_arr[ik],
+				false);
+	      } else {
+		add_measurement(current[ik],w_current[ik],
+				 data_arr[ik+ nwalk],
+				false);
+	      }
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
+			  << step_flags[ik] << " current[ik][0]: " 
+			  << current[ik][0] << "\n w_current[ik]: "
+			  << w_current[ik] << std::endl;
+	      }
+	    } else {
+	      if (step_flags[0]==false) {
+		add_measurement(current[0],w_current[0], data_arr[0],
+				false);
+	      } else {
+		add_measurement(current[0],w_current[0], data_arr[1],
+				false);
+	      }
+	      if (debug) {
+		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
+			  << step_flags[0] << " current[0][0]: " 
+			  << current[0][0] << "\n w_current[0]: "
+			  << w_current[ik] << std::endl;
+	      }
+	    }
+	  }
+
+	  // Output the old point
+	  if ( output_mc) {
+	    if ( aff_inv) {
+	       scr_out << "MC Rej: " <<  mc_accept << " ";
+	      o2scl::vector_out( scr_out,current[ik]);
+	       scr_out << " " << w_current[ik] << " "
+			    << w_next << std::endl;
+	    } else {
+	       scr_out << "MC Rej: " <<  mc_accept << " ";
+	      o2scl::vector_out( scr_out,current[0]);
+	       scr_out << " " << w_current[0] << " "
+			    << w_next << std::endl;
+	    }
+	  }
+
+	}
+	  
+	// End of "if (suc==ix_success)"
+      }
+
+      // --------------------------------------------------------------
+      
+       mcmc_cleanup();
+      
+      // ---------------------------------------------------------------
+
+      // After the warm-up is over, the calculation is abritrarily
+      // broken up into 20 blocks. The purpose of these blocks is
+      // simply to allow easier tracking of progress and to force
+      // periodic file updates.
+
+      // This section determines if we have finished a block or if we
+      // have finished the full calculation. Note that the value of
+      // mcmc_iterations isn't incremented until later.
+    
+      if ( warm_up==false) {
+
+	// If 'max_iters' is zero, then presume we're running over
+	// a fixed time interval
+	if ( max_iters==0) {
+
+	  // Determine time elapsed
+#ifndef NO_MPI
+	  double elapsed=MPI_Wtime()- mpi_start_time;
+#else
+	  double elapsed=time(0)- mpi_start_time;
+#endif
+
+	  // Force a file update when we've finished a block or if
+	  // we've run out of time
+	  if (elapsed> max_time/
+	      ((double)20)*((double)(block_counter+1)) ||
+	      (elapsed> max_time && block_counter==19)) {
+	    block_counter++;
+	     scr_out << "Finished block " << block_counter
+			  << " of 20." << std::endl;
+	  }
+
+	  // Output elapsed time every 10 iterations. The value of
+	  // mcmc_iterations isn't increased until later.
+	  if (( mcmc_iterations+1)%10==0) {
+	     scr_out << "Elapsed time: " << elapsed << " of "
+			  <<  max_time << " seconds" << std::endl;
+	  }
+	
+	  if (elapsed> max_time) {
+	    main_done=true;
+	  }
+
+	} else {
+
+	  // Otherwise, 'max_iters' is non-zero, so we're completing
+	  // a fixed number of iterations.
+
+	  // Force a file update when we've finished a block
+	  if (((int) mcmc_iterations)+1>
+	       max_iters*(((int)block_counter)+1)/20) {
+	    block_counter++;
+	     scr_out << "Iteration "
+			  <<  mcmc_iterations+1 << " of " 
+			  <<  max_iters << ", and finished block " 
+			  << block_counter << " of 20." << std::endl;
+	  }
+
+	  if (((int) mcmc_iterations)+1> max_iters) {
+	     scr_out << "Iteration count, " <<  mcmc_iterations 
+			  << ", exceed maximum number, "
+			  <<  max_iters << "."
+			  << std::endl;
+	    main_done=true;
+	  }
+	
+	}
+     
+      }
+
+      // --------------------------------------------------------------
+
+      // Increment iteration counter
+       mcmc_iterations++;
+
+      // Leave warm_up mode if necessary
+      if (((int) mcmc_iterations)> n_warm_up &&  warm_up==true) {
+	 warm_up=false;
+	 scr_out << "Setting warm_up to false. Reset start time."
+		      << std::endl;
+#ifndef NO_MPI
+	 max_time-=MPI_Wtime()- mpi_start_time;
+	 scr_out << "Resetting max_time to : " <<  max_time
+		      << std::endl;
+	 mpi_start_time=MPI_Wtime();
+#else
+	 max_time-=time(0)- mpi_start_time;
+	 scr_out << "Resetting max_time to : " <<  max_time
+		      << std::endl;
+	 mpi_start_time=time(0);
+#endif
+	 scr_out.precision(12);
+	 scr_out << " Start time: " <<  mpi_start_time << std::endl;
+	 scr_out.precision(6);
+      }
+    
+      // End of main loop
+    }
+
+#endif
+    return 0;
+  }
+
+  };
+
+  /** \brief A generic MCMC simulation class
+   */
+  template<class data_t=ubvector,
+    class model_t=model_demo> class mcmc_cli : public mcmc_base<data_t> {
+    
+  protected:
+  
+  /// \name Parameter data
+  //@{
+  /// Parameter lower limits
+  ubvector low;
+  /// Parameter upper limits
+  ubvector high;
+  
+  /// Parameter names
+  std::vector<std::string> param_names;
+  
+  /// Parameter units
+  std::vector<std::string> param_units;
+  //@}
+
+  /// \name Command-line settings
+  //@{
+  /** \brief Time in seconds (default is 86400 seconds or 1 day)
+   */
+  double max_time;
 
   /** \brief Prefix for output filenames
    */
@@ -257,9 +886,6 @@ namespace mcmc_namespace {
    */
   std::vector<std::string> cl_args;
 
-  /// Vector of data objects
-  std::vector<data_t> data_arr;
-  
   /// Model object (initialized in constructor)
   std::shared_ptr<model_t> mod;
 
@@ -270,9 +896,6 @@ namespace mcmc_namespace {
   static const int ix_zero_wgt=1;
   //@}
   
-  /// Current points in parameter space
-  std::vector<ubvector> current;
-
   /// \name Parameter objects for the 'set' command
   //@{
   o2scl::cli::parameter_double p_max_time;
@@ -287,33 +910,6 @@ namespace mcmc_namespace {
   o2scl::cli::parameter_string p_prefix;
   //@}
 
-  /// \name Interface customization
-  //@{
-  /** \brief Initializations before the MCMC 
-   */
-  virtual int mcmc_init() {
-    return 0;
-  }
-
-  /** \brief Cleanup after the MCMC
-   */
-  virtual void mcmc_cleanup() {
-    return;
-  }
-  
-  /** \brief Store a MCMC measurement
-   */
-  virtual void add_measurement(ubvector &pars, double weight, data_t &dat,
-			       bool new_meas) {
-    return;
-  }
-
-  /** \brief Function to record function maximum
-   */
-  virtual void best_point(ubvector &best, double w_best, data_t &dat) {
-    return;
-  }
-  
   /** \brief Set up the 'cli' object
       
       This function just adds the four commands and the 'set' parameters
@@ -325,47 +921,47 @@ namespace mcmc_namespace {
     
     p_max_time.d=&this->max_time;
     p_max_time.help=((std::string)"Maximum run time in seconds ")+
-    "(default 86400 sec or 1 day).";
+      "(default 86400 sec or 1 day).";
     this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
     
     p_step_fac.d=&this->step_fac;
     p_step_fac.help=((std::string)"MCMC step factor. The step size for ")+
-    "each variable is taken as the difference between the high and low "+
-    "limits divided by this factor (default 10.0). This factor can "+
-    "be increased if the acceptance rate is too small, but care must "+
-    "be taken, e.g. if the conditional probability is multimodal. If "+
-    "this step size is smaller than 1.0, it is reset to 1.0 .";
+      "each variable is taken as the difference between the high and low "+
+      "limits divided by this factor (default 10.0). This factor can "+
+      "be increased if the acceptance rate is too small, but care must "+
+      "be taken, e.g. if the conditional probability is multimodal. If "+
+      "this step size is smaller than 1.0, it is reset to 1.0 .";
     this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
     p_n_warm_up.i=&this->n_warm_up;
     p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
-    "(default 0).";
+      "(default 0).";
     this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
 
     p_user_seed.i=&this->user_seed;
     p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-    "generator. If zero is given (the default), then mcmc() uses "+
-    "time(0) to generate a random seed.";
+      "generator. If zero is given (the default), then mcmc() uses "+
+      "time(0) to generate a random seed.";
     this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
     
     p_max_iters.i=&this->max_iters;
     p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-    "iterations to be less than the specified number (default zero).";
+      "iterations to be less than the specified number (default zero).";
     this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
     
     p_output_next.b=&this->output_next;
     p_output_next.help=((std::string)"If true, output next point ")+
-    "to the '_scr' file before calling TOV solver (default true).";
+      "to the '_scr' file before calling TOV solver (default true).";
     this->cl.par_list.insert(std::make_pair("output_next",&p_output_next));
     
     p_output_mc.b=&this->output_mc;
     p_output_mc.help=((std::string)"If true, output MC accept ")+
-    "and reject steps (default true).";
+      "and reject steps (default true).";
     this->cl.par_list.insert(std::make_pair("output_mc",&p_output_mc));
     
     p_aff_inv.b=&this->aff_inv;
     p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
-    "sampling (default false).";
+      "sampling (default false).";
     this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
     
     p_prefix.str=&this->prefix;
@@ -380,24 +976,15 @@ namespace mcmc_namespace {
 
   /** \brief Create a new MCMC object with model \c m 
    */
-  mcmc_base(std::shared_ptr<model_t> &m) {
+  mcmc_cli(std::shared_ptr<model_t> &m) {
 
     // Parameters
     prefix="mcmc";
-    max_iters=0;
-    user_seed=0;
-    n_warm_up=0;
     output_next=true;
     output_mc=true;
 
     // Default to 24 hours
     max_time=3.6e3*24;
-
-    // MC step parameters
-    aff_inv=false;
-    hg_mode=0;
-    step_fac=10.0;
-    nwalk=1;
 
     // Initial values for MPI paramers
     mpi_nprocs=1;
@@ -499,7 +1086,7 @@ namespace mcmc_namespace {
     this->scr_out.precision(6);
       
     // First MC point
-    current.resize(1);
+    this->current.resize(1);
     
     std::vector<double> w_current(1);
     std::vector<bool> step_flags(1);
@@ -509,7 +1096,7 @@ namespace mcmc_namespace {
     
     // For stretch-moves, allocate for each walker
     if (this->aff_inv) {
-      current.resize(this->nwalk);
+      this->current.resize(this->nwalk);
       w_current.resize(this->nwalk);
       step_flags.resize(this->nwalk);
       this->data_arr.resize(2*this->nwalk);
@@ -521,7 +1108,7 @@ namespace mcmc_namespace {
 
     // Allocate memory for in all points
     for(size_t i=0;i<this->nwalk;i++) {
-      current[i].resize(this->nparams);
+      this->current[i].resize(this->nparams);
     }
 
 
@@ -534,8 +1121,8 @@ namespace mcmc_namespace {
 
     // Warm-up flag, not to be confused with 'n_warm_up', i.e. the
     // number of warm_up iterations.
-    warm_up=true;
-    if (this->n_warm_up==0) warm_up=false;
+    this->warm_up=true;
+    if (this->n_warm_up==0) this->warm_up=false;
 
     // Keep track of successful and failed MH moves
     this->mc_accept=0;
@@ -544,7 +1131,7 @@ namespace mcmc_namespace {
     m.initial_point(this->current[0]);
       
     // Run init() function
-    int iret=mcmc_init();
+    int iret=this->mcmc_init();
     if (iret!=0) return iret;
       
     // ---------------------------------------------------
@@ -573,18 +1160,18 @@ namespace mcmc_namespace {
 	  // Make a perturbation from the initial point
 	  for(size_t ik=0;ik<this->nparams;ik++) {
 	    do {
-	      current[ij][ik]=first[ik]+
+	      this->current[ij][ik]=first[ik]+
 		(this->gr.random()*2.0-1.0)*
 		(this->high[ik]-this->low[ik])/100.0;
-	    } while (current[ij][ik]>=this->high[ik] ||
-		     current[ij][ik]<=this->low[ik]);
+	    } while (this->current[ij][ik]>=this->high[ik] ||
+		     this->current[ij][ik]<=this->low[ik]);
 	  }
 	
 	  // Compute the weight
-	  w_current[ij]=m.compute_point(current[ij],this->scr_out,
+	  w_current[ij]=m.compute_point(this->current[ij],this->scr_out,
 					suc,this->data_arr[ij]);
 	  this->scr_out << "SM Init: " << ij << " ";
-	  o2scl::vector_out(this->scr_out,current[ij]);
+	  o2scl::vector_out(this->scr_out,this->current[ij]);
 	  this->scr_out << " " << w_current[ij] << std::endl;
 
 	  // Keep track of the best point and the best index
@@ -611,17 +1198,17 @@ namespace mcmc_namespace {
 
 	// For the initial point for this walker, add it
 	// to the result table
-	if (warm_up==false) {
+	if (this->warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  add_measurement(current[ij],w_current[ij],this->data_arr[ij],
+	  this->add_measurement(this->current[ij],w_current[ij],this->data_arr[ij],
 			  true);
 	}
       }
 
       // Output the best initial walker if necessary
       {
-	best=current[ij_best];
-	best_point(best,w_best,this->data_arr[ij_best]);
+	best=this->current[ij_best];
+	this->best_point(best,w_best,this->data_arr[ij_best]);
       }
 
     } else {
@@ -630,7 +1217,7 @@ namespace mcmc_namespace {
 
       // Compute weight for initial point
       w_current[0]=m.compute_point
-      (current[0],this->scr_out,suc,this->data_arr[0]);
+      (this->current[0],this->scr_out,suc,this->data_arr[0]);
       ret_codes[suc]++;
       this->scr_out << "Initial weight: " << w_current[0] << std::endl;
       if (w_current[0]<=0.0) {
@@ -640,19 +1227,19 @@ namespace mcmc_namespace {
 
       // Compute the initial Hastings proposal weight
       if (this->hg_mode>0) {
-	q_current=this->approx_like(current[0]);
+	q_current=this->approx_like(this->current[0]);
       }
 
       // Add measurement to output table and output best 
       {
-	if (warm_up==false) {
+	if (this->warm_up==false) {
 	  // Add the initial point if there's no warm up
-	  add_measurement(current[0],w_current[0],this->data_arr[0],
+	  this->add_measurement(this->current[0],w_current[0],this->data_arr[0],
 			  true);
 	}
-	best=current[0];
+	best=this->current[0];
 	w_best=w_current[0];
-	best_point(current[0],w_current[0],this->data_arr[0]);
+	this->best_point(this->current[0],w_current[0],this->data_arr[0]);
       }
     
     }
@@ -708,7 +1295,7 @@ namespace mcmc_namespace {
 	
 	  // Create new trial point
 	  for(size_t i=0;i<this->nparams;i++) {
-	    next[i]=current[ij][i]+smove_z*(current[ik][i]-current[ij][i]);
+	    next[i]=this->current[ij][i]+smove_z*(this->current[ik][i]-this->current[ij][i]);
 	    if (next[i]>=this->high[i] || next[i]<=this->low[i]) {
 	      in_bounds=false;
 	    }
@@ -766,7 +1353,7 @@ namespace mcmc_namespace {
 	// the masses are not too large
 	for(size_t k=0;k<this->nparams;k++) {
 	  
-	  next[k]=current[0][k]+(this->gr.random()*2.0-1.0)*
+	  next[k]=this->current[0][k]+(this->gr.random()*2.0-1.0)*
 	    (this->high[k]-this->low[k])/this->step_fac;
 	
 	  // If it's out of range, redo step near boundary
@@ -864,13 +1451,13 @@ namespace mcmc_namespace {
 	  this->mc_accept++;
 
 	  // Store results from new point
-	  if (!warm_up) {
+	  if (!this->warm_up) {
 	    if (this->aff_inv) {
 	      if (step_flags[ik]==false) {
-		add_measurement(next,w_next,this->data_arr[ik+this->nwalk],
+		this->add_measurement(next,w_next,this->data_arr[ik+this->nwalk],
 				true);
 	      } else {
-		add_measurement(next,w_next,this->data_arr[ik],true);
+		this->add_measurement(next,w_next,this->data_arr[ik],true);
 	      }
 	      if (debug) {
 		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
@@ -879,9 +1466,9 @@ namespace mcmc_namespace {
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(next,w_next,this->data_arr[1],true);
+		this->add_measurement(next,w_next,this->data_arr[1],true);
 	      } else {
-		add_measurement(next,w_next,this->data_arr[0],true);
+		this->add_measurement(next,w_next,this->data_arr[0],true);
 	      }
 	      if (debug) {
 		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
@@ -902,15 +1489,15 @@ namespace mcmc_namespace {
 	  if (w_next>w_best) {
 	    best=next;
 	    w_best=w_next;
-	    best_point(best,w_best,this->data_arr[0]);
+	    this->best_point(best,w_best,this->data_arr[0]);
 	  }
 
 	  // Prepare for next point
 	  if (this->aff_inv) {
-	    current[ik]=next;
+	    this->current[ik]=next;
 	    w_current[ik]=w_next;
 	  } else {
-	    current[0]=next;
+	    this->current[0]=next;
 	    w_current[0]=w_next;
 	  }
 
@@ -928,34 +1515,34 @@ namespace mcmc_namespace {
 	  this->mc_reject++;
 
 	  // Repeat measurement of old point
-	  if (!warm_up) {
+	  if (!this->warm_up) {
 	    if (this->aff_inv) {
 	      if (step_flags[ik]==false) {
-		add_measurement(current[ik],w_current[ik],this->data_arr[ik],
+		this->add_measurement(this->current[ik],w_current[ik],this->data_arr[ik],
 				false);
 	      } else {
-		add_measurement(current[ik],w_current[ik],
+		this->add_measurement(this->current[ik],w_current[ik],
 				this->data_arr[ik+this->nwalk],
 				false);
 	      }
 	      if (debug) {
 		std::cout << "MC debug: Calling add_meas(). step_flags[ik]: "
 			  << step_flags[ik] << " current[ik][0]: " 
-			  << current[ik][0] << "\n w_current[ik]: "
+			  << this->current[ik][0] << "\n w_current[ik]: "
 			  << w_current[ik] << std::endl;
 	      }
 	    } else {
 	      if (step_flags[0]==false) {
-		add_measurement(current[0],w_current[0],this->data_arr[0],
+		this->add_measurement(this->current[0],w_current[0],this->data_arr[0],
 				false);
 	      } else {
-		add_measurement(current[0],w_current[0],this->data_arr[1],
+		this->add_measurement(this->current[0],w_current[0],this->data_arr[1],
 				false);
 	      }
 	      if (debug) {
 		std::cout << "MC debug: Calling add_meas(). step_flags[0]: "
 			  << step_flags[0] << " current[0][0]: " 
-			  << current[0][0] << "\n w_current[0]: "
+			  << this->current[0][0] << "\n w_current[0]: "
 			  << w_current[ik] << std::endl;
 	      }
 	    }
@@ -965,12 +1552,12 @@ namespace mcmc_namespace {
 	  if (this->output_mc) {
 	    if (this->aff_inv) {
 	      this->scr_out << "MC Rej: " << this->mc_accept << " ";
-	      o2scl::vector_out(this->scr_out,current[ik]);
+	      o2scl::vector_out(this->scr_out,this->current[ik]);
 	      this->scr_out << " " << w_current[ik] << " "
 			    << w_next << std::endl;
 	    } else {
 	      this->scr_out << "MC Rej: " << this->mc_accept << " ";
-	      o2scl::vector_out(this->scr_out,current[0]);
+	      o2scl::vector_out(this->scr_out,this->current[0]);
 	      this->scr_out << " " << w_current[0] << " "
 			    << w_next << std::endl;
 	    }
@@ -989,7 +1576,7 @@ namespace mcmc_namespace {
 
       // --------------------------------------------------------------
       
-      mcmc_cleanup();
+      this->mcmc_cleanup();
       
       // ---------------------------------------------------------------
 
@@ -1069,8 +1656,8 @@ namespace mcmc_namespace {
       this->mcmc_iterations++;
 
       // Leave warm_up mode if necessary
-      if (((int)this->mcmc_iterations)>this->n_warm_up && warm_up==true) {
-	warm_up=false;
+      if (((int)this->mcmc_iterations)>this->n_warm_up && this->warm_up==true) {
+	this->warm_up=false;
 	this->scr_out << "Setting warm_up to false. Reset start time."
 		      << std::endl;
 #ifndef NO_MPI
@@ -1097,11 +1684,11 @@ namespace mcmc_namespace {
 
   };
 
-  /** \brief A generic MCMC simulator with HDF5 file I/O
+  /** \brief A generic MCMC simulation class with HDF5 file I/O
    */
   template<class data_t=ubvector,
-    class model_t=model_demo> class mcmc_class : 
-    public mcmc_base<data_t,model_t> {
+    class model_t=model_demo> class mcmc_table : 
+    public mcmc_cli<data_t,model_t> {
     
   public:
   
@@ -1163,7 +1750,7 @@ namespace mcmc_namespace {
   */
   virtual void setup_cli() {
 
-    mcmc_base<data_t,model_t>::setup_cli();
+    mcmc_cli<data_t,model_t>::setup_cli();
     
     // ---------------------------------------
     // Set commands/options
@@ -1174,7 +1761,7 @@ namespace mcmc_namespace {
        0,0,"",((std::string)"This is the main part of ")+
        "the code which performs the simulation. Make sure to set the "+
        "model first using the 'model' command first.",
-       new o2scl::comm_option_mfptr<mcmc_class>(this,&mcmc_class::mcmc),
+       new o2scl::comm_option_mfptr<mcmc_table>(this,&mcmc_table::mcmc),
        o2scl::cli::comm_option_both},
       {'i',"initial-point","Set the starting point in the parameter space",
        1,-1,"<mode> [...]",
@@ -1188,14 +1775,14 @@ namespace mcmc_namespace {
        "arguments specify all the parameter values. On the command-line, "+
        "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
        "to ensure they do not get confused with other options.",
-       new o2scl::comm_option_mfptr<mcmc_class>
-       (this,&mcmc_class::set_initial_point),
+       new o2scl::comm_option_mfptr<mcmc_table>
+       (this,&mcmc_table::set_initial_point),
        o2scl::cli::comm_option_both}
       /*
 	{'s',"hastings","Specify distribution for M-H step",
 	1,1,"<filename>",
 	((string)"Desc. ")+"Desc2.",
-	new comm_option_mfptr<mcmc_class>(this,&mcmc_class::hastings),
+	new comm_option_mfptr<mcmc_table>(this,&mcmc_table::hastings),
 	cli::comm_option_both}
       */
     };
@@ -1321,7 +1908,7 @@ namespace mcmc_namespace {
 	ctr++;
       } 
       if (ctr!=tc.get_ncolumns()) {
-	O2SCL_ERR("Column/unit alignment in mcmc_class::mcmc().",
+	O2SCL_ERR("Column/unit alignment in mcmc_table::mcmc().",
 		  o2scl::exc_esanity);
       }
     }
@@ -1494,7 +2081,7 @@ namespace mcmc_namespace {
 	  this->scr_out << line[i] << " "
 			<< tc.get_column_name(i) << std::endl;
 	}
-	O2SCL_ERR("Alignment problem in mcmc_class::add_measurement().",
+	O2SCL_ERR("Alignment problem in mcmc_table::add_measurement().",
 		  o2scl::exc_efailed);
       }
       tc.line_of_data(line.size(),line);
@@ -1816,7 +2403,7 @@ namespace mcmc_namespace {
 
   /** \brief Create an MCMC object with model \c m
    */
-  mcmc_class(std::shared_ptr<model_t> &m) : mcmc_base<data_t,model_t>(m) {
+  mcmc_table(std::shared_ptr<model_t> &m) : mcmc_cli<data_t,model_t>(m) {
 
     first_file_update=false;
     
