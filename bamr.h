@@ -97,7 +97,7 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class : public mcmc_namespace::mcmc_class<model_data,model> {
+  class bamr_class : public bamr::mcmc_bamr<> {
     
   public:
     
@@ -123,7 +123,6 @@ namespace bamr {
     /** \brief Write initial data to HDF file
      */
     virtual void first_update(o2scl_hdf::hdf_file &hf);
-    
     
     /** \brief Make any necessary preparations for the mcmc() function
 
