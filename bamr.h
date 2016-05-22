@@ -117,7 +117,7 @@ namespace bamr {
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
-    virtual void fill_line(ubvector &pars, double weight, model_data &dat,
+    virtual void fill_line(ubvector &pars, double weight, 
 			   std::vector<double> &line);
 
     /** \brief Write initial data to HDF file
@@ -138,8 +138,11 @@ namespace bamr {
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
-  bamr_class(settings &s, std::shared_ptr<model> &m) :
-    mcmc_class<model_data,model>(m), set(s) {
+    /** \brief Desc
+     */
+    virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
+    
+  bamr_class(settings &s) : set(s), mod(new two_polytropes(s)) {
       
     }
     
@@ -148,6 +151,12 @@ namespace bamr {
     
     /// Settings object
     settings &set;
+
+    /// Model object
+    std::shared_ptr<model> mod;
+
+    /// Data vector
+    std::vector<model_data> data_arr;
     
     /** \brief Set up the 'cli' object
 

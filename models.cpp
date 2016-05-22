@@ -277,7 +277,7 @@ int model::add_data(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
     
-void model::compute_star(ubvector &pars, std::ofstream &scr_out, 
+void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &success, model_data &dat) {
 
   double hc_mev_fm=o2scl_const::hc_mev_fm;
@@ -543,7 +543,8 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	scr_out << "Adjusting mass. M_max = " << mmax << " obj: "
 		<< source_names[i] << " old: "
 		<< pars[this->nparams-nsources+i];
-	
+
+	/*
 	// If a star is too massive, readjust it's mass accordingly
 	if (mmax<high[this->nparams-nsources+i]) {
 	  pars[this->nparams-nsources+i]=low[this->nparams-nsources+i]+
@@ -553,6 +554,9 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
 	    gr.random()*(high[this->nparams-nsources+i]-
 			 low[this->nparams-nsources+i]);
 	}
+	*/
+	std::cout << "fixme" << std::endl;
+	exit(-1);
 	  
 	scr_out << " new: " << pars[this->nparams-nsources+i] << std::endl;
       }
@@ -681,7 +685,7 @@ void model::compute_star(ubvector &pars, std::ofstream &scr_out,
   return;
 }
 
-double model::compute_point(ubvector &pars, std::ofstream &scr_out, 
+double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			    int &success, model_data &dat) {
       
   // Compute the M vs R curve and return if it failed
@@ -877,7 +881,7 @@ void two_polytropes::initial_point(ubvector &params) {
   return;
 }
 
-void two_polytropes::compute_eos(ubvector &params, int &success,
+void two_polytropes::compute_eos(const ubvector &params, int &success,
 				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
@@ -1023,7 +1027,7 @@ void alt_polytropes::initial_point(ubvector &params) {
   return;
 }
 
-void alt_polytropes::compute_eos(ubvector &params, int &success,
+void alt_polytropes::compute_eos(const ubvector &params, int &success,
 				 ofstream &scr_out, model_data &dat) {
   
   success=ix_success;
@@ -1184,7 +1188,7 @@ void fixed_pressure::initial_point(ubvector &params) {
   return;
 }
 
-void fixed_pressure::compute_eos(ubvector &params, int &success,
+void fixed_pressure::compute_eos(const ubvector &params, int &success,
 				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
@@ -1327,7 +1331,7 @@ void generic_quarks::initial_point(ubvector &params) {
   return;
 }
 
-void generic_quarks::compute_eos(ubvector &params, int &success,
+void generic_quarks::compute_eos(const ubvector &params, int &success,
 				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
@@ -1568,7 +1572,7 @@ void quark_star::initial_point(ubvector &params) {
   return;
 }
 
-void quark_star::compute_eos(ubvector &params, int &success,
+void quark_star::compute_eos(const ubvector &params, int &success,
 			     std::ofstream &scr_out, model_data &dat) {
   
   success=ix_success;
@@ -1767,7 +1771,7 @@ void qmc_neut::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_neut::compute_eos(ubvector &params, int &success,
+void qmc_neut::compute_eos(const ubvector &params, int &success,
 			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
@@ -1792,7 +1796,7 @@ void qmc_neut::compute_eos(ubvector &params, int &success,
 
   double ed=0.0, pr=0.0;
 
-  double gauss=pdg.sample();
+  double gauss=pdg();
   if (fabs(gauss)>3.0) gauss=0.0;
 
   for(double rho=0.02;rho<rho_trans+0.001;rho+=0.01) {
@@ -1934,7 +1938,7 @@ void qmc_threep::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_threep::compute_eos(ubvector &params, int &success,
+void qmc_threep::compute_eos(const ubvector &params, int &success,
 			     ofstream &scr_out, model_data &dat) {
 
   bool debug=false;
@@ -2159,7 +2163,7 @@ void qmc_fixp::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_fixp::compute_eos(ubvector &params, int &success,
+void qmc_fixp::compute_eos(const ubvector &params, int &success,
 			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
@@ -2382,7 +2386,7 @@ void qmc_twolines::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_twolines::compute_eos(ubvector &params, int &success,
+void qmc_twolines::compute_eos(const ubvector &params, int &success,
 			       ofstream &scr_out, model_data &dat) {
 
   success=ix_success;

@@ -39,11 +39,8 @@ int main(int argc, char *argv[]) {
   // Settings object
   settings set;
 
-  // Default model
-  std::shared_ptr<model> def_mod(new two_polytropes(set));
-
   // Main bamr object
-  bamr::bamr_class b(set,def_mod);
+  bamr::bamr_class b(set);
 
   // Run!
   b.run(argc,argv);

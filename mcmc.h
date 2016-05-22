@@ -331,14 +331,6 @@ namespace bamr {
 
     static const size_t nopt=1;
     o2scl::comm_option_s options[nopt]={
-      /*
-      {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-       0,0,"",((std::string)"This is the main part of ")+
-       "the code which performs the simulation. Make sure to set the "+
-       "model first using the 'model' command first.",
-       new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc),
-       o2scl::cli::comm_option_both},
-      */
       {'i',"initial-point","Set the starting point in the parameter space",
        1,-1,"<mode> [...]",
        ((std::string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+

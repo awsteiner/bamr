@@ -37,7 +37,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 
   model &m=*this->mod;
   
-  mcmc_class::table_names_units(s,u);
+  mcmc_bamr::table_names_units(s,u);
 
   /*
     if (set.norm_max) {
@@ -125,7 +125,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
         s+="nt prt ";
         u+="1/fm^3 1/fm^4 ";
       }
-      for(int i=0;i<grid_size;i++) {
+      for(int i=0;i<set.grid_size;i++) {
         s+=((string)"ct06_")+std::to_string(i)+" ";
         u+="km ";
         s+=((string)"ct08_")+std::to_string(i)+" ";
@@ -136,7 +136,7 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     }
   }
   if (set.addl_quants) {
-    for(int i=0;i<grid_size;i++) {
+    for(int i=0;i<set.grid_size;i++) {
       s+=((string)"Mb_")+std::to_string(i)+" ";
       u+="Msun ";
       s+=((string)"be_")+std::to_string(i)+" ";
@@ -151,12 +151,16 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   return;
 }
 
-void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
+void bamr_class::fill_line(ubvector &pars, double weight, 
 			   std::vector<double> &line) {
-
-  mcmc_class::fill_line(pars,weight,dat,line);
+  
+  mcmc_bamr::fill_line(pars,weight,line);
 
   model &m=*this->mod;
+
+  model_data dat;
+
+  size_t nparams=this->param_names.size();
   
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
@@ -266,52 +270,48 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
       }
     }
   }
-
-    if (baryon_density) {
-      line.push_back(tab_mvsr->get_constant("gm_nb1"));
-      line.push_back(tab_mvsr->get_constant("r_nb1"));
-      line.push_back(tab_mvsr->get_constant("gm_nb2"));
-      line.push_back(tab_mvsr->get_constant("r_nb2"));
-      line.push_back(tab_mvsr->get_constant("gm_nb3"));
-      line.push_back(tab_mvsr->get_constant("r_nb3"));
-      line.push_back(tab_mvsr->get_constant("gm_nb4"));
-      line.push_back(tab_mvsr->get_constant("r_nb4"));
-      line.push_back(tab_mvsr->get_constant("gm_nb5"));
-      line.push_back(tab_mvsr->get_constant("r_nb5"));
+  
+  if (set.baryon_density) {
+    line.push_back(dat.mvsr->get_constant("gm_nb1"));
+    line.push_back(dat.mvsr->get_constant("r_nb1"));
+    line.push_back(dat.mvsr->get_constant("gm_nb2"));
+    line.push_back(dat.mvsr->get_constant("r_nb2"));
+    line.push_back(dat.mvsr->get_constant("gm_nb3"));
+    line.push_back(dat.mvsr->get_constant("r_nb3"));
+    line.push_back(dat.mvsr->get_constant("gm_nb4"));
+    line.push_back(dat.mvsr->get_constant("r_nb4"));
+    line.push_back(dat.mvsr->get_constant("gm_nb5"));
+    line.push_back(dat.mvsr->get_constant("r_nb5"));
+  }
+  if (set.compute_cthick) {
+    if (set.nt_corr) {
+      line.push_back(dat.eos->get_constant("nt"));
+      line.push_back(dat.eos->get_constant("prt"));
     }
-    if (compute_cthick) {
-      if (nt_corr) {
-	line.push_back(tab_eos->get_constant("nt"));
-	line.push_back(tab_eos->get_constant("prt"));
-      }
-      if (mi_post) {
-	line.push_back(tab_mvsr->get_constant("deltaI_14"));
-	line.push_back(tab_mvsr->get_constant("deltaI_17"));
-	line.push_back(tab_mvsr->get_constant("deltaI_20"));
-      }
-      for(int i=0;i<grid_size;i++) {
-	double mval=m_grid[i];
-	if (mval<mmax && tab_mvsr->is_column("r2")) {
-	  double rval=tab_mvsr->interp("gm",mval,"r");
-	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r0"));
-	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r1"));
-	  line.push_back(rval-tab_mvsr->interp("gm",mval,"r2"));
-	} else {
-	  line.push_back(0.0);
-	  line.push_back(0.0);
-	  line.push_back(0.0);
-	}
+    for(int i=0;i<set.grid_size;i++) {
+      double mval=m.m_grid[i];
+      if (mval<mmax && dat.mvsr->is_column("r2")) {
+	double rval=dat.mvsr->interp("gm",mval,"r");
+	line.push_back(rval-dat.mvsr->interp("gm",mval,"r0"));
+	line.push_back(rval-dat.mvsr->interp("gm",mval,"r1"));
+	line.push_back(rval-dat.mvsr->interp("gm",mval,"r2"));
+      } else {
+	line.push_back(0.0);
+	line.push_back(0.0);
+	line.push_back(0.0);
       }
     }
+  }
+  /*
   if (epja_mode) {
-    double mmax=tab_mvsr->get_constant("new_max");
+    double mmax=dat.mvsr->get_constant("new_max");
     for(int i=0;i<grid_size;i++) {
       double mval=m_grid[i];
       if (mval<mmax) {
-	double bm=tab_mvsr->interp("gm",mval,"bm");
-	double rad=tab_mvsr->interp("gm",mval,"r");
+	double bm=dat.mvsr->interp("gm",mval,"bm");
+	double rad=dat.mvsr->interp("gm",mval,"r");
 	// rjw is km^4, so dividing by km/Msun gives Msun*km^2
-	double I=tab_mvsr->interp("gm",mval,"rjw")/3.0/schwarz_km;
+	double I=dat.mvsr->interp("gm",mval,"rjw")/3.0/schwarz_km;
 	line.push_back(bm);
 	line.push_back((bm-mval)/mval);
 	// Make unitless by dividing by G^2
@@ -322,13 +322,14 @@ void bamr_class::fill_line(ubvector &pars, double weight, model_data &dat,
 	line.push_back(0.0);
       }
     }
-  }
+    }
+  */
   return;
 }
 
 void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
-  mcmc_class::first_update(hf);
+  mcmc_bamr::first_update(hf);
 
   model &m=*this->mod;
   
@@ -365,35 +366,36 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
 int bamr_class::mcmc_init() {
 
-  if (compute_cthick && !baryon_density) {
+  model &m=*this->mod;
+  
+  if (set.compute_cthick && !set.baryon_density) {
     scr_out << "Cannot use 'compute_cthick=true' with "
 	    << "'baryon_density=false'." << endl;
     return exc_efailed;
   }
-  if (nt_corr && (!compute_cthick || !baryon_density)) {
+  if (set.nt_corr && (!set.compute_cthick || !set.baryon_density)) {
     scr_out << "Cannot use 'nt_corr=true' with "
 	    << "'compute_cthick=false' or "
 	    << "'baryon_density=false'." << endl;
     return exc_efailed;
   }
-  if (nt_corr && !has_esym) {
+  if (set.nt_corr && !m.has_esym) {
     scr_out << "Cannot use 'nt_corr=true' with a model which does not "
 	    << "provide S and L." << endl;
     return exc_efailed;
   }
-  if (crust_from_L && (!has_esym || !use_crust || !baryon_density ||
-		       !compute_cthick)) {
+  if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
+			   !set.baryon_density || !set.compute_cthick)) {
     scr_out << "Cannot use 'crust_from_L=true' with a model which does not "
 	    << "provide S and L or with 'use_crust=false' or with "
 	    << "'baryon_density=false or with 'compute_cthick=false'." 
 	    << endl;
     return exc_efailed;
   }
+
   // -----------------------------------------------------------
   // Make grids
 
-  model &m=*this->mod;
-  
   m.nb_grid=uniform_grid_end<double>(set.nb_low,set.nb_high,set.grid_size-1);
   m.e_grid=uniform_grid_end<double>(set.e_low,set.e_high,set.grid_size-1);
   m.m_grid=uniform_grid_end<double>(set.m_low,set.m_high,set.grid_size-1);
@@ -465,6 +467,33 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
+  
+  std::vector<std::string> names;
+  std::vector<std::string> units;
+  ubvector low;
+  ubvector high;   
+  ubvector init;
+  mod->get_param_info(names,units,low,high);
+  mod->initial_point(init);
+  
+  model_data dat;
+
+  int success;
+  o2scl::multi_funct11 mf;
+  //o2scl::multi_funct11 mf=std::bind
+  //(std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
+  //(&model::compute_point),mod,std::placeholders::_2,scr_out,success,dat);
+  o2scl::measure_funct mt=std::bind
+    (std::mem_fn<int(const ubvector &,double,size_t,bool)>
+     (&mcmc_bamr::add_line),this,std::placeholders::_1,
+     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
+  
+  this->mcmc(names.size(),init,low,high,mf,mt);
+  
+  return 0;
+}
+
 int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
   this->mod->add_data(sv,itive_com);
   return 0;
@@ -472,15 +501,21 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 
 void bamr_class::setup_cli() {
   
-  mcmc_class::setup_cli();
+  mcmc_bamr::setup_cli();
 
   set.setup_cli(cl);
   
   // ---------------------------------------
   // Set options
     
-  static const int nopt=2;
+  static const int nopt=3;
   comm_option_s options[nopt]={
+    {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
+     0,0,"",((std::string)"This is the main part of ")+
+     "the code which performs the simulation. Make sure to set the "+
+     "model first using the 'model' command first.",
+     new o2scl::comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc_func),
+     o2scl::cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
      "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
