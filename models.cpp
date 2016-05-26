@@ -265,7 +265,7 @@ int model::add_data(std::vector<std::string> &sv, bool itive_com) {
   source_names.push_back(sv[1]);
   source_fnames.push_back(sv[2]);
   slice_names.push_back(sv[3]);
-  first_mass.push_back(o2scl::stod(sv[4]));
+  init_mass_fracs.push_back(o2scl::stod(sv[4]));
   if (sv.size()==6) {
     table_names.push_back(sv[5]);
   } else {
@@ -534,8 +534,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Check that all stars have masses below the maximum mass
     // of the current M vs R curve
     for(size_t i=0;i<nsources;i++) {
-      if (pars[this->nparams-nsources+i]>mmax) {
+      if (pars[this->n_eos_params-nsources+i]>mmax) {
 
+	size_t nparams=this->n_eos_params+nsources;
 	ubvector low(nparams), high(nparams);
 	std::vector<std::string> names(nparams), units(nparams);
 	get_param_info(names,units,low,high);
@@ -558,7 +559,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	std::cout << "fixme" << std::endl;
 	exit(-1);
 	  
-	scr_out << " new: " << pars[this->nparams-nsources+i] << std::endl;
+	scr_out << " new: " << pars[this->n_eos_params-nsources+i] << std::endl;
       }
     }
     
@@ -643,9 +644,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
-  // Compute the radius for each source
+  // Compute the masses and radii for each source
   for(size_t i=0;i<nsources;i++) {
-    dat.rad[i]=dat.mvsr->interp("gm",pars[this->nparams-nsources+i],"r");
+    dat.mass[i]=mmax*pars[this->n_eos_params-nsources+i];
+    dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
   }
 
   // Check causality
@@ -672,7 +674,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   } else {
 
     for(size_t i=0;i<nsources;i++) {
-      if (dat.rad[i]<2.94*schwarz_km/2.0*pars[this->nparams-nsources+i]) {
+      if (dat.rad[i]<2.94*schwarz_km/2.0*pars[this->n_eos_params-nsources+i]) {
 	scr_out << "Source " << source_names[i] << " acausal."
 		<< std::endl;
 	success=ix_acausal_mr;
@@ -696,8 +698,8 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
   bool mr_fail=false;
   for(size_t i=0;i<nsources;i++) {
-    if (pars[this->nparams-nsources+i]<in_m_min ||
-	pars[this->nparams-nsources+i]>in_m_max ||
+    if (pars[this->n_eos_params-nsources+i]<in_m_min ||
+	pars[this->n_eos_params-nsources+i]>in_m_max ||
 	dat.rad[i]<in_r_min || dat.rad[i]>in_r_max) {
       mr_fail=true;
     }
@@ -709,7 +711,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       scr_out.precision(2);
       scr_out.setf(ios::showpos);
       for(size_t i=0;i<nsources;i++) {
-	scr_out << pars[this->nparams-nsources+i] << " ";
+	scr_out << pars[this->n_eos_params-nsources+i] << " ";
       }
       scr_out << std::endl;
       for(size_t i=0;i<nsources;i++) {
@@ -741,14 +743,14 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (dat.rad[i]<source_tables[i].get_x_data()[0] ||
 	dat.rad[i]>source_tables[i].get_x_data()
 	[source_tables[i].get_nx()-1] ||
-	pars[this->nparams-nsources+i]<source_tables[i].get_y_data()[0] ||
-	pars[this->nparams-nsources+i]>source_tables[i].get_y_data()
+	pars[this->n_eos_params-nsources+i]<source_tables[i].get_y_data()[0] ||
+	pars[this->n_eos_params-nsources+i]>source_tables[i].get_y_data()
 	[source_tables[i].get_ny()-1]) {
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
       dat.wgts[i]=source_tables[i].interp
-	(dat.rad[i],pars[this->nparams-nsources+i],slice_names[i]);
+	(dat.rad[i],pars[this->n_eos_params-nsources+i],slice_names[i]);
 				      
     }
 	
@@ -763,7 +765,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	
     if (set.debug_star) {
       scr_out << source_names[i] << " "
-	      << pars[this->nparams-nsources+i] << " " 
+	      << pars[this->n_eos_params-nsources+i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
 	
@@ -830,7 +832,7 @@ two_polytropes::two_polytropes(settings &s) : model(s) {
   // We include muons by default, but they rarely appear at low-density
   cns.include_muons=true;
 
-  this->nparams=8;
+  this->n_eos_params=8;
 }
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
@@ -840,8 +842,9 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   names={"comp","kprime","esym","gamma","trans1","index1",
 	  "trans2","index2"};
   
-  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
+  low.resize(n_eos_params+nsources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -852,7 +855,8 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   low[5]=0.2;
   low[6]=0.75;
   low[7]=0.2;
-
+  
+  high.resize(n_eos_params+nsources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
   high[1]=-200.0/hc_mev_fm;
@@ -865,7 +869,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   high[5]=1.5;
   high[6]=8.0;
   high[7]=2.0;
-
+  model::get_param_info(names,units,low,high);
   return;
 }
 
@@ -878,6 +882,7 @@ void two_polytropes::initial_point(ubvector &params) {
   params[5]=0.576;
   params[6]=4.60;
   params[7]=1.21;
+  model::initial_point(params);
   return;
 }
 
@@ -1010,7 +1015,7 @@ void alt_polytropes::get_param_info(std::vector<std::string> &names,
   names={"comp","kprime","esym","gamma","trans1","exp1",
 	  "trans2","exp2"};
   
-  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","."};
+  units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
   
   return;
 }
@@ -1171,7 +1176,7 @@ void fixed_pressure::get_param_info(std::vector<std::string> &names,
   names={"comp","kprime","esym","gamma","pres1","pres2","pres3",
 	  "pres4"};
   
-  units={"1/fm","1/fm","1/fm",".","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  units={"1/fm","1/fm","1/fm","","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
   return;
 }
@@ -1313,7 +1318,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   names={"comp","kprime","esym","gamma","trans1","exp1",
 	  "trans2","a2","a4"};
 
-  units={"1/fm","1/fm","1/fm",".","1/fm^4",".","1/fm^4","1/fm^2","."};
+  units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
   
   return;
 }
@@ -1559,7 +1564,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
 
   names={"B","c","Delta","ms"};
 
-  units={"1/fm",".","1/fm","1/fm"};
+  units={"1/fm","","1/fm","1/fm"};
   
   return;
 }
@@ -1753,7 +1758,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
     
   names={"a","alpha","b","beta","index1","trans1","index2"};
 
-  units={"MeV",".","MeV",".",".","1/fm^4","."};
+  units={"MeV","","MeV","","","1/fm^4",""};
   
   return;
 }
@@ -1918,7 +1923,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   names={"a","alpha","S","L","index1","trans1","index2","trans2",
 	  "index3"};
 
-  units={"MeV",".","MeV","MeV",".","1/fm^4",".","1/fm^4"};
+  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
   
   return;
 }
@@ -2144,7 +2149,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
     
   names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
 
-  units={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
   return;
 }
@@ -2367,7 +2372,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
     
   names={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
   
-  units={"MeV",".","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
   return;
 }

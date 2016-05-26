@@ -468,12 +468,12 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
-  
+
   std::vector<std::string> names;
   std::vector<std::string> units;
-  ubvector low;
-  ubvector high;   
-  ubvector init;
+  ubvector low(nparams);
+  ubvector high(nparams);   
+  ubvector init(nparams);
   mod->get_param_info(names,units,low,high);
   mod->initial_point(init);
   

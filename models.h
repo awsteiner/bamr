@@ -59,6 +59,9 @@ namespace bamr {
 
     /// Radii
     ubvector rad;
+
+    /// Masses
+    ubvector mass;
     
     /// Weights
     ubvector wgts;
@@ -421,9 +424,13 @@ namespace bamr {
     /// Slice names for each source
     std::vector<std::string> slice_names;
 
+    /// The initial set of neutron star masses
+    std::vector<double> init_mass_fracs;
+
     /** \brief The number of sources
      */
     size_t nsources;
+    //@}
 
   public:
 
@@ -450,7 +457,7 @@ namespace bamr {
     //@}
 
     /// Number of parameters (EOS parameters plus mass of each source)
-    size_t nparams;
+    size_t n_eos_params;
     
     /** \brief TOV solver
 	
@@ -470,9 +477,6 @@ namespace bamr {
 
     /// True if the model provides S and L
     bool has_esym;
-
-    /// The initial set of neutron star masses
-    std::vector<double> first_mass;
 
     /// Total number of processors
     size_t mpi_nprocs;
@@ -531,13 +535,26 @@ namespace bamr {
 
     /** \brief Specify the initial point
      */
-    virtual void initial_point(ubvector &pars)=0;
+    virtual void initial_point(ubvector &pars) {
+      for(size_t i=0;i<nsources;i++) {
+	params[i+n_eos_params]=init_mass_fracs[i];
+      }
+      return;
+    }
 
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				ubvector &low, ubvector &high)=0;
+				ubvector &low, ubvector &high) {
+      for(size_t i=0;i<nsources;i++) {
+	names.push_back("mf_"+source_names[i]);
+	units.push_back("");
+	low[i+n_eos_params]=0.0;
+	high[i+n_eos_params]=0.0;
+      }
+      return;
+    }
 
     /// \name Functions for model parameters fixed during the MCMC run
     //@{
