@@ -57,7 +57,7 @@ void model::load_mc(std::ofstream &scr_out) {
   std::string name;
 
   if (source_names.size()!=source_fnames.size() ||
-      source_names.size()!=first_mass.size()) {
+      source_names.size()!=init_mass_fracs.size()) {
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
   
@@ -423,6 +423,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // !dat.eos->is_column("nb")) {' 
   }
 
+  double mmax=0.0;
+  
   if (has_eos) {
 
     // Perform any additional necessary EOS preparations
@@ -523,7 +525,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->set_interp_type(o2scl::itp_linear);
   
     // Check that maximum mass is large enough,
-    double mmax=dat.mvsr->max("gm");
+    mmax=dat.mvsr->max("gm");
     if (mmax<set.min_max_mass) {
       scr_out << "Maximum mass too small: " << mmax << " < "
 	      << set.min_max_mass << "." << std::endl;
@@ -531,38 +533,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    // Check that all stars have masses below the maximum mass
-    // of the current M vs R curve
-    for(size_t i=0;i<nsources;i++) {
-      if (pars[this->n_eos_params-nsources+i]>mmax) {
-
-	size_t nparams=this->n_eos_params+nsources;
-	ubvector low(nparams), high(nparams);
-	std::vector<std::string> names(nparams), units(nparams);
-	get_param_info(names,units,low,high);
-	
-	scr_out << "Adjusting mass. M_max = " << mmax << " obj: "
-		<< source_names[i] << " old: "
-		<< pars[this->nparams-nsources+i];
-
-	/*
-	// If a star is too massive, readjust it's mass accordingly
-	if (mmax<high[this->nparams-nsources+i]) {
-	  pars[this->nparams-nsources+i]=low[this->nparams-nsources+i]+
-	    gr.random()*(mmax-low[this->nparams-nsources+i]);
-	} else {
-	  pars[this->nparams-nsources+i]=low[this->nparams-nsources+i]+
-	    gr.random()*(high[this->nparams-nsources+i]-
-			 low[this->nparams-nsources+i]);
-	}
-	*/
-	std::cout << "fixme" << std::endl;
-	exit(-1);
-	  
-	scr_out << " new: " << pars[this->n_eos_params-nsources+i] << std::endl;
-      }
-    }
-    
     // If the EOS is sufficiently stiff, the TOV solver will output
     // gibberish, i.e. masses and radii equal to zero, especially at the
     // higher pressures. This rules these EOSs out, as they would likely
@@ -626,6 +596,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   } else {
 
+    cout << "Fixme, mmax not set." << endl;
+    exit(-1);
+
     compute_mr(pars,success,scr_out,dat);
     if (success!=ix_success) {
       return;
@@ -674,7 +647,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   } else {
 
     for(size_t i=0;i<nsources;i++) {
-      if (dat.rad[i]<2.94*schwarz_km/2.0*pars[this->n_eos_params-nsources+i]) {
+      if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
 	scr_out << "Source " << source_names[i] << " acausal."
 		<< std::endl;
 	success=ix_acausal_mr;
@@ -698,8 +671,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
   bool mr_fail=false;
   for(size_t i=0;i<nsources;i++) {
-    if (pars[this->n_eos_params-nsources+i]<in_m_min ||
-	pars[this->n_eos_params-nsources+i]>in_m_max ||
+    if (dat.mass[i]<in_m_min || dat.mass[i]>in_m_max || 
 	dat.rad[i]<in_r_min || dat.rad[i]>in_r_max) {
       mr_fail=true;
     }
@@ -711,7 +683,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       scr_out.precision(2);
       scr_out.setf(ios::showpos);
       for(size_t i=0;i<nsources;i++) {
-	scr_out << pars[this->n_eos_params-nsources+i] << " ";
+	scr_out << dat.mass[i] << " ";
       }
       scr_out << std::endl;
       for(size_t i=0;i<nsources;i++) {
@@ -743,14 +715,14 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (dat.rad[i]<source_tables[i].get_x_data()[0] ||
 	dat.rad[i]>source_tables[i].get_x_data()
 	[source_tables[i].get_nx()-1] ||
-	pars[this->n_eos_params-nsources+i]<source_tables[i].get_y_data()[0] ||
-	pars[this->n_eos_params-nsources+i]>source_tables[i].get_y_data()
+	dat.mass[i]<source_tables[i].get_y_data()[0] ||
+	dat.mass[i]>source_tables[i].get_y_data()
 	[source_tables[i].get_ny()-1]) {
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
       dat.wgts[i]=source_tables[i].interp
-	(dat.rad[i],pars[this->n_eos_params-nsources+i],slice_names[i]);
+	(dat.rad[i],dat.mass[i],slice_names[i]);
 				      
     }
 	
@@ -765,7 +737,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	
     if (set.debug_star) {
       scr_out << source_names[i] << " "
-	      << pars[this->n_eos_params-nsources+i] << " " 
+	      << dat.mass[i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
 	
@@ -823,12 +795,6 @@ two_polytropes::two_polytropes(settings &s) : model(s) {
   se.eoa=-16.0/hc_mev_fm;
   se.a=17.0/hc_mev_fm;
     
-  neut.init(o2scl_settings.get_convert_units().convert
-	    ("kg","1/fm",o2scl_mks::mass_neutron),2.0);
-  prot.init(o2scl_settings.get_convert_units().convert
-	    ("kg","1/fm",o2scl_mks::mass_proton),2.0);
-
-  cns.set_n_and_p(neut,prot);
   // We include muons by default, but they rarely appear at low-density
   cns.include_muons=true;
 

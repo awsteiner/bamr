@@ -30,7 +30,7 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
-#ifndef NO_MPI
+#ifndef BAMR_NO_MPI
 #include <mpi.h>
 #endif
 
@@ -111,7 +111,7 @@ namespace bamr {
 
     setup_cli();
 
-#ifndef NO_MPI
+#ifndef BAMR_NO_MPI
     // Get MPI rank, etc.
     MPI_Comm_rank(MPI_COMM_WORLD,&this->mpi_rank);
     MPI_Comm_size(MPI_COMM_WORLD,&this->mpi_nprocs);
@@ -461,7 +461,7 @@ namespace bamr {
 
     size_t nparams=this->param_names.size();
 
-#ifndef NO_MPI
+#ifndef BAMR_NO_MPI
     int buffer=0, tag=0;
     if (this->mpi_nprocs>1 && this->mpi_rank>0) {
       MPI_Recv(&buffer,1,MPI_INT,this->mpi_rank-1,tag,MPI_COMM_WORLD,
@@ -578,7 +578,7 @@ namespace bamr {
       
     }
 
-#ifndef NO_MPI
+#ifndef BAMR_NO_MPI
     if (this->mpi_nprocs>1 && this->mpi_rank<this->mpi_nprocs-1) {
       MPI_Send(&buffer,1,MPI_INT,this->mpi_rank+1,tag,MPI_COMM_WORLD);
     }
@@ -661,7 +661,7 @@ namespace bamr {
       return exc_efailed;
     }
 
-#ifndef MCMC_NO_MPI
+#ifndef BAMR_NO_MPI
     int buffer=0, tag=0;
     if (mpi_nprocs>1 && mpi_rank>0) {
       MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,tag,MPI_COMM_WORLD,
@@ -679,7 +679,7 @@ namespace bamr {
     hf.close();
     scr_out << "Done opening file " << fname << " for hastings." << endl;
 
-#ifndef MCMC_NO_MPI
+#ifndef BAMR_NO_MPI
     if (mpi_nprocs>1 && mpi_rank<mpi_nprocs-1) {
       MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,tag,MPI_COMM_WORLD);
     }

@@ -20,7 +20,7 @@
 
   -------------------------------------------------------------------
 */
-#ifndef MCMC_NO_MPI
+#ifndef BAMR_NO_MPI
 #include <mpi.h>
 #endif
 
@@ -31,7 +31,7 @@ using namespace bamr;
 
 int main(int argc, char *argv[]) {
 
-#ifndef MCMC_NO_MPI
+#ifndef BAMR_NO_MPI
   // Init MPI
   MPI_Init(&argc,&argv);
 #endif
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   // Run!
   b.run(argc,argv);
   
-#ifndef MCMC_NO_MPI
+#ifndef BAMR_NO_MPI
   // Finalize MPI
   MPI_Finalize();
 #endif

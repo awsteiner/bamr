@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#ifndef NO_MPI
+#ifndef BAMR_NO_MPI
 #include <mpi.h>
 #endif
 
@@ -537,7 +537,7 @@ namespace bamr {
      */
     virtual void initial_point(ubvector &pars) {
       for(size_t i=0;i<nsources;i++) {
-	params[i+n_eos_params]=init_mass_fracs[i];
+	pars[i+n_eos_params]=init_mass_fracs[i];
       }
       return;
     }

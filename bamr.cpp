@@ -471,6 +471,7 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   std::vector<std::string> names;
   std::vector<std::string> units;
+  size_t nparams=names.size();
   ubvector low(nparams);
   ubvector high(nparams);   
   ubvector init(nparams);
