@@ -142,15 +142,18 @@ namespace bamr {
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
-  bamr_class(settings &s) : set(s), mod(new two_polytropes(s)) {
-      
+    bamr_class() {
+      model_type="";
     }
     
     virtual ~bamr_class() {
     }
     
     /// Settings object
-    settings &set;
+    settings set;
+
+    /// Neutron star data
+    ns_data nsd;
 
     /// Model object
     std::shared_ptr<model> mod;

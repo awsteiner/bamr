@@ -43,13 +43,13 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
     if (set.norm_max) {
     u+=". ";
     } else {
-    u+=((std::string)"1/km^")+std::to_string(m.nsources)+"/Msun^"+
-    std::to_string(m.nsources)+" ";
+    u+=((std::string)"1/km^")+std::to_string(nsd.nsources)+"/Msun^"+
+    std::to_string(nsd.nsources)+" ";
     }
   */
   
-  for(size_t i=0;i<m.nsources;i++) {
-    s+=((std::string)"wgt_")+m.source_names[i]+" ";
+  for(size_t i=0;i<nsd.nsources;i++) {
+    s+=((std::string)"wgt_")+nsd.source_names[i]+" ";
     if (set.norm_max) {
       u+=". ";
     } else {
@@ -61,8 +61,13 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(size_t i=0;i<m.nsources;i++) {
-    s+=((std::string)"Rns_")+m.source_names[i]+" ";
+  for(size_t i=0;i<nsd.nsources;i++) {
+    s+=((std::string)"Rns_")+nsd.source_names[i]+" ";
+    u+="km ";
+  }
+
+  for(size_t i=0;i<nsd.nsources;i++) {
+    s+=((std::string)"Mns_")+nsd.source_names[i]+" ";
     u+="km ";
   }
   
@@ -100,13 +105,13 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
       s+="nb_max ";
       u+="1/fm^3 ";
     }
-    for(size_t i=0;i<m.nsources;i++) {
-      s+=((string)"ce_")+m.source_names[i]+" ";
+    for(size_t i=0;i<nsd.nsources;i++) {
+      s+=((string)"ce_")+nsd.source_names[i]+" ";
       u+="1/fm^4 ";
     }
     if (set.baryon_density) {
-      for(size_t i=0;i<m.nsources;i++) {
-	s+=((string)"cnb_")+m.source_names[i]+" ";
+      for(size_t i=0;i<nsd.nsources;i++) {
+	s+=((string)"cnb_")+nsd.source_names[i]+" ";
 	u+="1/fm^3 ";
       }
       s+="gm_nb1 r_nb1 ";
@@ -188,11 +193,14 @@ void bamr_class::fill_line(ubvector &pars, double weight,
     mmax=3.0;
   }
 
-  for(size_t i=0;i<m.nsources;i++) {
+  for(size_t i=0;i<nsd.nsources;i++) {
     line.push_back(dat.wgts[i]);
   }
-  for(size_t i=0;i<m.nsources;i++) {
+  for(size_t i=0;i<nsd.nsources;i++) {
     line.push_back(dat.rad[i]);
+  }
+  for(size_t i=0;i<nsd.nsources;i++) {
+    line.push_back(dat.mass[i]);
   }
   
   if (m.has_eos) {
@@ -261,12 +269,12 @@ void bamr_class::fill_line(ubvector &pars, double weight,
     line.push_back(pmax);
     line.push_back(emax);
     if (set.baryon_density) line.push_back(nbmax);
-    for(size_t i=0;i<m.nsources;i++) {
-      line.push_back(dat.mvsr->interp("gm",pars[nparams-m.nsources+i],"ed"));
+    for(size_t i=0;i<nsd.nsources;i++) {
+      line.push_back(dat.mvsr->interp("gm",pars[nparams-nsd.nsources+i],"ed"));
     }
     if (set.baryon_density) {
-      for(size_t i=0;i<m.nsources;i++) {
-	line.push_back(dat.mvsr->interp("gm",pars[nparams-m.nsources+i],"nb"));
+      for(size_t i=0;i<nsd.nsources;i++) {
+	line.push_back(dat.mvsr->interp("gm",pars[nparams-nsd.nsources+i],"nb"));
       }
     }
   }
@@ -333,12 +341,12 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
   model &m=*this->mod;
   
-  hf.sets_vec("source_names",m.source_names);
-  hf.sets_vec("source_fnames",m.source_fnames);
-  hf.sets_vec("slice_names",m.slice_names);
+  hf.sets_vec("source_names",nsd.source_names);
+  hf.sets_vec("source_fnames",nsd.source_fnames);
+  hf.sets_vec("slice_names",nsd.slice_names);
 
   hf.set_szt("grid_size",set.grid_size);
-  hf.set_szt("nsources",m.nsources);
+  hf.set_szt("nsources",nsd.nsources);
   hf.sets("model",model_type);
   hf.setd("min_mass",set.min_mass);
   hf.setd("exit_mass",set.exit_mass);
@@ -366,6 +374,10 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
 int bamr_class::mcmc_init() {
 
+  std::cout << "Hx." << std::endl;
+  mcmc_bamr::mcmc_init();
+  std::cout << "Hy." << std::endl;
+  
   model &m=*this->mod;
   
   if (set.compute_cthick && !set.baryon_density) {
@@ -411,9 +423,32 @@ int bamr_class::mcmc_init() {
   // Prepare data objects
 
   for(size_t i=0;i<data_arr.size();i++) {
-    data_arr[i].rad.resize(m.nsources);
-    data_arr[i].wgts.resize(m.nsources);
+    data_arr[i].rad.resize(nsd.nsources);
+    data_arr[i].mass.resize(nsd.nsources);
+    data_arr[i].wgts.resize(nsd.nsources);
   }
+  std::cout << "H1." << std::endl;
+
+  // -----------------------------------------------------------
+  // Prepare crust
+
+  /*
+    if (set.use_crust) {
+    m.teos.default_low_dens_eos();
+    
+    // Get the transition density from the crust
+    double pt, pw;
+    m.teos.get_transition(pt,pw);
+    // We set the transition density a bit lower (because by default
+    // it's the largest pressure in the crust EOS) and then add a 
+    // small width
+    m.teos.transition_mode=eos_tov_interp::smooth_trans;
+    m.teos.set_transition(pt/1.2,1.2);
+    
+    } else {
+    m.teos.no_low_dens_eos();
+    }
+  */
   
   return 0;
 }
@@ -429,39 +464,41 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     cerr << "Model already set to " << sv[1] << endl;
     return 0;
   }
-  mod->remove_params(cl);
-  model_type=sv[1];
+  if (model_type.length()>0) {
+    mod->remove_params(cl);
+  }
   if (sv[1]==((string)"twop")) {
-    std::shared_ptr<model> mnew(new two_polytropes(set));
+    std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"altp")) {
-    std::shared_ptr<model> mnew(new alt_polytropes(set));
+    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"fixp")) {
-    std::shared_ptr<model> mnew(new fixed_pressure(set));
+    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qstar")) {
-    std::shared_ptr<model> mnew(new quark_star(set));
+    std::shared_ptr<model> mnew(new quark_star(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"genq")) {
-    std::shared_ptr<model> mnew(new generic_quarks(set));
+    std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc")) {
-    std::shared_ptr<model> mnew(new qmc_neut(set));
+    std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_threep")) {
-    std::shared_ptr<model> mnew(new qmc_threep(set));
+    std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_fixp")) {
-    std::shared_ptr<model> mnew(new qmc_fixp(set));
+    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_twolines")) {
-    std::shared_ptr<model> mnew(new qmc_twolines(set));
+    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
     mod=mnew;
   } else {
     cerr << "Model unknown." << endl;
     return exc_efailed;
   }
+  model_type=sv[1];
   mod->setup_params(cl);
 
   return 0;
@@ -469,34 +506,43 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 
 int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
+  std::cout << "H7." << std::endl;
+
   std::vector<std::string> names;
   std::vector<std::string> units;
-  size_t nparams=names.size();
-  ubvector low(nparams);
-  ubvector high(nparams);   
-  ubvector init(nparams);
+
+  ubvector low;
+  ubvector high;
   mod->get_param_info(names,units,low,high);
+
+  size_t nparams=names.size();
+  std::cout << "H7b " << nparams << std::endl;
+  ubvector init(nparams);
   mod->initial_point(init);
   
   model_data dat;
 
   int success;
-  o2scl::multi_funct11 mf;
-  //o2scl::multi_funct11 mf=std::bind
-  //(std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
-  //(&model::compute_point),mod,std::placeholders::_2,scr_out,success,dat);
+  model &modp=*mod;
+  o2scl::multi_funct11 mf=std::bind
+    (std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
+     (&model::compute_point),&modp,
+     std::placeholders::_2,std::ref(scr_out),std::ref(success),
+     std::ref(dat));
   o2scl::measure_funct mt=std::bind
     (std::mem_fn<int(const ubvector &,double,size_t,bool)>
      (&mcmc_bamr::add_line),this,std::placeholders::_1,
      std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   
+  std::cout << "H8." << std::endl;
+
   this->mcmc(names.size(),init,low,high,mf,mt);
   
   return 0;
 }
 
 int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
-  this->mod->add_data(sv,itive_com);
+  nsd.add_data(sv,itive_com);
   return 0;
 }
 

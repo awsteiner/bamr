@@ -36,11 +36,8 @@ int main(int argc, char *argv[]) {
   MPI_Init(&argc,&argv);
 #endif
 
-  // Settings object
-  settings set;
-
   // Main bamr object
-  bamr::bamr_class b(set);
+  bamr::bamr_class b;
 
   // Run!
   b.run(argc,argv);

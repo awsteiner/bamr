@@ -30,7 +30,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-model::model(settings &s) : set(s) {
+model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   cns.nb_start=0.01;
   ts.verbose=0;
   ts.set_units("1/fm^4","1/fm^4","1/fm^3");
@@ -46,8 +46,7 @@ model::model(settings &s) : set(s) {
   in_r_max=18.0;
       
   teos.verbose=0;
-
-  nsources=0;
+  
 }
 
 void model::load_mc(std::ofstream &scr_out) {
@@ -56,14 +55,14 @@ void model::load_mc(std::ofstream &scr_out) {
       
   std::string name;
 
-  if (source_names.size()!=source_fnames.size() ||
-      source_names.size()!=init_mass_fracs.size()) {
+  if (nsd.source_names.size()!=nsd.source_fnames.size() ||
+      nsd.source_names.size()!=nsd.init_mass_fracs.size()) {
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
   
-  if (nsources>0) {
+  if (nsd.nsources>0) {
 
-    source_tables.resize(nsources);
+    nsd.source_tables.resize(nsd.nsources);
 
 #ifdef BAMR_MPI_LOAD
 
@@ -72,7 +71,7 @@ void model::load_mc(std::ofstream &scr_out) {
     
     // Choose which file to read first for this rank
     int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int)nsources) && mpi_rank>0) {
+    if (mpi_rank>mpi_nprocs-((int)nsd.nsources) && mpi_rank>0) {
       filestart=mpi_nprocs-mpi_rank;
     }
     if (mpi_load_debug) {
@@ -81,11 +80,11 @@ void model::load_mc(std::ofstream &scr_out) {
     }
     
     // Loop through all files
-    for(int k=0;k<((int)nsources);k++) {
+    for(int k=0;k<((int)nsd.nsources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)nsources))) {
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)nsd.nsources))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -98,7 +97,7 @@ void model::load_mc(std::ofstream &scr_out) {
       
       // Determine which file to read next
       int file=filestart+k;
-      if (file>=((int)nsources)) file-=nsources;
+      if (file>=((int)nsd.nsources)) file-=nsd.nsources;
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
@@ -106,17 +105,17 @@ void model::load_mc(std::ofstream &scr_out) {
       }
 
       o2scl_hdf::hdf_file hf;
-      hf.open(source_fnames[file]);
-      if (table_names[file].length()>0) {
-	hdf_input(hf,source_tables[file],table_names[file]);
+      hf.open(nsd.source_fnames[file]);
+      if (nsd.table_names[file].length()>0) {
+	hdf_input(hf,nsd.source_tables[file],nsd.table_names[file]);
       } else {
-	hdf_input(hf,source_tables[file]);
+	hdf_input(hf,nsd.source_tables[file]);
       }
       hf.close();
       
       // Send a message, unless the rank is the last one to read a
       // file.
-      if (k<((int)nsources)-1 || mpi_rank<mpi_nprocs-((int)nsources)) {
+      if (k<((int)nsd.nsources)-1 || mpi_rank<mpi_nprocs-((int)nsd.nsources)) {
 	int next=mpi_rank+1;
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -130,14 +129,14 @@ void model::load_mc(std::ofstream &scr_out) {
     
 #else
     
-    for(size_t k=0;k<nsources;k++) {
+    for(size_t k=0;k<nsd.nsources;k++) {
       
       hdf_file hf;
-      hf.open(source_fnames[k]);
-      if (table_names[k].length()>0) {
-	hdf_input(hf,source_tables[k],table_names[k]);
+      hf.open(nsd.source_fnames[k]);
+      if (nsd.table_names[k].length()>0) {
+	hdf_input(hf,nsd.source_tables[k],nsd.table_names[k]);
       } else {
-	hdf_input(hf,source_tables[k]);
+	hdf_input(hf,nsd.source_tables[k]);
       }
       hf.close();
     }
@@ -155,71 +154,72 @@ void model::load_mc(std::ofstream &scr_out) {
     scr_out << "File                          name   total        "
 	    << "max          P(10,1.4)" << std::endl;
 
-    for(size_t k=0;k<nsources;k++) {
+    for(size_t k=0;k<nsd.nsources;k++) {
       
       // Update input limits
       if (k==0) {
-	in_r_min=source_tables[k].get_grid_x(0);
-	in_r_max=source_tables[k].get_grid_x(source_tables[k].get_nx()-1);
-	in_m_min=source_tables[k].get_grid_y(0);
-	in_m_max=source_tables[k].get_grid_y(source_tables[k].get_ny()-1);
+	in_r_min=nsd.source_tables[k].get_grid_x(0);
+	in_r_max=nsd.source_tables[k].get_grid_x(nsd.source_tables[k].get_nx()-1);
+	in_m_min=nsd.source_tables[k].get_grid_y(0);
+	in_m_max=nsd.source_tables[k].get_grid_y(nsd.source_tables[k].get_ny()-1);
       } else {
-	if (in_r_min>source_tables[k].get_grid_x(0)) {
-	  in_r_min=source_tables[k].get_grid_x(0);
+	if (in_r_min>nsd.source_tables[k].get_grid_x(0)) {
+	  in_r_min=nsd.source_tables[k].get_grid_x(0);
 	}
-	if (in_r_max<source_tables[k].get_grid_x
-	    (source_tables[k].get_nx()-1)) {
-	  in_r_max=source_tables[k].get_grid_x(source_tables[k].get_nx()-1);
+	if (in_r_max<nsd.source_tables[k].get_grid_x
+	    (nsd.source_tables[k].get_nx()-1)) {
+	  in_r_max=nsd.source_tables[k].get_grid_x(nsd.source_tables[k].get_nx()-1);
 	}
-	if (in_m_min>source_tables[k].get_grid_y(0)) {
-	  in_m_min=source_tables[k].get_grid_y(0);
+	if (in_m_min>nsd.source_tables[k].get_grid_y(0)) {
+	  in_m_min=nsd.source_tables[k].get_grid_y(0);
 	}
-	if (in_m_max<source_tables[k].get_grid_y
-	    (source_tables[k].get_ny()-1)) {
-	  in_m_max=source_tables[k].get_grid_y(source_tables[k].get_ny()-1);
+	if (in_m_max<nsd.source_tables[k].get_grid_y
+	    (nsd.source_tables[k].get_ny()-1)) {
+	  in_m_max=nsd.source_tables[k].get_grid_y(nsd.source_tables[k].get_ny()-1);
 	}
       }
 
       // Renormalize
       tot=0.0;
       max=0.0;
-      for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  tot+=source_tables[k].get(i,j,slice_names[k]);
-	  if (source_tables[k].get(i,j,slice_names[k])>max) {
-	    max=source_tables[k].get(i,j,slice_names[k]);
+      for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
+	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
+	  tot+=nsd.source_tables[k].get(i,j,nsd.slice_names[k]);
+	  if (nsd.source_tables[k].get(i,j,nsd.slice_names[k])>max) {
+	    max=nsd.source_tables[k].get(i,j,nsd.slice_names[k]);
 	  }
 	}
       }
-      for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
+      for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
+	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
 	  if (set.norm_max) {
-	    source_tables[k].set
-	      (i,j,slice_names[k],source_tables[k].get
-	       (i,j,slice_names[k])/max);
+	    nsd.source_tables[k].set
+	      (i,j,nsd.slice_names[k],nsd.source_tables[k].get
+	       (i,j,nsd.slice_names[k])/max);
 		   
 	  } else {
-	    source_tables[k].set
-	      (i,j,slice_names[k],source_tables[k].get
-	       (i,j,slice_names[k])/tot);
+	    nsd.source_tables[k].set
+	      (i,j,nsd.slice_names[k],nsd.source_tables[k].get
+	       (i,j,nsd.slice_names[k])/tot);
 		   
 	  }
 	}
       }
 
       if (set.debug_load) {
-	std::cout << source_fnames[k] << std::endl;
-	for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	  std::cout << i << " " << source_tables[k].get_grid_x(i)
+	std::cout << nsd.source_fnames[k] << std::endl;
+	for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
+	  std::cout << i << " " << nsd.source_tables[k].get_grid_x(i)
 		    << std::endl;
 	}
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  std::cout << j << " " << source_tables[k].get_grid_y(j)
+	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
+	  std::cout << j << " " << nsd.source_tables[k].get_grid_y(j)
 		    << std::endl;
 	}
-	for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	  for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	    std::cout << source_tables[k].get(i,j,slice_names[k]) << " ";
+	for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
+	  for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
+	    std::cout << nsd.source_tables[k].get(i,j,nsd.slice_names[k])
+		      << " ";
 	  }
 	  std::cout << std::endl;
 	}
@@ -227,12 +227,12 @@ void model::load_mc(std::ofstream &scr_out) {
 
       scr_out.setf(std::ios::left);
       scr_out.width(29);
-      std::string stempx=source_fnames[k].substr(0,29);
+      std::string stempx=nsd.source_fnames[k].substr(0,29);
       scr_out << stempx << " ";
       scr_out.width(6);
-      scr_out << source_names[k] << " " << tot << " " << max << " ";
+      scr_out << nsd.source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(std::ios::left);
-      scr_out << source_tables[k].interp(10.0,1.4,slice_names[k])
+      scr_out << nsd.source_tables[k].interp(10.0,1.4,nsd.slice_names[k])
 	      << std::endl;
       
     }
@@ -255,8 +255,10 @@ void model::load_mc(std::ofstream &scr_out) {
   return;
 }
   
-int model::add_data(std::vector<std::string> &sv, bool itive_com) {
-      
+int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
+
+  cout << "J1." << endl;
+  
   if (sv.size()<5) {
     std::cout << "Not enough arguments given to 'add-data'." << std::endl;
     return o2scl::exc_efailed;
@@ -274,11 +276,15 @@ int model::add_data(std::vector<std::string> &sv, bool itive_com) {
       
   nsources++;
       
+  cout << "J2 " << nsources << endl;
+
   return 0;
 }
     
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &success, model_data &dat) {
+
+  std::cout << "H2." << std::endl;
 
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
@@ -286,11 +292,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   
   // Compute the EOS first
   if (has_eos) {
+    std::cout << "K1." << std::endl;
     compute_eos(pars,success,scr_out,dat);
+    std::cout << "K2." << std::endl;
     if (success!=ix_success) return;
   }
   
   if (has_eos) {
+    std::cout << "K2b." << std::endl;
     // Ensure we're using linear interpolation
     dat.eos->set_interp_type(o2scl::itp_linear);
 
@@ -314,6 +323,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  std::cout << "K3." << std::endl;
+  
   // If requested, compute the baryon density automatically
   if (has_eos && set.baryon_density && !dat.eos->is_column("nb")) {
     
@@ -350,7 +361,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute integral of 'igb' relative to ed='e1', called 'iigb'
 
     dat.eos->new_column("iigb");
-
+    
+    std::cout << "K4." << std::endl;
+    
     for(size_t i=0;i<dat.eos->get_nlines();i++) {
       if (nb_e1<=dat.eos->get("ed",i)) {
 	double val=dat.eos->integ("ed",nb_e1,dat.eos->get("ed",i),"igb");
@@ -425,8 +438,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   double mmax=0.0;
   
+  std::cout << "K5 " << set.baryon_density << " "
+	    << set.inc_baryon_mass << std::endl;
+  
   if (has_eos) {
-
+    
     // Perform any additional necessary EOS preparations
     //prepare_eos(pars,dat,success);
     //if (success!=ix_success) {
@@ -434,16 +450,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     //}
 
     // Read the EOS into the tov_eos object.
+    table_units<> &teos_temp=*(dat.eos);
+    teos_temp.summary(&cout);
     if (set.baryon_density && set.inc_baryon_mass) {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
       dat.eos->set_unit("nb","1/fm^3");
-      teos.read_table(*dat.eos,"ed","pr","nb");
+      teos.read_table(teos_temp,"ed","pr","nb");
     } else {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
-      teos.read_table(*dat.eos,"ed","pr");
+      teos.read_table(teos_temp,"ed","pr");
     }
+
+    std::cout << "K5b." << std::endl;
     
     if (set.use_crust) {
     
@@ -452,6 +472,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	double ed, nb;
+	std::cout << "K5c " << pr << std::endl;
 	teos.ed_nb_from_pr(pr,ed,nb);
 	if (ed_last>1.0e-20 && ed<ed_last) {
 	  scr_out << "Stability problem near crust-core transition."
@@ -479,6 +500,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // End of 'if (set.use_crust)'
     }
+
+    std::cout << "K6." << std::endl;
 
     // If necessary, output debug information (We want to make sure this
     // is after tov_eos::read_table() so that we can debug the
@@ -513,6 +536,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
+    std::cout << "K7." << std::endl;
+    
     // Solve for M vs. R curve
     ts.princ=set.mvsr_pr_inc;
     ts.set_table(dat.mvsr);
@@ -546,6 +571,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
+    std::cout << "K8." << std::endl;
+
     // Check the radius of the maximum mass star
     size_t ix_max=dat.mvsr->lookup("gm",mmax);
     if (dat.mvsr->get("r",ix_max)>1.0e4) {
@@ -554,6 +581,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
+    std::cout << "K8a." << std::endl;
+
     dat.mvsr->add_constant
       ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
@@ -561,6 +590,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant
       ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
+
+    std::cout << "K8b." << std::endl;
 
     if (set.baryon_density) {
       
@@ -582,10 +613,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
       
+    std::cout << "K8c." << std::endl;
+
     // Remove table entries with pressures above the maximum pressure
     size_t row=dat.mvsr->lookup("gm",dat.mvsr->max("gm"));
     dat.mvsr->set_nlines(row+1);
   
+    std::cout << "K8d." << std::endl;
+
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
     if (dat.mvsr->get_nlines()<10) {
@@ -594,7 +629,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-  } else {
+    std::cout << "K9." << std::endl;
+
+    } else {
 
     cout << "Fixme, mmax not set." << endl;
     exit(-1);
@@ -618,10 +655,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   }
 
   // Compute the masses and radii for each source
-  for(size_t i=0;i<nsources;i++) {
-    dat.mass[i]=mmax*pars[this->n_eos_params-nsources+i];
+  for(size_t i=0;i<nsd.nsources;i++) {
+    dat.mass[i]=mmax*pars[this->n_eos_params-nsd.nsources+i];
     dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
   }
+
+  std::cout << "K10." << std::endl;
 
   // Check causality
   if (has_eos) {
@@ -646,9 +685,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   } else {
 
-    for(size_t i=0;i<nsources;i++) {
+    for(size_t i=0;i<nsd.nsources;i++) {
       if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
-	scr_out << "Source " << source_names[i] << " acausal."
+	scr_out << "Source " << nsd.source_names[i] << " acausal."
 		<< std::endl;
 	success=ix_acausal_mr;
 	return;
@@ -657,20 +696,26 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   }
 
+  std::cout << "H3." << std::endl;
+
   return;
 }
 
 double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			    int &success, model_data &dat) {
       
+  std::cout << "H4." << std::endl;
+
   // Compute the M vs R curve and return if it failed
   compute_star(pars,scr_out,success,dat);
   if (success!=ix_success) {
     return 0.0;
   }
       
+  std::cout << "H5." << std::endl;
+
   bool mr_fail=false;
-  for(size_t i=0;i<nsources;i++) {
+  for(size_t i=0;i<nsd.nsources;i++) {
     if (dat.mass[i]<in_m_min || dat.mass[i]>in_m_max || 
 	dat.rad[i]<in_r_min || dat.rad[i]>in_r_max) {
       mr_fail=true;
@@ -679,14 +724,14 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   
   if (mr_fail==true) {
     scr_out << "Rejected: Mass or radius outside range." << std::endl;
-    if (nsources>0) {
+    if (nsd.nsources>0) {
       scr_out.precision(2);
       scr_out.setf(ios::showpos);
-      for(size_t i=0;i<nsources;i++) {
+      for(size_t i=0;i<nsd.nsources;i++) {
 	scr_out << dat.mass[i] << " ";
       }
       scr_out << std::endl;
-      for(size_t i=0;i<nsources;i++) {
+      for(size_t i=0;i<nsd.nsources;i++) {
 	scr_out << dat.rad[i] << " ";
       }
       scr_out << std::endl;
@@ -707,22 +752,22 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   // Compute the weights for each source
       
   if (set.debug_star) scr_out << "Name M R Weight" << std::endl;
-      
-  for(size_t i=0;i<nsources;i++) {
+  
+  for(size_t i=0;i<nsd.nsources;i++) {
 	
     // Double check that current M and R is in the range of
     // the provided input data
-    if (dat.rad[i]<source_tables[i].get_x_data()[0] ||
-	dat.rad[i]>source_tables[i].get_x_data()
-	[source_tables[i].get_nx()-1] ||
-	dat.mass[i]<source_tables[i].get_y_data()[0] ||
-	dat.mass[i]>source_tables[i].get_y_data()
-	[source_tables[i].get_ny()-1]) {
+    if (dat.rad[i]<nsd.source_tables[i].get_x_data()[0] ||
+	dat.rad[i]>nsd.source_tables[i].get_x_data()
+	[nsd.source_tables[i].get_nx()-1] ||
+	dat.mass[i]<nsd.source_tables[i].get_y_data()[0] ||
+	dat.mass[i]>nsd.source_tables[i].get_y_data()
+	[nsd.source_tables[i].get_ny()-1]) {
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
-      dat.wgts[i]=source_tables[i].interp
-	(dat.rad[i],dat.mass[i],slice_names[i]);
+      dat.wgts[i]=nsd.source_tables[i].interp
+	(dat.rad[i],dat.mass[i],nsd.slice_names[i]);
 				      
     }
 	
@@ -736,7 +781,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     ret*=dat.wgts[i];
 	
     if (set.debug_star) {
-      scr_out << source_names[i] << " "
+      scr_out << nsd.source_names[i] << " "
 	      << dat.mass[i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
@@ -783,12 +828,12 @@ void two_polytropes::copy_params(model &m) {
 void two_polytropes::remove_params(o2scl::cli &cl) {
   size_t i=cl.par_list.erase("kin_sym");
   if (i!=1) {
-    O2SCL_ERR("Failed to erase parameter.",o2scl::exc_esanity);
+    O2SCL_ERR("Failed to erase parameter 'kin_sym'.",o2scl::exc_esanity);
   }
   return;
 }
 
-two_polytropes::two_polytropes(settings &s) : model(s) {
+two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
 
   se.kpp=0.0;
   se.n0=0.16;
@@ -799,6 +844,7 @@ two_polytropes::two_polytropes(settings &s) : model(s) {
   cns.include_muons=true;
 
   this->n_eos_params=8;
+  this->has_esym=true;
 }
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
@@ -810,7 +856,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
-  low.resize(n_eos_params+nsources);
+  low.resize(n_eos_params+nsd.nsources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -822,7 +868,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   low[6]=0.75;
   low[7]=0.2;
   
-  high.resize(n_eos_params+nsources);
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
   high[1]=-200.0/hc_mev_fm;
@@ -835,7 +881,11 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   high[5]=1.5;
   high[6]=8.0;
   high[7]=2.0;
+
+  cout << "I1: " << names.size() << " " << low.size() << endl;
+  
   model::get_param_info(names,units,low,high);
+  
   return;
 }
 
@@ -1662,7 +1712,7 @@ void quark_star::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_neut::qmc_neut(settings &s) : model(s) {
+qmc_neut::qmc_neut(settings &s, ns_data &n) : model(s,n) {
   rho0=0.16;
 
   // Set sigma for Gaussian distribution
@@ -1849,7 +1899,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_threep::qmc_threep(settings &s) : model(s) {
+qmc_threep::qmc_threep(settings &s, ns_data &n) : model(s,n) {
   rho0=0.16;
   rho_trans=0.16;
 }
@@ -2069,7 +2119,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_fixp::qmc_fixp(settings &s) : model(s) {
+qmc_fixp::qmc_fixp(settings &s, ns_data &n) : model(s,n) {
   nb0=0.16;
   nb_trans=0.16;
 
@@ -2301,7 +2351,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_twolines::qmc_twolines(settings &s) : model(s) {
+qmc_twolines::qmc_twolines(settings &s, ns_data &n) : model(s,n) {
   nb0=0.16;
   nb_trans=0.16;
 }

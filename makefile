@@ -129,7 +129,7 @@ test:
 	mpirun -np 2 bamr -run default.in -model twop -mcmc run1
 
 test_nompi:
-	bamr_nompi -run default.in -model twop -mcmc run1
+	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc run1
 
 # ----------------------------------------------------------------------
 # Internal 
