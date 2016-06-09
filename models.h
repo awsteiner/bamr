@@ -510,12 +510,16 @@ namespace bamr {
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
 
-    /// Reference to settings object
+    /// Settings object
     settings &set;
 
+    /// Mass-radius data
     ns_data &nsd;
+
+    /// Data objects
+    std::vector<model_data> &data_arr;
     
-    model(settings &s, ns_data &n);
+    model(settings &s, ns_data &n, std::vector<model_data> &da);
 
     virtual ~model() {}
 
@@ -677,7 +681,7 @@ namespace bamr {
     //@}
 
     /// Create a model object
-    two_polytropes(settings &s, ns_data &n);
+    two_polytropes(settings &s, ns_data &n, std::vector<model_data> &da);
 
     virtual ~two_polytropes() {}
 
@@ -725,8 +729,10 @@ namespace bamr {
 
   public:
 
-  alt_polytropes(settings &s, ns_data &n) : two_polytropes(s,n) {
+  alt_polytropes(settings &s, ns_data &n, std::vector<model_data> &da) :
+    two_polytropes(s,n,da) {
     }
+    
     
     virtual ~alt_polytropes() {}
 
@@ -789,7 +795,8 @@ namespace bamr {
 
   public:
 
-  fixed_pressure(settings &s, ns_data &n) : two_polytropes(s,n) {
+  fixed_pressure(settings &s, ns_data &n, std::vector<model_data> &da) :
+    two_polytropes(s,n,da) {
     }
     
     virtual ~fixed_pressure() {}
@@ -881,8 +888,10 @@ namespace bamr {
   
   public:
   
-  generic_quarks(settings &s, ns_data &n) : two_polytropes(s,n) {
+  generic_quarks(settings &s, ns_data &n, std::vector<model_data> &da) :
+    two_polytropes(s,n,da) {
     }
+    
     virtual ~generic_quarks() {}
 
     /** \brief Set parameter information [pure virtual]
@@ -940,8 +949,9 @@ namespace bamr {
     
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
-
-  quark_star(settings &s, ns_data &n) : model(s,n) {
+    
+  quark_star(settings &s, ns_data &n, std::vector<model_data> &da) :
+    model(s,n,da) {
     }
 
     virtual ~quark_star() {}
@@ -1015,7 +1025,7 @@ namespace bamr {
 
   public:
   
-    qmc_neut(settings &s, ns_data &n);
+    qmc_neut(settings &s, ns_data &n, std::vector<model_data> &da);
     
     virtual ~qmc_neut();
     
@@ -1113,7 +1123,7 @@ namespace bamr {
 
   public:
   
-    qmc_threep(settings &s, ns_data &n);
+    qmc_threep(settings &s, ns_data &n, std::vector<model_data> &da);
     
     virtual ~qmc_threep();
     
@@ -1191,7 +1201,7 @@ namespace bamr {
 
   public:
   
-    qmc_fixp(settings &s, ns_data &n);
+    qmc_fixp(settings &s, ns_data &n, std::vector<model_data> &da);
     
     virtual ~qmc_fixp();
 
@@ -1246,7 +1256,7 @@ namespace bamr {
 
   public:
   
-    qmc_twolines(settings &s, ns_data &n);
+    qmc_twolines(settings &s, ns_data &n, std::vector<model_data> &da);
     
     virtual ~qmc_twolines();
 

@@ -274,7 +274,8 @@ void bamr_class::fill_line(ubvector &pars, double weight,
     }
     if (set.baryon_density) {
       for(size_t i=0;i<nsd.nsources;i++) {
-	line.push_back(dat.mvsr->interp("gm",pars[nparams-nsd.nsources+i],"nb"));
+	line.push_back(dat.mvsr->interp
+		       ("gm",pars[nparams-nsd.nsources+i],"nb"));
       }
     }
   }
@@ -422,6 +423,7 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Prepare data objects
 
+  std::cout << "H0 " << data_arr.size() << " " << nsd.nsources << std::endl;
   for(size_t i=0;i<data_arr.size();i++) {
     data_arr[i].rad.resize(nsd.nsources);
     data_arr[i].mass.resize(nsd.nsources);
@@ -432,8 +434,7 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Prepare crust
 
-  /*
-    if (set.use_crust) {
+  if (set.use_crust) {
     m.teos.default_low_dens_eos();
     
     // Get the transition density from the crust
@@ -445,10 +446,9 @@ int bamr_class::mcmc_init() {
     m.teos.transition_mode=eos_tov_interp::smooth_trans;
     m.teos.set_transition(pt/1.2,1.2);
     
-    } else {
+  } else {
     m.teos.no_low_dens_eos();
-    }
-  */
+  }
   
   return 0;
 }
@@ -468,31 +468,31 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     mod->remove_params(cl);
   }
   if (sv[1]==((string)"twop")) {
-    std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
+    std::shared_ptr<model> mnew(new two_polytropes(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"altp")) {
-    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
+    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"fixp")) {
-    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
+    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"qstar")) {
-    std::shared_ptr<model> mnew(new quark_star(set,nsd));
+    std::shared_ptr<model> mnew(new quark_star(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"genq")) {
-    std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
+    std::shared_ptr<model> mnew(new generic_quarks(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"qmc")) {
-    std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
+    std::shared_ptr<model> mnew(new qmc_neut(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_threep")) {
-    std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
+    std::shared_ptr<model> mnew(new qmc_threep(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_fixp")) {
-    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
+    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd,data_arr));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_twolines")) {
-    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
+    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd,data_arr));
     mod=mnew;
   } else {
     cerr << "Model unknown." << endl;
@@ -523,10 +523,9 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   model_data dat;
 
   int success;
-  model &modp=*mod;
   o2scl::multi_funct11 mf=std::bind
     (std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
-     (&model::compute_point),&modp,
+     (&model::compute_point),mod,
      std::placeholders::_2,std::ref(scr_out),std::ref(success),
      std::ref(dat));
   o2scl::measure_funct mt=std::bind

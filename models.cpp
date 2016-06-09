@@ -30,7 +30,9 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-model::model(settings &s, ns_data &n) : set(s), nsd(n) {
+model::model(settings &s, ns_data &n, std::vector<model_data> &da) :
+  set(s), nsd(n), data_arr(da) {
+  
   cns.nb_start=0.01;
   ts.verbose=0;
   ts.set_units("1/fm^4","1/fm^4","1/fm^3");
@@ -168,14 +170,16 @@ void model::load_mc(std::ofstream &scr_out) {
 	}
 	if (in_r_max<nsd.source_tables[k].get_grid_x
 	    (nsd.source_tables[k].get_nx()-1)) {
-	  in_r_max=nsd.source_tables[k].get_grid_x(nsd.source_tables[k].get_nx()-1);
+	  in_r_max=nsd.source_tables[k].get_grid_x
+	    (nsd.source_tables[k].get_nx()-1);
 	}
 	if (in_m_min>nsd.source_tables[k].get_grid_y(0)) {
 	  in_m_min=nsd.source_tables[k].get_grid_y(0);
 	}
 	if (in_m_max<nsd.source_tables[k].get_grid_y
 	    (nsd.source_tables[k].get_ny()-1)) {
-	  in_m_max=nsd.source_tables[k].get_grid_y(nsd.source_tables[k].get_ny()-1);
+	  in_m_max=nsd.source_tables[k].get_grid_y
+	    (nsd.source_tables[k].get_ny()-1);
 	}
       }
 
@@ -548,7 +552,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
     dat.mvsr->set_interp_type(o2scl::itp_linear);
-  
+
+    dat.mvsr->add_col_from_table(*dat.eos,"pr","nb","pr");
+    dat.mvsr->set_unit("nb","1/fm^3");
+    
     // Check that maximum mass is large enough,
     mmax=dat.mvsr->max("gm");
     if (mmax<set.min_max_mass) {
@@ -654,10 +661,17 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
+  std::cout << "K9a " << this->n_eos_params << " " << nsd.nsources << std::endl;
+  std::cout << pars.size() << " " << mmax << endl;
+  std::cout << dat.mass.size() << " " << dat.rad.size() << std::endl;
+
   // Compute the masses and radii for each source
   for(size_t i=0;i<nsd.nsources;i++) {
-    dat.mass[i]=mmax*pars[this->n_eos_params-nsd.nsources+i];
+    std::cout << "i: " << i << endl;
+    dat.mass[i]=mmax*pars[this->n_eos_params+i];
+    std::cout << "i: " << i << endl;
     dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
+    std::cout << "i: " << i << endl;
   }
 
   std::cout << "K10." << std::endl;
@@ -833,7 +847,8 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
   return;
 }
 
-two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
+two_polytropes::two_polytropes(settings &s, ns_data &n,
+			       std::vector<model_data> &da) : model(s,n,da) {
 
   se.kpp=0.0;
   se.n0=0.16;
@@ -1712,7 +1727,9 @@ void quark_star::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_neut::qmc_neut(settings &s, ns_data &n) : model(s,n) {
+qmc_neut::qmc_neut(settings &s, ns_data &n, std::vector<model_data> &da) :
+  model(s,n,da) {
+  
   rho0=0.16;
 
   // Set sigma for Gaussian distribution
@@ -1899,7 +1916,9 @@ void qmc_neut::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_threep::qmc_threep(settings &s, ns_data &n) : model(s,n) {
+qmc_threep::qmc_threep(settings &s, ns_data &n, std::vector<model_data> &da) :
+  model(s,n,da) {
+  
   rho0=0.16;
   rho_trans=0.16;
 }
@@ -2119,7 +2138,9 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_fixp::qmc_fixp(settings &s, ns_data &n) : model(s,n) {
+qmc_fixp::qmc_fixp(settings &s, ns_data &n, std::vector<model_data> &da) :
+  model(s,n,da) {
+  
   nb0=0.16;
   nb_trans=0.16;
 
@@ -2351,7 +2372,8 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_twolines::qmc_twolines(settings &s, ns_data &n) : model(s,n) {
+qmc_twolines::qmc_twolines(settings &s, ns_data &n,
+			   std::vector<model_data> &da) : model(s,n,da) {
   nb0=0.16;
   nb_trans=0.16;
 }
