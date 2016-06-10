@@ -287,12 +287,10 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 }
     
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			 int &success) {
-
+			 int &success, model_data &dat) {
+  
   std::cout << "H2." << std::endl;
 
-  model_data &dat=*this->datp;
-  
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
   success=ix_success;
@@ -300,7 +298,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // Compute the EOS first
   if (has_eos) {
     std::cout << "K1." << std::endl;
-    compute_eos(pars,success,scr_out);
+    compute_eos(pars,success,scr_out,dat);
     std::cout << "K2." << std::endl;
     if (success!=ix_success) return;
   }
@@ -646,7 +644,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     cout << "Fixme, mmax not set." << endl;
     exit(-1);
 
-    compute_mr(pars,success,scr_out);
+    compute_mr(pars,success,scr_out,dat);
     if (success!=ix_success) {
       return;
     }
@@ -719,14 +717,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 }
 
 double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			    int &success) {
+			    int &success, model_data &dat) {
       
-  model_data &dat=*this->datp;
-
   std::cout << "H4." << std::endl;
 
   // Compute the M vs R curve and return if it failed
-  compute_star(pars,scr_out,success);
+  compute_star(pars,scr_out,success,dat);
   if (success!=ix_success) {
     return 0.0;
   }
@@ -922,9 +918,7 @@ void two_polytropes::initial_point(ubvector &params) {
 }
 
 void two_polytropes::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   if (params[4]>params[6]) {
@@ -1070,10 +1064,8 @@ void alt_polytropes::initial_point(ubvector &params) {
 }
 
 void alt_polytropes::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out) {
+				 ofstream &scr_out, model_data &dat) {
   
-  model_data &dat=*this->datp;
-
   success=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
@@ -1233,9 +1225,7 @@ void fixed_pressure::initial_point(ubvector &params) {
 }
 
 void fixed_pressure::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
 
@@ -1378,9 +1368,7 @@ void generic_quarks::initial_point(ubvector &params) {
 }
 
 void generic_quarks::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+				 ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
 
@@ -1621,10 +1609,8 @@ void quark_star::initial_point(ubvector &params) {
 }
 
 void quark_star::compute_eos(const ubvector &params, int &success,
-			     std::ofstream &scr_out) {
+			     std::ofstream &scr_out, model_data &dat) {
   
-  model_data &dat=*this->datp;
-
   success=ix_success;
 
   B=params[0];
@@ -1824,9 +1810,7 @@ void qmc_neut::initial_point(ubvector &params) {
 }
 
 void qmc_neut::compute_eos(const ubvector &params, int &success,
-			   ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   
@@ -1995,9 +1979,7 @@ void qmc_threep::initial_point(ubvector &params) {
 }
 
 void qmc_threep::compute_eos(const ubvector &params, int &success,
-			     ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+			     ofstream &scr_out, model_data &dat) {
 
   bool debug=false;
 
@@ -2224,9 +2206,7 @@ void qmc_fixp::initial_point(ubvector &params) {
 }
 
 void qmc_fixp::compute_eos(const ubvector &params, int &success,
-			   ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+			   ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   bool debug=false;
@@ -2449,9 +2429,7 @@ void qmc_twolines::initial_point(ubvector &params) {
 }
 
 void qmc_twolines::compute_eos(const ubvector &params, int &success,
-			       ofstream &scr_out) {
-
-  model_data &dat=*this->datp;
+			       ofstream &scr_out, model_data &dat) {
 
   success=ix_success;
   bool debug=false;

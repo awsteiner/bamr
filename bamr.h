@@ -47,7 +47,7 @@
 #include <o2scl/cli.h>
 #endif
 
-#include "mcmc.h"
+#include "mcmc_bamr.h"
 #include "nstar_cold2.h"
 #include "models.h"
 
@@ -60,7 +60,13 @@
 namespace bamr {
   
   typedef boost::numeric::ublas::vector<double> ubvector;
-
+  
+  typedef std::function<double(size_t,const ubvector &,
+			       model_data &)> point_funct;
+  
+  typedef std::function<int(const ubvector &,double,
+			    size_t,bool,model_data &)> measure_funct;
+  
   /** \brief Statistical analysis of EOS from M and R constraints
 
       \comment
@@ -97,7 +103,8 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class : public bamr::mcmc_bamr<> {
+  class bamr_class :
+    public bamr::mcmc_bamr<point_funct,measure_funct,model_data,ubvector> {
     
   public:
     

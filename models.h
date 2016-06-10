@@ -516,8 +516,6 @@ namespace bamr {
     /// Mass-radius data
     ns_data &nsd;
 
-    model_data *datp;
-    
     model(settings &s, ns_data &n);
 
     virtual ~model() {}
@@ -526,12 +524,12 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &pars, int &success,
-			     std::ofstream &scr_out) {
+			     std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
     virtual void compute_mr(const ubvector &pars, int &success,
-			    std::ofstream &scr_out) {
+			    std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
@@ -542,13 +540,13 @@ namespace bamr {
     /** \brief Tabulate EOS and then use in cold_nstar
      */
     virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			      int &success);
+			      int &success, model_data &dat);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
     virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 int &success);
+				 int &success, model_data &dat);
 
     /** \brief Specify the initial point
      */
@@ -694,7 +692,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -743,7 +741,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -807,7 +805,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -899,7 +897,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -966,7 +964,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -1055,7 +1053,7 @@ namespace bamr {
         \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -1137,7 +1135,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -1225,7 +1223,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -1270,7 +1268,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out);
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */

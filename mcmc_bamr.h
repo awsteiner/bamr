@@ -62,9 +62,9 @@ namespace bamr {
   
   /** \brief A generic MCMC simulation class
    */
-  template<class func_t=o2scl::multi_funct11,
-    class measure_t=o2scl::measure_funct, class vec_t=ubvector>
-    class mcmc_bamr : public o2scl::mcmc_table<func_t,measure_t,vec_t> {
+  template<class func_t, class measure_t, class data_t,
+    class vec_t=ubvector> class mcmc_bamr :
+    public o2scl::mcmc_table<func_t,measure_t,data_t,vec_t> {
     
   protected:
   
@@ -248,7 +248,8 @@ namespace bamr {
   virtual void fill_line(const vec_t &pars, double weight,
 			 std::vector<double> &line) {
     
-    o2scl::mcmc_table<func_t,measure_t,vec_t>::fill_line(pars,weight,line);
+    o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::fill_line
+    (pars,weight,line);
     
     if (debug_line) {
       std::vector<std::string> sc_in, sc_out;

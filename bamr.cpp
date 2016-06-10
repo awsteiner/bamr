@@ -521,14 +521,16 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   mod->initial_point(init);
   
   int success;
-  o2scl::multi_funct11 mf=std::bind
-    (std::mem_fn<double(const ubvector &,ofstream &,int &)>
+  bamr::point_funct mf=std::bind
+    (std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
      (&model::compute_point),mod,
-     std::placeholders::_2,std::ref(scr_out),std::ref(success));
-  o2scl::measure_funct mt=std::bind
-    (std::mem_fn<int(const ubvector &,double,size_t,bool)>
+     std::placeholders::_2,std::ref(scr_out),std::ref(success),
+     std::placeholders::_3);
+  bamr::measure_funct mt=std::bind
+    (std::mem_fn<int(const ubvector &,double,size_t,bool,model_data &)>
      (&mcmc_bamr::add_line),this,std::placeholders::_1,
-     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
+     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,
+     std::placeholders::_5);
   
   std::cout << "H8." << std::endl;
 

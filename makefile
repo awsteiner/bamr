@@ -50,16 +50,16 @@ bamr: bamr.o models.o nstar_cold2.o main.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
 		models.o bamr.o $(LIB) 
 
-main.o: main.cpp mcmc.h
+main.o: main.cpp mcmc_bamr.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
 
-nstar_cold2.o: nstar_cold2.cpp nstar_cold2.h mcmc.h
+nstar_cold2.o: nstar_cold2.cpp nstar_cold2.h mcmc_bamr.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o nstar_cold2.o -c nstar_cold2.cpp
 
-models.o: models.cpp models.h mcmc.h
+models.o: models.cpp models.h mcmc_bamr.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o models.o -c models.cpp
 
-bamr.o: bamr.cpp bamr.h models.o main.o nstar_cold2.o mcmc.h
+bamr.o: bamr.cpp bamr.h models.o main.o nstar_cold2.o mcmc_bamr.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr.o -c bamr.cpp
 
 # ----------------------------------------------------------------------
@@ -94,16 +94,16 @@ bamr_nompi: bamr_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o models_nompi.o \
 		bamr_nompi.o $(LIB) 
 
-main_nompi.o: main.cpp mcmc.h
+main_nompi.o: main.cpp mcmc_bamr.h
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
 
-nstar_cold2_nompi.o: nstar_cold2.cpp nstar_cold2.h mcmc.h
+nstar_cold2_nompi.o: nstar_cold2.cpp nstar_cold2.h mcmc_bamr.h
 	$(CXX) $(ALL_FLAGS) -o nstar_cold2_nompi.o -c nstar_cold2.cpp
 
-models_nompi.o: models.cpp models.h mcmc.h
+models_nompi.o: models.cpp models.h mcmc_bamr.h
 	$(CXX) $(ALL_FLAGS) -o models_nompi.o -c models.cpp
 
-bamr_nompi.o: bamr.cpp bamr.h models_nompi.o mcmc.h \
+bamr_nompi.o: bamr.cpp bamr.h models_nompi.o mcmc_bamr.h \
 		nstar_cold2_nompi.o main_nompi.o
 	$(CXX) $(ALL_FLAGS) -o bamr_nompi.o -c bamr.cpp
 
