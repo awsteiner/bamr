@@ -47,7 +47,7 @@
 #endif
 
 #include "nstar_cold2.h"
-#include "mcmc.h"
+#include "mcmc_bamr.h"
 
 namespace bamr {
   

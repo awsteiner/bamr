@@ -268,23 +268,23 @@ namespace bamr {
 
     return;
   }
-  
+
   /** \brief Desc
    */
-  virtual int add_line(const vec_t &pars, double weight,
-			size_t ix, bool new_meas) {
-
+  virtual int add_line(const ubvector &pars, double weight,
+		       size_t ix, bool new_meas, data_t &dat) {
+      
     n_measurements++;
-    
+      
     if (output_meas) {
       scr_out << "Line: ";
       o2scl::vector_out(scr_out,pars);
       scr_out << " " << weight << " " << ix << " " << new_meas << std::endl;
     }
-    
-    o2scl::mcmc_table<func_t,measure_t,vec_t>::add_line
+      
+    o2scl::mcmc_table<func_t,measure_t,data_t,ubvector>::add_line
     (pars,weight,ix,new_meas);
-
+      
     bool files_updated=false;
     if (this->tab->get_nlines()==max_chain_size) {
       update_files();
@@ -295,7 +295,7 @@ namespace bamr {
       update_files();
       files_updated=true;
     }
-    
+      
     if (this->max_iters>0 && n_measurements==this->max_iters) {
       if (files_updated==false) {
 	update_files();
@@ -315,9 +315,10 @@ namespace bamr {
 	return -1;
       }
     }
-
+      
     return 0;
   }
+    
   
   /// \name Customization functions
   //@{
@@ -359,30 +360,30 @@ namespace bamr {
 
     p_file_update_iters.i=&file_update_iters;
     p_file_update_iters.help=((std::string)"Number of MCMC successes ")+
-      "between file upates (default 40, minimum value 1).";
+    "between file upates (default 40, minimum value 1).";
     this->cl.par_list.insert(std::make_pair("file_update_iters",
 					    &p_file_update_iters));
     
     p_max_chain_size.i=&max_chain_size;
     p_max_chain_size.help=((std::string)"Maximum Markov chain size ")+
-      "(default 10000).";
+    "(default 10000).";
     this->cl.par_list.insert(std::make_pair("max_chain_size",
 					    &p_max_chain_size));
     
     p_max_time.d=&this->max_time;
     p_max_time.help=((std::string)"Maximum run time in seconds ")+
-      "(default 86400 sec or 1 day).";
+    "(default 86400 sec or 1 day).";
     this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
     
     p_max_iters.i=&this->max_iters;
     p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-      "iterations to be less than the specified number (default zero).";
+    "iterations to be less than the specified number (default zero).";
     this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
     
     p_debug_line.b=&debug_line;
     p_debug_line.help=((std::string)
 		       "If true, output each line as its stored ")+
-      "(default false).";
+    "(default false).";
     this->cl.par_list.insert(std::make_pair("debug_line",&p_debug_line));
       
     p_prefix.str=&this->prefix;
@@ -391,42 +392,42 @@ namespace bamr {
     
     p_output_meas.b=&this->output_meas;
     p_output_meas.help=((std::string)"If true, output next point ")+
-      "to the '_scr' file before calling TOV solver (default true).";
+    "to the '_scr' file before calling TOV solver (default true).";
     this->cl.par_list.insert(std::make_pair("output_meas",&p_output_meas));
     
     p_step_fac.d=&this->step_fac;
     p_step_fac.help=((std::string)"MCMC step factor. The step size for ")+
-      "each variable is taken as the difference between the high and low "+
-      "limits divided by this factor (default 10.0). This factor can "+
-      "be increased if the acceptance rate is too small, but care must "+
-      "be taken, e.g. if the conditional probability is multimodal. If "+
-      "this step size is smaller than 1.0, it is reset to 1.0 .";
+    "each variable is taken as the difference between the high and low "+
+    "limits divided by this factor (default 10.0). This factor can "+
+    "be increased if the acceptance rate is too small, but care must "+
+    "be taken, e.g. if the conditional probability is multimodal. If "+
+    "this step size is smaller than 1.0, it is reset to 1.0 .";
     this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
     p_n_warm_up.i=&this->n_warm_up;
     p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
-      "(default 0).";
+    "(default 0).";
     this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
 
     p_max_bad_steps.i=&this->max_bad_steps;
     p_max_bad_steps.help=((std::string)"Maximum number of bad steps ")+
-      "(default 1000).";
+    "(default 1000).";
     this->cl.par_list.insert(std::make_pair("max_bad_steps",&p_max_bad_steps));
 
     p_nwalk.i=&this->nwalk;
     p_nwalk.help=((std::string)"Number of walkers ")+
-      "(default 10).";
+    "(default 10).";
     this->cl.par_list.insert(std::make_pair("nwalk",&p_nwalk));
 
     p_user_seed.i=&this->user_seed;
     p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-      "generator. If zero is given (the default), then mcmc() uses "+
-      "time(0) to generate a random seed.";
+    "generator. If zero is given (the default), then mcmc() uses "+
+    "time(0) to generate a random seed.";
     this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
     
     p_aff_inv.b=&this->aff_inv;
     p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
-      "sampling (default false).";
+    "sampling (default false).";
     this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
     
     return;

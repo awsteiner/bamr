@@ -107,7 +107,7 @@ namespace bamr {
     public bamr::mcmc_bamr<point_funct,measure_funct,model_data,ubvector> {
     
   public:
-    
+
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
