@@ -516,10 +516,9 @@ namespace bamr {
     /// Mass-radius data
     ns_data &nsd;
 
-    /// Data objects
-    std::vector<model_data> &data_arr;
+    model_data *datp;
     
-    model(settings &s, ns_data &n, std::vector<model_data> &da);
+    model(settings &s, ns_data &n);
 
     virtual ~model() {}
 
@@ -527,12 +526,12 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &pars, int &success,
-			     std::ofstream &scr_out, model_data &dat) {
+			     std::ofstream &scr_out) {
       return;
     }
 
     virtual void compute_mr(const ubvector &pars, int &success,
-			    std::ofstream &scr_out, model_data &dat) {
+			    std::ofstream &scr_out) {
       return;
     }
 
@@ -543,13 +542,13 @@ namespace bamr {
     /** \brief Tabulate EOS and then use in cold_nstar
      */
     virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			      int &success, model_data &dat);
+			      int &success);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
     virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 int &success, model_data &dat);
+				 int &success);
 
     /** \brief Specify the initial point
      */
@@ -681,7 +680,7 @@ namespace bamr {
     //@}
 
     /// Create a model object
-    two_polytropes(settings &s, ns_data &n, std::vector<model_data> &da);
+    two_polytropes(settings &s, ns_data &n);
 
     virtual ~two_polytropes() {}
 
@@ -695,7 +694,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -729,10 +728,8 @@ namespace bamr {
 
   public:
 
-  alt_polytropes(settings &s, ns_data &n, std::vector<model_data> &da) :
-    two_polytropes(s,n,da) {
+  alt_polytropes(settings &s, ns_data &n) : two_polytropes(s,n) {
     }
-    
     
     virtual ~alt_polytropes() {}
 
@@ -746,7 +743,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -795,8 +792,7 @@ namespace bamr {
 
   public:
 
-  fixed_pressure(settings &s, ns_data &n, std::vector<model_data> &da) :
-    two_polytropes(s,n,da) {
+  fixed_pressure(settings &s, ns_data &n) : two_polytropes(s,n) {
     }
     
     virtual ~fixed_pressure() {}
@@ -811,7 +807,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -888,8 +884,7 @@ namespace bamr {
   
   public:
   
-  generic_quarks(settings &s, ns_data &n, std::vector<model_data> &da) :
-    two_polytropes(s,n,da) {
+  generic_quarks(settings &s, ns_data &n) : two_polytropes(s,n) {
     }
     
     virtual ~generic_quarks() {}
@@ -904,7 +899,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -950,8 +945,7 @@ namespace bamr {
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
     
-  quark_star(settings &s, ns_data &n, std::vector<model_data> &da) :
-    model(s,n,da) {
+  quark_star(settings &s, ns_data &n) : model(s,n) {
     }
 
     virtual ~quark_star() {}
@@ -972,7 +966,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -1025,7 +1019,7 @@ namespace bamr {
 
   public:
   
-    qmc_neut(settings &s, ns_data &n, std::vector<model_data> &da);
+    qmc_neut(settings &s, ns_data &n);
     
     virtual ~qmc_neut();
     
@@ -1061,7 +1055,7 @@ namespace bamr {
         \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -1123,7 +1117,7 @@ namespace bamr {
 
   public:
   
-    qmc_threep(settings &s, ns_data &n, std::vector<model_data> &da);
+    qmc_threep(settings &s, ns_data &n);
     
     virtual ~qmc_threep();
     
@@ -1143,7 +1137,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -1201,7 +1195,7 @@ namespace bamr {
 
   public:
   
-    qmc_fixp(settings &s, ns_data &n, std::vector<model_data> &da);
+    qmc_fixp(settings &s, ns_data &n);
     
     virtual ~qmc_fixp();
 
@@ -1231,7 +1225,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */
@@ -1256,7 +1250,7 @@ namespace bamr {
 
   public:
   
-    qmc_twolines(settings &s, ns_data &n, std::vector<model_data> &da);
+    qmc_twolines(settings &s, ns_data &n);
     
     virtual ~qmc_twolines();
 
@@ -1276,7 +1270,7 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);  
+			     std::ofstream &scr_out);
 
     /** \brief Function to compute the initial guess
      */

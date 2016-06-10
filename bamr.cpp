@@ -468,31 +468,31 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
     mod->remove_params(cl);
   }
   if (sv[1]==((string)"twop")) {
-    std::shared_ptr<model> mnew(new two_polytropes(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"altp")) {
-    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"fixp")) {
-    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qstar")) {
-    std::shared_ptr<model> mnew(new quark_star(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new quark_star(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"genq")) {
-    std::shared_ptr<model> mnew(new generic_quarks(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc")) {
-    std::shared_ptr<model> mnew(new qmc_neut(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_threep")) {
-    std::shared_ptr<model> mnew(new qmc_threep(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_fixp")) {
-    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
     mod=mnew;
   } else if (sv[1]==((string)"qmc_twolines")) {
-    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd,data_arr));
+    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
     mod=mnew;
   } else {
     cerr << "Model unknown." << endl;
@@ -520,14 +520,11 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   ubvector init(nparams);
   mod->initial_point(init);
   
-  model_data dat;
-
   int success;
   o2scl::multi_funct11 mf=std::bind
-    (std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
+    (std::mem_fn<double(const ubvector &,ofstream &,int &)>
      (&model::compute_point),mod,
-     std::placeholders::_2,std::ref(scr_out),std::ref(success),
-     std::ref(dat));
+     std::placeholders::_2,std::ref(scr_out),std::ref(success));
   o2scl::measure_funct mt=std::bind
     (std::mem_fn<int(const ubvector &,double,size_t,bool)>
      (&mcmc_bamr::add_line),this,std::placeholders::_1,

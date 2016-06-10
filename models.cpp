@@ -30,8 +30,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-model::model(settings &s, ns_data &n, std::vector<model_data> &da) :
-  set(s), nsd(n), data_arr(da) {
+model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   
   cns.nb_start=0.01;
   ts.verbose=0;
@@ -161,9 +160,11 @@ void model::load_mc(std::ofstream &scr_out) {
       // Update input limits
       if (k==0) {
 	in_r_min=nsd.source_tables[k].get_grid_x(0);
-	in_r_max=nsd.source_tables[k].get_grid_x(nsd.source_tables[k].get_nx()-1);
+	in_r_max=nsd.source_tables[k].get_grid_x
+	  (nsd.source_tables[k].get_nx()-1);
 	in_m_min=nsd.source_tables[k].get_grid_y(0);
-	in_m_max=nsd.source_tables[k].get_grid_y(nsd.source_tables[k].get_ny()-1);
+	in_m_max=nsd.source_tables[k].get_grid_y
+	  (nsd.source_tables[k].get_ny()-1);
       } else {
 	if (in_r_min>nsd.source_tables[k].get_grid_x(0)) {
 	  in_r_min=nsd.source_tables[k].get_grid_x(0);
@@ -286,10 +287,12 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 }
     
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			 int &success, model_data &dat) {
+			 int &success) {
 
   std::cout << "H2." << std::endl;
 
+  model_data &dat=*this->datp;
+  
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
   success=ix_success;
@@ -297,7 +300,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // Compute the EOS first
   if (has_eos) {
     std::cout << "K1." << std::endl;
-    compute_eos(pars,success,scr_out,dat);
+    compute_eos(pars,success,scr_out);
     std::cout << "K2." << std::endl;
     if (success!=ix_success) return;
   }
@@ -643,7 +646,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     cout << "Fixme, mmax not set." << endl;
     exit(-1);
 
-    compute_mr(pars,success,scr_out,dat);
+    compute_mr(pars,success,scr_out);
     if (success!=ix_success) {
       return;
     }
@@ -716,12 +719,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 }
 
 double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			    int &success, model_data &dat) {
+			    int &success) {
       
+  model_data &dat=*this->datp;
+
   std::cout << "H4." << std::endl;
 
   // Compute the M vs R curve and return if it failed
-  compute_star(pars,scr_out,success,dat);
+  compute_star(pars,scr_out,success);
   if (success!=ix_success) {
     return 0.0;
   }
@@ -847,8 +852,7 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
   return;
 }
 
-two_polytropes::two_polytropes(settings &s, ns_data &n,
-			       std::vector<model_data> &da) : model(s,n,da) {
+two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
 
   se.kpp=0.0;
   se.n0=0.16;
@@ -918,7 +922,9 @@ void two_polytropes::initial_point(ubvector &params) {
 }
 
 void two_polytropes::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out, model_data &dat) {
+				 ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
   if (params[4]>params[6]) {
@@ -1064,8 +1070,10 @@ void alt_polytropes::initial_point(ubvector &params) {
 }
 
 void alt_polytropes::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out, model_data &dat) {
+				 ofstream &scr_out) {
   
+  model_data &dat=*this->datp;
+
   success=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
@@ -1225,7 +1233,9 @@ void fixed_pressure::initial_point(ubvector &params) {
 }
 
 void fixed_pressure::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out, model_data &dat) {
+				 ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
 
@@ -1368,7 +1378,9 @@ void generic_quarks::initial_point(ubvector &params) {
 }
 
 void generic_quarks::compute_eos(const ubvector &params, int &success,
-				 ofstream &scr_out, model_data &dat) {
+				 ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
 
@@ -1609,8 +1621,10 @@ void quark_star::initial_point(ubvector &params) {
 }
 
 void quark_star::compute_eos(const ubvector &params, int &success,
-			     std::ofstream &scr_out, model_data &dat) {
+			     std::ofstream &scr_out) {
   
+  model_data &dat=*this->datp;
+
   success=ix_success;
 
   B=params[0];
@@ -1727,8 +1741,8 @@ void quark_star::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_neut::qmc_neut(settings &s, ns_data &n, std::vector<model_data> &da) :
-  model(s,n,da) {
+qmc_neut::qmc_neut(settings &s, ns_data &n) :
+  model(s,n) {
   
   rho0=0.16;
 
@@ -1810,7 +1824,9 @@ void qmc_neut::initial_point(ubvector &params) {
 }
 
 void qmc_neut::compute_eos(const ubvector &params, int &success,
-			   ofstream &scr_out, model_data &dat) {
+			   ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
   
@@ -1916,8 +1932,8 @@ void qmc_neut::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_threep::qmc_threep(settings &s, ns_data &n, std::vector<model_data> &da) :
-  model(s,n,da) {
+qmc_threep::qmc_threep(settings &s, ns_data &n) :
+  model(s,n) {
   
   rho0=0.16;
   rho_trans=0.16;
@@ -1979,7 +1995,9 @@ void qmc_threep::initial_point(ubvector &params) {
 }
 
 void qmc_threep::compute_eos(const ubvector &params, int &success,
-			     ofstream &scr_out, model_data &dat) {
+			     ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   bool debug=false;
 
@@ -2138,8 +2156,8 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_fixp::qmc_fixp(settings &s, ns_data &n, std::vector<model_data> &da) :
-  model(s,n,da) {
+qmc_fixp::qmc_fixp(settings &s, ns_data &n) :
+  model(s,n) {
   
   nb0=0.16;
   nb_trans=0.16;
@@ -2206,7 +2224,9 @@ void qmc_fixp::initial_point(ubvector &params) {
 }
 
 void qmc_fixp::compute_eos(const ubvector &params, int &success,
-			   ofstream &scr_out, model_data &dat) {
+			   ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
   bool debug=false;
@@ -2372,8 +2392,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
 
 // --------------------------------------------------------------
 
-qmc_twolines::qmc_twolines(settings &s, ns_data &n,
-			   std::vector<model_data> &da) : model(s,n,da) {
+qmc_twolines::qmc_twolines(settings &s, ns_data &n) :model(s,n) {
   nb0=0.16;
   nb_trans=0.16;
 }
@@ -2430,7 +2449,9 @@ void qmc_twolines::initial_point(ubvector &params) {
 }
 
 void qmc_twolines::compute_eos(const ubvector &params, int &success,
-			       ofstream &scr_out, model_data &dat) {
+			       ofstream &scr_out) {
+
+  model_data &dat=*this->datp;
 
   success=ix_success;
   bool debug=false;
