@@ -163,6 +163,7 @@ namespace bamr {
       e_high=10.0;
       m_low=0.2;
       m_high=3.0;
+      verbose=0;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -191,6 +192,9 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
     //@}
+
+    /// Desc
+    int verbose;
     
     /// \name Other parameters accessed by 'set' and 'get'
     //@{

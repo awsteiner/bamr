@@ -126,10 +126,32 @@ process: process.o process_main.o
 # ----------------------------------------------------------------------
 
 test:
-	mpirun -np 2 bamr -run default.in -model twop -mcmc run1
+	mpirun -np 2 bamr -run default.in -model twop -mcmc
 
 test_nompi:
-	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc run1
+	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc
+
+test3:
+	bamr -set max_time 300 -set verbose 2 -set prefix test_1 \
+		-run default.in -model twop -mcmc
+
+test_all:
+	-bamr -set debug_eos 1 -run default.in -model twop -mcmc
+	-bamr -set debug_star 1 -run default.in -model twop -mcmc
+	bamr -set max_time 300 -set prefix twop_data \
+		-run default.in -model twop -mcmc
+	bamr -set max_time 300 -set prefix twop_nodata -model twop -mcmc
+	bamr -set max_iters 100 -set prefix twop_iters -model twop -mcmc
+	bamr -set max_time 300 -set n_warm_up 100 \
+		-set prefix twop_warmup -model twop -mcmc
+	bamr -set max_time 300 -set compute_cthick 1 -set crust_from_L 1 \
+		-set prefix twop_cthick -model twop -mcmc
+	bamr -set max_time 300 -set compute_cthick 1 -set crust_from_L 1 \
+		-set addl_quants 1 -set prefix twop_addl -model twop -mcmc
+	bamr -set max_time 300 -set prefix fixp_nodata -model fixp -mcmc
+	bamr -set max_time 300 -set prefix qn_nodata -model qmc_neut -mcmc
+	bamr -set max_time 300 -set prefix qt_nodata -model qmc_threep -mcmc
+	bamr -set max_time 300 -set prefix qf_nodata -model qmc_fixp -mcmc
 
 # ----------------------------------------------------------------------
 # Internal 

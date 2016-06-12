@@ -53,13 +53,13 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
     // The central pressure in the maximum mass configuration
     pmax=dat.mvsr->max("pr");
     // The maximum mass
-    mmax=dat.mvsr->get_constant("new_max");
+    mmax=dat.mvsr->get_constant("m_max");
     // The radius of the maximum mass star
-    rmax=dat.mvsr->get_constant("new_r_max");
+    rmax=dat.mvsr->get_constant("r_max");
     
     if (set.baryon_density) {
       // The central baryon density in the maximum mass configuration
-      nbmax=dat.mvsr->get_constant("new_nb_max");
+      nbmax=dat.mvsr->get_constant("nb_max");
     }
 
   } else {
@@ -250,10 +250,14 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
 int bamr_class::mcmc_init() {
 
+  if (this->verbose>=2) {
+    std::cout << "Start bamr_class::mcmc_init()." << std::endl;
+  }
+  
   model &m=*this->mod;
   
   mcmc_bamr::mcmc_init();
-  
+
   /*
     if (set.norm_max) {
     u+=". ";
@@ -463,6 +467,10 @@ int bamr_class::mcmc_init() {
     m.teos.no_low_dens_eos();
   }
   
+  if (this->verbose>=2) {
+    std::cout << "End bamr_class::mcmc_init()." << std::endl;
+  }
+
   return 0;
 }
 
@@ -524,12 +532,9 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   ubvector low;
   ubvector high;
-  // Get names and units from model
+  // Get names and units from model (which also automatically
+  // includes nuisance variables for the data points)
   mod->get_param_info(names,units,low,high);
-  for(size_t i=0;i<nsd.nsources;i++) {
-    names.push_back(((string)"mf_")+nsd.source_names[i]);
-    units.push_back("");
-  }
   set_names_units(names,units);
 
   size_t nparams=names.size();
@@ -547,7 +552,8 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
      (&mcmc_bamr::add_line),this,std::placeholders::_1,
      std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,
      std::placeholders::_5);
-  
+
+  set.verbose=this->verbose;
   this->mcmc(names.size(),init,low,high,mf,mt);
   
   return 0;

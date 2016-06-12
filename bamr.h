@@ -162,9 +162,6 @@ namespace bamr {
     /// Model object
     std::shared_ptr<model> mod;
 
-    /// Data vector
-    std::vector<model_data> data_arr;
-    
     /** \brief Set up the 'cli' object
 
 	This function just adds the four commands and the 'set' parameters

@@ -303,7 +303,10 @@ namespace bamr {
       if (files_updated==false) {
 	update_files();
       }
-      std::cout << "H1" << std::endl;
+      if (this->verbose>=1) {
+	cout << "mcmc: Stopping because n_measurements, " << n_measurements
+	<< " is equal to max_iters." << endl;
+      }
       return this->mcmc_done;
     } else {
       // Determine time elapsed
@@ -316,8 +319,9 @@ namespace bamr {
 	if (files_updated==false) {
 	  update_files();
 	}
-	std::cout << "H2" << elapsed << " " << " " << mpi_start_time << " "
-		  << max_time << std::endl;
+	if (this->verbose>=1) {
+	  cout << "mcmc: Stopping because elapsed > max_time." << endl;
+	}
 	return this->mcmc_done;
       }
     }
@@ -447,7 +451,11 @@ namespace bamr {
   /** \brief User-defined initialization function
    */
   virtual int mcmc_init() {
-
+    
+    if (this->verbose>=2) {
+      std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
+    }
+    
     o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::mcmc_init();
     
 #ifndef BAMR_NO_MPI
@@ -608,6 +616,10 @@ namespace bamr {
     this->scr_out << "First point: ";
     o2scl::vector_out(this->scr_out,this->current[0],true);
 
+    if (this->verbose>=2) {
+      std::cout << "End mcmc_bamr::mcmc_init()." << std::endl;
+    }
+    
     return 0;
   };
 

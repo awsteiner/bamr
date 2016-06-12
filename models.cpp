@@ -284,6 +284,10 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
     
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &success, model_data &dat) {
+
+  if (set.verbose>=2) {
+    cout << "Start model::compute_star()." << endl;
+  }
   
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
@@ -291,8 +295,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   
   // Compute the EOS first
   if (has_eos) {
+    if (set.verbose>=2) {
+      cout << "Going to model::compute_eos()." << endl;
+    }
     compute_eos(pars,success,scr_out,dat);
     if (success!=ix_success) return;
+    if (set.verbose>=2) {
+      cout << "Back from model::compute_eos()." << endl;
+    }
   }
   
   if (has_eos) {
@@ -533,8 +543,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_col_from_table(*dat.eos,"pr","nb","pr");
     dat.mvsr->set_unit("nb","1/fm^3");
     
-    // Check that maximum mass is large enough,
+    // Check that maximum mass is large enough. Note that the
+    // mass-radius curve is not differentiable near M_{max}, so the
+    // best way to increase the accuracy here is to make
+    // set.mvsr_pr_inc smaller.
     mmax=dat.mvsr->max("gm");
+    dat.mvsr->add_constant("m_max",mmax);
     if (mmax<set.min_max_mass) {
       scr_out << "Maximum mass too small: " << mmax << " < "
 	      << set.min_max_mass << "." << std::endl;
@@ -557,43 +571,21 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Check the radius of the maximum mass star
     size_t ix_max=dat.mvsr->lookup("gm",mmax);
-    if (dat.mvsr->get("r",ix_max)>1.0e4) {
+    double r_max=dat.mvsr->get("r",ix_max);
+    dat.mvsr->add_constant("r_max",r_max);
+    if (r_max>1.0e4) {
       scr_out << "TOV convergence problem: " << std::endl;
       success=ix_tov_conv;
       return;
     }
-
-    dat.mvsr->add_constant
-      ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
-       (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
     
-    dat.mvsr->add_constant
-      ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
-       (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
-
     if (set.baryon_density) {
-      
-      double nb1=dat.mvsr->get("nb",dat.mvsr->lookup("gm",mmax));
-      if (nb1>0.01) {
-	double nb2=o2scl::vector_max_quad_loc<std::vector<double>,double>
-	  (dat.mvsr->get_nlines(),(*dat.mvsr)["nb"],(*dat.mvsr)["gm"]);
-	dat.mvsr->add_constant("new_nb_max",nb2);
-	if (nb2>5.0) {
-	  scr_out << "nb_check: " << nb2 << " " << nb1 << std::endl;
-	  for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
-	    scr_out << i << " " << dat.mvsr->get("gm",i) << " "
-		    << dat.mvsr->get("r",i) << " " 
-		    << dat.mvsr->get("nb",i) << std::endl;
-	  }
-	}
-      } else {
-	dat.mvsr->add_constant("new_nb_max",nb1);
-      }
+      double nb_max=dat.mvsr->get("nb",ix_max);
+      dat.mvsr->add_constant("nb_max",nb_max);
     }
-      
+    
     // Remove table entries with pressures above the maximum pressure
-    size_t row=dat.mvsr->lookup("gm",dat.mvsr->max("gm"));
-    dat.mvsr->set_nlines(row+1);
+    dat.mvsr->set_nlines(ix_max+1);
   
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
@@ -602,12 +594,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_table;
       return;
     }
-
-    } else {
-
+    
+  } else {
+    
     cout << "Fixme, mmax not set." << endl;
     exit(-1);
-
+    
     compute_mr(pars,success,scr_out,dat);
     if (success!=ix_success) {
       return;
@@ -687,12 +679,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant("r_nb5",dat.mvsr->interp("ed",ed5,"r"));
   }
 
+  if (set.verbose>=2) {
+    cout << "End model::compute_star()." << endl;
+  }
+
   return;
 }
 
 double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			    int &success, model_data &dat) {
-      
+
+  if (set.verbose>=2) {
+    cout << "Start model::compute_point()." << endl;
+  }
+
   // Compute the M vs R curve and return if it failed
   compute_star(pars,scr_out,success,dat);
   if (success!=ix_success) {
@@ -791,6 +791,10 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
+  if (set.verbose>=2) {
+    cout << "End model::compute_point()." << endl;
+  }
+
   return ret;
 }
 
@@ -830,6 +834,7 @@ two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
 
   this->n_eos_params=8;
   this->has_esym=true;
+  
 }
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
@@ -1172,11 +1177,16 @@ void fixed_pressure::get_param_info(std::vector<std::string> &names,
   // values are relatively rare.
   high[7]=2.5;
 
-  names={"comp","kprime","esym","gamma","pres1","pres2","pres3",
-	  "pres4"};
+  names[4]="pres1";
+  names[5]="pres2";
+  names[6]="pres3";
+  names[7]="pres4";
   
-  units={"1/fm","1/fm","1/fm","","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
-  
+  units[4]="1/fm^4";
+  units[5]="1/fm^4";
+  units[6]="1/fm^4";
+  units[7]="1/fm^4";
+
   return;
 }
 
