@@ -821,6 +821,8 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
+  std::cout << "H5bb." << std::endl;
+  
   return ret;
 }
 

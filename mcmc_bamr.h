@@ -246,11 +246,15 @@ namespace bamr {
   /** \brief Desc
    */
   virtual void fill_line(const vec_t &pars, double weight,
-			 std::vector<double> &line) {
+			 std::vector<double> &line, data_t &dat) {
+
+    std::cout << "fl1" << std::endl;
     
     o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::fill_line
-    (pars,weight,line);
+    (pars,weight,line,dat);
     
+    std::cout << "fl2" << std::endl;
+
     if (debug_line) {
       std::vector<std::string> sc_in, sc_out;
       for(size_t k=0;k<line.size();k++) {
@@ -266,6 +270,8 @@ namespace bamr {
       std::cin >> ch;
     }
 
+    std::cout << "fl3" << std::endl;
+
     return;
   }
 
@@ -273,7 +279,9 @@ namespace bamr {
    */
   virtual int add_line(const ubvector &pars, double weight,
 		       size_t ix, bool new_meas, data_t &dat) {
-      
+
+    std::cout << "al1" << std::endl;
+    
     n_measurements++;
       
     if (output_meas) {
@@ -282,9 +290,13 @@ namespace bamr {
       scr_out << " " << weight << " " << ix << " " << new_meas << std::endl;
     }
       
+    std::cout << "al2" << std::endl;
+
     o2scl::mcmc_table<func_t,measure_t,data_t,ubvector>::add_line
-    (pars,weight,ix,new_meas);
+    (pars,weight,ix,new_meas,dat);
       
+    std::cout << "al3" << std::endl;
+
     bool files_updated=false;
     if (this->tab->get_nlines()==max_chain_size) {
       update_files();
@@ -296,6 +308,8 @@ namespace bamr {
       files_updated=true;
     }
       
+    std::cout << "al4" << std::endl;
+
     if (this->max_iters>0 && n_measurements==this->max_iters) {
       if (files_updated==false) {
 	update_files();
@@ -315,6 +329,8 @@ namespace bamr {
 	return -1;
       }
     }
+
+    std::cout << "al5" << std::endl;
       
     return 0;
   }

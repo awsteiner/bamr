@@ -157,16 +157,20 @@ void bamr_class::table_names_units(std::string &s, std::string &u) {
 }
 
 void bamr_class::fill_line(ubvector &pars, double weight, 
-			   std::vector<double> &line) {
+			   std::vector<double> &line, model_data &dat) {
   
-  mcmc_bamr::fill_line(pars,weight,line);
-
+  std::cout << "bfl1" << std::endl;
+  
+  mcmc_bamr::fill_line(pars,weight,line,dat);
+  
+  std::cout << "bfl2" << std::endl;
+  
   model &m=*this->mod;
-
-  model_data dat;
-
+  
   size_t nparams=this->param_names.size();
   
+  std::cout << "bfl3" << std::endl;
+
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
   if (m.has_eos) {

@@ -125,7 +125,7 @@ namespace bamr {
 	current Monte Carlo point
     */
     virtual void fill_line(ubvector &pars, double weight, 
-			   std::vector<double> &line);
+			   std::vector<double> &line, model_data &dat);
 
     /** \brief Write initial data to HDF file
      */
