@@ -146,6 +146,8 @@ namespace bamr {
   
   /// \name Command-line settings
   //@{
+  /** \brief Desc (default 0)
+   */
   int max_iters;
   
   /** \brief Time in seconds (default is 86400 seconds or 1 day)
@@ -195,6 +197,7 @@ namespace bamr {
   o2scl::cli::parameter_bool p_debug_line;
   o2scl::cli::parameter_bool p_output_meas;
   o2scl::cli::parameter_string p_prefix;
+  o2scl::cli::parameter_int p_verbose;
   //@}
   
   /// \name Command-line settings
@@ -248,13 +251,9 @@ namespace bamr {
   virtual void fill_line(const vec_t &pars, double weight,
 			 std::vector<double> &line, data_t &dat) {
 
-    std::cout << "fl1" << std::endl;
-    
     o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::fill_line
     (pars,weight,line,dat);
     
-    std::cout << "fl2" << std::endl;
-
     if (debug_line) {
       std::vector<std::string> sc_in, sc_out;
       for(size_t k=0;k<line.size();k++) {
@@ -270,8 +269,6 @@ namespace bamr {
       std::cin >> ch;
     }
 
-    std::cout << "fl3" << std::endl;
-
     return;
   }
 
@@ -280,8 +277,6 @@ namespace bamr {
   virtual int add_line(const ubvector &pars, double weight,
 		       size_t ix, bool new_meas, data_t &dat) {
 
-    std::cout << "al1" << std::endl;
-    
     n_measurements++;
       
     if (output_meas) {
@@ -289,14 +284,10 @@ namespace bamr {
       o2scl::vector_out(scr_out,pars);
       scr_out << " " << weight << " " << ix << " " << new_meas << std::endl;
     }
-      
-    std::cout << "al2" << std::endl;
-
+    
     o2scl::mcmc_table<func_t,measure_t,data_t,ubvector>::add_line
     (pars,weight,ix,new_meas,dat);
       
-    std::cout << "al3" << std::endl;
-
     bool files_updated=false;
     if (this->tab->get_nlines()==max_chain_size) {
       update_files();
@@ -308,13 +299,12 @@ namespace bamr {
       files_updated=true;
     }
       
-    std::cout << "al4" << std::endl;
-
     if (this->max_iters>0 && n_measurements==this->max_iters) {
       if (files_updated==false) {
 	update_files();
       }
-      return -1;
+      std::cout << "H1" << std::endl;
+      return this->mcmc_done;
     } else {
       // Determine time elapsed
 #ifndef BAMR_NO_MPI
@@ -326,12 +316,12 @@ namespace bamr {
 	if (files_updated==false) {
 	  update_files();
 	}
-	return -1;
+	std::cout << "H2" << elapsed << " " << " " << mpi_start_time << " "
+		  << max_time << std::endl;
+	return this->mcmc_done;
       }
     }
 
-    std::cout << "al5" << std::endl;
-      
     return 0;
   }
     
@@ -425,6 +415,11 @@ namespace bamr {
     "(default 0).";
     this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
 
+    p_verbose.i=&this->verbose;
+    p_verbose.help=((std::string)"Verbosity parameter ")+
+    "(default 0).";
+    this->cl.par_list.insert(std::make_pair("verbose",&p_verbose));
+
     p_max_bad_steps.i=&this->max_bad_steps;
     p_max_bad_steps.help=((std::string)"Maximum number of bad steps ")+
     "(default 1000).";
@@ -453,6 +448,14 @@ namespace bamr {
    */
   virtual int mcmc_init() {
 
+    o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::mcmc_init();
+    
+#ifndef BAMR_NO_MPI
+    mpi_start_time=MPI_Wtime();
+#else
+    mpi_start_time=time(0);
+#endif
+    
     n_measurements=0;
     n_chains=0;
 
@@ -891,6 +894,7 @@ namespace bamr {
     // Initial values for MPI paramers
     mpi_nprocs=1;
     mpi_rank=0;
+    mpi_start_time=0.0;
 
     // Parameters
     prefix="mcmc";
@@ -898,6 +902,7 @@ namespace bamr {
 
     // Default to 24 hours
     max_time=3.6e3*24;
+    max_iters=0;
 
     // True if scr_out has been opened
     file_opened=false;

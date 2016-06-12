@@ -262,8 +262,6 @@ void model::load_mc(std::ofstream &scr_out) {
   
 int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 
-  cout << "J1." << endl;
-  
   if (sv.size()<5) {
     std::cout << "Not enough arguments given to 'add-data'." << std::endl;
     return o2scl::exc_efailed;
@@ -280,8 +278,6 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
   }
       
   nsources++;
-      
-  cout << "J2 " << nsources << endl;
 
   return 0;
 }
@@ -289,22 +285,17 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &success, model_data &dat) {
   
-  std::cout << "H2." << std::endl;
-
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
   success=ix_success;
   
   // Compute the EOS first
   if (has_eos) {
-    std::cout << "K1." << std::endl;
     compute_eos(pars,success,scr_out,dat);
-    std::cout << "K2." << std::endl;
     if (success!=ix_success) return;
   }
   
   if (has_eos) {
-    std::cout << "K2b." << std::endl;
     // Ensure we're using linear interpolation
     dat.eos->set_interp_type(o2scl::itp_linear);
 
@@ -328,8 +319,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  std::cout << "K3." << std::endl;
-  
   // If requested, compute the baryon density automatically
   if (has_eos && set.baryon_density && !dat.eos->is_column("nb")) {
     
@@ -366,8 +355,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute integral of 'igb' relative to ed='e1', called 'iigb'
 
     dat.eos->new_column("iigb");
-    
-    std::cout << "K4." << std::endl;
     
     for(size_t i=0;i<dat.eos->get_nlines();i++) {
       if (nb_e1<=dat.eos->get("ed",i)) {
@@ -443,9 +430,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   double mmax=0.0;
   
-  std::cout << "K5 " << set.baryon_density << " "
-	    << set.inc_baryon_mass << std::endl;
-  
   if (has_eos) {
     
     // Perform any additional necessary EOS preparations
@@ -456,7 +440,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Read the EOS into the tov_eos object.
     table_units<> &teos_temp=*(dat.eos);
-    teos_temp.summary(&cout);
     if (set.baryon_density && set.inc_baryon_mass) {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
@@ -468,8 +451,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       teos.read_table(teos_temp,"ed","pr");
     }
 
-    std::cout << "K5b." << std::endl;
-    
     if (set.use_crust) {
     
       double ed_last=0.0;
@@ -477,7 +458,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
 	double ed, nb;
-	std::cout << "K5c " << pr << std::endl;
 	teos.ed_nb_from_pr(pr,ed,nb);
 	if (ed_last>1.0e-20 && ed<ed_last) {
 	  scr_out << "Stability problem near crust-core transition."
@@ -505,8 +485,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // End of 'if (set.use_crust)'
     }
-
-    std::cout << "K6." << std::endl;
 
     // If necessary, output debug information (We want to make sure this
     // is after tov_eos::read_table() so that we can debug the
@@ -541,8 +519,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
-    std::cout << "K7." << std::endl;
-    
     // Solve for M vs. R curve
     ts.princ=set.mvsr_pr_inc;
     ts.set_table(dat.mvsr);
@@ -579,8 +555,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    std::cout << "K8." << std::endl;
-
     // Check the radius of the maximum mass star
     size_t ix_max=dat.mvsr->lookup("gm",mmax);
     if (dat.mvsr->get("r",ix_max)>1.0e4) {
@@ -589,8 +563,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    std::cout << "K8a." << std::endl;
-
     dat.mvsr->add_constant
       ("new_max",o2scl::vector_max_quad<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
@@ -598,8 +570,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant
       ("new_r_max",o2scl::vector_max_quad_loc<std::vector<double>,double>
        (dat.mvsr->get_nlines(),(*dat.mvsr)["r"],(*dat.mvsr)["gm"]));
-
-    std::cout << "K8b." << std::endl;
 
     if (set.baryon_density) {
       
@@ -621,14 +591,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
       
-    std::cout << "K8c." << std::endl;
-
     // Remove table entries with pressures above the maximum pressure
     size_t row=dat.mvsr->lookup("gm",dat.mvsr->max("gm"));
     dat.mvsr->set_nlines(row+1);
   
-    std::cout << "K8d." << std::endl;
-
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
     if (dat.mvsr->get_nlines()<10) {
@@ -636,8 +602,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_table;
       return;
     }
-
-    std::cout << "K9." << std::endl;
 
     } else {
 
@@ -662,20 +626,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
-  std::cout << "K9a " << this->n_eos_params << " " << nsd.nsources << std::endl;
-  std::cout << pars.size() << " " << mmax << endl;
-  std::cout << dat.mass.size() << " " << dat.rad.size() << std::endl;
-
   // Compute the masses and radii for each source
   for(size_t i=0;i<nsd.nsources;i++) {
-    std::cout << "i: " << i << endl;
     dat.mass[i]=mmax*pars[this->n_eos_params+i];
-    std::cout << "i: " << i << endl;
     dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
-    std::cout << "i: " << i << endl;
   }
-
-  std::cout << "K10." << std::endl;
 
   // Check causality
   if (has_eos) {
@@ -697,7 +652,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	return;
       }
     }
-
+    
   } else {
 
     for(size_t i=0;i<nsd.nsources;i++) {
@@ -710,8 +665,27 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
   }
+  
+  // -----------------------------------------------
+  // Compute M, R for fixed central baryon densities
 
-  std::cout << "H3." << std::endl;
+  if (has_eos && set.baryon_density) {
+    double ed1=dat.eos->interp("nb",0.16,"ed");
+    dat.mvsr->add_constant("gm_nb1",dat.mvsr->interp("ed",ed1,"gm"));
+    dat.mvsr->add_constant("r_nb1",dat.mvsr->interp("ed",ed1,"r"));
+    double ed2=dat.eos->interp("nb",0.32,"ed");
+    dat.mvsr->add_constant("gm_nb2",dat.mvsr->interp("ed",ed2,"gm"));
+    dat.mvsr->add_constant("r_nb2",dat.mvsr->interp("ed",ed2,"r"));
+    double ed3=dat.eos->interp("nb",0.48,"ed");
+    dat.mvsr->add_constant("gm_nb3",dat.mvsr->interp("ed",ed3,"gm"));
+    dat.mvsr->add_constant("r_nb3",dat.mvsr->interp("ed",ed3,"r"));
+    double ed4=dat.eos->interp("nb",0.64,"ed");
+    dat.mvsr->add_constant("gm_nb4",dat.mvsr->interp("ed",ed4,"gm"));
+    dat.mvsr->add_constant("r_nb4",dat.mvsr->interp("ed",ed4,"r"));
+    double ed5=dat.eos->interp("nb",0.80,"ed");
+    dat.mvsr->add_constant("gm_nb5",dat.mvsr->interp("ed",ed5,"gm"));
+    dat.mvsr->add_constant("r_nb5",dat.mvsr->interp("ed",ed5,"r"));
+  }
 
   return;
 }
@@ -719,16 +693,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			    int &success, model_data &dat) {
       
-  std::cout << "H4." << std::endl;
-
   // Compute the M vs R curve and return if it failed
   compute_star(pars,scr_out,success,dat);
   if (success!=ix_success) {
     return 0.0;
   }
       
-  std::cout << "H5." << std::endl;
-
   bool mr_fail=false;
   for(size_t i=0;i<nsd.nsources;i++) {
     if (dat.mass[i]<in_m_min || dat.mass[i]>in_m_max || 
@@ -821,8 +791,6 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
-  std::cout << "H5bb." << std::endl;
-  
   return ret;
 }
 
@@ -899,8 +867,6 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   high[6]=8.0;
   high[7]=2.0;
 
-  cout << "I1: " << names.size() << " " << low.size() << endl;
-  
   model::get_param_info(names,units,low,high);
   
   return;

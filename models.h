@@ -568,8 +568,6 @@ namespace bamr {
 	low[i+n_eos_params]=0.0;
 	high[i+n_eos_params]=1.0;
       }
-      std::cout << "I2: " << n_eos_params << " " << nsd.nsources
-		<< " " << names.size() << " " << low.size() << std::endl;
       return;
     }
 

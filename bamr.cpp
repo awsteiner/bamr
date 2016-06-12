@@ -33,144 +33,15 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-void bamr_class::table_names_units(std::string &s, std::string &u) {
-
-  model &m=*this->mod;
-  
-  mcmc_bamr::table_names_units(s,u);
-
-  /*
-    if (set.norm_max) {
-    u+=". ";
-    } else {
-    u+=((std::string)"1/km^")+std::to_string(nsd.nsources)+"/Msun^"+
-    std::to_string(nsd.nsources)+" ";
-    }
-  */
-  
-  for(size_t i=0;i<nsd.nsources;i++) {
-    s+=((std::string)"wgt_")+nsd.source_names[i]+" ";
-    if (set.norm_max) {
-      u+=". ";
-    } else {
-      u+="1/km/Msun ";
-    }
-  }
-  
-  // It is important here that all of these columns which store values
-  // over a grid are either always positive or always negative,
-  // because the code reports zero in the fill_line() function for
-  // values beyond the end of the EOS or the M-R curve. 
-  for(size_t i=0;i<nsd.nsources;i++) {
-    s+=((std::string)"Rns_")+nsd.source_names[i]+" ";
-    u+="km ";
-  }
-
-  for(size_t i=0;i<nsd.nsources;i++) {
-    s+=((std::string)"Mns_")+nsd.source_names[i]+" ";
-    u+="km ";
-  }
-  
-  if (m.has_eos) {
-    for(int i=0;i<set.grid_size;i++) {
-      s+=((string)"P_")+std::to_string(i)+" ";
-      u+="1/fm^4 ";
-    }
-  }
-  
-  for(int i=0;i<set.grid_size;i++) {
-    s+=((string)"R_")+std::to_string(i)+" ";
-    u+="km ";
-    if (m.has_eos) {
-      s+=((string)"PM_")+std::to_string(i)+" ";
-      u+="1/fm^4 ";
-    }
-  }
-  if (m.has_eos) {
-    if (set.baryon_density) {
-      for(int i=0;i<set.grid_size;i++) {
-	s+=((string)"Pnb_")+std::to_string(i)+" ";
-	u+="1/fm^4 ";
-	s+=((string)"EoA_")+std::to_string(i)+" ";
-	u+="MeV ";
-      }
-    }
-    if (m.has_esym) {
-      s+="S L ";
-      u+="MeV MeV ";
-    }
-    s+="R_max M_max P_max e_max ";
-    u+="km Msun 1/fm^4 1/fm^4 ";
-    if (set.baryon_density) {
-      s+="nb_max ";
-      u+="1/fm^3 ";
-    }
-    for(size_t i=0;i<nsd.nsources;i++) {
-      s+=((string)"ce_")+nsd.source_names[i]+" ";
-      u+="1/fm^4 ";
-    }
-    if (set.baryon_density) {
-      for(size_t i=0;i<nsd.nsources;i++) {
-	s+=((string)"cnb_")+nsd.source_names[i]+" ";
-	u+="1/fm^3 ";
-      }
-      s+="gm_nb1 r_nb1 ";
-      u+="Msun km ";
-      s+="gm_nb2 r_nb2 ";
-      u+="Msun km ";
-      s+="gm_nb3 r_nb3 ";
-      u+="Msun km ";
-      s+="gm_nb4 r_nb4 ";
-      u+="Msun km ";
-      s+="gm_nb5 r_nb5 ";
-      u+="Msun km ";
-    }
-    if (set.compute_cthick) {
-      if (set.nt_corr) {
-        s+="nt prt ";
-        u+="1/fm^3 1/fm^4 ";
-      }
-      for(int i=0;i<set.grid_size;i++) {
-        s+=((string)"ct06_")+std::to_string(i)+" ";
-        u+="km ";
-        s+=((string)"ct08_")+std::to_string(i)+" ";
-        u+="km ";
-        s+=((string)"ct10_")+std::to_string(i)+" ";
-        u+="km ";
-      }
-    }
-  }
-  if (set.addl_quants) {
-    for(int i=0;i<set.grid_size;i++) {
-      s+=((string)"Mb_")+std::to_string(i)+" ";
-      u+="Msun ";
-      s+=((string)"be_")+std::to_string(i)+" ";
-      u+="Msun ";
-      s+=((string)"I_")+std::to_string(i)+" ";
-      u+="Msun*km^2 ";
-      s+=((string)"lambda_")+std::to_string(i)+" ";
-      u+=". ";
-    }
-  }
-
-  return;
-}
-
-void bamr_class::fill_line(ubvector &pars, double weight, 
+void bamr_class::fill_line(const ubvector &pars, double weight, 
 			   std::vector<double> &line, model_data &dat) {
   
-  std::cout << "bfl1" << std::endl;
-  
   mcmc_bamr::fill_line(pars,weight,line,dat);
-  
-  std::cout << "bfl2" << std::endl;
   
   model &m=*this->mod;
   
   size_t nparams=this->param_names.size();
   
-  std::cout << "bfl3" << std::endl;
-
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
   if (m.has_eos) {
@@ -379,12 +250,152 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
 int bamr_class::mcmc_init() {
 
-  std::cout << "Hx." << std::endl;
-  mcmc_bamr::mcmc_init();
-  std::cout << "Hy." << std::endl;
-  
   model &m=*this->mod;
   
+  mcmc_bamr::mcmc_init();
+  
+  /*
+    if (set.norm_max) {
+    u+=". ";
+    } else {
+    u+=((std::string)"1/km^")+std::to_string(nsd.nsources)+"/Msun^"+
+    std::to_string(nsd.nsources)+" ";
+    }
+  */
+  
+  for(size_t i=0;i<nsd.nsources;i++) {
+    this->tab->new_column(((std::string)"wgt_")+nsd.source_names[i]);
+    if (!set.norm_max) {
+      this->tab->set_unit(((std::string)"wgt_")+nsd.source_names[i],
+			  "1/km/Msun");
+    }
+  }
+  
+  // It is important here that all of these columns which store values
+  // over a grid are either always positive or always negative,
+  // because the code reports zero in the fill_line() function for
+  // values beyond the end of the EOS or the M-R curve. 
+  for(size_t i=0;i<nsd.nsources;i++) {
+    this->tab->new_column(((std::string)"Rns_")+nsd.source_names[i]);
+    this->tab->set_unit(((std::string)"Rns_")+nsd.source_names[i],
+			"km");
+  }
+  
+  for(size_t i=0;i<nsd.nsources;i++) {
+    this->tab->new_column(((std::string)"Mns_")+nsd.source_names[i]);
+    this->tab->set_unit(((std::string)"Rns_")+nsd.source_names[i],
+			"Msun");
+  }
+  
+  if (m.has_eos) {
+    for(int i=0;i<set.grid_size;i++) {
+      this->tab->new_column(((string)"P_")+std::to_string(i));
+      this->tab->set_unit(((string)"P_")+std::to_string(i),
+			  "1/fm^4");
+    }
+  }
+  
+  for(int i=0;i<set.grid_size;i++) {
+    this->tab->new_column(((string)"R_")+std::to_string(i));
+    this->tab->set_unit(((string)"R_")+std::to_string(i),
+			"km");
+    if (m.has_eos) {
+      this->tab->new_column(((string)"PM_")+std::to_string(i));
+      this->tab->set_unit(((string)"PM_")+std::to_string(i),
+			  "1/fm^4");
+    }
+  }
+  if (m.has_eos) {
+    if (set.baryon_density) {
+      for(int i=0;i<set.grid_size;i++) {
+	this->tab->new_column(((string)"Pnb_")+std::to_string(i));
+	this->tab->set_unit(((string)"Pnb_")+std::to_string(i),
+			    "1/fm^4");
+	this->tab->new_column(((string)"EoA_")+std::to_string(i));
+	this->tab->set_unit(((string)"EoA_")+std::to_string(i),
+			    "MeV");
+      }
+    }
+    if (m.has_esym) {
+      this->tab->new_column("S");
+      this->tab->set_unit("S","1/fm");
+      this->tab->new_column("L");
+      this->tab->set_unit("L","1/fm");
+    }
+    this->tab->new_column("R_max");
+    this->tab->set_unit("R_max","km");
+    this->tab->new_column("M_max");
+    this->tab->set_unit("M_max","Msun");
+    this->tab->new_column("P_max");
+    this->tab->set_unit("P_max","1/fm^4");
+    this->tab->new_column("e_max");
+    this->tab->set_unit("e_max","1/fm^4");
+    if (set.baryon_density) {
+      this->tab->new_column("nb_max");
+      this->tab->set_unit("nb_max","1/fm^3");
+    }
+    for(size_t i=0;i<nsd.nsources;i++) {
+      this->tab->new_column(((string)"ce_")+nsd.source_names[i]);
+      this->tab->set_unit(((string)"ce_")+nsd.source_names[i],
+			  "1/fm^4");
+    }
+    if (set.baryon_density) {
+      for(size_t i=0;i<nsd.nsources;i++) {
+	this->tab->new_column(((string)"cnb_")+nsd.source_names[i]);
+	this->tab->set_unit(((string)"cnb_")+nsd.source_names[i],
+			      "1/fm^3");
+      }
+      this->tab->new_column("gm_nb1");
+      this->tab->set_unit("gm_nb1","Msun");
+      this->tab->new_column("r_nb1");
+      this->tab->set_unit("r_nb1","km");
+      this->tab->new_column("gm_nb2");
+      this->tab->set_unit("gm_nb2","Msun");
+      this->tab->new_column("r_nb2");
+      this->tab->set_unit("r_nb2","km");
+      this->tab->new_column("gm_nb3");
+      this->tab->set_unit("gm_nb3","Msun");
+      this->tab->new_column("r_nb3");
+      this->tab->set_unit("r_nb3","km");
+      this->tab->new_column("gm_nb4");
+      this->tab->set_unit("gm_nb4","Msun");
+      this->tab->new_column("r_nb4");
+      this->tab->set_unit("r_nb4","km");
+      this->tab->new_column("gm_nb5");
+      this->tab->set_unit("gm_nb5","Msun");
+      this->tab->new_column("r_nb5");
+      this->tab->set_unit("r_nb5","km");
+    }
+    if (set.compute_cthick) {
+      if (set.nt_corr) {
+        this->tab->new_column("nt");
+        this->tab->set_unit("nt","1/fm^3");
+        this->tab->new_column("prt");
+        this->tab->set_unit("prt","1/fm^4");
+      }
+      for(int i=0;i<set.grid_size;i++) {
+        this->tab->new_column(((string)"ct06_")+std::to_string(i));
+        this->tab->set_unit(((string)"ct06_")+std::to_string(i),"km");
+        this->tab->new_column(((string)"ct08_")+std::to_string(i));
+        this->tab->set_unit(((string)"ct08_")+std::to_string(i),"km");
+        this->tab->new_column(((string)"ct10_")+std::to_string(i));
+        this->tab->set_unit(((string)"ct10_")+std::to_string(i),"km");
+      }
+    }
+  }
+  if (set.addl_quants) {
+    for(int i=0;i<set.grid_size;i++) {
+      this->tab->new_column(((string)"Mb_")+std::to_string(i));
+      this->tab->set_unit(((string)"Mb_")+std::to_string(i),"Msun");
+      this->tab->new_column(((string)"be_")+std::to_string(i));
+      this->tab->set_unit(((string)"be_")+std::to_string(i),"Msun");
+      this->tab->new_column(((string)"I_")+std::to_string(i));
+      this->tab->set_unit(((string)"I_")+std::to_string(i),
+			    "Msun*km^2");
+      this->tab->new_column(((string)"lambda_")+std::to_string(i));
+    }
+  }
+
   if (set.compute_cthick && !set.baryon_density) {
     scr_out << "Cannot use 'compute_cthick=true' with "
 	    << "'baryon_density=false'." << endl;
@@ -427,13 +438,11 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Prepare data objects
 
-  std::cout << "H0 " << data_arr.size() << " " << nsd.nsources << std::endl;
   for(size_t i=0;i<data_arr.size();i++) {
     data_arr[i].rad.resize(nsd.nsources);
     data_arr[i].mass.resize(nsd.nsources);
     data_arr[i].wgts.resize(nsd.nsources);
   }
-  std::cout << "H1." << std::endl;
 
   // -----------------------------------------------------------
   // Prepare crust
@@ -510,17 +519,20 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 
 int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
-  std::cout << "H7." << std::endl;
-
   std::vector<std::string> names;
   std::vector<std::string> units;
 
   ubvector low;
   ubvector high;
+  // Get names and units from model
   mod->get_param_info(names,units,low,high);
+  for(size_t i=0;i<nsd.nsources;i++) {
+    names.push_back(((string)"mf_")+nsd.source_names[i]);
+    units.push_back("");
+  }
+  set_names_units(names,units);
 
   size_t nparams=names.size();
-  std::cout << "H7b " << nparams << std::endl;
   ubvector init(nparams);
   mod->initial_point(init);
   
@@ -536,8 +548,6 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
      std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,
      std::placeholders::_5);
   
-  std::cout << "H8." << std::endl;
-
   this->mcmc(names.size(),init,low,high,mf,mt);
   
   return 0;

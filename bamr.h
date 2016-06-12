@@ -105,7 +105,7 @@ namespace bamr {
   */
   class bamr_class :
     public bamr::mcmc_bamr<point_funct,measure_funct,model_data,ubvector> {
-    
+
   public:
 
     /// A string indicating which model is used, set in \ref set_model().
@@ -118,13 +118,10 @@ namespace bamr {
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
     //@}
 
-    /// Setup column names and units for data table
-    virtual void table_names_units(std::string &s, std::string &u);
-
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
-    virtual void fill_line(ubvector &pars, double weight, 
+    virtual void fill_line(const ubvector &pars, double weight, 
 			   std::vector<double> &line, model_data &dat);
 
     /** \brief Write initial data to HDF file
