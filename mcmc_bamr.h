@@ -304,8 +304,9 @@ namespace bamr {
 	update_files();
       }
       if (this->verbose>=1) {
-	cout << "mcmc: Stopping because n_measurements, " << n_measurements
-	<< " is equal to max_iters." << endl;
+	std::cout << "mcmc: Stopping because n_measurements, "
+	<< n_measurements
+	<< " is equal to max_iters." << std::endl;
       }
       return this->mcmc_done;
     } else {
@@ -320,7 +321,8 @@ namespace bamr {
 	  update_files();
 	}
 	if (this->verbose>=1) {
-	  cout << "mcmc: Stopping because elapsed > max_time." << endl;
+	  std::cout << "mcmc: Stopping because elapsed > max_time."
+		    << std::endl;
 	}
 	return this->mcmc_done;
       }
