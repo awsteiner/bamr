@@ -422,7 +422,7 @@ int bamr_class::mcmc_init() {
 	    << endl;
     return exc_efailed;
   }
-  if (set.addl_quants && |set.inc_baryon_mass) {
+  if (set.addl_quants && !set.inc_baryon_mass) {
     scr_out << "Cannot do additional quantities without including "
 	    << "baryon mass." << endl;
     return exc_efailed;
