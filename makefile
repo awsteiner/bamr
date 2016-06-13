@@ -132,9 +132,12 @@ test_nompi:
 	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc
 
 testx:
-	bamr -set max_time 300 -set compute_cthick 1 -set crust_from_L 1 \
-		-set verbose 2 \
-		-set addl_quants 1 -set prefix twop_addl -model twop -mcmc
+	mkdir -p data_temp
+	rm -rf data_temp/*
+	bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
+		-set addl_quants 1 -set inc_baryon_mass 1 \
+		-set prefix data_temp/twop_addl -model twop -mcmc \
+		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
 test_all:
 	mkdir -p data_temp

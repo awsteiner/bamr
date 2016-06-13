@@ -199,6 +199,7 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
 	line.push_back((bm-mval)/mval);
 	// Make unitless by dividing by G^2
 	line.push_back(I/mval/mval/mval/schwarz_km/schwarz_km*4.0);
+	// Set up relation between Ibar and lambdabar
       } else {
 	line.push_back(0.0);
 	line.push_back(0.0);
@@ -394,7 +395,7 @@ int bamr_class::mcmc_init() {
       this->tab->new_column(((string)"I_")+std::to_string(i));
       this->tab->set_unit(((string)"I_")+std::to_string(i),
 			    "Msun*km^2");
-      this->tab->new_column(((string)"lambda_")+std::to_string(i));
+      //this->tab->new_column(((string)"lambda_")+std::to_string(i));
     }
   }
 
