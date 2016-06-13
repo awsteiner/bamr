@@ -186,11 +186,10 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
       }
     }
   }
-  /*
-  if (epja_mode) {
-    double mmax=dat.mvsr->get_constant("new_max");
-    for(int i=0;i<grid_size;i++) {
-      double mval=m_grid[i];
+  if (set.addl_quants) {
+    double mmax=dat.mvsr->get_constant("m_max");
+    for(int i=0;i<set.grid_size;i++) {
+      double mval=m.m_grid[i];
       if (mval<mmax) {
 	double bm=dat.mvsr->interp("gm",mval,"bm");
 	double rad=dat.mvsr->interp("gm",mval,"r");
@@ -206,8 +205,7 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
 	line.push_back(0.0);
       }
     }
-    }
-  */
+  }
   return;
 }
 
@@ -422,6 +420,11 @@ int bamr_class::mcmc_init() {
 	    << "provide S and L or with 'use_crust=false' or with "
 	    << "'baryon_density=false or with 'compute_cthick=false'." 
 	    << endl;
+    return exc_efailed;
+  }
+  if (set.addl_quants && |set.inc_baryon_mass) {
+    scr_out << "Cannot do additional quantities without including "
+	    << "baryon mass." << endl;
     return exc_efailed;
   }
 

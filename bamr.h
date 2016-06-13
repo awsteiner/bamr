@@ -106,6 +106,11 @@ namespace bamr {
   class bamr_class :
     public bamr::mcmc_bamr<point_funct,measure_funct,model_data,ubvector> {
 
+  protected:
+
+    /// The Schwarzchild radius in km
+    double schwarz_km;
+    
   public:
 
     /// A string indicating which model is used, set in \ref set_model().
@@ -148,6 +153,7 @@ namespace bamr {
     
     bamr_class() {
       model_type="";
+      schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }
     
     virtual ~bamr_class() {

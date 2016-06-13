@@ -532,6 +532,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Solve for M vs. R curve
     ts.princ=set.mvsr_pr_inc;
     ts.set_table(dat.mvsr);
+    if (set.addl_quants) {
+      ts.ang_vel=true;
+      ts.calc_gpot=true;
+    } else {
+      ts.ang_vel=false;
+      ts.calc_gpot=false;
+    }
     int info=ts.mvsr();
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
