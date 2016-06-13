@@ -1060,6 +1060,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &success,
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
+  cns.set_eos_table(dat.eos);
   cns.calc_eos();
   dat.eos->set_interp_type(itp_linear);
 
@@ -1221,6 +1222,7 @@ void fixed_pressure::compute_eos(const ubvector &params, int &success,
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
+  cns.set_eos_table(dat.eos);
   cns.calc_eos();
   dat.eos->set_interp_type(itp_linear);
 
@@ -1295,6 +1297,12 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
 				    ubvector &low, ubvector &high) {
 
+  names={"comp","kprime","esym","gamma","trans1","exp1",
+	  "trans2","a2","a4"};
+
+  units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
+  
+  low.resize(n_eos_params+nsd.nsources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1309,6 +1317,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   // a4
   low[8]=0.045;
     
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
   high[1]=-200.0/hc_mev_fm;
@@ -1325,11 +1334,6 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   // a4
   high[8]=0.08;
 
-  names={"comp","kprime","esym","gamma","trans1","exp1",
-	  "trans2","a2","a4"};
-
-  units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
-  
   return;
 }
 
@@ -1364,6 +1368,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
+  cns.set_eos_table(dat.eos);
   cns.calc_eos();
   dat.eos->set_interp_type(itp_linear);
 
@@ -1554,6 +1559,11 @@ void quark_star::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
 				    ubvector &low, ubvector &high) {
 
+  names={"B","c","Delta","ms"};
+
+  units={"1/fm","","1/fm","1/fm"};
+  
+  low.resize(n_eos_params+nsd.nsources);
   // B
   low[0]=-10.0;
   // c
@@ -1563,6 +1573,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   // ms
   low[3]=0.75;
     
+  high.resize(n_eos_params+nsd.nsources);
   // B
   high[0]=10.0;
   // c
@@ -1572,10 +1583,6 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   // ms
   high[3]=2.5;
 
-  names={"B","c","Delta","ms"};
-
-  units={"1/fm","","1/fm","1/fm"};
-  
   return;
 }
 
@@ -1759,6 +1766,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","","","1/fm^4",""};
   
+  low.resize(n_eos_params+nsd.nsources);
   low[0]=12.7;
   low[1]=0.48;
   low[2]=1.0;
@@ -1767,6 +1775,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   low[5]=2.0;
   low[6]=0.2;
     
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=13.3;
   high[1]=0.52;
   high[2]=5.0;
@@ -1924,6 +1933,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
   
+  low.resize(n_eos_params+nsd.nsources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -1938,6 +1948,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   low[7]=0.75;
   low[8]=0.2;
     
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2157,6 +2168,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
+  low.resize(n_eos_params+nsd.nsources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2170,6 +2182,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2384,6 +2397,11 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
 				  std::vector<std::string> &units,
 				  ubvector &low, ubvector &high) {
 
+  names={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
+  
+  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+
+  low.resize(n_eos_params+nsd.nsources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2397,6 +2415,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
+  high.resize(n_eos_params+nsd.nsources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2406,11 +2425,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   high[5]=1.5;
   high[6]=2.5;
   high[7]=2.5;
-    
-  names={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
-  
-  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
-  
+      
   return;
 }
 
