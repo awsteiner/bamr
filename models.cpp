@@ -65,7 +65,7 @@ two_polytropes::two_polytropes() {
   prot.init(o2scl_settings.get_convert_units().convert
 	    ("kg","1/fm",o2scl_mks::mass_proton),2.0);
 
-  cns.set_n_and_p(neut,prot);
+  //cns.set_n_and_p(neut,prot);
   // We include muons by default, but they rarely appear at low-density
   cns.include_muons=true;
 }
@@ -1123,7 +1123,7 @@ void qmc_neut::compute_eos(entry &e, int &success, ofstream &scr_out) {
 
   double ed=0.0, pr=0.0;
 
-  double gauss=pdg.sample();
+  double gauss=pdg();
   if (fabs(gauss)>3.0) gauss=0.0;
 
   for(double rho=0.02;rho<rho_trans+0.001;rho+=0.01) {

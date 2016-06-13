@@ -952,6 +952,9 @@ void bamr_class::compute_star(entry &e, eos_tov &dat, int &success) {
     tab_mvsr=dat.ts.get_results();
     tab_mvsr->set_interp_type(itp_linear);
   
+    tab_mvsr->add_col_from_table(*(tab_eos),"pr","nb","pr");
+    tab_mvsr->set_unit("nb","1/fm^3");
+
     // If the EOS is sufficiently stiff, the TOV solver will output
     // gibberish, i.e. masses and radii equal to zero, especially at the
     // higher pressures. This rules these EOSs out, as they would likely
@@ -2297,7 +2300,7 @@ int bamr_class::mcmc(std::vector<std::string> &sv, bool itive_com) {
       do {
 	
 	for(size_t k=0;k<nv;k++) {
-	  hg_z[k]=pdg.sample();
+	  hg_z[k]=pdg();
 	}
 	hg_temp=prod(hg_chol,hg_z);
 	for(size_t k=0;k<nv;k++) {
