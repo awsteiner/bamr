@@ -834,7 +834,6 @@ two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
 
   this->n_eos_params=8;
   this->has_esym=true;
-  
 }
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
@@ -872,6 +871,8 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   high[6]=8.0;
   high[7]=2.0;
 
+  // Go to the parent which takes care of the data-related
+  // parameters
   model::get_param_info(names,units,low,high);
   
   return;
@@ -1742,6 +1743,9 @@ qmc_neut::qmc_neut(settings &s, ns_data &n) :
   si_err.set(11,ed_corr,pres_err,itp_linear);
   
   rho_trans=0.48;
+
+  this->n_eos_params=7;
+  this->has_esym=true;
 }
 
 qmc_neut::~qmc_neut() {
@@ -1751,6 +1755,10 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
 			      std::vector<std::string> &units,
 			      ubvector &low, ubvector &high) {
 
+  names={"a","alpha","b","beta","index1","trans1","index2"};
+
+  units={"MeV","","MeV","","","1/fm^4",""};
+  
   low[0]=12.7;
   low[1]=0.48;
   low[2]=1.0;
@@ -1767,10 +1775,10 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   high[5]=8.0;
   high[6]=4.0;
     
-  names={"a","alpha","b","beta","index1","trans1","index2"};
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
 
-  units={"MeV","","MeV","","","1/fm^4",""};
-  
   return;
 }
 
@@ -1899,6 +1907,9 @@ qmc_threep::qmc_threep(settings &s, ns_data &n) :
   
   rho0=0.16;
   rho_trans=0.16;
+
+  this->n_eos_params=9;
+  this->has_esym=true;
 }
 
 qmc_threep::~qmc_threep() {
@@ -1908,6 +1919,11 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
 				ubvector &low, ubvector &high) {
 
+  names={"a","alpha","S","L","index1","trans1","index2","trans2",
+	  "index3"};
+
+  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
+  
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -1933,11 +1949,10 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   high[7]=8.0;
   high[8]=8.0;
     
-  names={"a","alpha","S","L","index1","trans1","index2","trans2",
-	  "index3"};
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
 
-  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
-  
   return;
 }
 
@@ -2126,6 +2141,9 @@ qmc_fixp::qmc_fixp(settings &s, ns_data &n) :
   ed2=3.0;
   ed3=5.0;
   ed4=7.0;
+
+  this->n_eos_params=8;
+  this->has_esym=true;
 }
 
 qmc_fixp::~qmc_fixp() {
@@ -2135,6 +2153,10 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
 				ubvector &low, ubvector &high) {
 
+  names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
+
+  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
+  
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2162,10 +2184,10 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   high[6]=2.5;
   high[7]=2.5;
     
-  names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
 
-  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
-  
   return;
 }
 

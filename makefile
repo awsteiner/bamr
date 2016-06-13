@@ -142,8 +142,6 @@ test_all:
 		-run default.in -model twop -mcmc
 	bamr -set max_time 300 -set prefix twop_nodata -model twop -mcmc
 	bamr -set max_iters 100 -set prefix twop_iters -model twop -mcmc
-	bamr -set max_time 300 -set n_warm_up 100 \
-		-set prefix twop_warmup -model twop -mcmc
 	bamr -set max_time 300 -set compute_cthick 1 -set crust_from_L 1 \
 		-set prefix twop_cthick -model twop -mcmc
 	bamr -set max_time 300 -set compute_cthick 1 -set crust_from_L 1 \
@@ -152,6 +150,10 @@ test_all:
 	bamr -set max_time 300 -set prefix qn_nodata -model qmc_neut -mcmc
 	bamr -set max_time 300 -set prefix qt_nodata -model qmc_threep -mcmc
 	bamr -set max_time 300 -set prefix qf_nodata -model qmc_fixp -mcmc
+	bamr -set max_time 300 -set n_warm_up 100 \
+		-set prefix twop_warmup -model twop -mcmc
+	bamr -set max_time 300 -set prefix twop_ai -set aff_inv 1 \
+		-set step_fac 2.0 -mcmc 
 
 # ----------------------------------------------------------------------
 # Internal 

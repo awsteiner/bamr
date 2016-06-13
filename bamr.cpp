@@ -287,7 +287,7 @@ int bamr_class::mcmc_init() {
   
   for(size_t i=0;i<nsd.nsources;i++) {
     this->tab->new_column(((std::string)"Mns_")+nsd.source_names[i]);
-    this->tab->set_unit(((std::string)"Rns_")+nsd.source_names[i],
+    this->tab->set_unit(((std::string)"Mns_")+nsd.source_names[i],
 			"Msun");
   }
   

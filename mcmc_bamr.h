@@ -141,12 +141,9 @@ namespace bamr {
   /// If true, scr_out has been opened
   bool file_opened;
 
-  /// Desc
-  size_t n_measurements;
-  
   /// \name Command-line settings
   //@{
-  /** \brief Desc (default 0)
+  /** \brief Maximum number of iterations (default 0)
    */
   int max_iters;
   
@@ -237,8 +234,9 @@ namespace bamr {
 
     hf.set_szt("n_accept",this->n_accept);
     hf.set_szt("n_reject",this->n_reject);
+    hf.set_szt("mcmc_iters",this->mcmc_iters);
     
-    std::string ch_name="markov_chain"+std::to_string(n_chains-1);
+    std::string ch_name="markov_chain"+std::to_string(n_chains);
     hdf_output(hf,*this->tab,ch_name);
 
     hf.close();
@@ -272,13 +270,11 @@ namespace bamr {
     return;
   }
 
-  /** \brief Desc
+  /** \brief Add a measurement to the table
    */
   virtual int add_line(const ubvector &pars, double weight,
 		       size_t ix, bool new_meas, data_t &dat) {
 
-    n_measurements++;
-      
     if (output_meas) {
       scr_out << "Line: ";
       o2scl::vector_out(scr_out,pars);
@@ -294,18 +290,19 @@ namespace bamr {
       n_chains++;
       this->tab->clear_data();
       files_updated=true;
-    } else if (n_measurements>0 && n_measurements%file_update_iters==0) {
+    } else if (n_accept>0 && n_reject>0 &&
+	       (n_accept+n_reject)%file_update_iters==0) {
       update_files();
       files_updated=true;
     }
-      
-    if (this->max_iters>0 && n_measurements==this->max_iters) {
+    
+    if (this->max_iters>0 && (n_accept+n_reject)==this->max_iters) {
       if (files_updated==false) {
 	update_files();
       }
       if (this->verbose>=1) {
-	std::cout << "mcmc: Stopping because n_measurements, "
-	<< n_measurements
+	std::cout << "mcmc: Stopping because n_accept+n_reject, "
+	<< n_accept+n_reject
 	<< " is equal to max_iters." << std::endl;
       }
       return this->mcmc_done;
@@ -466,7 +463,6 @@ namespace bamr {
     mpi_start_time=time(0);
 #endif
     
-    n_measurements=0;
     n_chains=0;
 
     if (this->file_opened==false) {
