@@ -47,7 +47,19 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   in_r_max=18.0;
       
   teos.verbose=0;
-  
+
+    // Transition density parameters
+  nt_a.set_center(0.1327);
+  nt_a.set_sigma(0.0024);
+  nt_b.set_center(-0.0898);
+  nt_b.set_sigma(0.0055);
+  nt_c.set_center(0.0228);
+  nt_c.set_sigma(0.0028);
+
+  // If nt_corr is true and the transition density is outside
+  // this range, then we reject and go to the next point
+  nt_low=0.02;
+  nt_high=0.14;
 }
 
 void model::load_mc(std::ofstream &scr_out) {
@@ -292,7 +304,100 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   double hc_mev_fm=o2scl_const::hc_mev_fm;
       
   success=ix_success;
+
+  // ---------------------------------------------------
+
+  if (set.compute_cthick && set.baryon_density) {
+
+    double nt=0.08;
+
+    // If nt_corr is true, compute the pressure at the number density
+    // specified by the correlation. Otherwise, just use 0.08
+
+    if (set.nt_corr && set.crust_from_L) {
+
+      double asamp, bsamp, csamp;
+      if (false) {
+	double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
+	if (f1<=0.0) f1=1.0e-5;
+	else if (f1>=1.0) f1=1.0-1.0e-5;
+	asamp=nt_a.invert_cdf(f1);
+
+	double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
+	f2=0.5;
+	if (f2<=0.0) f2=1.0e-5;
+	else if (f2>=1.0) f2=1.0-1.0e-5;
+	bsamp=nt_b.invert_cdf(f2);
+
+	double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
+	if (f3<=0.0) f3=1.0e-5;
+	else if (f3>=1.0) f3=1.0-1.0e-5;
+	csamp=nt_c.invert_cdf(f3);
+      } else {
+	asamp=nt_a.mean();
+	bsamp=nt_b.mean();
+	csamp=nt_c.mean();
+      }
+      
+      double St=dat.eos->get_constant("S")*o2scl_const::hc_mev_fm;
+      double Lt=dat.eos->get_constant("L")*o2scl_const::hc_mev_fm;
+      nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))*(St/30.0);
+
+      if (nt<nt_low || nt>nt_high) {
+	scr_out << "Transition density, " << nt << ", out of range." << endl;
+	success=ix_trans_invalid;
+	return;
+      }
+      dat.eos->add_constant("nt",nt);
+    }
+
+    double prt=dat.eos->interp("nb",nt,"pr");
+    dat.eos->add_constant("prt",prt);
+
+    // Add the transition pressure to the tov_solve object
+    
+    if (ts.pr_list.size()>0) {
+      ts.pr_list.clear();
+    }
+    ts.pr_list.push_back(prt);
+    
+    // If necessary, set the crust and it's transition pressure
+    if (set.crust_from_L) {
+      
+      if (dat.eos->get_constant("S")*hc_mev_fm<28.0 || 
+	  dat.eos->get_constant("S")*hc_mev_fm>38.0 || 
+	  dat.eos->get_constant("L")*hc_mev_fm<25.0 ||
+	  dat.eos->get_constant("L")*hc_mev_fm>115.0 ||
+	  dat.eos->get_constant("L")*hc_mev_fm>
+	  dat.eos->get_constant("S")*hc_mev_fm*5.0-65.0) {
+	scr_out << "S or L out of range" << endl;
+	success=ix_SL_invalid;
+	return;
+      }
+      
+      // This function expects its argument in MeV
+      teos.ngl13_low_dens_eos2
+	(dat.eos->get_constant("S")*hc_mev_fm,
+	 dat.eos->get_constant("L")*hc_mev_fm,nt,"");
+      
+      // Set the transition pressure and width. Note that
+      // the ngl13 EOS is in units of Msun/km^3, so we 
+      // convert prt to those units
+      teos.transition_mode=eos_tov_interp::match_line;
+      teos.set_transition(o2scl_settings.get_convert_units().convert
+			  ("1/fm^4","Msun/km^3",prt),1.4);
+    }
+    
+  } else {
+
+    if (ts.pr_list.size()>0) {
+      ts.pr_list.clear();
+    }
+
+  }
   
+  // ---------------------------------------------------
+
   // Compute the EOS first
   if (has_eos) {
     if (set.verbose>=2) {
@@ -306,6 +411,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   }
   
   if (has_eos) {
+
     // Ensure we're using linear interpolation
     dat.eos->set_interp_type(o2scl::itp_linear);
 

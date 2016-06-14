@@ -474,6 +474,8 @@ namespace bamr {
     static const int ix_neg_pressure=16;
     static const int ix_no_eos_table=17;
     static const int ix_eos_solve_failed=18;
+    static const int ix_trans_invalid=19;
+    static const int ix_SL_invalid=20;
     //@}
 
     /// Number of parameters (EOS parameters plus mass of each source)
@@ -499,10 +501,10 @@ namespace bamr {
     bool has_esym;
 
     /// Total number of processors
-    size_t mpi_nprocs;
+    int mpi_nprocs;
 
     /// Current processor rank
-    size_t mpi_rank;
+    int mpi_rank;
 
     /// \name Grids
     //@{
@@ -511,6 +513,15 @@ namespace bamr {
     o2scl::uniform_grid<double> m_grid;
     //@}
 
+    /// Lower limit for baryon density of core-crust transition
+    double nt_low;
+
+    /// Upper limit for baryon density of core-crust transition
+    double nt_high;
+
+    /// Gaussians for core-crust transition
+    o2scl::prob_dens_gaussian nt_a, nt_b, nt_c;
+    
     /// EOS interpolation object for TOV solver
     o2scl::eos_tov_interp teos;
 

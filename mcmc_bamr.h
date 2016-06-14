@@ -145,7 +145,7 @@ namespace bamr {
   //@{
   /** \brief Maximum number of iterations (default 0)
    */
-  int max_iters;
+  size_t max_iters;
   
   /** \brief Time in seconds (default is 86400 seconds or 1 day)
    */
@@ -182,13 +182,13 @@ namespace bamr {
   /// \name Parameter objects for the 'set' command
   //@{
   o2scl::cli::parameter_double p_step_fac;
-  o2scl::cli::parameter_int p_n_warm_up;
+  o2scl::cli::parameter_size_t p_n_warm_up;
   o2scl::cli::parameter_int p_user_seed;
-  o2scl::cli::parameter_int p_max_bad_steps;
-  o2scl::cli::parameter_int p_nwalk;
+  o2scl::cli::parameter_size_t p_max_bad_steps;
+  o2scl::cli::parameter_size_t p_nwalk;
   o2scl::cli::parameter_bool p_aff_inv;
   o2scl::cli::parameter_double p_max_time;
-  o2scl::cli::parameter_int p_max_iters;
+  o2scl::cli::parameter_size_t p_max_iters;
   o2scl::cli::parameter_int p_max_chain_size;
   o2scl::cli::parameter_int p_file_update_iters;
   o2scl::cli::parameter_bool p_debug_line;
@@ -284,7 +284,7 @@ namespace bamr {
     (pars,weight,ix,new_meas,dat);
       
     bool files_updated=false;
-    if (this->tab->get_nlines()==max_chain_size) {
+    if (((int)this->tab->get_nlines())==max_chain_size) {
       update_files();
       n_chains++;
       this->tab->clear_data();
@@ -384,7 +384,7 @@ namespace bamr {
     "(default 86400 sec or 1 day).";
     this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
     
-    p_max_iters.i=&this->max_iters;
+    p_max_iters.s=&this->max_iters;
     p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
     "iterations to be less than the specified number (default zero).";
     this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
@@ -413,7 +413,7 @@ namespace bamr {
     "this step size is smaller than 1.0, it is reset to 1.0 .";
     this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
-    p_n_warm_up.i=&this->n_warm_up;
+    p_n_warm_up.s=&this->n_warm_up;
     p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
     "(default 0).";
     this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
@@ -423,12 +423,12 @@ namespace bamr {
     "(default 0).";
     this->cl.par_list.insert(std::make_pair("verbose",&p_verbose));
 
-    p_max_bad_steps.i=&this->max_bad_steps;
+    p_max_bad_steps.s=&this->max_bad_steps;
     p_max_bad_steps.help=((std::string)"Maximum number of bad steps ")+
     "(default 1000).";
     this->cl.par_list.insert(std::make_pair("max_bad_steps",&p_max_bad_steps));
 
-    p_nwalk.i=&this->nwalk;
+    p_nwalk.s=&this->nwalk;
     p_nwalk.help=((std::string)"Number of walkers ")+
     "(default 10).";
     this->cl.par_list.insert(std::make_pair("nwalk",&p_nwalk));

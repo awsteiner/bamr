@@ -155,6 +155,10 @@ test_all:
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 	-bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
+		-set nt_corr 1
+		-set prefix data_temp/twop_ntc -model twop -mcmc \
+		> data_temp/twop_ntc.scr 2> data_temp/twop_ntc.err
+	-bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err

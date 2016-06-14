@@ -174,11 +174,9 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
     }
     for(int i=0;i<set.grid_size;i++) {
       double mval=m.m_grid[i];
-      if (mval<mmax && dat.mvsr->is_column("r2")) {
+      if (mval<mmax) {
 	double rval=dat.mvsr->interp("gm",mval,"r");
 	line.push_back(rval-dat.mvsr->interp("gm",mval,"r0"));
-	line.push_back(rval-dat.mvsr->interp("gm",mval,"r1"));
-	line.push_back(rval-dat.mvsr->interp("gm",mval,"r2"));
       } else {
 	line.push_back(0.0);
 	line.push_back(0.0);
@@ -377,12 +375,8 @@ int bamr_class::mcmc_init() {
         this->tab->set_unit("prt","1/fm^4");
       }
       for(int i=0;i<set.grid_size;i++) {
-        this->tab->new_column(((string)"ct06_")+std::to_string(i));
-        this->tab->set_unit(((string)"ct06_")+std::to_string(i),"km");
-        this->tab->new_column(((string)"ct08_")+std::to_string(i));
-        this->tab->set_unit(((string)"ct08_")+std::to_string(i),"km");
-        this->tab->new_column(((string)"ct10_")+std::to_string(i));
-        this->tab->set_unit(((string)"ct10_")+std::to_string(i),"km");
+        this->tab->new_column(((string)"ct_")+std::to_string(i));
+        this->tab->set_unit(((string)"ct_")+std::to_string(i),"km");
       }
     }
   }
