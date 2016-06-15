@@ -48,7 +48,7 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
       
   teos.verbose=0;
 
-    // Transition density parameters
+  // Transition density parameters
   nt_a.set_center(0.1327);
   nt_a.set_sigma(0.0024);
   nt_b.set_center(-0.0898);
@@ -56,10 +56,31 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   nt_c.set_center(0.0228);
   nt_c.set_sigma(0.0028);
 
-  // If nt_corr is true and the transition density is outside
+  // If crust_from_L is true and the transition density is outside
   // this range, then we reject and go to the next point
   nt_low=0.02;
   nt_high=0.14;
+
+  // -----------------------------------------------------------
+  // Prepare crust
+
+  if (set.use_crust) {
+    teos.default_low_dens_eos();
+    
+    // Get the transition density from the crust
+    double pt, pw;
+    teos.get_transition(pt,pw);
+    // We set the transition density a bit lower (because by default
+    // it's the largest pressure in the crust EOS) and then add a
+    // small width. This ensures the pressure will be increasing and
+    // prefers the core EOS over the crust EOS near the transition.
+    teos.transition_mode=eos_tov_interp::smooth_trans;
+    teos.set_transition(pt/1.2,1.2);
+    
+  } else {
+    teos.no_low_dens_eos();
+  }
+  
 }
 
 void model::load_mc(std::ofstream &scr_out) {
@@ -301,105 +322,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     cout << "Start model::compute_star()." << endl;
   }
   
-  double hc_mev_fm=o2scl_const::hc_mev_fm;
-      
   success=ix_success;
 
-  // ---------------------------------------------------
-
-  if (set.compute_cthick && set.baryon_density) {
-
-    double nt=0.08;
-
-    // If nt_corr is true, compute the pressure at the number density
-    // specified by the correlation. Otherwise, just use 0.08
-
-    if (set.nt_corr && set.crust_from_L) {
-
-      double asamp, bsamp, csamp;
-      if (false) {
-	double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
-	if (f1<=0.0) f1=1.0e-5;
-	else if (f1>=1.0) f1=1.0-1.0e-5;
-	asamp=nt_a.invert_cdf(f1);
-
-	double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
-	f2=0.5;
-	if (f2<=0.0) f2=1.0e-5;
-	else if (f2>=1.0) f2=1.0-1.0e-5;
-	bsamp=nt_b.invert_cdf(f2);
-
-	double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
-	if (f3<=0.0) f3=1.0e-5;
-	else if (f3>=1.0) f3=1.0-1.0e-5;
-	csamp=nt_c.invert_cdf(f3);
-      } else {
-	asamp=nt_a.mean();
-	bsamp=nt_b.mean();
-	csamp=nt_c.mean();
-      }
-      
-      double St=dat.eos->get_constant("S")*o2scl_const::hc_mev_fm;
-      double Lt=dat.eos->get_constant("L")*o2scl_const::hc_mev_fm;
-      nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))*(St/30.0);
-
-      if (nt<nt_low || nt>nt_high) {
-	scr_out << "Transition density, " << nt << ", out of range." << endl;
-	success=ix_trans_invalid;
-	return;
-      }
-      dat.eos->add_constant("nt",nt);
-    }
-
-    double prt=dat.eos->interp("nb",nt,"pr");
-    dat.eos->add_constant("prt",prt);
-
-    // Add the transition pressure to the tov_solve object
-    
-    if (ts.pr_list.size()>0) {
-      ts.pr_list.clear();
-    }
-    ts.pr_list.push_back(prt);
-    
-    // If necessary, set the crust and it's transition pressure
-    if (set.crust_from_L) {
-      
-      if (dat.eos->get_constant("S")*hc_mev_fm<28.0 || 
-	  dat.eos->get_constant("S")*hc_mev_fm>38.0 || 
-	  dat.eos->get_constant("L")*hc_mev_fm<25.0 ||
-	  dat.eos->get_constant("L")*hc_mev_fm>115.0 ||
-	  dat.eos->get_constant("L")*hc_mev_fm>
-	  dat.eos->get_constant("S")*hc_mev_fm*5.0-65.0) {
-	scr_out << "S or L out of range" << endl;
-	success=ix_SL_invalid;
-	return;
-      }
-      
-      // This function expects its argument in MeV
-      teos.ngl13_low_dens_eos2
-	(dat.eos->get_constant("S")*hc_mev_fm,
-	 dat.eos->get_constant("L")*hc_mev_fm,nt,"");
-      
-      // Set the transition pressure and width. Note that
-      // the ngl13 EOS is in units of Msun/km^3, so we 
-      // convert prt to those units
-      teos.transition_mode=eos_tov_interp::match_line;
-      teos.set_transition(o2scl_settings.get_convert_units().convert
-			  ("1/fm^4","Msun/km^3",prt),1.4);
-    }
-    
-  } else {
-
-    if (ts.pr_list.size()>0) {
-      ts.pr_list.clear();
-    }
-
-  }
-  
-  // ---------------------------------------------------
-
-  // Compute the EOS first
   if (has_eos) {
+    
+    // ---------------------------------------------------------------
+    // Compute the EOS
+  
     if (set.verbose>=2) {
       cout << "Going to model::compute_eos()." << endl;
     }
@@ -408,13 +337,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (set.verbose>=2) {
       cout << "Back from model::compute_eos()." << endl;
     }
-  }
-  
-  if (has_eos) {
 
     // Ensure we're using linear interpolation
     dat.eos->set_interp_type(o2scl::itp_linear);
 
+    // ---------------------------------------------------------------
     // Check that pressure is increasing. If we're using a crust EOS,
     // choose 0.6 as an arbitrary low-density cutoff which corresponds
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
@@ -435,7 +362,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
+  
   if (has_eos && set.baryon_density && !dat.eos->is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
@@ -544,29 +473,154 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // !dat.eos->is_column("nb")) {' 
   }
 
-  double mmax=0.0;
-  
+  // ---------------------------------------------------------------
+
   if (has_eos) {
     
-    // Perform any additional necessary EOS preparations
-    //prepare_eos(pars,dat,success);
-    //if (success!=ix_success) {
-    //return;
-    //}
+    // ---------------------------------------------------------------
+    // Compute crust transition density and set crust (if necessary)
 
-    // Read the EOS into the tov_eos object.
+    if (set.compute_cthick && set.baryon_density) {
+
+      // If crust_from_L is true, compute the pressure at the number density
+      // specified by the correlation. Otherwise, just use 0.08
+
+      if (set.crust_from_L) {
+
+	if (set.verbose>=2) {
+	  std::cout << "Starting crust from L." << std::endl;
+	}
+	
+	double asamp, bsamp, csamp;
+	if (false) {
+	  double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
+	  if (f1<=0.0) f1=1.0e-5;
+	  else if (f1>=1.0) f1=1.0-1.0e-5;
+	  asamp=nt_a.invert_cdf(f1);
+
+	  double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
+	  f2=0.5;
+	  if (f2<=0.0) f2=1.0e-5;
+	  else if (f2>=1.0) f2=1.0-1.0e-5;
+	  bsamp=nt_b.invert_cdf(f2);
+
+	  double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
+	  if (f3<=0.0) f3=1.0e-5;
+	  else if (f3>=1.0) f3=1.0-1.0e-5;
+	  csamp=nt_c.invert_cdf(f3);
+	} else {
+	  asamp=nt_a.mean();
+	  bsamp=nt_b.mean();
+	  csamp=nt_c.mean();
+	}
+      
+	double St=dat.eos->get_constant("S")*o2scl_const::hc_mev_fm;
+	double Lt=dat.eos->get_constant("L")*o2scl_const::hc_mev_fm;
+	double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))*(St/30.0);
+
+	if (nt<nt_low || nt>nt_high) {
+	  scr_out << "Transition density, " << nt << ", out of range." << endl;
+	  success=ix_trans_invalid;
+	  return;
+	}
+	dat.eos->add_constant("nt",nt);
+	
+	double prt=dat.eos->interp("nb",nt,"pr");
+	dat.eos->add_constant("prt",prt);
+	
+	// Add the transition pressure to the tov_solve object
+	
+	if (ts.pr_list.size()>0) {
+	  ts.pr_list.clear();
+	}
+	ts.pr_list.push_back(prt);
+	
+	// Set the crust and it's transition pressure
+      
+	if (dat.eos->get_constant("S")*hc_mev_fm<28.0 || 
+	    dat.eos->get_constant("S")*hc_mev_fm>38.0 || 
+	    dat.eos->get_constant("L")*hc_mev_fm<25.0 ||
+	    dat.eos->get_constant("L")*hc_mev_fm>115.0 ||
+	    dat.eos->get_constant("L")*hc_mev_fm>
+	    dat.eos->get_constant("S")*hc_mev_fm*5.0-65.0) {
+	  scr_out << "S or L out of range" << endl;
+	  success=ix_SL_invalid;
+	  return;
+	}
+      
+	// This function expects its argument in MeV
+	teos.ngl13_low_dens_eos2
+	  (dat.eos->get_constant("S")*hc_mev_fm,
+	   dat.eos->get_constant("L")*hc_mev_fm,nt,"");
+      
+	// Set the transition pressure and width. Note that
+	// the ngl13 EOS is in units of Msun/km^3, so we 
+	// convert prt to those units
+	teos.transition_mode=eos_tov_interp::match_line;
+	teos.set_transition(o2scl_settings.get_convert_units().convert
+			    ("1/fm^4","Msun/km^3",prt),1.4);
+
+	if (set.verbose>=2) {
+	  std::cout << "Done with crust from L." << std::endl;
+	}
+	
+      } else {
+
+	// Otherwise, if we're not determining the crust from L, then
+	// compute the crust thickness based on a density of 0.08
+	// fm^{-3}
+
+	double nt=0.08;
+	dat.eos->add_constant("nt",nt);
+	double prt=dat.eos->interp("nb",0.08,"pr");
+	dat.eos->add_constant("prt",prt);
+	if (ts.pr_list.size()>0) {
+	  ts.pr_list.clear();
+	}
+	ts.pr_list.push_back(prt);
+	
+      }
+    
+    } else {
+
+      if (ts.pr_list.size()>0) {
+	ts.pr_list.clear();
+      }
+
+    }
+
+    // ---------------------------------------------------------------
+    // Read the EOS into the tov_eos object
+    
     table_units<> &teos_temp=*(dat.eos);
     if (set.baryon_density && set.inc_baryon_mass) {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
       dat.eos->set_unit("nb","1/fm^3");
+      if (set.verbose>=2) {
+	std::cout << "Going to read_table() (with nb)." << std::endl;
+      }
       teos.read_table(teos_temp,"ed","pr","nb");
+      if (set.verbose>=2) {
+	std::cout << "Done in read_table() (with nb)." << std::endl;
+      }
     } else {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
+      if (set.verbose>=2) {
+	std::cout << "Going to read_table() (without nb)." << std::endl;
+      }
       teos.read_table(teos_temp,"ed","pr");
+      if (set.verbose>=2) {
+	std::cout << "Done in read_table() (without nb)." << std::endl;
+      }
     }
 
+    // ---------------------------------------------------------------
+    // We checked that the pressure of the core EOS was increasing
+    // earlier. Here we also double check that the EOS is increasing
+    // near the crust-core transition.
+    
     if (set.use_crust) {
     
       double ed_last=0.0;
@@ -602,9 +656,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // End of 'if (set.use_crust)'
     }
 
-    // If necessary, output debug information (We want to make sure this
-    // is after tov_eos::read_table() so that we can debug the
+    // ---------------------------------------------------------------
+    // If necessary, output debug information (We want to make sure
+    // this is after tov_eos::read_table() so that we can debug the
     // core-crust transition)
+    
     if (set.debug_eos) {
       o2scl_hdf::hdf_file hfde;
 
@@ -635,7 +691,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
+    // ---------------------------------------------------------------
     // Solve for M vs. R curve
+    
+    double m_max=0.0;
     ts.princ=set.mvsr_pr_inc;
     ts.set_table(dat.mvsr);
     if (set.addl_quants) {
@@ -645,7 +704,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.ang_vel=false;
       ts.calc_gpot=false;
     }
+    if (set.verbose>=2) {
+      std::cout << "Going to TOV." << std::endl;
+    }
     int info=ts.mvsr();
+    if (set.verbose>=2) {
+      cout << "Done with TOV." << endl;
+    }
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
       success=ix_mvsr_failed;
@@ -653,27 +718,36 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
     dat.mvsr->set_interp_type(o2scl::itp_linear);
 
-    dat.mvsr->add_col_from_table(*dat.eos,"pr","nb","pr");
-    dat.mvsr->set_unit("nb","1/fm^3");
+    // ---------------------------------------------------------------
+    // Add baryon density to M vs. R table if it's not already there
+
+    if (set.baryon_density && !set.inc_baryon_mass) {
+      dat.mvsr->add_col_from_table(*dat.eos,"pr","nb","pr");
+      dat.mvsr->set_unit("nb","1/fm^3");
+    }
     
+    // ---------------------------------------------------------------
     // Check that maximum mass is large enough. Note that the
     // mass-radius curve is not differentiable near M_{max}, so the
     // best way to increase the accuracy here is to make
     // set.mvsr_pr_inc smaller.
-    mmax=dat.mvsr->max("gm");
-    dat.mvsr->add_constant("m_max",mmax);
-    if (mmax<set.min_max_mass) {
-      scr_out << "Maximum mass too small: " << mmax << " < "
+    
+    m_max=dat.mvsr->max("gm");
+    dat.mvsr->add_constant("m_max",m_max);
+    if (m_max<set.min_max_mass) {
+      scr_out << "Maximum mass too small: " << m_max << " < "
 	      << set.min_max_mass << "." << std::endl;
       success=ix_small_max;
       return;
     }
 
+    // ---------------------------------------------------------------
     // If the EOS is sufficiently stiff, the TOV solver will output
-    // gibberish, i.e. masses and radii equal to zero, especially at the
-    // higher pressures. This rules these EOSs out, as they would likely
-    // be acausal anyway. If this happens frequently, it might signal
-    // a problem. 
+    // gibberish, i.e. masses and radii equal to zero, especially at
+    // the higher pressures. This rules these EOSs out, as they would
+    // likely be acausal anyway. If this happens frequently, it might
+    // signal a problem.
+    
     size_t ir=dat.mvsr->get_nlines()-1;
     if ((*dat.mvsr)["gm"][ir]<1.0e-10 ||
 	(*dat.mvsr)["gm"][ir-1]<1.0e-10) {
@@ -682,8 +756,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
+    // ---------------------------------------------------------------
     // Check the radius of the maximum mass star
-    size_t ix_max=dat.mvsr->lookup("gm",mmax);
+    
+    size_t ix_max=dat.mvsr->lookup("gm",m_max);
     double r_max=dat.mvsr->get("r",ix_max);
     dat.mvsr->add_constant("r_max",r_max);
     if (r_max>1.0e4) {
@@ -692,6 +768,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
     
+    // ---------------------------------------------------------------
+
+    // Compute the central baryon density in the maximum mass star
     if (set.baryon_density) {
       double nb_max=dat.mvsr->get("nb",ix_max);
       dat.mvsr->add_constant("nb_max",nb_max);
@@ -708,14 +787,25 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
     
+    // Compute the masses and radii for each source
+    for(size_t i=0;i<nsd.nsources;i++) {
+      dat.mass[i]=m_max*pars[this->n_eos_params+i];
+      dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
+    }
+
+    // End of loop 'if (has_eos)'
   } else {
-    
-    cout << "Fixme, mmax not set." << endl;
-    exit(-1);
-    
+
+    // Compute mass-radius curve directly
     compute_mr(pars,success,scr_out,dat);
     if (success!=ix_success) {
       return;
+    }
+
+    // Compute the masses and radii for each source
+    for(size_t i=0;i<nsd.nsources;i++) {
+      dat.mass[i]=pars[this->n_eos_params+i];
+      dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
 
   }
@@ -731,13 +821,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     exit(-1);
   }
 
-  // Compute the masses and radii for each source
-  for(size_t i=0;i<nsd.nsources;i++) {
-    dat.mass[i]=mmax*pars[this->n_eos_params+i];
-    dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
-  }
-
-  // Check causality
+  // -----------------------------------------------------------------
+  // Check causality. Note that we have to do this after the rows for
+  // the unstable branch have been removed from the mass-radius table.
+  
   if (has_eos) {
     
     // Compute speed of sound squared
@@ -771,7 +858,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   }
   
-  // -----------------------------------------------
+  // ---------------------------------------------------------------
   // Compute M, R for fixed central baryon densities
 
   if (has_eos && set.baryon_density) {
@@ -954,7 +1041,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
 				    ubvector &low, ubvector &high) {
 
   names={"comp","kprime","esym","gamma","trans1","index1",
-	  "trans2","index2"};
+	 "trans2","index2"};
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
@@ -1131,7 +1218,7 @@ void alt_polytropes::get_param_info(std::vector<std::string> &names,
   high[7]=3.0;
   
   names={"comp","kprime","esym","gamma","trans1","exp1",
-	  "trans2","exp2"};
+	 "trans2","exp2"};
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
   
@@ -1411,7 +1498,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
 				    ubvector &low, ubvector &high) {
 
   names={"comp","kprime","esym","gamma","trans1","exp1",
-	  "trans2","a2","a4"};
+	 "trans2","a2","a4"};
 
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
   
@@ -1669,8 +1756,8 @@ double quark_star::pressure2(double mu) {
 }
 
 void quark_star::get_param_info(std::vector<std::string> &names,
-				    std::vector<std::string> &units,
-				    ubvector &low, ubvector &high) {
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high) {
 
   names={"B","c","Delta","ms"};
 
@@ -2042,7 +2129,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 				ubvector &low, ubvector &high) {
 
   names={"a","alpha","S","L","index1","trans1","index2","trans2",
-	  "index3"};
+	 "index3"};
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
   
@@ -2274,8 +2361,8 @@ qmc_fixp::~qmc_fixp() {
 }
 
 void qmc_fixp::get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				ubvector &low, ubvector &high) {
+			      std::vector<std::string> &units,
+			      ubvector &low, ubvector &high) {
 
   names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
 

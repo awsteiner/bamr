@@ -46,8 +46,6 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
 
   if (m.has_eos) {
 
-    // The highest baryon density in the EOS table
-    nbmax2=dat.eos->max("nb");
     // The central energy density in the maximum mass configuration
     emax=dat.mvsr->max("ed");
     // The central pressure in the maximum mass configuration
@@ -58,8 +56,12 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
     rmax=dat.mvsr->get_constant("r_max");
     
     if (set.baryon_density) {
+
+      // The highest baryon density in the EOS table
+      nbmax2=dat.eos->max("nb");
       // The central baryon density in the maximum mass configuration
       nbmax=dat.mvsr->get_constant("nb_max");
+      
     }
 
   } else {
@@ -168,18 +170,14 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
     line.push_back(dat.mvsr->get_constant("r_nb5"));
   }
   if (set.compute_cthick) {
-    if (set.nt_corr) {
-      line.push_back(dat.eos->get_constant("nt"));
-      line.push_back(dat.eos->get_constant("prt"));
-    }
+    line.push_back(dat.eos->get_constant("nt"));
+    line.push_back(dat.eos->get_constant("prt"));
     for(int i=0;i<set.grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
 	double rval=dat.mvsr->interp("gm",mval,"r");
 	line.push_back(rval-dat.mvsr->interp("gm",mval,"r0"));
       } else {
-	line.push_back(0.0);
-	line.push_back(0.0);
 	line.push_back(0.0);
       }
     }
@@ -255,15 +253,44 @@ int bamr_class::mcmc_init() {
   
   mcmc_bamr::mcmc_init();
 
-  /*
-    if (set.norm_max) {
-    u+=". ";
-    } else {
-    u+=((std::string)"1/km^")+std::to_string(nsd.nsources)+"/Msun^"+
-    std::to_string(nsd.nsources)+" ";
-    }
-  */
+  // -----------------------------------------------------------
+  // Make sure the settings are consistent
   
+  if (set.compute_cthick && (!set.baryon_density || !set.use_crust)) {
+    scr_out << "Cannot use compute_cthick=true with "
+	    << "baryon_density=false or use_crust=false." << endl;
+    return exc_efailed;
+  }
+  if (set.crust_from_L && (!set.compute_cthick || !set.baryon_density ||
+		      !set.use_crust)) {
+    scr_out << "Cannot use crust_from_L=true with "
+	    << "compute_cthick=false or "
+	    << "baryon_density=false or use_crust=false." << endl;
+    return exc_efailed;
+  }
+  if (set.crust_from_L && (!m.has_esym || !set.use_crust)) {
+    scr_out << "Cannot use crust_from_L=true with use_crust=false or "
+	    << " with a model which does not "
+	    << "provide S and L." << endl;
+    return exc_efailed;
+  }
+  if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
+			   !set.baryon_density || !set.compute_cthick)) {
+    scr_out << "Cannot use crust_from_L=true with a model which does not "
+	    << "provide S and L or with use_crust=false or with "
+	    << "baryon_density=false or with compute_cthick=false'." 
+	    << endl;
+    return exc_efailed;
+  }
+  if (set.addl_quants && !set.inc_baryon_mass) {
+    scr_out << "Cannot do additional quantities without including "
+	    << "baryon mass." << endl;
+    return exc_efailed;
+  }
+
+  // -----------------------------------------------------------
+  // Add columns to table
+
   for(size_t i=0;i<nsd.nsources;i++) {
     this->tab->new_column(((std::string)"wgt_")+nsd.source_names[i]);
     if (!set.norm_max) {
@@ -368,12 +395,10 @@ int bamr_class::mcmc_init() {
       this->tab->set_unit("r_nb5","km");
     }
     if (set.compute_cthick) {
-      if (set.nt_corr) {
-        this->tab->new_column("nt");
-        this->tab->set_unit("nt","1/fm^3");
-        this->tab->new_column("prt");
-        this->tab->set_unit("prt","1/fm^4");
-      }
+      this->tab->new_column("nt");
+      this->tab->set_unit("nt","1/fm^3");
+      this->tab->new_column("prt");
+      this->tab->set_unit("prt","1/fm^4");
       for(int i=0;i<set.grid_size;i++) {
         this->tab->new_column(((string)"ct_")+std::to_string(i));
         this->tab->set_unit(((string)"ct_")+std::to_string(i),"km");
@@ -391,36 +416,6 @@ int bamr_class::mcmc_init() {
 			    "Msun*km^2");
       //this->tab->new_column(((string)"lambda_")+std::to_string(i));
     }
-  }
-
-  if (set.compute_cthick && !set.baryon_density) {
-    scr_out << "Cannot use 'compute_cthick=true' with "
-	    << "'baryon_density=false'." << endl;
-    return exc_efailed;
-  }
-  if (set.nt_corr && (!set.compute_cthick || !set.baryon_density)) {
-    scr_out << "Cannot use 'nt_corr=true' with "
-	    << "'compute_cthick=false' or "
-	    << "'baryon_density=false'." << endl;
-    return exc_efailed;
-  }
-  if (set.nt_corr && !m.has_esym) {
-    scr_out << "Cannot use 'nt_corr=true' with a model which does not "
-	    << "provide S and L." << endl;
-    return exc_efailed;
-  }
-  if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
-			   !set.baryon_density || !set.compute_cthick)) {
-    scr_out << "Cannot use 'crust_from_L=true' with a model which does not "
-	    << "provide S and L or with 'use_crust=false' or with "
-	    << "'baryon_density=false or with 'compute_cthick=false'." 
-	    << endl;
-    return exc_efailed;
-  }
-  if (set.addl_quants && !set.inc_baryon_mass) {
-    scr_out << "Cannot do additional quantities without including "
-	    << "baryon mass." << endl;
-    return exc_efailed;
   }
 
   // -----------------------------------------------------------
@@ -446,25 +441,6 @@ int bamr_class::mcmc_init() {
     data_arr[i].wgts.resize(nsd.nsources);
   }
 
-  // -----------------------------------------------------------
-  // Prepare crust
-
-  if (set.use_crust) {
-    m.teos.default_low_dens_eos();
-    
-    // Get the transition density from the crust
-    double pt, pw;
-    m.teos.get_transition(pt,pw);
-    // We set the transition density a bit lower (because by default
-    // it's the largest pressure in the crust EOS) and then add a 
-    // small width
-    m.teos.transition_mode=eos_tov_interp::smooth_trans;
-    m.teos.set_transition(pt/1.2,1.2);
-    
-  } else {
-    m.teos.no_low_dens_eos();
-  }
-  
   if (this->verbose>=2) {
     std::cout << "End bamr_class::mcmc_init()." << std::endl;
   }

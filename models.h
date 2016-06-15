@@ -180,7 +180,6 @@ namespace bamr {
     o2scl::cli::parameter_bool p_use_crust;
     o2scl::cli::parameter_bool p_inc_baryon_mass;
     o2scl::cli::parameter_bool p_norm_max;
-    o2scl::cli::parameter_bool p_nt_corr;
     o2scl::cli::parameter_bool p_compute_cthick;
     o2scl::cli::parameter_bool p_addl_quants;
     o2scl::cli::parameter_bool p_crust_from_L;
@@ -250,13 +249,6 @@ namespace bamr {
 	as well as the gravitational mass (default false)
     */
     bool inc_baryon_mass;
-    /** \brief If true, compute transition density using correlation 
-	with L and S (default false)
-
-	Only works if \ref compute_cthick and \ref baryon_density
-	are true and the model provides S and L.
-    */
-    bool nt_corr;
     /// If true, compute crust thicknesses (default true)
     bool compute_cthick;
     /// If true (default false)
@@ -400,17 +392,12 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("m_high",&p_m_high));
       
       p_crust_from_L.b=&crust_from_L;
-      p_crust_from_L.help=((std::string)"If true, change the crust ")+
-	"according to the value of 'L' returned by the EOS.";
-      cl.par_list.insert(std::make_pair("crust_from_L",&p_crust_from_L));
-      
-      p_nt_corr.b=&nt_corr;
-      p_nt_corr.help=((std::string)"If true, compute the core-crust ")+
+      p_crust_from_L.help=((std::string)"If true, compute the core-crust ")+
 	"transition density from L and S (requires a model which "+
 	"provides these quantities). This also requires baryon_density "+
 	"and compute_cthick are true.";
-      cl.par_list.insert(std::make_pair("nt_corr",&p_nt_corr));
-
+      cl.par_list.insert(std::make_pair("crust_from_L",&p_crust_from_L));
+      
       p_compute_cthick.b=&compute_cthick;
       p_compute_cthick.help="";
       cl.par_list.insert(std::make_pair("compute_cthick",&p_compute_cthick));
