@@ -280,11 +280,6 @@ void model::load_mc(std::ofstream &scr_out) {
 
   if (in_m_min<set.min_mass) in_m_min=set.min_mass;
   
-#ifdef AWS_HACK
-  in_m_min=1.3;
-  in_m_max=1.5;
-#endif
-  
   scr_out << "M limits: (" 
 	  << in_m_min << "," << in_m_max << ")" << std::endl;
   scr_out << "R limits: ("
@@ -789,7 +784,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd.nsources;i++) {
+#ifdef AWS_HACK
       dat.mass[i]=m_max*pars[this->n_eos_params+i];
+#else
+      dat.mass[i]=m_max*0.4+1.3;
+#endif
       dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
 

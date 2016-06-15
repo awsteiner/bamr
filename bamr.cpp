@@ -501,6 +501,11 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 
 int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
+  if (model_type.length()==0) {
+    cerr << "Model not set in 'mcmc' command." << endl;
+    return 1;
+  }
+  
   std::vector<std::string> names;
   std::vector<std::string> units;
 

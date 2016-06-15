@@ -131,13 +131,6 @@ test:
 test_nompi:
 	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc
 
-testx:
-	-mkdir -p data_temp
-	rm -rf data_temp/*
-	-bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
-		-set prefix data_temp/twop_crustL -set verbose 2 \
-		-model twop -mcmc 
-
 test_all:
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
