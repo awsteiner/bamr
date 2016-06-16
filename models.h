@@ -28,23 +28,420 @@
 
 #include <iostream>
 
+#ifndef BAMR_NO_MPI
+#include <mpi.h>
+#endif
+
 #include <o2scl/nstar_cold.h>
 #include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
 #include <o2scl/cli.h>
 #include <o2scl/prob_dens_func.h>
+#include <o2scl/table3d.h>
+#include <o2scl/hdf_io.h>
+
+#ifdef BAMR_READLINE
+#include <o2scl/cli_readline.h>
+#else
+#include <o2scl/cli.h>
+#endif
 
 #include "nstar_cold2.h"
-#include "entry.h"
+#include "mcmc_bamr.h"
 
 namespace bamr {
+  
+  /** \brief Data at each MC point
+   */
+  class model_data {
+    
+  public:
 
+    /// Radii
+    ubvector rad;
+
+    /// Masses
+    ubvector mass;
+    
+    /// Weights
+    ubvector wgts;
+
+    /// M vs. R data
+    std::shared_ptr<o2scl::table_units<> > mvsr;
+
+    /// EOS data
+    std::shared_ptr<o2scl::table_units<> > eos;
+    
+  model_data() : mvsr(new o2scl::table_units<>),
+      eos(new o2scl::table_units<>) {
+    }
+    
+    /** \brief Copy constructor
+     */
+    model_data(const model_data &md) {
+      std::shared_ptr<o2scl::table_units<> >
+	mvsr_new(new o2scl::table_units<>);
+      mvsr=mvsr_new;
+      std::shared_ptr<o2scl::table_units<> >
+	eos_new(new o2scl::table_units<>);
+      eos=eos_new;
+    }
+    
+  private:
+    
+    /** \brief Make operator= copy constructor private
+     */
+    model_data &operator=(const model_data &e);
+    
+  };
+
+  /** \brief Settings object
+   */
+  class settings {
+
+  public:
+
+    settings() {
+      grid_size=100;
+      debug_load=false;
+      min_max_mass=2.0;
+      min_mass=0.8;
+      debug_star=false;
+      debug_eos=false;
+      baryon_density=true;
+      exit_mass=10.0;
+      input_dist_thresh=0.0;
+      use_crust=true;
+      best_detail=false;
+      inc_baryon_mass=false;
+      norm_max=true;
+      mvsr_pr_inc=1.1;
+      nb_low=0.04;
+      nb_high=1.24;
+      e_low=0.3;
+      e_high=10.0;
+      m_low=0.2;
+      m_high=3.0;
+      verbose=0;
+      in_m_min=0.8;
+      in_m_max=3.0;
+      in_r_min=5.0;
+      in_r_max=18.0;
+    }
+    
+    /// \name Parameter objects for the 'set' command
+    //@{
+    o2scl::cli::parameter_double p_min_max_mass;
+    o2scl::cli::parameter_double p_exit_mass;
+    o2scl::cli::parameter_double p_input_dist_thresh;
+    o2scl::cli::parameter_double p_min_mass;
+    o2scl::cli::parameter_int p_grid_size;
+    o2scl::cli::parameter_bool p_debug_star;
+    o2scl::cli::parameter_bool p_debug_load;
+    o2scl::cli::parameter_bool p_debug_eos;
+    o2scl::cli::parameter_bool p_baryon_density;
+    o2scl::cli::parameter_bool p_use_crust;
+    o2scl::cli::parameter_bool p_inc_baryon_mass;
+    o2scl::cli::parameter_bool p_norm_max;
+    o2scl::cli::parameter_bool p_compute_cthick;
+    o2scl::cli::parameter_bool p_addl_quants;
+    o2scl::cli::parameter_bool p_crust_from_L;
+    o2scl::cli::parameter_double p_nb_low;
+    o2scl::cli::parameter_double p_nb_high;
+    o2scl::cli::parameter_double p_e_low;
+    o2scl::cli::parameter_double p_e_high;
+    o2scl::cli::parameter_double p_m_low;
+    o2scl::cli::parameter_double p_m_high;
+    o2scl::cli::parameter_double p_mvsr_pr_inc;
+    //@}
+
+    /// Desc
+    int verbose;
+    
+    /** \name Limits on mass and radius from source data files
+
+	These are automatically computed in load_mc() as the
+	smallest rectangle in the \f$ (M,R) \f$ plane which
+	encloses all of the user-specified source data
+    */
+    //@{
+    double in_m_min;
+    double in_m_max;
+    double in_r_min;
+    double in_r_max;
+    //@}
+
+    /// \name Other parameters accessed by 'set' and 'get'
+    //@{
+    /// Number of bins for all histograms (default 100)
+    int grid_size;
+
+    /// Pressure increment for the M vs. R curve (default 1.1)
+    double mvsr_pr_inc;
+
+    /** \brief If true, normalize the data distributions so that the
+	max is one, otherwise, normalize so that the integral is one
+	(default true)
+    */
+    bool norm_max;
+
+    /// If true, use the default crust (default true)
+    bool use_crust;
+
+    /** \brief If true, output debug information about the input data 
+	files (default false)
+    */
+    bool debug_load;
+
+    /// If true, output stellar properties for debugging (default false)
+    bool debug_star;
+    
+    /// If true, output equation of state for debugging (default false)
+    bool debug_eos;
+
+    /// If true, compute the baryon density (default true)
+    bool baryon_density;
+
+    /// The lower threshold for the input distributions (default 0.0)
+    double input_dist_thresh;
+
+    /// The upper mass threshold (default 10.0)
+    double exit_mass;
+
+    /** \brief Minimum mass allowed for any of the individual neutron
+	stars (default 0.8)
+    */
+    double min_mass;
+  
+    /// Minimum allowed maximum mass (default 2.0)
+    double min_max_mass;
+
+    /** \brief If true, output more detailed information about the 
+	best point (default false)
+    */
+    bool best_detail;
+    
+    /** \brief If true, output information about the baryon mass
+	as well as the gravitational mass (default false)
+    */
+    bool inc_baryon_mass;
+    /// If true, compute crust thicknesses (default true)
+    bool compute_cthick;
+    /// If true (default false)
+    bool addl_quants;
+    /** \brief If true, compute a crust consistent with current 
+	value of L
+
+	Only works if \ref use_crust, \ref baryon_density, and
+	\ref compute_cthick are true and the model 
+	provides S and L.
+    */
+    bool crust_from_L;
+    //@}
+
+    /** \name Histogram limits
+     */
+    //@{
+    double nb_low;
+    double nb_high;
+    double e_low;
+    double e_high;
+    double m_low;
+    double m_high;
+    //@}
+
+    /** \brief Add parameters to the \ref o2scl::cli object
+     */
+    void setup_cli(o2scl::cli &cl) {
+      
+      // ---------------------------------------
+      // Set parameters
+      
+      p_grid_size.i=&grid_size;
+      p_grid_size.help="Grid size (default 100).";
+      cl.par_list.insert(std::make_pair("grid_size",&p_grid_size));
+      
+      p_min_max_mass.d=&min_max_mass;
+      p_min_max_mass.help=((std::string)"Minimum maximum mass ")
+	+"(in solar masses, default 2.0).";
+      cl.par_list.insert(std::make_pair("min_max_mass",&p_min_max_mass));
+      
+      p_min_mass.d=&min_mass;
+      p_min_mass.help=
+	((std::string)"Minimum possible mass for any of individual ")+
+	"neutron stars in solar masses. The default is 0.8 solar masses.";
+      cl.par_list.insert(std::make_pair("min_mass",&p_min_mass));
+      
+      p_exit_mass.d=&exit_mass;
+      p_exit_mass.help=((std::string)"Upper limit on maximum mass ")+
+	"(default 10.0). When the maximum mass is larger than this value, "+
+	"the current point in the parameter space is output to 'cout' and "+
+	"execution is aborted. This is sometimes useful in debugging the "+
+	"initial guess.";
+      cl.par_list.insert(std::make_pair("exit_mass",&p_exit_mass));
+      
+      p_input_dist_thresh.d=&input_dist_thresh;
+      p_input_dist_thresh.help=((std::string)"Input distribution threshold. ")+
+	"This is the artificial lower limit for the (renormalized) "+
+	"probability of a (R,M) pair as reported by the data file. If the "+
+	"weight is smaller than or equal to this value, an exception is "+
+	"thrown. Changing this value is sometimes "+
+	"useful to gracefully avoid zero probabilities in the input "+
+	"data files. The default is 0.";
+      cl.par_list.insert(std::make_pair("input_dist_thresh",
+					&p_input_dist_thresh));
+      
+      p_debug_star.b=&debug_star;
+      p_debug_star.help=((std::string)"If true, output stellar properties ")+
+	"to file with suffix '_scr' at each point (default false).";
+      cl.par_list.insert(std::make_pair("debug_star",&p_debug_star));
+      
+      p_norm_max.b=&norm_max;
+      p_norm_max.help=((std::string)"If true, normalize by max probability ")+
+	"or if false, normalize by total integral (default true).";
+      cl.par_list.insert(std::make_pair("norm_max",&p_norm_max));
+      
+      p_debug_load.b=&debug_load;
+      p_debug_load.help=((std::string)"If true, output info on loaded data ")+
+	"(default false).";
+      cl.par_list.insert(std::make_pair("debug_load",&p_debug_load));
+      
+      p_debug_eos.b=&debug_eos;
+      p_debug_eos.help=((std::string)
+			"If true, output initial equation of state ")+
+	"to file 'debug_eos.o2' and abort (default false).";
+      cl.par_list.insert(std::make_pair("debug_eos",&p_debug_eos));
+      
+      p_baryon_density.b=&baryon_density;
+      p_baryon_density.help=((std::string)"If true, compute baryon density ")+
+	"and associated profiles (default true).";
+      cl.par_list.insert(std::make_pair("baryon_density",
+					&p_baryon_density));
+      
+      p_use_crust.b=&use_crust;
+      p_use_crust.help=((std::string)
+			"If true, use the default crust (default ")+
+	"true).";
+      cl.par_list.insert(std::make_pair("use_crust",&p_use_crust));
+      
+      p_inc_baryon_mass.b=&inc_baryon_mass;
+      p_inc_baryon_mass.help=((std::string)
+			      "If true, compute the baryon mass ")+
+	"(default false)";
+      cl.par_list.insert(std::make_pair("inc_baryon_mass",
+					&p_inc_baryon_mass));
+      
+      p_mvsr_pr_inc.d=&mvsr_pr_inc;
+      p_mvsr_pr_inc.help=((std::string)
+			  "The multiplicative pressure increment for ")+
+	"the TOV solver (default 1.1).";
+      cl.par_list.insert(std::make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
+      
+      // --------------------------------------------------------
+      
+      p_nb_low.d=&nb_low;
+      p_nb_low.help=
+	"Smallest baryon density grid point in 1/fm^3 (default 0.04).";
+      cl.par_list.insert(std::make_pair("nb_low",&p_nb_low));
+      
+      p_nb_high.d=&nb_high;
+      p_nb_high.help=
+	"Largest baryon density grid point in 1/fm^3 (default 1.24).";
+      cl.par_list.insert(std::make_pair("nb_high",&p_nb_high));
+      
+      p_e_low.d=&e_low;
+      p_e_low.help=
+	"Smallest energy density grid point in 1/fm^4 (default 0.3).";
+      cl.par_list.insert(std::make_pair("e_low",&p_e_low));
+      
+      p_e_high.d=&e_high;
+      p_e_high.help=
+	"Largest energy density grid point in 1/fm^4 (default 10.0).";
+      cl.par_list.insert(std::make_pair("e_high",&p_e_high));
+      
+      p_m_low.d=&m_low;
+      p_m_low.help="Smallest mass grid point in Msun (default 0.2).";
+      cl.par_list.insert(std::make_pair("m_low",&p_m_low));
+      
+      p_m_high.d=&m_high;
+      p_m_high.help="Largest mass grid point in Msun (default 3.0).";
+      cl.par_list.insert(std::make_pair("m_high",&p_m_high));
+      
+      p_crust_from_L.b=&crust_from_L;
+      p_crust_from_L.help=((std::string)"If true, compute the core-crust ")+
+	"transition density from L and S (requires a model which "+
+	"provides these quantities). This also requires baryon_density "+
+	"and compute_cthick are true.";
+      cl.par_list.insert(std::make_pair("crust_from_L",&p_crust_from_L));
+      
+      p_compute_cthick.b=&compute_cthick;
+      p_compute_cthick.help="";
+      cl.par_list.insert(std::make_pair("compute_cthick",&p_compute_cthick));
+
+      p_addl_quants.b=&addl_quants;
+      p_addl_quants.help="";
+      cl.par_list.insert(std::make_pair("addl_quants",&p_addl_quants));
+
+      return;
+    }
+    
+  };
+  
+  /** \brief Desc
+   */
+  class ns_data {
+
+  public:
+
+    ns_data() {
+      nsources=0;
+    }      
+    
+    /// \name Input neutron star data
+    //@{
+    /// Input probability distributions
+    std::vector<o2scl::table3d> source_tables;
+
+    /// The names for each source
+    std::vector<std::string> source_names;
+
+    /// The names of the table in the data file
+    std::vector<std::string> table_names;
+
+    /// File names for each source
+    std::vector<std::string> source_fnames;
+
+    /// Slice names for each source
+    std::vector<std::string> slice_names;
+
+    /// The initial set of neutron star masses
+    std::vector<double> init_mass_fracs;
+
+    /** \brief The number of sources
+     */
+    size_t nsources;
+
+    /** \brief Add a data distribution to the list
+     */
+    virtual int add_data(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Load input probability distributions
+     */
+    virtual void load_mc(std::ofstream &scr_out, int mpi_nprocs,
+			 int mpi_rank, settings &set);
+    //@}
+
+  };
+  
   /** \brief Base class for an EOS parameterization
    */
   class model {
-
-  protected:
-
+    
+  public:
+    
+    /// Random number generator
+    o2scl::rng_gsl gr;
+  
     /// The fiducial baryon density
     double nb_n1;
     
@@ -53,64 +450,127 @@ namespace bamr {
 
   public:
 
-    /** \brief TOV solver and storage for the EOS table
+    /// \name Return codes for each point
+    //@{
+    static const int ix_success=0;
+    static const int ix_mr_outside=2;
+    static const int ix_r_outside=3;
+    static const int ix_press_dec=4;
+    static const int ix_nb_problem=5;
+    static const int ix_nb_problem2=6;
+    static const int ix_crust_unstable=7;
+    static const int ix_mvsr_failed=8;
+    static const int ix_tov_failure=9;
+    static const int ix_small_max=10;
+    static const int ix_tov_conv=11;
+    static const int ix_mvsr_table=12;
+    static const int ix_acausal=13;
+    static const int ix_acausal_mr=14;
+    static const int ix_param_mismatch=15;
+    static const int ix_neg_pressure=16;
+    static const int ix_no_eos_table=17;
+    static const int ix_eos_solve_failed=18;
+    static const int ix_trans_invalid=19;
+    static const int ix_SL_invalid=20;
+    //@}
+
+    /// Number of parameters (EOS parameters plus mass of each source)
+    size_t n_eos_params;
+    
+    /** \brief TOV solver
 	
 	The value of \ref o2scl::nstar_cold::nb_start is set to
 	0.01 by the constructor
     */
     nstar_cold2 cns;
 
-    model() {
-      cns.nb_start=0.01;
-    }
+    /// TOV solver
+    o2scl::tov_solve ts;
+    
+    /// True if the model has an EOS
+    bool has_eos;
+
+    /// Schwarzchild radius (set in constructor)
+    double schwarz_km;
+
+    /// True if the model provides S and L
+    bool has_esym;
+
+    /// \name Grids
+    //@{
+    o2scl::uniform_grid<double> nb_grid;
+    o2scl::uniform_grid<double> e_grid;
+    o2scl::uniform_grid<double> m_grid;
+    //@}
+
+    /// Lower limit for baryon density of core-crust transition
+    double nt_low;
+
+    /// Upper limit for baryon density of core-crust transition
+    double nt_high;
+
+    /// Gaussians for core-crust transition
+    o2scl::prob_dens_gaussian nt_a, nt_b, nt_c;
+    
+    /// EOS interpolation object for TOV solver
+    o2scl::eos_tov_interp teos;
+
+    /// Settings object
+    settings &set;
+
+    /// Mass-radius data
+    ns_data &nsd;
+
+    model(settings &s, ns_data &n);
 
     virtual ~model() {}
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out)=0;
-
-    /// Compute the M-R curve directly
-    virtual void compute_mr
-      (entry &e, std::ofstream &scr_out,
-       std::shared_ptr<o2scl::table_units<> > tab_mvsr,
-       int &success) {
+    virtual void compute_eos(const ubvector &pars, int &success,
+			     std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
-    /** \brief A point to calibrate the baryon density with
+    virtual void compute_mr(const ubvector &pars, int &success,
+			    std::ofstream &scr_out, model_data &dat) {
+      return;
+    }
+
+    /** \brief Tabulate EOS and then use in cold_nstar
      */
-    virtual void baryon_density_point(double &n1, double &e1) {
-      n1=nb_n1;
-      e1=nb_e1;
-      return;
-    }
+    virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
+			      int &success, model_data &dat);
+    
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
+				 int &success, model_data &dat);
 
-    /** \brief Function to compute the initial guess
+    /** \brief Specify the initial point
      */
-    virtual void first_point(entry &e) {
+    virtual void initial_point(ubvector &pars) {
+      for(size_t i=0;i<nsd.nsources;i++) {
+	pars[i+n_eos_params]=nsd.init_mass_fracs[i];
+      }
       return;
     }
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e)=0;
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e)=0;
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i)=0;
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i)=0;
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high) {
+      for(size_t i=0;i<nsd.nsources;i++) {
+	names.push_back("mf_"+nsd.source_names[i]);
+	units.push_back("");
+	low[i+n_eos_params]=0.0;
+	high[i+n_eos_params]=1.0;
+      }
+      return;
+    }
 
     /// \name Functions for model parameters fixed during the MCMC run
     //@{
@@ -217,37 +677,25 @@ namespace bamr {
     //@}
 
     /// Create a model object
-    two_polytropes();
+    two_polytropes(settings &s, ns_data &n);
 
     virtual ~two_polytropes() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -277,35 +725,26 @@ namespace bamr {
 
   public:
 
+  alt_polytropes(settings &s, ns_data &n) : two_polytropes(s,n) {
+    }
+    
     virtual ~alt_polytropes() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
   
   };
 
@@ -350,35 +789,26 @@ namespace bamr {
 
   public:
 
+  fixed_pressure(settings &s, ns_data &n) : two_polytropes(s,n) {
+    }
+    
     virtual ~fixed_pressure() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);  
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -451,35 +881,26 @@ namespace bamr {
   
   public:
   
+  generic_quarks(settings &s, ns_data &n) : two_polytropes(s,n) {
+    }
+    
     virtual ~generic_quarks() {}
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -520,8 +941,8 @@ namespace bamr {
     
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
-
-    quark_star() {
+    
+  quark_star(settings &s, ns_data &n) : model(s,n) {
     }
 
     virtual ~quark_star() {}
@@ -532,33 +953,21 @@ namespace bamr {
     /// Compute the pressure as a function of the chemical potential
     double pressure2(double mu);
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-  
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-  
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-  
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
 
   };
 
@@ -607,7 +1016,7 @@ namespace bamr {
 
   public:
   
-    qmc_neut();
+    qmc_neut(settings &s, ns_data &n);
     
     virtual ~qmc_neut();
     
@@ -633,33 +1042,21 @@ namespace bamr {
     /// Gaussian distribution for proton correction factor
     o2scl::prob_dens_gaussian pdg;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-        masses, and radii
-    */
-    virtual void low_limits(entry &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-        masses, and radii
-    */
-    virtual void high_limits(entry &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
         \c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
   };
   
   /** \brief QMC + three polytropes created for \ref Steiner15un
@@ -717,7 +1114,7 @@ namespace bamr {
 
   public:
   
-    qmc_threep();
+    qmc_threep(settings &s, ns_data &n);
     
     virtual ~qmc_threep();
     
@@ -727,33 +1124,21 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double rho_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-    
-    /// Return the name of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
   
   };
 
@@ -807,7 +1192,7 @@ namespace bamr {
 
   public:
   
-    qmc_fixp();
+    qmc_fixp(settings &s, ns_data &n);
     
     virtual ~qmc_fixp();
 
@@ -827,33 +1212,21 @@ namespace bamr {
     */
     double nb_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
   
   };
   
@@ -874,7 +1247,7 @@ namespace bamr {
 
   public:
   
-    qmc_twolines();
+    qmc_twolines(settings &s, ns_data &n);
     
     virtual ~qmc_twolines();
 
@@ -884,33 +1257,21 @@ namespace bamr {
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
     double nb_trans;
 
-    /// \name Functions for MCMC parameters
-    //@{
-    /** \brief Set the lower boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void low_limits(entry &e);
-    
-    /** \brief Set the upper boundaries for all the parameters,
-	masses, and radii
-    */
-    virtual void high_limits(entry &e);
-    
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_name(size_t i);
-
-    /// Return the unit of parameter with index \c i
-    virtual std::string param_unit(size_t i);
-    //@}
+    /** \brief Set parameter information [pure virtual]
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual void compute_eos(entry &e, int &success, std::ofstream &scr_out);
+    virtual void compute_eos(const ubvector &e, int &success,
+			     std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
-    virtual void first_point(entry &e);
+    virtual void initial_point(ubvector &e);
   
   };
 

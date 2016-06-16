@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2013-2016, Andrew W. Steiner
+  Copyright (C) 2016, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -20,32 +20,20 @@
 
   -------------------------------------------------------------------
 */
-#ifndef BAMR_NO_MPI
-#include <mpi.h>
-#endif
+#include "mcmc.h"
+#include <o2scl/vec_stats.h>
 
-#include "models.h"
-#include "bamr.h"
-
+using namespace std;
+using namespace o2scl;
 using namespace bamr;
 
+typedef boost::numeric::ublas::vector<double> ubvector;
+
 int main(int argc, char *argv[]) {
-
-#ifndef BAMR_NO_MPI
-  // Init MPI
-  MPI_Init(&argc,&argv);
-#endif
-
-  // Main bamr object
-  bamr::bamr_class b;
-
-  // Run!
-  b.run(argc,argv);
   
-#ifndef BAMR_NO_MPI
-  // Finalize MPI
-  MPI_Finalize();
-#endif
-
+  cout.setf(ios::scientific);
+  
+  mcmc_bamr<> mc;
+  
   return 0;
 }
