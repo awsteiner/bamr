@@ -41,11 +41,6 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   has_eos=true;
   schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
       
-  in_m_min=0.8;
-  in_m_max=3.0;
-  in_r_min=5.0;
-  in_r_max=18.0;
-      
   teos.verbose=0;
 
   // Transition density parameters
@@ -83,20 +78,21 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   
 }
 
-void model::load_mc(std::ofstream &scr_out) {
+void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
+		      settings &set) {
       
   double tot, max;
       
   std::string name;
 
-  if (nsd.source_names.size()!=nsd.source_fnames.size() ||
-      nsd.source_names.size()!=nsd.init_mass_fracs.size()) {
+  if ( source_names.size()!= source_fnames.size() ||
+       source_names.size()!= init_mass_fracs.size()) {
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
   
-  if (nsd.nsources>0) {
+  if ( nsources>0) {
 
-    nsd.source_tables.resize(nsd.nsources);
+     source_tables.resize( nsources);
 
 #ifdef BAMR_MPI_LOAD
 
@@ -105,7 +101,7 @@ void model::load_mc(std::ofstream &scr_out) {
     
     // Choose which file to read first for this rank
     int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int)nsd.nsources) && mpi_rank>0) {
+    if (mpi_rank>mpi_nprocs-((int) nsources) && mpi_rank>0) {
       filestart=mpi_nprocs-mpi_rank;
     }
     if (mpi_load_debug) {
@@ -114,11 +110,11 @@ void model::load_mc(std::ofstream &scr_out) {
     }
     
     // Loop through all files
-    for(int k=0;k<((int)nsd.nsources);k++) {
+    for(int k=0;k<((int) nsources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)nsd.nsources))) {
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int) nsources))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -131,7 +127,7 @@ void model::load_mc(std::ofstream &scr_out) {
       
       // Determine which file to read next
       int file=filestart+k;
-      if (file>=((int)nsd.nsources)) file-=nsd.nsources;
+      if (file>=((int) nsources)) file-= nsources;
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
@@ -139,17 +135,17 @@ void model::load_mc(std::ofstream &scr_out) {
       }
 
       o2scl_hdf::hdf_file hf;
-      hf.open(nsd.source_fnames[file]);
-      if (nsd.table_names[file].length()>0) {
-	hdf_input(hf,nsd.source_tables[file],nsd.table_names[file]);
+      hf.open( source_fnames[file]);
+      if ( table_names[file].length()>0) {
+	hdf_input(hf, source_tables[file], table_names[file]);
       } else {
-	hdf_input(hf,nsd.source_tables[file]);
+	hdf_input(hf, source_tables[file]);
       }
       hf.close();
       
       // Send a message, unless the rank is the last one to read a
       // file.
-      if (k<((int)nsd.nsources)-1 || mpi_rank<mpi_nprocs-((int)nsd.nsources)) {
+      if (k<((int) nsources)-1 || mpi_rank<mpi_nprocs-((int) nsources)) {
 	int next=mpi_rank+1;
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -163,14 +159,14 @@ void model::load_mc(std::ofstream &scr_out) {
     
 #else
     
-    for(size_t k=0;k<nsd.nsources;k++) {
+    for(size_t k=0;k< nsources;k++) {
       
       hdf_file hf;
-      hf.open(nsd.source_fnames[k]);
-      if (nsd.table_names[k].length()>0) {
-	hdf_input(hf,nsd.source_tables[k],nsd.table_names[k]);
+      hf.open( source_fnames[k]);
+      if ( table_names[k].length()>0) {
+	hdf_input(hf, source_tables[k], table_names[k]);
       } else {
-	hdf_input(hf,nsd.source_tables[k]);
+	hdf_input(hf, source_tables[k]);
       }
       hf.close();
     }
@@ -188,75 +184,75 @@ void model::load_mc(std::ofstream &scr_out) {
     scr_out << "File                          name   total        "
 	    << "max          P(10,1.4)" << std::endl;
 
-    for(size_t k=0;k<nsd.nsources;k++) {
+    for(size_t k=0;k< nsources;k++) {
       
       // Update input limits
       if (k==0) {
-	in_r_min=nsd.source_tables[k].get_grid_x(0);
-	in_r_max=nsd.source_tables[k].get_grid_x
-	  (nsd.source_tables[k].get_nx()-1);
-	in_m_min=nsd.source_tables[k].get_grid_y(0);
-	in_m_max=nsd.source_tables[k].get_grid_y
-	  (nsd.source_tables[k].get_ny()-1);
+	set.in_r_min= source_tables[k].get_grid_x(0);
+	set.in_r_max= source_tables[k].get_grid_x
+	  ( source_tables[k].get_nx()-1);
+	set.in_m_min= source_tables[k].get_grid_y(0);
+	set.in_m_max= source_tables[k].get_grid_y
+	  ( source_tables[k].get_ny()-1);
       } else {
-	if (in_r_min>nsd.source_tables[k].get_grid_x(0)) {
-	  in_r_min=nsd.source_tables[k].get_grid_x(0);
+	if (set.in_r_min> source_tables[k].get_grid_x(0)) {
+	  set.in_r_min= source_tables[k].get_grid_x(0);
 	}
-	if (in_r_max<nsd.source_tables[k].get_grid_x
-	    (nsd.source_tables[k].get_nx()-1)) {
-	  in_r_max=nsd.source_tables[k].get_grid_x
-	    (nsd.source_tables[k].get_nx()-1);
+	if (set.in_r_max< source_tables[k].get_grid_x
+	    ( source_tables[k].get_nx()-1)) {
+	  set.in_r_max= source_tables[k].get_grid_x
+	    ( source_tables[k].get_nx()-1);
 	}
-	if (in_m_min>nsd.source_tables[k].get_grid_y(0)) {
-	  in_m_min=nsd.source_tables[k].get_grid_y(0);
+	if (set.in_m_min> source_tables[k].get_grid_y(0)) {
+	  set.in_m_min= source_tables[k].get_grid_y(0);
 	}
-	if (in_m_max<nsd.source_tables[k].get_grid_y
-	    (nsd.source_tables[k].get_ny()-1)) {
-	  in_m_max=nsd.source_tables[k].get_grid_y
-	    (nsd.source_tables[k].get_ny()-1);
+	if (set.in_m_max< source_tables[k].get_grid_y
+	    ( source_tables[k].get_ny()-1)) {
+	  set.in_m_max= source_tables[k].get_grid_y
+	    ( source_tables[k].get_ny()-1);
 	}
       }
 
       // Renormalize
       tot=0.0;
       max=0.0;
-      for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
-	  tot+=nsd.source_tables[k].get(i,j,nsd.slice_names[k]);
-	  if (nsd.source_tables[k].get(i,j,nsd.slice_names[k])>max) {
-	    max=nsd.source_tables[k].get(i,j,nsd.slice_names[k]);
+      for(size_t i=0;i< source_tables[k].get_nx();i++) {
+	for(size_t j=0;j< source_tables[k].get_ny();j++) {
+	  tot+= source_tables[k].get(i,j, slice_names[k]);
+	  if ( source_tables[k].get(i,j, slice_names[k])>max) {
+	    max= source_tables[k].get(i,j, slice_names[k]);
 	  }
 	}
       }
-      for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
+      for(size_t i=0;i< source_tables[k].get_nx();i++) {
+	for(size_t j=0;j< source_tables[k].get_ny();j++) {
 	  if (set.norm_max) {
-	    nsd.source_tables[k].set
-	      (i,j,nsd.slice_names[k],nsd.source_tables[k].get
-	       (i,j,nsd.slice_names[k])/max);
+	     source_tables[k].set
+	      (i,j, slice_names[k], source_tables[k].get
+	       (i,j, slice_names[k])/max);
 		   
 	  } else {
-	    nsd.source_tables[k].set
-	      (i,j,nsd.slice_names[k],nsd.source_tables[k].get
-	       (i,j,nsd.slice_names[k])/tot);
+	     source_tables[k].set
+	      (i,j, slice_names[k], source_tables[k].get
+	       (i,j, slice_names[k])/tot);
 		   
 	  }
 	}
       }
 
       if (set.debug_load) {
-	std::cout << nsd.source_fnames[k] << std::endl;
-	for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
-	  std::cout << i << " " << nsd.source_tables[k].get_grid_x(i)
+	std::cout <<  source_fnames[k] << std::endl;
+	for(size_t i=0;i< source_tables[k].get_nx();i++) {
+	  std::cout << i << " " <<  source_tables[k].get_grid_x(i)
 		    << std::endl;
 	}
-	for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
-	  std::cout << j << " " << nsd.source_tables[k].get_grid_y(j)
+	for(size_t j=0;j< source_tables[k].get_ny();j++) {
+	  std::cout << j << " " <<  source_tables[k].get_grid_y(j)
 		    << std::endl;
 	}
-	for(size_t i=0;i<nsd.source_tables[k].get_nx();i++) {
-	  for(size_t j=0;j<nsd.source_tables[k].get_ny();j++) {
-	    std::cout << nsd.source_tables[k].get(i,j,nsd.slice_names[k])
+	for(size_t i=0;i< source_tables[k].get_nx();i++) {
+	  for(size_t j=0;j< source_tables[k].get_ny();j++) {
+	    std::cout <<  source_tables[k].get(i,j, slice_names[k])
 		      << " ";
 	  }
 	  std::cout << std::endl;
@@ -265,12 +261,12 @@ void model::load_mc(std::ofstream &scr_out) {
 
       scr_out.setf(std::ios::left);
       scr_out.width(29);
-      std::string stempx=nsd.source_fnames[k].substr(0,29);
+      std::string stempx= source_fnames[k].substr(0,29);
       scr_out << stempx << " ";
       scr_out.width(6);
-      scr_out << nsd.source_names[k] << " " << tot << " " << max << " ";
+      scr_out <<  source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(std::ios::left);
-      scr_out << nsd.source_tables[k].interp(10.0,1.4,nsd.slice_names[k])
+      scr_out <<  source_tables[k].interp(10.0,1.4, slice_names[k])
 	      << std::endl;
       
     }
@@ -278,12 +274,12 @@ void model::load_mc(std::ofstream &scr_out) {
     scr_out << std::endl;
   }
 
-  if (in_m_min<set.min_mass) in_m_min=set.min_mass;
+  if (set.in_m_min<set.min_mass) set.in_m_min=set.min_mass;
   
   scr_out << "M limits: (" 
-	  << in_m_min << "," << in_m_max << ")" << std::endl;
+	  << set.in_m_min << "," << set.in_m_max << ")" << std::endl;
   scr_out << "R limits: ("
-	  << in_r_min << "," << in_r_max << ")" << std::endl;
+	  << set.in_r_min << "," << set.in_r_max << ")" << std::endl;
   
   return;
 }
@@ -291,7 +287,7 @@ void model::load_mc(std::ofstream &scr_out) {
 int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 
   if (sv.size()<5) {
-    std::cout << "Not enough arguments given to 'add-data'." << std::endl;
+    std::cerr << "Not enough arguments given to 'add-data'." << std::endl;
     return o2scl::exc_efailed;
   }
       
@@ -897,36 +893,34 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   if (success!=ix_success) {
     return 0.0;
   }
-      
-  bool mr_fail=false;
+  
   for(size_t i=0;i<nsd.nsources;i++) {
-    if (dat.mass[i]<in_m_min || dat.mass[i]>in_m_max || 
-	dat.rad[i]<in_r_min || dat.rad[i]>in_r_max) {
-      mr_fail=true;
+    if (dat.mass[i]<set.in_m_min || dat.mass[i]>set.in_m_max || 
+	dat.rad[i]<set.in_r_min || dat.rad[i]>set.in_r_max) {
+      scr_out << "Rejected: Mass or radius outside range." << std::endl;
+      scr_out << "M limits: " << set.in_m_min << " "
+	      << set.in_m_max << std::endl;
+      scr_out << "R limits: " << set.in_r_min << " "
+	      << set.in_r_max << std::endl;
+      if (nsd.nsources>0) {
+	scr_out.precision(2);
+	scr_out.setf(ios::showpos);
+	for(size_t i=0;i<nsd.nsources;i++) {
+	  scr_out << dat.mass[i] << " ";
+	}
+	scr_out << std::endl;
+	for(size_t i=0;i<nsd.nsources;i++) {
+	  scr_out << dat.rad[i] << " ";
+	}
+	scr_out << std::endl;
+	scr_out.precision(6);
+	scr_out.unsetf(ios::showpos);
+      }
+      success=ix_mr_outside;
+      return 0.0;
     }
   }
   
-  if (mr_fail==true) {
-    scr_out << "Rejected: Mass or radius outside range." << std::endl;
-    if (nsd.nsources>0) {
-      scr_out.precision(2);
-      scr_out.setf(ios::showpos);
-      for(size_t i=0;i<nsd.nsources;i++) {
-	scr_out << dat.mass[i] << " ";
-      }
-      scr_out << std::endl;
-      for(size_t i=0;i<nsd.nsources;i++) {
-	scr_out << dat.rad[i] << " ";
-      }
-      scr_out << std::endl;
-      scr_out.precision(6);
-      scr_out.unsetf(ios::showpos);
-    }
-    success=ix_mr_outside;
-    return 0.0;
-  }
-
-  success=ix_success;
   double ret=1.0;
       
   dat.mvsr->set_interp_type(o2scl::itp_linear);

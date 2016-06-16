@@ -428,9 +428,7 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Load data
 
-  m.mpi_rank=mpi_rank;
-  m.mpi_nprocs=mpi_nprocs;
-  m.load_mc(this->scr_out);
+  nsd.load_mc(this->scr_out,mpi_nprocs,mpi_rank,set);
 
   // -----------------------------------------------------------
   // Prepare data objects

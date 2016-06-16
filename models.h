@@ -95,47 +95,6 @@ namespace bamr {
     
   };
 
-  /** \brief Desc
-   */
-  class ns_data {
-
-  public:
-
-    ns_data() {
-      nsources=0;
-    }      
-    
-    /// \name Input neutron star data
-    //@{
-    /// Input probability distributions
-    std::vector<o2scl::table3d> source_tables;
-
-    /// The names for each source
-    std::vector<std::string> source_names;
-
-    /// The names of the table in the data file
-    std::vector<std::string> table_names;
-
-    /// File names for each source
-    std::vector<std::string> source_fnames;
-
-    /// Slice names for each source
-    std::vector<std::string> slice_names;
-
-    /// The initial set of neutron star masses
-    std::vector<double> init_mass_fracs;
-
-    /** \brief The number of sources
-     */
-    size_t nsources;
-
-    /** \brief Add a data distribution to the list
-     */
-    int add_data(std::vector<std::string> &sv, bool itive_com);
-    //@}
-
-  };
-  
   /** \brief Settings object
    */
   class settings {
@@ -164,6 +123,10 @@ namespace bamr {
       m_low=0.2;
       m_high=3.0;
       verbose=0;
+      in_m_min=0.8;
+      in_m_max=3.0;
+      in_r_min=5.0;
+      in_r_max=18.0;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -195,6 +158,19 @@ namespace bamr {
     /// Desc
     int verbose;
     
+    /** \name Limits on mass and radius from source data files
+
+	These are automatically computed in load_mc() as the
+	smallest rectangle in the \f$ (M,R) \f$ plane which
+	encloses all of the user-specified source data
+    */
+    //@{
+    double in_m_min;
+    double in_m_max;
+    double in_r_min;
+    double in_r_max;
+    //@}
+
     /// \name Other parameters accessed by 'set' and 'get'
     //@{
     /// Number of bins for all histograms (default 100)
@@ -411,6 +387,52 @@ namespace bamr {
     
   };
   
+  /** \brief Desc
+   */
+  class ns_data {
+
+  public:
+
+    ns_data() {
+      nsources=0;
+    }      
+    
+    /// \name Input neutron star data
+    //@{
+    /// Input probability distributions
+    std::vector<o2scl::table3d> source_tables;
+
+    /// The names for each source
+    std::vector<std::string> source_names;
+
+    /// The names of the table in the data file
+    std::vector<std::string> table_names;
+
+    /// File names for each source
+    std::vector<std::string> source_fnames;
+
+    /// Slice names for each source
+    std::vector<std::string> slice_names;
+
+    /// The initial set of neutron star masses
+    std::vector<double> init_mass_fracs;
+
+    /** \brief The number of sources
+     */
+    size_t nsources;
+
+    /** \brief Add a data distribution to the list
+     */
+    virtual int add_data(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Load input probability distributions
+     */
+    virtual void load_mc(std::ofstream &scr_out, int mpi_nprocs,
+			 int mpi_rank, settings &set);
+    //@}
+
+  };
+  
   /** \brief Base class for an EOS parameterization
    */
   class model {
@@ -425,19 +447,6 @@ namespace bamr {
     
     /// The fiducial energy density
     double nb_e1;
-
-    /** \name Limits on mass and radius from source data files
-
-	These are automatically computed in load_mc() as the
-	smallest rectangle in the \f$ (M,R) \f$ plane which
-	encloses all of the user-specified source data
-    */
-    //@{
-    double in_m_min;
-    double in_m_max;
-    double in_r_min;
-    double in_r_max;
-    //@}
 
   public:
 
@@ -487,12 +496,6 @@ namespace bamr {
     /// True if the model provides S and L
     bool has_esym;
 
-    /// Total number of processors
-    int mpi_nprocs;
-
-    /// Current processor rank
-    int mpi_rank;
-
     /// \name Grids
     //@{
     o2scl::uniform_grid<double> nb_grid;
@@ -535,10 +538,6 @@ namespace bamr {
       return;
     }
 
-    /** \brief Load input probability distributions
-     */
-    void load_mc(std::ofstream &scr_out);
-  
     /** \brief Tabulate EOS and then use in cold_nstar
      */
     virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
