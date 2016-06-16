@@ -303,7 +303,7 @@ namespace bamr {
       if (this->verbose>=1) {
 	std::cout << "mcmc: Stopping because n_accept+n_reject, "
 	<< this->n_accept+this->n_reject
-	<< " is equal to max_iters." << std::endl;
+	<< ", is equal to max_iters." << std::endl;
       }
       return this->mcmc_done;
     } else {

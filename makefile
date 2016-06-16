@@ -148,8 +148,8 @@ test3:
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 	-bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
-		-set step_fac 2.0 -model twop -mcmc \
-		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
+		-set nwalk 10 -set step_fac 2.0 -model twop -set verbose 1 \
+		-mcmc
 
 test_all:
 	-mkdir -p data_temp
@@ -187,7 +187,7 @@ test_all:
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 	-bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
-		-set step_fac 2.0 -model twop -mcmc \
+		-set step_fac 2.0 -model twop -set nwalk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
 # ----------------------------------------------------------------------

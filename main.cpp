@@ -27,10 +27,13 @@
 #include "models.h"
 #include "bamr.h"
 
+using namespace std;
 using namespace bamr;
 
 int main(int argc, char *argv[]) {
 
+  cout.setf(ios::scientific);
+  
 #ifndef BAMR_NO_MPI
   // Init MPI
   MPI_Init(&argc,&argv);
