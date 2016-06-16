@@ -85,15 +85,19 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
   std::string name;
 
-  if ( source_names.size()!= source_fnames.size() ||
-       source_names.size()!= init_mass_fracs.size()) {
+  if (source_names.size()!=source_fnames.size() ||
+      source_names.size()!=init_mass_fracs.size()) {
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
   
-  if ( nsources>0) {
-
-     source_tables.resize( nsources);
-
+  if (nsources>0) {
+    
+    if (set.verbose>=2) {
+      cout << "bamr: Loading " << nsources << " data files." << endl;
+    }
+    
+    source_tables.resize(nsources);
+    
 #ifdef BAMR_MPI_LOAD
 
     bool mpi_load_debug=true;
@@ -781,9 +785,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd.nsources;i++) {
 #ifdef AWS_HACK
-      dat.mass[i]=m_max*pars[this->n_eos_params+i];
+      dat.mass[i]=0.4*pars[this->n_eos_params+i]+1.3;
 #else
-      dat.mass[i]=m_max*0.4+1.3;
+      dat.mass[i]=m_max*pars[this->n_eos_params+i];
 #endif
       dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
