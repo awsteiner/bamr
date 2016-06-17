@@ -151,7 +151,7 @@ namespace bamr {
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
-    bamr_class() {
+  bamr_class(settings &s, ns_data &n) : set(s), nsd(n) {
       model_type="";
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }
@@ -160,10 +160,10 @@ namespace bamr {
     }
     
     /// Settings object
-    settings set;
+    settings &set;
 
     /// Neutron star data
-    ns_data nsd;
+    ns_data &nsd;
 
     /// Model object
     std::shared_ptr<model> mod;

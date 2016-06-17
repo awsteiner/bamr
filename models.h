@@ -127,6 +127,7 @@ namespace bamr {
       in_m_max=3.0;
       in_r_min=5.0;
       in_r_max=18.0;
+      addl_quants=false;
     }
     
     /// \name Parameter objects for the 'set' command

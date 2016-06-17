@@ -276,7 +276,11 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     }
     
     scr_out << std::endl;
-  }
+  } else {
+    if (set.verbose>=2) {
+      cout << "bamr: no sources." << endl;
+    }
+  }    
 
   if (set.in_m_min<set.min_mass) set.in_m_min=set.min_mass;
   
@@ -781,7 +785,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       success=ix_mvsr_table;
       return;
     }
-    
+
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd.nsources;i++) {
 #ifdef AWS_HACK
@@ -1231,6 +1235,7 @@ void alt_polytropes::initial_point(ubvector &params) {
   params[5]=2.913;
   params[6]=4.066;
   params[7]=1.80;
+  model::initial_point(params);
   return;
 }
 
@@ -1398,6 +1403,7 @@ void fixed_pressure::initial_point(ubvector &params) {
   params[5]=0.74;
   params[6]=0.60;
   params[7]=1.84;
+  model::initial_point(params);
   return;
 }
 
@@ -1544,6 +1550,7 @@ void generic_quarks::initial_point(ubvector &params) {
   params[6]=2.29;
   params[7]=0.1907;
   params[8]=0.0796;
+  model::initial_point(params);
   return;
 }
 
@@ -1788,6 +1795,7 @@ void quark_star::initial_point(ubvector &params) {
   params[1]=0.0740;
   params[2]=0.00289;
   params[3]=0.0754;
+  model::initial_point(params);
   return;
 }
 
@@ -1998,6 +2006,7 @@ void qmc_neut::initial_point(ubvector &params) {
   params[5]=4.60;
   params[6]=1.21;
 
+  model::initial_point(params);
   return;
 }
 
@@ -2128,7 +2137,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   names={"a","alpha","S","L","index1","trans1","index2","trans2",
 	 "index3"};
 
-  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4"};
+  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
   
   low.resize(n_eos_params+nsd.nsources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
@@ -2176,6 +2185,7 @@ void qmc_threep::initial_point(ubvector &params) {
   params[7]=2.5;
   params[8]=1.0;
 
+  model::initial_point(params);
   return;
 }
 
@@ -2412,6 +2422,7 @@ void qmc_fixp::initial_point(ubvector &params) {
   params[6]=0.60;
   params[7]=1.84;
 
+  model::initial_point(params);
   return;
 }
 
@@ -2637,6 +2648,7 @@ void qmc_twolines::initial_point(ubvector &params) {
   params[6]=0.8;
   params[7]=1.84;
 
+  model::initial_point(params);
   return;
 }
 

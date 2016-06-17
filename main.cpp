@@ -39,8 +39,12 @@ int main(int argc, char *argv[]) {
   MPI_Init(&argc,&argv);
 #endif
 
+  settings s;
+
+  ns_data n;
+  
   // Main bamr object
-  bamr::bamr_class b;
+  bamr::bamr_class b(s,n);
 
   // Run!
   b.run(argc,argv);
