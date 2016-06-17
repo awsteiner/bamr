@@ -971,7 +971,12 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	      << dat.mass[i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
-	
+    if (set.verbose>=2) {
+      cout << nsd.source_names[i] << " "
+	   << dat.mass[i] << " " 
+	   << dat.rad[i] << " " << dat.wgts[i] << std::endl;
+    }
+    
     // Go to the next source
   }
       

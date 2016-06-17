@@ -141,8 +141,7 @@ test2:
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 	-bamr -set max_iters 100 -set prefix data_temp/qt_nodata \
-		-model qmc_threep -mcmc \
-		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
+		-model qmc_threep -set verbose 1 -mcmc
 
 test3:
 	-mkdir -p data_temp

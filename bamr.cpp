@@ -497,6 +497,11 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+double bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
+				 int &success, model_data &dat) {
+  return mod->compute_point(pars,scr_out,success,dat);
+}
+
 int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (model_type.length()==0) {
@@ -521,7 +526,7 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   int success;
   bamr::point_funct mf=std::bind
     (std::mem_fn<double(const ubvector &,ofstream &,int &,model_data &)>
-     (&model::compute_point),mod,
+     (&bamr_class::compute_point),this,
      std::placeholders::_2,std::ref(scr_out),std::ref(success),
      std::placeholders::_3);
   bamr::measure_funct mt=std::bind

@@ -143,6 +143,12 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
+				 int &success, model_data &dat);
+
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
