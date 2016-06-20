@@ -194,8 +194,33 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
 	line.push_back(bm);
 	line.push_back((bm-mval)/mval);
 	// Make unitless by dividing by G^2
-	line.push_back(I/mval/mval/mval/schwarz_km/schwarz_km*4.0);
-	// Set up relation between Ibar and lambdabar
+	double I_bar=I/mval/mval/mval/schwarz_km/schwarz_km*4.0;
+	line.push_back(I_bar);
+
+#ifdef NEVER_DEFINED
+	// Relation for lambda given I from Kent Yagi based
+	// on Yagi and Yunes, Science, (2014)
+	double a0=-210.327;
+	double a1=481.472;
+	double a2=-464.271;
+	double a3=241.564;
+	double a4=-70.6449;
+	double a5=10.9775;
+	double a6=-0.707066;
+
+	double li=log(I_bar);
+	double li2=li*li;
+	double li3=li*li2;
+	double li4=li*li3;
+	double li5=li*li4;
+	double li6=li*li5;
+	  
+	double lambda_bar=exp(a0+a1*li+a2*li2+a3*li3+a4*li4+a5*li5+a6*li6);
+	double lambda=lambda_bar*pow(mval,5.0);
+	cout << I_bar << " " << lambda_bar << endl;
+	exit(-1);
+#endif
+	
       } else {
 	line.push_back(0.0);
 	line.push_back(0.0);

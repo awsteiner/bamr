@@ -131,25 +131,6 @@ test:
 test_nompi:
 	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc
 
-test1:
-	-mkdir -p data_temp
-	-rm -rf data_temp/*
-	-bamr -set max_iters 100 -set prefix data_temp/twop_data \
-		-run default.in -model twop -set verbose 2 -mcmc 
-
-test2:
-	-mkdir -p data_temp
-	-rm -rf data_temp/*
-	-bamr -set max_iters 100 -set prefix data_temp/qt_nodata \
-		-model qmc_threep -set verbose 1 -mcmc
-
-test3:
-	-mkdir -p data_temp
-	-rm -rf data_temp/*
-	-bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
-		-set nwalk 10 -set step_fac 2.0 -model twop -set verbose 1 \
-		-mcmc
-
 test_all:
 	-mkdir -p data_temp
 	-rm -rf data_temp/*

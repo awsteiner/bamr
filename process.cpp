@@ -839,7 +839,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 
     // Obtain the number of chains in this file
     size_t n_chains;
-    hf.get_szt("n_chains",n_chains);
+    hf.get_szt_def("n_chains",1,n_chains);
     if (verbose>0) {
       if (n_chains==1) {
 	cout << n_chains << " separate chain." << endl;
