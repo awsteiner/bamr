@@ -185,7 +185,7 @@ namespace bamr {
   o2scl::cli::parameter_size_t p_n_warm_up;
   o2scl::cli::parameter_int p_user_seed;
   o2scl::cli::parameter_size_t p_max_bad_steps;
-  o2scl::cli::parameter_size_t p_nwalk;
+  o2scl::cli::parameter_size_t p_n_walk;
   o2scl::cli::parameter_bool p_aff_inv;
   o2scl::cli::parameter_double p_max_time;
   o2scl::cli::parameter_size_t p_max_iters;
@@ -214,10 +214,10 @@ namespace bamr {
   bool debug_line;
   //@}
     
-  /// Number of Markov chain segments
+  /// Number of complete Markov chain segments
   size_t n_chains;
   
-  /** \brief Desc
+  /** \brief Update files with current table
    */
   virtual void update_files() {
 
@@ -234,6 +234,7 @@ namespace bamr {
 
     hf.set_szt("n_accept",this->n_accept);
     hf.set_szt("n_reject",this->n_reject);
+    hf.set_szt("n_chains",n_chains);
     
     std::string ch_name="markov_chain"+std::to_string(n_chains);
     hdf_output(hf,*this->tab,ch_name);
@@ -285,6 +286,7 @@ namespace bamr {
       
     bool files_updated=false;
     if (((int)this->tab->get_nlines())==max_chain_size) {
+      scr_out << "Writing files and starting new chain." << endl;
       update_files();
       n_chains++;
       this->tab->clear_data();
@@ -428,10 +430,10 @@ namespace bamr {
     "(default 1000).";
     this->cl.par_list.insert(std::make_pair("max_bad_steps",&p_max_bad_steps));
 
-    p_nwalk.s=&this->nwalk;
-    p_nwalk.help=((std::string)"Number of walkers ")+
+    p_n_walk.s=&this->n_walk;
+    p_n_walk.help=((std::string)"Number of walkers ")+
     "(default 10).";
-    this->cl.par_list.insert(std::make_pair("nwalk",&p_nwalk));
+    this->cl.par_list.insert(std::make_pair("n_walk",&p_n_walk));
 
     p_user_seed.i=&this->user_seed;
     p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
@@ -657,6 +659,7 @@ namespace bamr {
     hf.seti("initial_point_type",initial_point_type);
     hf.sets("initial_point_file",initial_point_file);
     hf.setd_vec_copy("initial_point",initial_point);
+    hf.set_szt("n_chains",n_chains);
     
     //hf.setd_vec_copy("low",this->low);
     //hf.setd_vec_copy("high",this->high);
