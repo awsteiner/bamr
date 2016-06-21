@@ -286,7 +286,7 @@ namespace bamr {
       
     bool files_updated=false;
     if (((int)this->tab->get_nlines())==max_chain_size) {
-      scr_out << "Writing files and starting new chain." << endl;
+      scr_out << "Writing files and starting new chain." << std::endl;
       update_files();
       n_chains++;
       this->tab->clear_data();
