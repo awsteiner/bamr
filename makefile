@@ -29,7 +29,8 @@ READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
 READLINE_LIBS = -lreadline -lncurses
 
 # Basic optimization flags
-COMPILER_FLAGS = -std=c++0x -O3 -Wno-deprecated-declarations
+COMPILER_FLAGS = -std=c++0x -O3 -Wno-deprecated-declarations \
+	-Wno-ignored-attributes
 
 # ----------------------------------------------------------------------
 # Secondary variables

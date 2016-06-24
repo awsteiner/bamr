@@ -36,6 +36,9 @@
     useful to you. Nevertheless, you are not required to contact me
     and I will be improving documentation and updating this code as
     time permits.
+
+    \note The bamr source code is undergoing some major 
+    upgrades which have not yet been documented. 
     
     \hline
     \section contents_sect Contents
