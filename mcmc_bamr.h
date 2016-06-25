@@ -432,7 +432,7 @@ namespace bamr {
 
     p_n_walk.s=&this->n_walk;
     p_n_walk.help=((std::string)"Number of walkers ")+
-    "(default 10).";
+    "(default 1).";
     this->cl.par_list.insert(std::make_pair("n_walk",&p_n_walk));
 
     p_user_seed.i=&this->user_seed;
