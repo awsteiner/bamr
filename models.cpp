@@ -788,7 +788,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd.nsources;i++) {
 #ifdef AWS_HACK
-      dat.mass[i]=0.4*pars[this->n_eos_params+i]+1.3;
+      dat.mass[i]=0.2*pars[this->n_eos_params+i]+1.3;
 #else
       dat.mass[i]=m_max*pars[this->n_eos_params+i];
 #endif
