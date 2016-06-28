@@ -130,8 +130,8 @@
     - The name of the \ref o2scl::table3d slice in which the data 
     is stored
     - The initial guess for the neutron star's mass
-    - The fifth argument is the name of the \ref o2scl::table3d object
-    in the data file
+    - The fifth, optional, argument is the name of the \ref
+    o2scl::table3d object in the data file
     
     It is assumed that the "x" grid in the data file refers to the
     radius and the "y" grid refers to the mass. The data need not
@@ -192,20 +192,8 @@
     high and low limiting values divided by the value \c step_fac .
     Increasing or decreasing this value may give better results.
 
-    The EOS results are stored in a table in the \ref bamr::model::cns
-    data member and the TOV results are stored in a table in the \ref
-    o2scl::tov_solve object. In order to prevent needless copying of
-    the EOS and TOV tables back and forth, the code keeps two
-    instances of the model objects (\ref bamr::bamr_class::modp and
-    \ref bamr::bamr_class::modp2) and two copies of the \ref
-    o2scl::tov_solve objects (\ref bamr::bamr_class::ts and \ref
-    bamr::bamr_class::ts2). The class \ref bamr::bamr_class flips back
-    and forth between these two result sets depending on whether or
-    not the MCMC algorithm gives an acceptance or a rejection.
-
-    In order to ensure that several processors do not try to
-    access the same input file at the same time, MPI
-    calls are used to force each processor to take turns.
+    The EOS results are stored in a table in \ref model_data::eos
+    and the TOV results are stored in \ref model_data::tov .
 
     \hline
     \section crust_sect Crust Model
@@ -233,15 +221,13 @@
     children of the \ref bamr::model class) must perform several tasks
 
     - The function \ref bamr::model::compute_eos() should use the
-    parameters in the \ref bamr::entry argument to compute the EOS and
-    store it in the object returned by \ref
-    o2scl::nstar_cold::get_eos_results().
+    parameters to compute the EOS
 
     - The energy density should be stored in a column named
     <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
     set for each column (currently only <tt>1/fm^4</tt> is supported).
 
-    - If \ref bamr::bamr_class::baryon_density is true and the EOS
+    - If \ref bamr::model::baryon_density is true and the EOS
     model did not already compute the baryon density in a column named
     <tt>"nb"</tt>, then \ref bamr::model::compute_eos() should return
     one baryon density and energy density in \ref
