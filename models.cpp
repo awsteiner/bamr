@@ -1000,6 +1000,12 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     cout << "End model::compute_point()." << endl;
   }
 
+  if (success!=ix_success) {
+    // We shouldn't be returning a non-zero value if success is
+    // non-zero, so we double check this here
+    O2SCL_ERR("Sanity check for success flag in model::compute_point.",
+	      o2scl::exc_esanity);
+  }
   return ret;
 }
 
