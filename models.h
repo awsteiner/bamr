@@ -547,8 +547,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 int &success, model_data &dat);
+    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
+			      double &weight, model_data &dat);
 
     /** \brief Specify the initial point
      */

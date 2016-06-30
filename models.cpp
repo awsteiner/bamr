@@ -314,13 +314,13 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
 }
     
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			 int &success, model_data &dat) {
+			 int &ret, model_data &dat) {
 
   if (set.verbose>=2) {
     cout << "Start model::compute_star()." << endl;
   }
   
-  success=ix_success;
+  ret=ix_success;
 
   if (has_eos) {
     
@@ -330,8 +330,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (set.verbose>=2) {
       cout << "Going to model::compute_eos()." << endl;
     }
-    compute_eos(pars,success,scr_out,dat);
-    if (success!=ix_success) return;
+    compute_eos(pars,ret,scr_out,dat);
+    if (ret!=ix_success) return;
     if (set.verbose>=2) {
       cout << "Back from model::compute_eos()." << endl;
     }
@@ -354,7 +354,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 		<< " pr=" << dat.eos->get("pr",i) << std::endl;
 	scr_out << "ed=" << dat.eos->get("ed",i+1) 
 		<< " pr=" << dat.eos->get("pr",i+1) << std::endl;
-	success=ix_press_dec;
+	ret=ix_press_dec;
 	return;
       }
     }
@@ -435,7 +435,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     double Anb=nb_n1/exp(dat.eos->interp("ed",nb_e1,"iigb"));
     if (!std::isfinite(Anb) || Anb<0.0) {
       scr_out << "Baryon density normalization problem." << std::endl;
-      success=ix_nb_problem;
+      ret=ix_nb_problem;
       return;
     }
 
@@ -460,7 +460,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	if (!std::isfinite(nbt)) {
 	  scr_out << "Baryon density normalization problem (2)."
 		  << std::endl;
-	  success=ix_nb_problem2;
+	  ret=ix_nb_problem2;
 	  return;
 	} 
 	dat.eos->set("nb",i,nbt);
@@ -518,7 +518,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
 	if (nt<nt_low || nt>nt_high) {
 	  scr_out << "Transition density, " << nt << ", out of range." << endl;
-	  success=ix_trans_invalid;
+	  ret=ix_trans_invalid;
 	  return;
 	}
 	dat.eos->add_constant("nt",nt);
@@ -542,7 +542,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	    dat.eos->get_constant("L")*hc_mev_fm>
 	    dat.eos->get_constant("S")*hc_mev_fm*5.0-65.0) {
 	  scr_out << "S or L out of range" << endl;
-	  success=ix_SL_invalid;
+	  ret=ix_SL_invalid;
 	  return;
 	}
       
@@ -645,7 +645,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	    scr_out << pr << " " << ed << std::endl;
 	  }
 	  scr_out << std::endl;
-	  success=ix_crust_unstable;
+	  ret=ix_crust_unstable;
 	  return;
 	}
 	ed_last=ed;
@@ -711,7 +711,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
-      success=ix_mvsr_failed;
+      ret=ix_mvsr_failed;
       return;
     }
     dat.mvsr->set_interp_type(o2scl::itp_linear);
@@ -735,7 +735,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (m_max<set.min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
 	      << set.min_max_mass << "." << std::endl;
-      success=ix_small_max;
+      ret=ix_small_max;
       return;
     }
 
@@ -750,7 +750,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if ((*dat.mvsr)["gm"][ir]<1.0e-10 ||
 	(*dat.mvsr)["gm"][ir-1]<1.0e-10) {
       scr_out << "TOV failure fix." << std::endl;
-      success=ix_tov_failure;
+      ret=ix_tov_failure;
       return;
     }
 
@@ -762,7 +762,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant("r_max",r_max);
     if (r_max>1.0e4) {
       scr_out << "TOV convergence problem: " << std::endl;
-      success=ix_tov_conv;
+      ret=ix_tov_conv;
       return;
     }
     
@@ -781,7 +781,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // is not typically an issue.
     if (dat.mvsr->get_nlines()<10) {
       scr_out << "M vs. R failed to generate lines." << std::endl;
-      success=ix_mvsr_table;
+      ret=ix_mvsr_table;
       return;
     }
 
@@ -799,8 +799,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   } else {
 
     // Compute mass-radius curve directly
-    compute_mr(pars,success,scr_out,dat);
-    if (success!=ix_success) {
+    compute_mr(pars,ret,scr_out,dat);
+    if (ret!=ix_success) {
       return;
     }
 
@@ -842,7 +842,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 		<< dat.mvsr->max("pr") << " pr_bad=" 
 		<< (*dat.mvsr)["pr"][i] << std::endl;
 	scr_out.precision(6);
-	success=ix_acausal;
+	ret=ix_acausal;
 	return;
       }
     }
@@ -853,7 +853,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
 	scr_out << "Source " << nsd.source_names[i] << " acausal."
 		<< std::endl;
-	success=ix_acausal_mr;
+	ret=ix_acausal_mr;
 	return;
       }
     }
@@ -888,17 +888,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   return;
 }
 
-double model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			    int &success, model_data &dat) {
+int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
+			 double &weight, model_data &dat) {
 
   if (set.verbose>=2) {
     cout << "Start model::compute_point()." << endl;
   }
 
   // Compute the M vs R curve and return if it failed
-  compute_star(pars,scr_out,success,dat);
-  if (success!=ix_success) {
-    return 0.0;
+  int iret;
+  compute_star(pars,scr_out,iret,dat);
+  if (iret!=ix_success) {
+    weight=0.0;
+    return iret;
   }
   
   for(size_t i=0;i<nsd.nsources;i++) {
@@ -923,12 +925,12 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	scr_out.precision(6);
 	scr_out.unsetf(ios::showpos);
       }
-      success=ix_mr_outside;
-      return 0.0;
+      weight=0.0;
+      return ix_mr_outside;
     }
   }
-  
-  double ret=1.0;
+
+  weight=1.0;
       
   dat.mvsr->set_interp_type(o2scl::itp_linear);
   double m_max_current=dat.mvsr->max("gm");
@@ -963,7 +965,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 	
     // Include the weight for this source 
-    ret*=dat.wgts[i];
+    weight*=dat.wgts[i];
 	
     if (set.debug_star) {
       scr_out << nsd.source_names[i] << " "
@@ -991,7 +993,7 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	    << std::endl;
     scr_out.precision(12);
     vector_out(scr_out,pars);
-    scr_out << " " << ret << std::endl;
+    scr_out << " " << weight << std::endl;
     scr_out.precision(6);
     exit(-1);
   }
@@ -1000,13 +1002,13 @@ double model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     cout << "End model::compute_point()." << endl;
   }
 
-  if (success!=ix_success) {
+  if (iret!=ix_success) {
     // We shouldn't be returning a non-zero value if success is
     // non-zero, so we double check this here
     O2SCL_ERR("Sanity check for success flag in model::compute_point.",
 	      o2scl::exc_esanity);
   }
-  return ret;
+  return o2scl::success;
 }
 
 void two_polytropes::setup_params(o2scl::cli &cl) {
@@ -1102,13 +1104,13 @@ void two_polytropes::initial_point(ubvector &params) {
   return;
 }
 
-void two_polytropes::compute_eos(const ubvector &params, int &success,
+void two_polytropes::compute_eos(const ubvector &params, int &ret,
 				 ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
   
@@ -1144,7 +1146,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &success,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=ix_neg_pressure;
+    ret=ix_neg_pressure;
     return;
   }
 
@@ -1167,7 +1169,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &success,
   // Check that low-density EOS has statistics
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
 
@@ -1185,7 +1187,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &success,
   // Check that matching didn't fail
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
   
@@ -1200,7 +1202,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &success,
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    success=ix_neg_pressure;
+    ret=ix_neg_pressure;
     return;
   }
 
@@ -1249,13 +1251,13 @@ void alt_polytropes::initial_point(ubvector &params) {
   return;
 }
 
-void alt_polytropes::compute_eos(const ubvector &params, int &success,
+void alt_polytropes::compute_eos(const ubvector &params, int &ret,
 				 ofstream &scr_out, model_data &dat) {
   
-  success=ix_success;
+  ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -1294,7 +1296,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &success,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=ix_neg_pressure;
+    ret=ix_neg_pressure;
     return;
   }
 
@@ -1317,7 +1319,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &success,
   // Check that low-density EOS has statistics
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
 
@@ -1335,7 +1337,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &success,
   // Check that matching didn't fail
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
 
@@ -1350,7 +1352,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &success,
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    success=ix_neg_pressure;
+    ret=ix_neg_pressure;
     return;
   }
 
@@ -1417,10 +1419,10 @@ void fixed_pressure::initial_point(ubvector &params) {
   return;
 }
 
-void fixed_pressure::compute_eos(const ubvector &params, int &success,
+void fixed_pressure::compute_eos(const ubvector &params, int &ret,
 				 ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
@@ -1564,10 +1566,10 @@ void generic_quarks::initial_point(ubvector &params) {
   return;
 }
 
-void generic_quarks::compute_eos(const ubvector &params, int &success,
+void generic_quarks::compute_eos(const ubvector &params, int &ret,
 				 ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
 
   eos_had_schematic &se=this->se;
   nstar_cold2 &cns=this->cns;
@@ -1612,7 +1614,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    success=ix_neg_pressure;
+    ret=ix_neg_pressure;
     return;
   }
 
@@ -1635,7 +1637,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
   // Check that low-density EOS has statistics
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (1)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
   
@@ -1660,7 +1662,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
   // Check that matching didn't fail
   if (dat.eos->get_nlines()<3) {
     scr_out << "Rejected: Polytrope fit failed (2)." << endl;
-    success=ix_no_eos_table;
+    ret=ix_no_eos_table;
     return;
   }
 
@@ -1693,7 +1695,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
       mu_start=sqrt(musq2);
     } else {
       scr_out << "Rejected: Neither mu^2 is positive." << endl;
-      success=ix_eos_solve_failed;
+      ret=ix_eos_solve_failed;
       return;
     }
   }
@@ -1726,7 +1728,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &success,
     double dPde=(a2+2.0*a4*musq)/(a2+6.0*a4*musq);
     if (dPde<0.0) {
       scr_out << "Rejected: dPdeps<0.0 in quarks." << endl;
-      success=ix_acausal;
+      ret=ix_acausal;
       return;
     }
 
@@ -1809,10 +1811,10 @@ void quark_star::initial_point(ubvector &params) {
   return;
 }
 
-void quark_star::compute_eos(const ubvector &params, int &success,
+void quark_star::compute_eos(const ubvector &params, int &ret,
 			     std::ofstream &scr_out, model_data &dat) {
   
-  success=ix_success;
+  ret=ix_success;
 
   B=params[0];
   c=params[1];
@@ -1840,7 +1842,7 @@ void quark_star::compute_eos(const ubvector &params, int &success,
   }
 
   if (mu_0<dmu+1.0e-6) {
-    success=ix_eos_solve_failed;
+    ret=ix_eos_solve_failed;
     scr_out << "No zero pressure solution." << std::endl;
     return;
   }
@@ -1852,10 +1854,10 @@ void quark_star::compute_eos(const ubvector &params, int &success,
 			   this,std::placeholders::_1,std::placeholders::_2,
 			   std::placeholders::_3);
   gmh.err_nonconv=false;
-  int ret=gmh.msolve(1,x,fmf);
-  if (ret!=0) {
+  int solve_ret=gmh.msolve(1,x,fmf);
+  if (solve_ret!=0) {
     scr_out << "Solver failed in qstar." << std::endl;
-    success=ix_eos_solve_failed;
+    ret=ix_eos_solve_failed;
     return;
   }
   mu_0=x[0];
@@ -1890,7 +1892,7 @@ void quark_star::compute_eos(const ubvector &params, int &success,
     // Check that energy density is increasing
     if (ed<ed_last) {
       scr_out << "Energy density decreasing in quark_star." << std::endl;
-      success=ix_acausal;
+      ret=ix_acausal;
       return;
     }
 
@@ -1905,7 +1907,7 @@ void quark_star::compute_eos(const ubvector &params, int &success,
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
 	scr_out << "Not absolutely stable." << std::endl;
-	success=ix_param_mismatch;
+	ret=ix_param_mismatch;
 	return;
       }
 
@@ -2020,10 +2022,10 @@ void qmc_neut::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_neut::compute_eos(const ubvector &params, int &success,
+void qmc_neut::compute_eos(const ubvector &params, int &ret,
 			   ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
   
   // Hack to start with a fresh table
   dat.eos->clear_table();
@@ -2083,7 +2085,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &success,
   // polytropes
   if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2199,12 +2201,12 @@ void qmc_threep::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_threep::compute_eos(const ubvector &params, int &success,
+void qmc_threep::compute_eos(const ubvector &params, int &ret,
 			     ofstream &scr_out, model_data &dat) {
 
   bool debug=false;
 
-  success=ix_success;
+  ret=ix_success;
   
   // Hack to start with a fresh table
   dat.eos->clear_table();
@@ -2232,7 +2234,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range: " << Stmp << " " << Ltmp << endl;
     scr_out << 9.17*Stmp-266.0 << " " << 14.3*Stmp-379.0 << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2241,7 +2243,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
   if (debug) {
@@ -2291,7 +2293,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &success,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2436,10 +2438,10 @@ void qmc_fixp::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_fixp::compute_eos(const ubvector &params, int &success,
+void qmc_fixp::compute_eos(const ubvector &params, int &ret,
 			   ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
   bool debug=false;
   
   // Hack to start with a fresh table
@@ -2458,7 +2460,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2467,7 +2469,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
   
@@ -2514,7 +2516,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &success,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2662,10 +2664,10 @@ void qmc_twolines::initial_point(ubvector &params) {
   return;
 }
 
-void qmc_twolines::compute_eos(const ubvector &params, int &success,
+void qmc_twolines::compute_eos(const ubvector &params, int &ret,
 			       ofstream &scr_out, model_data &dat) {
 
-  success=ix_success;
+  ret=ix_success;
   bool debug=false;
   
   // Hack to start with a fresh table
@@ -2684,7 +2686,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &success,
 
   if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
     scr_out << "L out of range." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 
@@ -2693,7 +2695,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &success,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
   
@@ -2707,7 +2709,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &success,
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
-    success=ix_param_mismatch;
+    ret=ix_param_mismatch;
     return;
   }
 

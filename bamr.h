@@ -61,8 +61,8 @@ namespace bamr {
   
   typedef boost::numeric::ublas::vector<double> ubvector;
   
-  typedef std::function<double(size_t,const ubvector &,
-			       model_data &)> point_funct;
+  typedef std::function<int(size_t,const ubvector &, double &,
+			    model_data &)> point_funct;
   
   typedef std::function<int(const ubvector &,double,
 			    size_t,bool,model_data &)> measure_funct;
@@ -146,8 +146,8 @@ namespace bamr {
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
-    virtual double compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 int &success, model_data &dat);
+    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
+				 double &weight, model_data &dat);
 
     /** \brief Add a data distribution to the list
      */
