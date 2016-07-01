@@ -143,7 +143,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(emax);
     if (set.baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<nsd.nsources;i++) {
-      line.push_back(dat.mvsr->interp("gm",pars[this->nparams-nsd.nsources+i],"ed"));
+      double val=dat.mvsr->interp
+	("gm",pars[this->nparams-nsd.nsources+i],"ed");
+      line.push_back(val);
     }
     if (set.baryon_density) {
       for(size_t i=0;i<nsd.nsources;i++) {
@@ -556,7 +558,7 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
      std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
 
   set.verbose=this->verbose;
-  this->mcmc(1000,names.size(),init,low,high,mf,mt);
+  this->mcmc(init.size(),init,low,high,mf,mt);
   
   return 0;
 }

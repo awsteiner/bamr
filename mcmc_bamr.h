@@ -106,13 +106,13 @@ namespace bamr {
 
   /** \brief Perform an MCMC simulation
    */
-  virtual int mcmc(size_t niters, size_t np, vec_t &init,
+  virtual int mcmc(size_t np, vec_t &init,
 		   vec_t &low, vec_t &high, func_t &func,
 		   fill_t &fill) {
     // The function mcmc_init() needs to know the number of
     // parameters, so we store it here for later use
     nparams=np;
-    return parent_t::mcmc(niters,np,init,low,high,func,fill);
+    return parent_t::mcmc(np,init,low,high,func,fill);
   }
     
     /// Main wrapper for parsing command-line arguments
@@ -208,7 +208,6 @@ namespace bamr {
   o2scl::cli::parameter_size_t p_max_iters;
   o2scl::cli::parameter_int p_max_chain_size;
   o2scl::cli::parameter_int p_file_update_iters;
-  o2scl::cli::parameter_bool p_debug_line;
   o2scl::cli::parameter_bool p_output_meas;
   o2scl::cli::parameter_string p_prefix;
   o2scl::cli::parameter_int p_verbose;
@@ -224,11 +223,6 @@ namespace bamr {
   /** \brief Maximum size of Markov chain (default 10000)
    */
   int max_chain_size;
-
-  /** \brief If true, output each line of the table as it's stored
-      (default false)
-  */
-  bool debug_line;
   //@}
     
   /// Number of complete Markov chain segments
@@ -261,33 +255,6 @@ namespace bamr {
     return;
   }
   
-  /** \brief Desc
-   */
-  virtual void fill_line(const vec_t &pars, double weight,
-			 std::vector<double> &line, data_t &dat,
-			 fill_t &fill) {
-
-    o2scl::mcmc_table<func_t,fill_t,data_t,vec_t>::fill_line
-    (pars,weight,line,dat,fill);
-    
-    if (debug_line) {
-      std::vector<std::string> sc_in, sc_out;
-      for(size_t k=0;k<line.size();k++) {
-	sc_in.push_back(this->tab->get_column_name(k)+": "+
-			o2scl::dtos(line[k]));
-      }
-      o2scl::screenify(line.size(),sc_in,sc_out);
-      for(size_t k=0;k<sc_out.size();k++) {
-	std::cout << sc_out[k] << std::endl;
-      }
-      std::cout << "Press a key and enter to continue." << std::endl;
-      char ch;
-      std::cin >> ch;
-    }
-
-    return;
-  }
-
   /** \brief Add a measurement to the table
    */
   virtual int add_line(const ubvector &pars, double weight,
@@ -410,12 +377,6 @@ namespace bamr {
     "iterations to be less than the specified number (default zero).";
     this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
     
-    p_debug_line.b=&debug_line;
-    p_debug_line.help=((std::string)
-		       "If true, output each line as its stored ")+
-    "(default false).";
-    this->cl.par_list.insert(std::make_pair("debug_line",&p_debug_line));
-      
     p_prefix.str=&this->prefix;
     p_prefix.help="Output file prefix (default 'mcmc\').";
     this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
@@ -670,7 +631,6 @@ namespace bamr {
     hf.seti("n_warm_up",this->n_warm_up);
     hf.setd("step_fac",this->step_fac);
     hf.seti("max_iters",this->max_iters);
-    hf.seti("debug_line",debug_line);
     hf.seti("file_update_iters",file_update_iters);
     hf.seti("output_meas",this->output_meas);
     hf.seti("initial_point_type",initial_point_type);
@@ -943,7 +903,6 @@ namespace bamr {
 
     file_update_iters=40;
     max_chain_size=10000;
-    debug_line=false;
 
     n_chains=0;
     

@@ -930,7 +930,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  weight=1.0;
+  weight=0.0;
       
   dat.mvsr->set_interp_type(o2scl::itp_linear);
   double m_max_current=dat.mvsr->max("gm");
@@ -965,7 +965,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 	
     // Include the weight for this source 
-    weight*=dat.wgts[i];
+    weight+=log(dat.wgts[i]);
 	
     if (set.debug_star) {
       scr_out << nsd.source_names[i] << " "
