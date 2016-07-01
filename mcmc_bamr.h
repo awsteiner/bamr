@@ -62,11 +62,13 @@ namespace bamr {
   
   /** \brief A generic MCMC simulation class
    */
-  template<class func_t, class measure_t, class data_t,
+  template<class func_t, class fill_t, class data_t,
     class vec_t=ubvector> class mcmc_bamr :
-    public o2scl::mcmc_table<func_t,measure_t,data_t,vec_t> {
+    public o2scl::mcmc_table<func_t,fill_t,data_t,vec_t> {
     
   protected:
+
+  typedef o2scl::mcmc_table<func_t,fill_t,data_t,vec_t> parent_t;
   
   /// \name MPI properties
   //@{
@@ -96,9 +98,24 @@ namespace bamr {
    */
   std::vector<std::string> cl_args;
 
+  /** \brief The number of parameters
+   */
+  size_t nparams;
+  
   public:
 
-  /// Main wrapper for parsing command-line arguments
+  /** \brief Perform an MCMC simulation
+   */
+  virtual int mcmc(size_t niters, size_t np, vec_t &init,
+		   vec_t &low, vec_t &high, func_t &func,
+		   fill_t &fill) {
+    // The function mcmc_init() needs to know the number of
+    // parameters, so we store it here for later use
+    nparams=np;
+    return parent_t::mcmc(niters,np,init,low,high,func,fill);
+  }
+    
+    /// Main wrapper for parsing command-line arguments
   virtual void run(int argc, char *argv[]) {
 
     // ---------------------------------------
@@ -247,10 +264,11 @@ namespace bamr {
   /** \brief Desc
    */
   virtual void fill_line(const vec_t &pars, double weight,
-			 std::vector<double> &line, data_t &dat) {
+			 std::vector<double> &line, data_t &dat,
+			 fill_t &fill) {
 
-    o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::fill_line
-    (pars,weight,line,dat);
+    o2scl::mcmc_table<func_t,fill_t,data_t,vec_t>::fill_line
+    (pars,weight,line,dat,fill);
     
     if (debug_line) {
       std::vector<std::string> sc_in, sc_out;
@@ -273,7 +291,8 @@ namespace bamr {
   /** \brief Add a measurement to the table
    */
   virtual int add_line(const ubvector &pars, double weight,
-		       size_t ix, bool new_meas, data_t &dat) {
+		       size_t ix, bool new_meas, data_t &dat,
+		       fill_t &fill) {
 
     if (output_meas) {
       scr_out << "Line: ";
@@ -281,8 +300,8 @@ namespace bamr {
       scr_out << " " << weight << " " << ix << " " << new_meas << std::endl;
     }
     
-    o2scl::mcmc_table<func_t,measure_t,data_t,ubvector>::add_line
-    (pars,weight,ix,new_meas,dat);
+    o2scl::mcmc_table<func_t,fill_t,data_t,ubvector>::add_line
+    (pars,weight,ix,new_meas,dat,fill);
       
     bool files_updated=false;
     if (((int)this->tab->get_nlines())==max_chain_size) {
@@ -457,7 +476,7 @@ namespace bamr {
       std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
     }
     
-    o2scl::mcmc_table<func_t,measure_t,data_t,vec_t>::mcmc_init();
+    o2scl::mcmc_table<func_t,fill_t,data_t,vec_t>::mcmc_init();
     
 #ifndef BAMR_NO_MPI
     mpi_start_time=MPI_Wtime();
@@ -488,8 +507,6 @@ namespace bamr {
 		o2scl::exc_einval);
     }
 
-    size_t nparams=this->param_names.size();
-
 #ifndef BAMR_NO_MPI
     int buffer=0, tag=0;
     if (this->mpi_nprocs>1 && this->mpi_rank>0) {
@@ -516,13 +533,13 @@ namespace bamr {
 	o2scl::table_units<> file_tab;
 	hdf_input(hf,file_tab,chain_name);
 	size_t last_line=file_tab.get_nlines()-1;
-      
+
 	// Get parameters
 	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+this->param_names[i];
+	  std::string pname=((std::string)"param_")+this->col_names[i];
 	  this->current[0][i]=file_tab.get(pname,last_line);
 	  this->scr_out << "Parameter named "
-			<< this->param_names[i] << " " 
+			<< this->col_names[i] << " " 
 			<< this->current[0][i] << std::endl;
 	}
       
@@ -580,10 +597,10 @@ namespace bamr {
       
 	// Get parameters
 	for(size_t i=0;i<nparams;i++) {
-	  std::string pname=((std::string)"param_")+this->param_names[i];
+	  std::string pname=((std::string)"param_")+this->col_names[i];
 	  this->current[0][i]=file_tab.get(pname,row);
 	  this->scr_out << "Parameter named "
-	  << this->param_names[i] << " " 
+	  << this->col_names[i] << " " 
 	  << this->current[0][i] << std::endl;
 	}
       
@@ -645,9 +662,9 @@ namespace bamr {
    */
   virtual void first_update(o2scl_hdf::hdf_file &hf) {
     
-    hf.sets_vec("param_names",this->param_names);
+    hf.sets_vec("col_names",this->col_names);
     
-    hf.set_szt("nparams",this->param_names.size());
+    hf.set_szt("nparams",nparams);
     hf.setd("max_time",this->max_time);
     hf.seti("user_seed",this->user_seed);
     hf.seti("n_warm_up",this->n_warm_up);

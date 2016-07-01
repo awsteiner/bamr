@@ -65,7 +65,7 @@ namespace bamr {
 			    model_data &)> point_funct;
   
   typedef std::function<int(const ubvector &,double,
-			    size_t,bool,model_data &)> measure_funct;
+			    std::vector<double> &,model_data &)> fill_funct;
   
   /** \brief Statistical analysis of EOS from M and R constraints
 
@@ -104,7 +104,7 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class bamr_class :
-    public bamr::mcmc_bamr<point_funct,measure_funct,model_data,ubvector> {
+    public bamr::mcmc_bamr<point_funct,fill_funct,model_data,ubvector> {
 
   protected:
 
@@ -126,8 +126,8 @@ namespace bamr {
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
-    virtual void fill_line(const ubvector &pars, double weight, 
-			   std::vector<double> &line, model_data &dat);
+    virtual int fill(const ubvector &pars, double weight, 
+		      std::vector<double> &line, model_data &dat);
 
     /** \brief Write initial data to HDF file
      */

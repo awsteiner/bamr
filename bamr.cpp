@@ -33,14 +33,10 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-void bamr_class::fill_line(const ubvector &pars, double weight, 
-			   std::vector<double> &line, model_data &dat) {
-  
-  mcmc_bamr::fill_line(pars,weight,line,dat);
+int bamr_class::fill(const ubvector &pars, double weight, 
+		      std::vector<double> &line, model_data &dat) {
   
   model &m=*this->mod;
-  
-  size_t nparams=this->param_names.size();
   
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
@@ -147,12 +143,12 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
     line.push_back(emax);
     if (set.baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<nsd.nsources;i++) {
-      line.push_back(dat.mvsr->interp("gm",pars[nparams-nsd.nsources+i],"ed"));
+      line.push_back(dat.mvsr->interp("gm",pars[this->nparams-nsd.nsources+i],"ed"));
     }
     if (set.baryon_density) {
       for(size_t i=0;i<nsd.nsources;i++) {
 	line.push_back(dat.mvsr->interp
-		       ("gm",pars[nparams-nsd.nsources+i],"nb"));
+		       ("gm",pars[this->nparams-nsd.nsources+i],"nb"));
       }
     }
   }
@@ -228,7 +224,8 @@ void bamr_class::fill_line(const ubvector &pars, double weight,
       }
     }
   }
-  return;
+  
+  return o2scl::success;
 }
 
 void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
@@ -544,8 +541,7 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
-  size_t nparams=names.size();
-  ubvector init(nparams);
+  ubvector init(this->nparams);
   mod->initial_point(init);
   
   bamr::point_funct mf=std::bind
@@ -553,14 +549,14 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
      (&bamr_class::compute_point),this,
      std::placeholders::_2,std::ref(scr_out),std::placeholders::_3,
      std::placeholders::_4);
-  bamr::measure_funct mt=std::bind
-    (std::mem_fn<int(const ubvector &,double,size_t,bool,model_data &)>
-     (&mcmc_bamr::add_line),this,std::placeholders::_1,
-     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,
-     std::placeholders::_5);
+  bamr::fill_funct mt=std::bind
+    (std::mem_fn<int(const ubvector &,double,std::vector<double> &,
+		     model_data &)>
+     (&bamr_class::fill),this,std::placeholders::_1,
+     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
 
   set.verbose=this->verbose;
-  this->mcmc(names.size(),init,low,high,mf,mt);
+  this->mcmc(1000,names.size(),init,low,high,mf,mt);
   
   return 0;
 }
