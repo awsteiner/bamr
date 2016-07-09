@@ -787,11 +787,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd.nsources;i++) {
-#ifdef AWS_HACK
-      dat.mass[i]=0.2*pars[this->n_eos_params+i]+1.3;
-#else
-      dat.mass[i]=m_max*pars[this->n_eos_params+i];
-#endif
+      if (set.mass_switch==0) {
+	dat.mass[i]=m_max*pars[this->n_eos_params+i];
+      } else if (set.mass_switch==1) {
+	dat.mass[i]=0.4*pars[this->n_eos_params+i]+1.3;
+      } else {
+	dat.mass[i]=0.2*pars[this->n_eos_params+i]+1.3;
+      }
       dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
 
@@ -820,7 +822,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     hfds.close();
     scr_out << "Automatically exiting since 'debug_star' is true."
 	    << std::endl;
-    exit(-1);
+    exit(0);
   }
 
   // -----------------------------------------------------------------
@@ -889,7 +891,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 }
 
 int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			 double &weight, model_data &dat) {
+			 double &log_weight, model_data &dat) {
 
   if (set.verbose>=2) {
     cout << "Start model::compute_point()." << endl;
@@ -899,7 +901,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   int iret;
   compute_star(pars,scr_out,iret,dat);
   if (iret!=ix_success) {
-    weight=0.0;
+    log_weight=0.0;
     return iret;
   }
   
@@ -925,12 +927,12 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	scr_out.precision(6);
 	scr_out.unsetf(ios::showpos);
       }
-      weight=0.0;
+      log_weight=0.0;
       return ix_mr_outside;
     }
   }
 
-  weight=0.0;
+  log_weight=0.0;
       
   dat.mvsr->set_interp_type(o2scl::itp_linear);
   double m_max_current=dat.mvsr->max("gm");
@@ -965,7 +967,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 	
     // Include the weight for this source 
-    weight+=log(dat.wgts[i]);
+    log_weight+=log(dat.wgts[i]);
 	
     if (set.debug_star) {
       scr_out << nsd.source_names[i] << " "
@@ -993,7 +995,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	    << std::endl;
     scr_out.precision(12);
     vector_out(scr_out,pars);
-    scr_out << " " << weight << std::endl;
+    scr_out << " " << log_weight << std::endl;
     scr_out.precision(6);
     exit(-1);
   }

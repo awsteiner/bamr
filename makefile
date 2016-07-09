@@ -129,8 +129,9 @@ process: process.o process_main.o
 test:
 	mpirun -np 2 bamr -run default.in -model twop -mcmc
 
-test_nompi:
-	bamr_nompi -set debug_eos 1 -run default.in -model twop -mcmc
+testx:
+	bamr -set max_iters 100 -set prefix data_temp/twop_data \
+		-run default.in -model twop -set verbose 1 -mcmc
 
 test_all:
 	-mkdir -p data_temp

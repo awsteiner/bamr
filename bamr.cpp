@@ -279,23 +279,12 @@ int bamr_class::mcmc_init() {
 
   // -----------------------------------------------------------
   // Make sure the settings are consistent
+
+  // Does inc_baryon_mass also need baryon_density?
   
   if (set.compute_cthick && (!set.baryon_density || !set.use_crust)) {
     scr_out << "Cannot use compute_cthick=true with "
 	    << "baryon_density=false or use_crust=false." << endl;
-    return exc_efailed;
-  }
-  if (set.crust_from_L && (!set.compute_cthick || !set.baryon_density ||
-		      !set.use_crust)) {
-    scr_out << "Cannot use crust_from_L=true with "
-	    << "compute_cthick=false or "
-	    << "baryon_density=false or use_crust=false." << endl;
-    return exc_efailed;
-  }
-  if (set.crust_from_L && (!m.has_esym || !set.use_crust)) {
-    scr_out << "Cannot use crust_from_L=true with use_crust=false or "
-	    << " with a model which does not "
-	    << "provide S and L." << endl;
     return exc_efailed;
   }
   if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
@@ -522,7 +511,7 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 double &weight, model_data &dat) {
+			      double &weight, model_data &dat) {
   return mod->compute_point(pars,scr_out,weight,dat);
 }
 
@@ -543,7 +532,7 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
-  ubvector init(this->nparams);
+  ubvector init(names.size());
   mod->initial_point(init);
   
   bamr::point_funct mf=std::bind

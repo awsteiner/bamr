@@ -114,7 +114,7 @@ namespace bamr {
       use_crust=true;
       best_detail=false;
       inc_baryon_mass=false;
-      norm_max=true;
+      norm_max=false;
       mvsr_pr_inc=1.1;
       nb_low=0.04;
       nb_high=1.24;
@@ -128,6 +128,8 @@ namespace bamr {
       in_r_min=5.0;
       in_r_max=18.0;
       addl_quants=false;
+      mass_switch=0;
+      compute_cthick=false;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -182,7 +184,7 @@ namespace bamr {
 
     /** \brief If true, normalize the data distributions so that the
 	max is one, otherwise, normalize so that the integral is one
-	(default true)
+	(default false)
     */
     bool norm_max;
 
@@ -226,7 +228,7 @@ namespace bamr {
 	as well as the gravitational mass (default false)
     */
     bool inc_baryon_mass;
-    /// If true, compute crust thicknesses (default true)
+    /// If true, compute crust thicknesses (default false)
     bool compute_cthick;
     /// If true (default false)
     bool addl_quants;
@@ -238,6 +240,7 @@ namespace bamr {
 	provides S and L.
     */
     bool crust_from_L;
+    int mass_switch;
     //@}
 
     /** \name Histogram limits
@@ -282,11 +285,11 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("exit_mass",&p_exit_mass));
       
       p_input_dist_thresh.d=&input_dist_thresh;
-      p_input_dist_thresh.help=((std::string)"Input distribution threshold. ")+
-	"This is the artificial lower limit for the (renormalized) "+
-	"probability of a (R,M) pair as reported by the data file. If the "+
-	"weight is smaller than or equal to this value, an exception is "+
-	"thrown. Changing this value is sometimes "+
+      p_input_dist_thresh.help=((std::string)"Input distribution ")+
+	"threshold. This is the artificial lower limit for the "+
+	"(renormalized) probability of a (R,M) pair as reported by the "+
+	"data file. If the weight is smaller than or equal to this value, "+
+	"an exception is thrown. Changing this value is sometimes "+
 	"useful to gracefully avoid zero probabilities in the input "+
 	"data files. The default is 0.";
       cl.par_list.insert(std::make_pair("input_dist_thresh",
@@ -299,7 +302,8 @@ namespace bamr {
       
       p_norm_max.b=&norm_max;
       p_norm_max.help=((std::string)"If true, normalize by max probability ")+
-	"or if false, normalize by total integral (default true).";
+	"or if false, normalize by total integral (default false). If "+
+	"the Bayes factor is to be computed, this should be false.";
       cl.par_list.insert(std::make_pair("norm_max",&p_norm_max));
       
       p_debug_load.b=&debug_load;
@@ -308,9 +312,8 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("debug_load",&p_debug_load));
       
       p_debug_eos.b=&debug_eos;
-      p_debug_eos.help=((std::string)
-			"If true, output initial equation of state ")+
-	"to file 'debug_eos.o2' and abort (default false).";
+      p_debug_eos.help=((std::string)"If true, output initial equation ")+
+	"of state to file 'debug_eos.o2' and abort (default false).";
       cl.par_list.insert(std::make_pair("debug_eos",&p_debug_eos));
       
       p_baryon_density.b=&baryon_density;
@@ -320,22 +323,21 @@ namespace bamr {
 					&p_baryon_density));
       
       p_use_crust.b=&use_crust;
-      p_use_crust.help=((std::string)
-			"If true, use the default crust (default ")+
-	"true).";
+      p_use_crust.help=((std::string)"If true, use the default crust ")+
+	"(default true).";
       cl.par_list.insert(std::make_pair("use_crust",&p_use_crust));
       
       p_inc_baryon_mass.b=&inc_baryon_mass;
-      p_inc_baryon_mass.help=((std::string)
-			      "If true, compute the baryon mass ")+
-	"(default false)";
+      p_inc_baryon_mass.help=((std::string)"If true, compute the baryon ")+
+	"mass (default false)";
       cl.par_list.insert(std::make_pair("inc_baryon_mass",
 					&p_inc_baryon_mass));
       
       p_mvsr_pr_inc.d=&mvsr_pr_inc;
-      p_mvsr_pr_inc.help=((std::string)
-			  "The multiplicative pressure increment for ")+
-	"the TOV solver (default 1.1).";
+      p_mvsr_pr_inc.help=((std::string)"The multiplicative pressure ")+
+	"increment for the TOV solver (default 1.1). This can be "+
+	"set to a value closer to 1.0 to make the mass-radius curve "+
+	"more accurate.";
       cl.par_list.insert(std::make_pair("mvsr_pr_inc",&p_mvsr_pr_inc));
       
       // --------------------------------------------------------
@@ -371,17 +373,25 @@ namespace bamr {
       p_crust_from_L.b=&crust_from_L;
       p_crust_from_L.help=((std::string)"If true, compute the core-crust ")+
 	"transition density from L and S (requires a model which "+
-	"provides these quantities). This also requires baryon_density "+
-	"and compute_cthick are true.";
+	"provides these quantities). This also requires baryon_density, "+
+	"compute_cthick, and use_crust are true (default false).";
       cl.par_list.insert(std::make_pair("crust_from_L",&p_crust_from_L));
       
       p_compute_cthick.b=&compute_cthick;
-      p_compute_cthick.help="";
+      p_compute_cthick.help=((std::string)"If true, compute the ")+
+	"thickness of the crust (default false). This also requires "+
+	"that baryon_density and use_crust are true.";
       cl.par_list.insert(std::make_pair("compute_cthick",&p_compute_cthick));
 
       p_addl_quants.b=&addl_quants;
-      p_addl_quants.help="";
+      p_addl_quants.help=((std::string)"If true, compute moment of ")+
+	"inertia, binding energy, and tidal deformability (default "+
+	"false). This requires that baryon_mass is true.";
       cl.par_list.insert(std::make_pair("addl_quants",&p_addl_quants));
+
+      p_mass_switch.i=&mass_switch;
+      p_mass_switch.help="";
+      cl.par_list.insert(std::make_pair("mass_switch",&p_mass_switch));
 
       return;
     }
