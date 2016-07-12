@@ -277,22 +277,39 @@ int bamr_class::mcmc_init() {
   
   mcmc_bamr::mcmc_init();
 
+  if (this->file_opened==false) {
+    // Open main output file
+    this->scr_out.open((this->prefix+"_"+
+			std::to_string(this->mpi_rank)+"_scr").c_str());
+    this->scr_out.setf(std::ios::scientific);
+    this->file_opened=true;
+    this->scr_out << "Opened main file in function 'bamr_class::mcmc_init()'."
+		  << std::endl;
+  }
+  
   // -----------------------------------------------------------
   // Make sure the settings are consistent
 
   // Does inc_baryon_mass also need baryon_density?
-  
+  if (set.inc_baryon_mass && !set.baryon_density) {
+    scr_out << "Cannot use inc_baryon_mass=true with "
+	    << "baryon_density=false." << endl;
+    return exc_efailed;
+  }
   if (set.compute_cthick && (!set.baryon_density || !set.use_crust)) {
     scr_out << "Cannot use compute_cthick=true with "
 	    << "baryon_density=false or use_crust=false." << endl;
     return exc_efailed;
   }
   if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
-			   !set.baryon_density || !set.compute_cthick)) {
+			   !set.baryon_density)) {
+    scr_out << "crust_from_L: " << set.crust_from_L << std::endl;
+    scr_out << "has_esym: " << m.has_esym << std::endl;
+    scr_out << "use_crust: " << set.use_crust << std::endl;
+    scr_out << "baryon_density: " << set.baryon_density << std::endl;
     scr_out << "Cannot use crust_from_L=true with a model which does not "
-	    << "provide S and L or with use_crust=false or with "
-	    << "baryon_density=false or with compute_cthick=false'." 
-	    << endl;
+	    << "provide S and L\nor with use_crust=false or with "
+	    << "baryon_density=false." << endl;
     return exc_efailed;
   }
   if (set.addl_quants && !set.inc_baryon_mass) {

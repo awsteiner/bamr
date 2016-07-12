@@ -130,16 +130,19 @@ test:
 	mpirun -np 2 bamr -run default.in -model twop -mcmc
 
 testx:
-	bamr -set max_iters 100 -set prefix data_temp/twop_data \
-		-run default.in -model twop -set verbose 1 -mcmc
+	bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
+		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
+		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
 test_all:
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
-	bamr -set debug_eos 1 -run default.in -model twop -mcmc \
+	bamr -set prefix data_temp/debug_eos \
+		-set debug_eos 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_eos.scr
 	-mv -i debug_eos.o2 data_temp
-	bamr -set debug_star 1 -run default.in -model twop -mcmc \
+	bamr -set prefix data_temp/debug_star \
+		-set debug_star 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_star.scr
 	-mv -i debug_star.o2 data_temp
 	bamr -set max_iters 100 -set prefix data_temp/twop_data \
@@ -171,7 +174,7 @@ test_all:
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 	bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
-		-set step_fac 2.0 -model twop -set nwalk 10 -mcmc \
+		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
 # ----------------------------------------------------------------------

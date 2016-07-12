@@ -997,7 +997,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     vector_out(scr_out,pars);
     scr_out << " " << log_weight << std::endl;
     scr_out.precision(6);
-    exit(-1);
+    exit(0);
   }
 
   if (set.verbose>=2) {
@@ -2148,7 +2148,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
 				ubvector &low, ubvector &high) {
 
-  names={"a","alpha","S","L","index1","trans1","index2","trans2",
+  names={"a","alpha","param_S","param_L","index1","trans1","index2","trans2",
 	 "index3"};
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
@@ -2385,7 +2385,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 			      std::vector<std::string> &units,
 			      ubvector &low, ubvector &high) {
 
-  names={"a","alpha","S","L","pres1","pres2","pres3","pres4"};
+  names={"a","alpha","param_S","param_L","pres1","pres2","pres3","pres4"};
 
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
@@ -2619,7 +2619,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
 				  std::vector<std::string> &units,
 				  ubvector &low, ubvector &high) {
 
-  names={"a","alpha","S","L","pres1","ed1","pres2","ed2"};
+  names={"a","alpha","param_S","param_L","pres1","ed1","pres2","ed2"};
   
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
 

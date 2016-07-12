@@ -130,6 +130,7 @@ namespace bamr {
       addl_quants=false;
       mass_switch=0;
       compute_cthick=false;
+      crust_from_L=false;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -139,6 +140,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
     o2scl::cli::parameter_int p_grid_size;
+    o2scl::cli::parameter_int p_mass_switch;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_load;
     o2scl::cli::parameter_bool p_debug_eos;
