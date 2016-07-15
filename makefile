@@ -145,7 +145,7 @@ test_all:
 		-set debug_star 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_star.scr
 	-mv -i debug_star.o2 data_temp
-	bamr -set max_iters 100 -set prefix data_temp/twop_data \
+	bamr -set max_iters 300 -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 	bamr -set max_iters 100 -set prefix data_temp/twop_nodata \
@@ -164,7 +164,7 @@ test_all:
 	bamr -set max_iters 100 -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
-	bamr -set max_iters 100 -set prefix data_temp/qt_nodata \
+	bamr -set max_iters 300 -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 	bamr -set max_iters 100 -set prefix data_temp/qf_nodata \
