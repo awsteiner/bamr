@@ -51,7 +51,9 @@
     - \ref detail_sect
     - \ref crust_sect
     - \ref model_sect
+    \comment
     - \ref func_stack_sect
+    \endcomment
     - \ref postproc_sect
     - \ref changelog_sect
     - \ref ack_sect
@@ -172,28 +174,29 @@
     \hline
     \section detail_sect Some Details
 
-    The basic functionality is provided in the \ref bamr::bamr_class
-    and each Monte Carlo point is an object of type \ref bamr::entry.
-    All of the "models" (EOS parameterizations) are children of \ref
-    bamr::model class.
+    The basic functionality is provided in the class \ref
+    bamr::bamr_class and \ref bamr::model . All of the "models" (EOS
+    parameterizations) are children of \ref bamr::model .
 
     If the initial guess has no probability, then the code will fail.
-    This is indicated by the line \c "Initial weight zero." in
-    the \c _scr file. The easiest fix is just to change the initial 
-    guess.
+    The easiest fix is just to change the initial guess.
 
     In order to make the output more efficient, the table representing
     the full Markov chain is divided up into tables with 10,000 rows
     each, named \c markov_chain0, \c markov_chain1, and so on. The
-    total number of tables is stored in the integer <tt>n_chains</tt>.
+    total number of tables is stored in the HD5 output in the
+    integer <tt>n_chains</tt>.
 
     Different models have different optimal MC step sizes. The step
     size for each parameter is chosen to be the difference betwen the
-    high and low limiting values divided by the value \c step_fac .
-    Increasing or decreasing this value may give better results.
+    high and low limiting values divided by the value \c
+    o2scl::mcmc_base::step_fac (which can be changed from the command
+    line using "-set step_fac <value>". Increasing or decreasing this
+    value may give better results.
 
-    The EOS results are stored in a table in \ref model_data::eos
-    and the TOV results are stored in \ref model_data::tov .
+    The EOS results are stored in a table in \ref
+    bamr::model_data::eos and the TOV results are stored in \ref
+    bamr::model_data::mvsr .
 
     \hline
     \section crust_sect Crust Model
@@ -227,11 +230,13 @@
     <tt>ed</tt> and the pressure in <tt>pr</tt> with the correct units
     set for each column (currently only <tt>1/fm^4</tt> is supported).
 
-    - If \ref bamr::model::baryon_density is true and the EOS
+    \comment
+    - If \ref bamr::settings::baryon_density is true and the EOS
     model did not already compute the baryon density in a column named
     <tt>"nb"</tt>, then \ref bamr::model::compute_eos() should return
     one baryon density and energy density in \ref
     bamr::model::baryon_density_point().
+    \endcomment
 
     - If the model provides the symmetry energy and its density
     derivative, it should be stored as constants named <tt>"S"</tt>
@@ -244,6 +249,7 @@
     - Finally, it is recommended to set the interpolation type in the
     \ref o2scl::table_units object to linear interpolation.
 
+    \comment
     \hline
     \section func_stack_sect Partial Function Call Stack
 
@@ -290,6 +296,8 @@
           - If some masses are too large: \ref bamr::bamr_class::select_mass() 
         - Otherwise if there's no EOS: \ref bamr::model::compute_mr()
         - Test for causality
+
+    \endcomment
 
     \hline
     \section postproc_sect Postprocessing code

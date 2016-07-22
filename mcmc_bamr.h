@@ -60,7 +60,7 @@ namespace bamr {
   typedef boost::numeric::ublas::vector<double> ubvector;
   typedef boost::numeric::ublas::matrix<double> ubmatrix;
   
-  /** \brief A generic MCMC simulation class
+  /** \brief MCMC with HDF5 table I/O 
    */
   template<class func_t, class fill_t, class data_t,
     class vec_t=ubvector> class mcmc_bamr :
@@ -226,7 +226,7 @@ namespace bamr {
   //@}
     
   /// Number of complete Markov chain segments
-  size_t n_chains;
+  size_t chain_index;
   
   /** \brief Update files with current table
    */
@@ -245,9 +245,9 @@ namespace bamr {
 
     hf.set_szt("n_accept",this->n_accept);
     hf.set_szt("n_reject",this->n_reject);
-    hf.set_szt("n_chains",n_chains);
+    hf.set_szt("n_chains",chain_index+1);
     
-    std::string ch_name="markov_chain"+std::to_string(n_chains);
+    std::string ch_name="markov_chain"+std::to_string(chain_index);
     hdf_output(hf,*this->tab,ch_name);
 
     hf.close();
@@ -274,7 +274,7 @@ namespace bamr {
     if (((int)this->tab->get_nlines())==max_chain_size) {
       scr_out << "Writing files and starting new chain." << std::endl;
       update_files();
-      n_chains++;
+      chain_index++;
       this->tab->clear_data();
       files_updated=true;
     } else if (this->n_accept>0 && this->n_reject>0 &&
@@ -445,7 +445,7 @@ namespace bamr {
     mpi_start_time=time(0);
 #endif
     
-    n_chains=0;
+    chain_index=0;
 
     if (this->file_opened==false) {
       // Open main output file
@@ -636,7 +636,7 @@ namespace bamr {
     hf.seti("initial_point_type",initial_point_type);
     hf.sets("initial_point_file",initial_point_file);
     hf.setd_vec_copy("initial_point",initial_point);
-    hf.set_szt("n_chains",n_chains);
+    hf.set_szt("n_chains",chain_index+1);
     
     //hf.setd_vec_copy("low",this->low);
     //hf.setd_vec_copy("high",this->high);
@@ -904,7 +904,7 @@ namespace bamr {
     file_update_iters=40;
     max_chain_size=10000;
 
-    n_chains=0;
+    chain_index=0;
     
   }
 
