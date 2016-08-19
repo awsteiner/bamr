@@ -2312,6 +2312,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_threep (2): " << line[0] << " "
 	   << line[1] << endl;
+      cerr << index1 << " " << exp1 << endl;
       cerr << coeff1 << " " << exp1 << " " << ed_last << " " << trans1 << endl;
       cerr << ed << " " << pr << " " << nb_n1 << " " << nb_e1 << endl;
       exit(-1);
@@ -2331,7 +2332,10 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     pr=coeff2*pow(ed,exp2);
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (3): " << line[0] << " "
+      cerr << index2 << " " << exp2 << endl;
+      cerr << trans1 << " " << trans2 << " " << coeff2 << " "
+	   << pr_last << " " << ed_last << " " << exp2 << endl;
+      cerr << "Problem in qmc_threep (3): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
