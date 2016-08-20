@@ -2332,11 +2332,11 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     pr=coeff2*pow(ed,exp2);
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
+      cerr << "Problem in qmc_threep (3): " << line[0] << " "
+	   << line[1] << endl;
       cerr << index2 << " " << exp2 << endl;
       cerr << trans1 << " " << trans2 << " " << coeff2 << " "
 	   << pr_last << " " << ed_last << " " << exp2 << endl;
-      cerr << "Problem in qmc_threep (3): " << line[0] << " "
-	   << line[1] << endl;
       exit(-1);
     }
     dat.eos->line_of_data(2,line);
@@ -2354,7 +2354,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     pr=coeff3*pow(ed,exp3);
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (4): " << line[0] << " "
+      cerr << "Problem in qmc_threep (4): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2503,7 +2503,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
       
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (4): " << line[0] << " "
+      cerr << "Problem in qmc_fixp (4): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2542,7 +2542,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed_trans+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
     double line[2]={ed,pr_trans+params[4]*(ed-ed_trans)/(ed1-ed_trans)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (5): " << line[0] << " "
+      cerr << "Problem in qmc_fixp (5): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2559,7 +2559,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed1;ed<ed2-1.0e-4;ed+=(ed2-ed1)/10.0) {
     double line[2]={ed,p1+params[5]*(ed-ed1)/(ed2-ed1)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (6): " << line[0] << " "
+      cerr << "Problem in qmc_fixp (6): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2576,7 +2576,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed2;ed<ed3-1.0e-4;ed+=(ed3-ed2)/10.0) {
     double line[2]={ed,p2+params[6]*(ed-ed2)/(ed3-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (7): " << line[0] << " "
+      cerr << "Problem in qmc_fixp (7): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2593,7 +2593,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed3;ed<10.0-1.0e-4;ed+=(ed4-ed3)/10.0) {
     double line[2]={ed,p3+params[7]*(ed-ed3)/(ed4-ed3)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (8): " << line[0] << " "
+      cerr << "Problem in qmc_fixp (8): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2739,7 +2739,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     } else {
       double line[2]={ed,pr};
       if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-	cerr << "Problem in model (4): " << line[0] << " "
+	cerr << "Problem in qmc_twolines (4): " << line[0] << " "
 	     << line[1] << endl;
 	exit(-1);
       }
@@ -2770,7 +2770,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed_last+delta_ed;ed<ed2-1.0e-4;ed+=delta_ed) {
     double line[2]={ed,pr_last+params[4]*(ed-ed_last)/(ed2-ed_last)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (5): " << line[0] << " "
+      cerr << "Problem in qmc_twolines (5): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
@@ -2787,7 +2787,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   for(double ed=ed2;ed<10.0-1.0e-4;ed+=(10.0-ed2)/20.0) {
     double line[2]={ed,p2+params[6]*(ed-ed2)/(10.0-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in model (6): " << line[0] << " "
+      cerr << "Problem in qmc_twolines (6): " << line[0] << " "
 	   << line[1] << endl;
       exit(-1);
     }
