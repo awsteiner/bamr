@@ -1204,7 +1204,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
 	hf.get_szt("grid_size",lgrid_size);
 	hf.get_szt("nparams",nparams);
 	hf.get_szt("nsources",nsources);
-	hf.gets_vec("param_names",param_names);
+	//hf.gets_vec("param_names",param_names);
 	hf.gets_vec("source_names",source_names);
       }
 	  
@@ -1251,7 +1251,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
     // Load weight column for this file from full table
     vector<double> subweights;
     for(size_t k=file_row_start;k<full.get_nlines();k++) {
-      subweights.push_back(full.get("weight",k));
+      subweights.push_back(exp(full.get("log_wgt",k)));
     }
 	
     // Compute autocorrelation
