@@ -235,7 +235,7 @@ namespace bamr {
     o2scl_hdf::hdf_file hf;
     
     // Open main update file
-    hf.open_or_create(prefix+"_"+std::to_string(mpi_rank)+"_out");
+    hf.open_or_create(prefix+"_"+o2scl::itos(mpi_rank)+"_out");
     
     // First time, output some initial quantities
     if (first_file_update==false) {
@@ -247,7 +247,7 @@ namespace bamr {
     hf.set_szt("n_reject",this->n_reject);
     hf.set_szt("n_chains",chain_index+1);
     
-    std::string ch_name="markov_chain"+std::to_string(chain_index);
+    std::string ch_name="markov_chain"+o2scl::szttos(chain_index);
     hdf_output(hf,*this->tab,ch_name);
 
     hf.close();
@@ -450,7 +450,7 @@ namespace bamr {
     if (this->file_opened==false) {
       // Open main output file
       this->scr_out.open((this->prefix+"_"+
-			  std::to_string(this->mpi_rank)+"_scr").c_str());
+			  o2scl::itos(this->mpi_rank)+"_scr").c_str());
       this->scr_out.setf(std::ios::scientific);
       this->file_opened=true;
       this->scr_out << "Opened main file in command 'mcmc'." << std::endl;
@@ -490,7 +490,7 @@ namespace bamr {
 	size_t file_n_chains;
 	hf.get_szt("n_chains",file_n_chains);
 	std::string chain_name=std::string("markov_chain")+
-	std::to_string(file_n_chains-1);
+	o2scl::szttos(file_n_chains-1);
 	o2scl::table_units<> file_tab;
 	hdf_input(hf,file_tab,chain_name);
 	size_t last_line=file_tab.get_nlines()-1;
@@ -542,7 +542,7 @@ namespace bamr {
       
 	o2scl::table_units<> file_tab;
 	for(size_t k=0;k<file_n_chains;k++) {
-	  std::string chain_name=std::string("markov_chain")+std::to_string(k);
+	  std::string chain_name=std::string("markov_chain")+o2scl::szttos(k);
 	  hdf_input(hf,file_tab,chain_name);
 	  if (file_tab.get_nlines()>row) {
 	    k=file_n_chains;
@@ -607,7 +607,7 @@ namespace bamr {
     if (this->file_opened==false) {
       // Open main output file
       this->scr_out.open((this->prefix+"_"+
-			  std::to_string(this->mpi_rank)+"_scr").c_str());
+			  o2scl::itos(this->mpi_rank)+"_scr").c_str());
       this->scr_out.setf(std::ios::scientific);
       this->file_opened=true;
       this->scr_out << "Opened main file in function 'best_point()'."
@@ -656,7 +656,7 @@ namespace bamr {
 
     if (file_opened==false) {
       // Open main output file
-      scr_out.open((prefix+"_"+std::to_string(mpi_rank)+"_scr").c_str());
+      scr_out.open((prefix+"_"+o2scl::itos(mpi_rank)+"_scr").c_str());
       scr_out.setf(ios::scientific);
       file_opened=true;
       scr_out << "Opened main file in command 'hastings'." << endl;
@@ -861,7 +861,7 @@ namespace bamr {
   
       initial_point_type=fp_last;
       initial_point_file=sv[2]+((std::string)"_")+
-      std::to_string(this->mpi_rank)+"_out";
+      o2scl::itos(this->mpi_rank)+"_out";
       
     } else if (sv[1]==((std::string)"last")) {
       initial_point_type=fp_last;

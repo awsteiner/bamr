@@ -86,12 +86,16 @@ namespace bamr {
 	eos_new(new o2scl::table_units<>);
       eos=eos_new;
     }
+
+#ifdef O2SCL_NEVER_DEFINED
     
   private:
     
     /** \brief Make operator= copy constructor private
      */
     model_data &operator=(const model_data &e);
+
+#endif
     
   };
 

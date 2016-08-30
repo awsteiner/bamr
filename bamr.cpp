@@ -280,7 +280,7 @@ int bamr_class::mcmc_init() {
   if (this->file_opened==false) {
     // Open main output file
     this->scr_out.open((this->prefix+"_"+
-			std::to_string(this->mpi_rank)+"_scr").c_str());
+			o2scl::itos(this->mpi_rank)+"_scr").c_str());
     this->scr_out.setf(std::ios::scientific);
     this->file_opened=true;
     this->scr_out << "Opened main file in function 'bamr_class::mcmc_init()'."
@@ -347,30 +347,30 @@ int bamr_class::mcmc_init() {
   
   if (m.has_eos) {
     for(int i=0;i<set.grid_size;i++) {
-      this->tab->new_column(((string)"P_")+std::to_string(i));
-      this->tab->set_unit(((string)"P_")+std::to_string(i),
+      this->tab->new_column(((string)"P_")+o2scl::itos(i));
+      this->tab->set_unit(((string)"P_")+o2scl::itos(i),
 			  "1/fm^4");
     }
   }
   
   for(int i=0;i<set.grid_size;i++) {
-    this->tab->new_column(((string)"R_")+std::to_string(i));
-    this->tab->set_unit(((string)"R_")+std::to_string(i),
+    this->tab->new_column(((string)"R_")+o2scl::itos(i));
+    this->tab->set_unit(((string)"R_")+o2scl::itos(i),
 			"km");
     if (m.has_eos) {
-      this->tab->new_column(((string)"PM_")+std::to_string(i));
-      this->tab->set_unit(((string)"PM_")+std::to_string(i),
+      this->tab->new_column(((string)"PM_")+o2scl::itos(i));
+      this->tab->set_unit(((string)"PM_")+o2scl::itos(i),
 			  "1/fm^4");
     }
   }
   if (m.has_eos) {
     if (set.baryon_density) {
       for(int i=0;i<set.grid_size;i++) {
-	this->tab->new_column(((string)"Pnb_")+std::to_string(i));
-	this->tab->set_unit(((string)"Pnb_")+std::to_string(i),
+	this->tab->new_column(((string)"Pnb_")+o2scl::itos(i));
+	this->tab->set_unit(((string)"Pnb_")+o2scl::itos(i),
 			    "1/fm^4");
-	this->tab->new_column(((string)"EoA_")+std::to_string(i));
-	this->tab->set_unit(((string)"EoA_")+std::to_string(i),
+	this->tab->new_column(((string)"EoA_")+o2scl::itos(i));
+	this->tab->set_unit(((string)"EoA_")+o2scl::itos(i),
 			    "MeV");
       }
     }
@@ -430,21 +430,21 @@ int bamr_class::mcmc_init() {
       this->tab->new_column("prt");
       this->tab->set_unit("prt","1/fm^4");
       for(int i=0;i<set.grid_size;i++) {
-        this->tab->new_column(((string)"ct_")+std::to_string(i));
-        this->tab->set_unit(((string)"ct_")+std::to_string(i),"km");
+        this->tab->new_column(((string)"ct_")+o2scl::itos(i));
+        this->tab->set_unit(((string)"ct_")+o2scl::itos(i),"km");
       }
     }
   }
   if (set.addl_quants) {
     for(int i=0;i<set.grid_size;i++) {
-      this->tab->new_column(((string)"Mb_")+std::to_string(i));
-      this->tab->set_unit(((string)"Mb_")+std::to_string(i),"Msun");
-      this->tab->new_column(((string)"be_")+std::to_string(i));
-      this->tab->set_unit(((string)"be_")+std::to_string(i),"Msun");
-      this->tab->new_column(((string)"I_")+std::to_string(i));
-      this->tab->set_unit(((string)"I_")+std::to_string(i),
+      this->tab->new_column(((string)"Mb_")+o2scl::itos(i));
+      this->tab->set_unit(((string)"Mb_")+o2scl::itos(i),"Msun");
+      this->tab->new_column(((string)"be_")+o2scl::itos(i));
+      this->tab->set_unit(((string)"be_")+o2scl::itos(i),"Msun");
+      this->tab->new_column(((string)"I_")+o2scl::itos(i));
+      this->tab->set_unit(((string)"I_")+o2scl::itos(i),
 			    "Msun*km^2");
-      //this->tab->new_column(((string)"lambda_")+std::to_string(i));
+      //this->tab->new_column(((string)"lambda_")+o2scl::itos(i));
     }
   }
 
