@@ -38,6 +38,7 @@
 #include <o2scl/uniform_grid.h>
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_file.h>
+#include <o2scl/hdf_io.h>
 #include <o2scl/exception.h>
 #include <o2scl/prob_dens_func.h>
 #include <o2scl/cholesky.h>
