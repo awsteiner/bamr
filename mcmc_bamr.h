@@ -110,6 +110,14 @@ namespace bamr {
   virtual int mcmc(size_t np, vec_t &init,
 		   vec_t &low, vec_t &high, func_t &func,
 		   fill_t &fill) {
+
+    unsigned long int seed=time(0);
+    if (user_seed!=0) {
+      seed=user_seed;
+    }
+    seed*=(mpi_rank+1);
+    rg.set_seed(seed);
+    
     // The function mcmc_init() needs to know the number of
     // parameters, so we store it here for later use
     nparams=np;
