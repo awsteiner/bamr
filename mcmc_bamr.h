@@ -105,19 +105,26 @@ namespace bamr {
   
   public:
 
+  /** \brief Method for setting the random seed
+   */
+  virtual void set_seed() {
+    // Set RNG seed
+    unsigned long int seed=time(0);
+    if (this->user_seed!=0) {
+      seed=this->user_seed;
+    }
+    seed*=(mpi_rank+1);
+    this->rg.set_seed(seed);
+
+    return;
+  }
+
   /** \brief Perform an MCMC simulation
    */
   virtual int mcmc(size_t np, vec_t &init,
 		   vec_t &low, vec_t &high, func_t &func,
 		   fill_t &fill) {
 
-    unsigned long int seed=time(0);
-    if (user_seed!=0) {
-      seed=user_seed;
-    }
-    seed*=(mpi_rank+1);
-    rg.set_seed(seed);
-    
     // The function mcmc_init() needs to know the number of
     // parameters, so we store it here for later use
     nparams=np;
