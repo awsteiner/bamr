@@ -259,6 +259,8 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
   hf.setd("e_high",set.e_high);
   hf.setd("m_low",set.m_low);
   hf.setd("m_high",set.m_high);
+  hf.setd_vec_copy("low",this->low_copy);
+  hf.setd_vec_copy("high",this->high_copy);
 
   hdf_output(hf,m.nb_grid,"nb_grid");
   hdf_output(hf,m.e_grid,"e_grid");
@@ -544,8 +546,10 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   ubvector low;
   ubvector high;
-  // Get names and units from model (which also automatically
-  // includes nuisance variables for the data points)
+  // Get names and units for parameters from model (which also
+  // automatically includes nuisance variables for the data points)
+  // The other columns and units are specified in mcmc_init()
+  // function manually using a call to table::new_column().
   mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 

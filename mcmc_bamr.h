@@ -102,6 +102,14 @@ namespace bamr {
   /** \brief The number of parameters
    */
   size_t nparams;
+
+  /** \brief A copy of the lower limits for HDF5 output
+   */
+  vec_t low_copy;
+
+  /** \brief A copy of the upper limits for HDF5 output
+   */
+  vec_t high_copy;
   
   public:
 
@@ -125,6 +133,9 @@ namespace bamr {
 		   vec_t &low, vec_t &high, func_t &func,
 		   fill_t &fill) {
 
+    low_copy=low;
+    high_copy=high;
+    
     // The function mcmc_init() needs to know the number of
     // parameters, so we store it here for later use
     nparams=np;
@@ -639,7 +650,7 @@ namespace bamr {
    */
   virtual void first_update(o2scl_hdf::hdf_file &hf) {
     
-    hf.sets_vec("col_names",this->col_names);
+    hf.sets_vec("param_names",this->col_names);
     
     hf.set_szt("nparams",nparams);
     hf.setd("max_time",this->max_time);
