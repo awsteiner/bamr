@@ -29,8 +29,7 @@ READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
 READLINE_LIBS = -lreadline -lncurses
 
 # Basic optimization flags
-COMPILER_FLAGS = -std=c++0x -O3 -Wno-deprecated-declarations \
-	-Wno-ignored-attributes
+COMPILER_FLAGS = -std=c++0x -O3
 
 # ----------------------------------------------------------------------
 # Secondary variables
@@ -128,11 +127,6 @@ process: process.o process_main.o
 
 test:
 	mpirun -np 2 bamr -run default.in -model twop -mcmc
-
-testx:
-	bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
-		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
-		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
 test_all:
 	-mkdir -p data_temp

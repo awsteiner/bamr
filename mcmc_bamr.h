@@ -61,10 +61,10 @@ namespace bamr {
   typedef boost::numeric::ublas::vector<double> ubvector;
   typedef boost::numeric::ublas::matrix<double> ubmatrix;
   
-  /** \brief MCMC with HDF5 table I/O 
+  /** \brief MCMC with MPI and HDF5 table I/O 
    */
   template<class func_t, class fill_t, class data_t,
-    class vec_t=ubvector> class mcmc_bamr :
+    class vec_t=ubvector> class mcmc_mpi :
     public o2scl::mcmc_table<func_t,fill_t,data_t,vec_t> {
     
   protected:
@@ -87,21 +87,13 @@ namespace bamr {
    */
   o2scl::err_hnd_cpp error_handler;
 
-#ifdef O2SCL_READLINE
-  /// Command-line interface
-  o2scl::cli_readline cl;
-#else
-  /// Command-line interface
-  o2scl::cli cl;
-#endif
-
   /** \brief The arguments sent to the command-line
    */
   std::vector<std::string> cl_args;
 
   /** \brief The number of parameters
    */
-  size_t nparams;
+  size_t n_params;
 
   /** \brief A copy of the lower limits for HDF5 output
    */
@@ -138,44 +130,9 @@ namespace bamr {
     
     // The function mcmc_init() needs to know the number of
     // parameters, so we store it here for later use
-    nparams=np;
+    n_params=np;
     return parent_t::mcmc(np,init,low,high,func,fill);
   }
-    
-    /// Main wrapper for parsing command-line arguments
-  virtual void run(int argc, char *argv[]) {
-
-    // ---------------------------------------
-    // Set error handler for this thread
-  
-    o2scl::err_hnd=&this->error_handler;
-  
-    // ---------------------------------------
-    // Process command-line arguments and run
-
-    setup_cli();
-
-#ifndef BAMR_NO_MPI
-    // Get MPI rank, etc.
-    MPI_Comm_rank(MPI_COMM_WORLD,&this->mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&this->mpi_nprocs);
-#endif
-
-    // Process arguments
-    for(int i=0;i<argc;i++) {
-      this->cl_args.push_back(argv[i]);
-    }
-
-    this->cl.prompt="mcmc> ";
-    this->cl.run_auto(argc,argv);
-
-    if (file_opened) {
-      //Close main output file
-      this->scr_out.close();
-    }
- 
-    return;
-  }    
     
   public:
   
@@ -223,23 +180,6 @@ namespace bamr {
   /// If true, then \ref first_update() has been called
   bool first_file_update;
   
-  /// \name Parameter objects for the 'set' command
-  //@{
-  o2scl::cli::parameter_double p_step_fac;
-  o2scl::cli::parameter_size_t p_n_warm_up;
-  o2scl::cli::parameter_int p_user_seed;
-  o2scl::cli::parameter_size_t p_max_bad_steps;
-  o2scl::cli::parameter_size_t p_n_walk;
-  o2scl::cli::parameter_bool p_aff_inv;
-  o2scl::cli::parameter_double p_max_time;
-  o2scl::cli::parameter_size_t p_max_iters;
-  o2scl::cli::parameter_int p_max_chain_size;
-  o2scl::cli::parameter_int p_file_update_iters;
-  o2scl::cli::parameter_bool p_output_meas;
-  o2scl::cli::parameter_string p_prefix;
-  o2scl::cli::parameter_int p_verbose;
-  //@}
-  
   /// \name Command-line settings
   //@{
   /** \brief The number of MCMC successes between file updates
@@ -273,6 +213,7 @@ namespace bamr {
     hf.set_szt("n_accept",this->n_accept);
     hf.set_szt("n_reject",this->n_reject);
     hf.set_szt("n_chains",chain_index+1);
+    hf.set_szt_vec("ret_value_counts",this->ret_value_counts);
     
     std::string ch_name="markov_chain"+o2scl::szttos(chain_index);
     hdf_output(hf,*this->tab,ch_name);
@@ -343,125 +284,14 @@ namespace bamr {
     return 0;
   }
     
-  
   /// \name Customization functions
   //@{
-  /** \brief Set up the 'cli' object
-      
-      This function just adds the four commands and the 'set' parameters
-  */
-  virtual void setup_cli() {
-
-    // ---------------------------------------
-    // Set commands/options
-
-    static const size_t nopt=1;
-    o2scl::comm_option_s options[nopt]={
-      {'i',"initial-point","Set the starting point in the parameter space",
-       1,-1,"<mode> [...]",
-       ((std::string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+
-       "If mode is 'best', then it uses the point with the largest "+
-       "weight and the second argument specifies the file. If mode is "+
-       "'last' then it uses the last point and the second argument "+
-       "specifies the file. If mode is 'N' then it uses the Nth point, "+
-       "the second argument specifies the value of N and the third "+
-       "argument specifies the file. If mode is 'values', then the remaining "+
-       "arguments specify all the parameter values. On the command-line, "+
-       "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
-       "to ensure they do not get confused with other options.",
-       new o2scl::comm_option_mfptr<mcmc_bamr>
-       (this,&mcmc_bamr::set_initial_point),
-       o2scl::cli::comm_option_both}
-      /*
-	{'s',"hastings","Specify distribution for M-H step",
-	1,1,"<filename>",
-	((string)"Desc. ")+"Desc2.",
-	new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::hastings),
-	cli::comm_option_both}
-      */
-    };
-    this->cl.set_comm_option_vec(nopt,options);
-
-    p_file_update_iters.i=&file_update_iters;
-    p_file_update_iters.help=((std::string)"Number of MCMC successes ")+
-    "between file upates (default 40, minimum value 1).";
-    this->cl.par_list.insert(std::make_pair("file_update_iters",
-					    &p_file_update_iters));
-    
-    p_max_chain_size.i=&max_chain_size;
-    p_max_chain_size.help=((std::string)"Maximum Markov chain size ")+
-    "(default 10000).";
-    this->cl.par_list.insert(std::make_pair("max_chain_size",
-					    &p_max_chain_size));
-    
-    p_max_time.d=&this->max_time;
-    p_max_time.help=((std::string)"Maximum run time in seconds ")+
-    "(default 86400 sec or 1 day).";
-    this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
-    
-    p_max_iters.s=&this->max_iters;
-    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
-    "iterations to be less than the specified number (default zero).";
-    this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
-    
-    p_prefix.str=&this->prefix;
-    p_prefix.help="Output file prefix (default 'mcmc\').";
-    this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
-    
-    p_output_meas.b=&this->output_meas;
-    p_output_meas.help=((std::string)"If true, output next point ")+
-    "to the '_scr' file before calling TOV solver (default true).";
-    this->cl.par_list.insert(std::make_pair("output_meas",&p_output_meas));
-    
-    p_step_fac.d=&this->step_fac;
-    p_step_fac.help=((std::string)"MCMC step factor. The step size for ")+
-    "each variable is taken as the difference between the high and low "+
-    "limits divided by this factor (default 10.0). This factor can "+
-    "be increased if the acceptance rate is too small, but care must "+
-    "be taken, e.g. if the conditional probability is multimodal. If "+
-    "this step size is smaller than 1.0, it is reset to 1.0 .";
-    this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
-
-    p_n_warm_up.s=&this->n_warm_up;
-    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
-    "(default 0).";
-    this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
-
-    p_verbose.i=&this->verbose;
-    p_verbose.help=((std::string)"Verbosity parameter ")+
-    "(default 0).";
-    this->cl.par_list.insert(std::make_pair("verbose",&p_verbose));
-
-    p_max_bad_steps.s=&this->max_bad_steps;
-    p_max_bad_steps.help=((std::string)"Maximum number of bad steps ")+
-    "(default 1000).";
-    this->cl.par_list.insert(std::make_pair("max_bad_steps",&p_max_bad_steps));
-
-    p_n_walk.s=&this->n_walk;
-    p_n_walk.help=((std::string)"Number of walkers ")+
-    "(default 1).";
-    this->cl.par_list.insert(std::make_pair("n_walk",&p_n_walk));
-
-    p_user_seed.i=&this->user_seed;
-    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
-    "generator. If zero is given (the default), then mcmc() uses "+
-    "time(0) to generate a random seed.";
-    this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
-    
-    p_aff_inv.b=&this->aff_inv;
-    p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
-    "sampling (default false).";
-    this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
-    
-    return;
-  }
-  
   /** \brief User-defined initialization function
    */
   virtual int mcmc_init() {
     
     if (this->verbose>=2) {
-      std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
+      std::cout << "Start mcmc_mpi::mcmc_init()." << std::endl;
     }
     
     o2scl::mcmc_table<func_t,fill_t,data_t,vec_t>::mcmc_init();
@@ -523,7 +353,7 @@ namespace bamr {
 	size_t last_line=file_tab.get_nlines()-1;
 
 	// Get parameters
-	for(size_t i=0;i<nparams;i++) {
+	for(size_t i=0;i<n_params;i++) {
 	  std::string pname=((std::string)"param_")+this->col_names[i];
 	  this->current[0][i]=file_tab.get(pname,last_line);
 	  this->scr_out << "Parameter named "
@@ -544,13 +374,13 @@ namespace bamr {
 	hf.close();
 	this->scr_out << "Reading best point from file '" << initial_point_file
 	<< "'." << std::endl;
-	for(size_t i=0;i<nparams;i++) {
+	for(size_t i=0;i<n_params;i++) {
 	  this->current[0][i]=best_point[i];
 	  this->scr_out << "Parameter " << i << " : "
 			<< this->current[0][i] << std::endl;
 	}
 	this->scr_out << "Best weight: "
-	<< best_point[nparams] << std::endl;
+	<< best_point[n_params] << std::endl;
 	this->scr_out << std::endl;
 
       } else {
@@ -584,7 +414,7 @@ namespace bamr {
 	}
       
 	// Get parameters
-	for(size_t i=0;i<nparams;i++) {
+	for(size_t i=0;i<n_params;i++) {
 	  std::string pname=((std::string)"param_")+this->col_names[i];
 	  this->current[0][i]=file_tab.get(pname,row);
 	  this->scr_out << "Parameter named "
@@ -600,7 +430,7 @@ namespace bamr {
     } else if (initial_point.size()>0) {
     
       this->scr_out << "First point from command-line." << std::endl;
-      for(size_t i=0;i<nparams;i++) {
+      for(size_t i=0;i<n_params;i++) {
 	this->current[0][i]=initial_point[i];
 	this->scr_out << this->current[0][i] << std::endl;
       }
@@ -622,7 +452,7 @@ namespace bamr {
     o2scl::vector_out(this->scr_out,this->current[0],true);
 
     if (this->verbose>=2) {
-      std::cout << "End mcmc_bamr::mcmc_init()." << std::endl;
+      std::cout << "End mcmc_mpi::mcmc_init()." << std::endl;
     }
     
     return 0;
@@ -652,7 +482,7 @@ namespace bamr {
     
     hf.sets_vec("param_names",this->col_names);
     
-    hf.set_szt("nparams",nparams);
+    hf.set_szt("n_params",n_params);
     hf.setd("max_time",this->max_time);
     hf.seti("user_seed",this->user_seed);
     hf.seti("n_warm_up",this->n_warm_up);
@@ -664,9 +494,9 @@ namespace bamr {
     hf.sets("initial_point_file",initial_point_file);
     hf.setd_vec_copy("initial_point",initial_point);
     hf.set_szt("n_chains",chain_index+1);
-    
-    //hf.setd_vec_copy("low",this->low);
-    //hf.setd_vec_copy("high",this->high);
+    hf.set_szt_vec("ret_value_counts",this->ret_value_counts);
+    hf.setd_vec_copy("low",this->low_copy);
+    hf.setd_vec_copy("high",this->high_copy);
     
     hf.sets_vec("cl_args",this->cl_args);
     
@@ -734,30 +564,30 @@ namespace bamr {
     if (debug) scr_out << "lines: " << file_tab.get_nlines() << endl;
   
     // The total number of variables
-    size_t nv=nparams+nsources;
+    size_t nv=n_params+n_sources;
     if (debug) {
-      scr_out << nparams << " parameters and " << nsources << " sources."
+      scr_out << n_params << " parameters and " << n_sources << " sources."
 	      << endl;
     }
     hg_best.resize(nv);
   
     // Find the average values
-    for(size_t i=0;i<nparams;i++) {
+    for(size_t i=0;i<n_params;i++) {
       string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
       hg_best[i]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
 			      file_tab["mwgt"]);
     }
-    for(size_t i=0;i<nsources;i++) {
+    for(size_t i=0;i<n_sources;i++) {
       string str_i=((string)"Mns_")+source_names[i];
-      hg_best[i+nparams]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
-				      file_tab["mwgt"]);
+      hg_best[i+n_params]=wvector_mean(file_tab.get_nlines(),file_tab[str_i],
+				       file_tab["mwgt"]);
     }
   
     // Construct the covariance matrix
     ubmatrix covar(nv,nv);
-    for(size_t i=0;i<nparams;i++) {
+    for(size_t i=0;i<n_params;i++) {
       string str_i=((string)"param_")+data_arr[0].modp->param_name(i);
-      for(size_t j=i;j<nparams;j++) {
+      for(size_t j=i;j<n_params;j++) {
 	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
 	covar(i,j)=wvector_covariance(file_tab.get_nlines(),
 				      file_tab[str_i],file_tab[str_j],
@@ -768,31 +598,31 @@ namespace bamr {
 	}
 	covar(j,i)=covar(i,j);
       }
-      for(size_t j=0;j<nsources;j++) {
+      for(size_t j=0;j<n_sources;j++) {
 	string str_j=((string)"Mns_")+source_names[j];
-	covar(i,j+nparams)=wvector_covariance(file_tab.get_nlines(),
-					      file_tab[str_i],file_tab[str_j],
-					      file_tab["mult"]);
+	covar(i,j+n_params)=wvector_covariance(file_tab.get_nlines(),
+					       file_tab[str_i],file_tab[str_j],
+					       file_tab["mult"]);
 	if (debug) {
-	  scr_out << "Covar: " << i << " " << j+nparams << " "
-		  << covar(i,j+nparams) << endl;
+	  scr_out << "Covar: " << i << " " << j+n_params << " "
+		  << covar(i,j+n_params) << endl;
 	}
-	covar(j+nparams,i)=covar(i,j+nparams);
+	covar(j+n_params,i)=covar(i,j+n_params);
       }
     }
-    for(size_t i=0;i<nsources;i++) {
+    for(size_t i=0;i<n_sources;i++) {
       string str_i=((string)"Mns_")+source_names[i];
-      for(size_t j=i;j<nsources;j++) {
+      for(size_t j=i;j<n_sources;j++) {
 	string str_j=((string)"Mns_")+source_names[j];
-	covar(i+nparams,j+nparams)=
+	covar(i+n_params,j+n_params)=
 	  wvector_covariance(file_tab.get_nlines(),
 			     file_tab[str_i],file_tab[str_j],
 			     file_tab["mult"]);
 	if (debug) {
-	  scr_out << "Covar: " << i+nparams << " " << j+nparams << " "
-		  << covar(i+nparams,j+nparams) << endl;
+	  scr_out << "Covar: " << i+n_params << " " << j+n_params << " "
+		  << covar(i+n_params,j+n_params) << endl;
 	}
-	covar(j+nparams,i+nparams)=covar(i+nparams,j+nparams);
+	covar(j+n_params,i+n_params)=covar(i+n_params,j+n_params);
       }
     }
 
@@ -818,12 +648,12 @@ namespace bamr {
     double renorm=0.0;
     double wgt_sum=0.0;
     for(size_t i=0;i<file_tab.get_nlines();i+=step) {
-      ubvector e(nparams,nsources);
-      for(size_t j=0;j<nparams;j++) {
+      ubvector e(n_params,n_sources);
+      for(size_t j=0;j<n_params;j++) {
 	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
 	e.params[j]=file_tab.get(str_j,i);
       }
-      for(size_t j=0;j<nsources;j++) {
+      for(size_t j=0;j<n_sources;j++) {
 	string str_j=((string)"Mns_")+source_names[j];
 	e.mass[j]=file_tab.get(str_j,i);
       }
@@ -844,12 +674,12 @@ namespace bamr {
     step=file_tab.get_nlines()/20;
     if (step<1) step=1;
     for(size_t i=0;i<file_tab.get_nlines();i+=step) {
-      ubvector e(nparams,nsources);
-      for(size_t j=0;j<nparams;j++) {
+      ubvector e(n_params,n_sources);
+      for(size_t j=0;j<n_params;j++) {
 	string str_j=((string)"param_")+data_arr[0].modp->param_name(j);
 	e.params[j]=file_tab.get(str_j,i);
       }
-      for(size_t j=0;j<nsources;j++) {
+      for(size_t j=0;j<n_sources;j++) {
 	string str_j=((string)"Mns_")+source_names[j];
 	e.mass[j]=file_tab.get(str_j,i);
       }
@@ -906,7 +736,7 @@ namespace bamr {
 
   /** \brief Create an MCMC object with model \c m
    */
-  mcmc_bamr() {
+  mcmc_mpi() {
 
     // Initial values for MPI paramers
     mpi_nprocs=1;
@@ -933,10 +763,194 @@ namespace bamr {
 
     chain_index=0;
     
+    // ---------------------------------------
+    // Set error handler for this thread
+    
+    o2scl::err_hnd=&this->error_handler;
+      
   }
 
   };
 
+  /** \brief MCMC class with a command-line interface
+   */
+  template<class func_t, class fill_t, class data_t,
+    class vec_t=ubvector> class mcmc_cli :
+    public bamr::mcmc_mpi<func_t,fill_t,data_t,vec_t> {
+
+  protected:
+    
+#ifdef O2SCL_READLINE
+  /// Command-line interface
+  o2scl::cli_readline cl;
+#else
+  /// Command-line interface
+  o2scl::cli cl;
+#endif
+
+  /// \name Parameter objects for the 'set' command
+  //@{
+  o2scl::cli::parameter_double p_step_fac;
+  o2scl::cli::parameter_size_t p_n_warm_up;
+  o2scl::cli::parameter_int p_user_seed;
+  o2scl::cli::parameter_size_t p_max_bad_steps;
+  o2scl::cli::parameter_size_t p_n_walk;
+  o2scl::cli::parameter_bool p_aff_inv;
+  o2scl::cli::parameter_double p_max_time;
+  o2scl::cli::parameter_size_t p_max_iters;
+  o2scl::cli::parameter_int p_max_chain_size;
+  o2scl::cli::parameter_int p_file_update_iters;
+  o2scl::cli::parameter_bool p_output_meas;
+  o2scl::cli::parameter_string p_prefix;
+  o2scl::cli::parameter_int p_verbose;
+  //@}
+  
+  public:
+  
+  /// Main wrapper for parsing command-line arguments
+  virtual void run(int argc, char *argv[]) {
+      
+    // ---------------------------------------
+    // Process command-line arguments and run
+      
+    setup_cli();
+      
+#ifndef BAMR_NO_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&this->mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&this->mpi_nprocs);
+#endif
+      
+    // Process arguments
+    for(int i=0;i<argc;i++) {
+      this->cl_args.push_back(argv[i]);
+    }
+      
+    this->cl.prompt="mcmc> ";
+    this->cl.run_auto(argc,argv);
+      
+    if (this->file_opened) {
+      //Close main output file
+      this->scr_out.close();
+    }
+      
+    return;
+  }    
+    
+  /// \name Customization functions
+  //@{
+  /** \brief Set up the 'cli' object
+      
+      This function just adds the four commands and the 'set' parameters
+  */
+  virtual void setup_cli() {
+
+    // ---------------------------------------
+    // Set commands/options
+
+    static const size_t nopt=1;
+    o2scl::comm_option_s options[nopt]={
+      {'i',"initial-point","Set the starting point in the parameter space",
+       1,-1,"<mode> [...]",
+       ((std::string)"Mode can be one of 'best', 'last', 'N', or 'values'. ")+
+       "If mode is 'best', then it uses the point with the largest "+
+       "weight and the second argument specifies the file. If mode is "+
+       "'last' then it uses the last point and the second argument "+
+       "specifies the file. If mode is 'N' then it uses the Nth point, "+
+       "the second argument specifies the value of N and the third "+
+       "argument specifies the file. If mode is 'values', then the remaining "+
+       "arguments specify all the parameter values. On the command-line, "+
+       "enclose negative values in quotes and parentheses, i.e. \"(-1.00)\" "+
+       "to ensure they do not get confused with other options.",
+       new o2scl::comm_option_mfptr<mcmc_cli>
+       (this,&mcmc_cli::set_initial_point),
+       o2scl::cli::comm_option_both}
+      /*
+	{'s',"hastings","Specify distribution for M-H step",
+	1,1,"<filename>",
+	((string)"Desc. ")+"Desc2.",
+	new comm_option_mfptr<mcmc_mpi>(this,&mcmc_mpi::hastings),
+	cli::comm_option_both}
+      */
+    };
+    this->cl.set_comm_option_vec(nopt,options);
+
+    p_file_update_iters.i=&this->file_update_iters;
+    p_file_update_iters.help=((std::string)"Number of MCMC successes ")+
+    "between file upates (default 40, minimum value 1).";
+    this->cl.par_list.insert(std::make_pair("file_update_iters",
+					    &p_file_update_iters));
+    
+    p_max_chain_size.i=&this->max_chain_size;
+    p_max_chain_size.help=((std::string)"Maximum Markov chain size ")+
+    "(default 10000).";
+    this->cl.par_list.insert(std::make_pair("max_chain_size",
+					    &p_max_chain_size));
+    
+    p_max_time.d=&this->max_time;
+    p_max_time.help=((std::string)"Maximum run time in seconds ")+
+    "(default 86400 sec or 1 day).";
+    this->cl.par_list.insert(std::make_pair("max_time",&p_max_time));
+    
+    p_max_iters.s=&this->max_iters;
+    p_max_iters.help=((std::string)"If non-zero, limit the number of ")+
+    "iterations to be less than the specified number (default zero).";
+    this->cl.par_list.insert(std::make_pair("max_iters",&p_max_iters));
+    
+    p_prefix.str=&this->prefix;
+    p_prefix.help="Output file prefix (default 'mcmc\').";
+    this->cl.par_list.insert(std::make_pair("prefix",&p_prefix));
+    
+    p_output_meas.b=&this->output_meas;
+    p_output_meas.help=((std::string)"If true, output next point ")+
+    "to the '_scr' file before calling TOV solver (default true).";
+    this->cl.par_list.insert(std::make_pair("output_meas",&p_output_meas));
+    
+    p_step_fac.d=&this->step_fac;
+    p_step_fac.help=((std::string)"MCMC step factor. The step size for ")+
+    "each variable is taken as the difference between the high and low "+
+    "limits divided by this factor (default 10.0). This factor can "+
+    "be increased if the acceptance rate is too small, but care must "+
+    "be taken, e.g. if the conditional probability is multimodal. If "+
+    "this step size is smaller than 1.0, it is reset to 1.0 .";
+    this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
+
+    p_n_warm_up.s=&this->n_warm_up;
+    p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
+    "(default 0).";
+    this->cl.par_list.insert(std::make_pair("n_warm_up",&p_n_warm_up));
+
+    p_verbose.i=&this->verbose;
+    p_verbose.help=((std::string)"Verbosity parameter ")+
+    "(default 0).";
+    this->cl.par_list.insert(std::make_pair("verbose",&p_verbose));
+
+    p_max_bad_steps.s=&this->max_bad_steps;
+    p_max_bad_steps.help=((std::string)"Maximum number of bad steps ")+
+    "(default 1000).";
+    this->cl.par_list.insert(std::make_pair("max_bad_steps",&p_max_bad_steps));
+
+    p_n_walk.s=&this->n_walk;
+    p_n_walk.help=((std::string)"Number of walkers ")+
+    "(default 1).";
+    this->cl.par_list.insert(std::make_pair("n_walk",&p_n_walk));
+
+    p_user_seed.i=&this->user_seed;
+    p_user_seed.help=((std::string)"Seed for multiplier for random number ")+
+    "generator. If zero is given (the default), then mcmc() uses "+
+    "time(0) to generate a random seed.";
+    this->cl.par_list.insert(std::make_pair("user_seed",&p_user_seed));
+    
+    p_aff_inv.b=&this->aff_inv;
+    p_aff_inv.help=((std::string)"If true, then use affine-invariant ")+
+    "sampling (default false).";
+    this->cl.par_list.insert(std::make_pair("aff_inv",&p_aff_inv));
+    
+    return;
+  }
+  
+  };
+  
   // End of bamr namespace
 }
 

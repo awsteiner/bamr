@@ -104,7 +104,7 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class bamr_class :
-    public bamr::mcmc_bamr<point_funct,fill_funct,model_data,ubvector> {
+    public bamr::mcmc_cli<point_funct,fill_funct,model_data,ubvector> {
 
   protected:
 

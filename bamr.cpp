@@ -66,13 +66,13 @@ int bamr_class::fill(const ubvector &pars, double weight,
     mmax=3.0;
   }
 
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     line.push_back(dat.wgts[i]);
   }
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     line.push_back(dat.rad[i]);
   }
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     line.push_back(dat.mass[i]);
   }
   
@@ -142,15 +142,15 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(pmax);
     line.push_back(emax);
     if (set.baryon_density) line.push_back(nbmax);
-    for(size_t i=0;i<nsd.nsources;i++) {
+    for(size_t i=0;i<nsd.n_sources;i++) {
       double val=dat.mvsr->interp
-	("gm",pars[this->nparams-nsd.nsources+i],"ed");
+	("gm",pars[this->n_params-nsd.n_sources+i],"ed");
       line.push_back(val);
     }
     if (set.baryon_density) {
-      for(size_t i=0;i<nsd.nsources;i++) {
+      for(size_t i=0;i<nsd.n_sources;i++) {
 	line.push_back(dat.mvsr->interp
-		       ("gm",pars[this->nparams-nsd.nsources+i],"nb"));
+		       ("gm",pars[this->n_params-nsd.n_sources+i],"nb"));
       }
     }
   }
@@ -232,7 +232,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
 void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
 
-  mcmc_bamr::first_update(hf);
+  mcmc_cli::first_update(hf);
 
   model &m=*this->mod;
   
@@ -241,7 +241,7 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
   hf.sets_vec("slice_names",nsd.slice_names);
 
   hf.set_szt("grid_size",set.grid_size);
-  hf.set_szt("nsources",nsd.nsources);
+  hf.set_szt("n_sources",nsd.n_sources);
   hf.sets("model",model_type);
   hf.setd("min_mass",set.min_mass);
   hf.setd("exit_mass",set.exit_mass);
@@ -259,8 +259,6 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
   hf.setd("e_high",set.e_high);
   hf.setd("m_low",set.m_low);
   hf.setd("m_high",set.m_high);
-  hf.setd_vec_copy("low",this->low_copy);
-  hf.setd_vec_copy("high",this->high_copy);
 
   hdf_output(hf,m.nb_grid,"nb_grid");
   hdf_output(hf,m.e_grid,"e_grid");
@@ -276,8 +274,12 @@ int bamr_class::mcmc_init() {
   }
   
   model &m=*this->mod;
+
+  // This ensures enough space for all the
+  // default return values in models.h
+  this->ret_value_counts.resize(21);
   
-  mcmc_bamr::mcmc_init();
+  mcmc_cli::mcmc_init();
 
   if (this->file_opened==false) {
     // Open main output file
@@ -323,7 +325,7 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Add columns to table
 
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     this->tab->new_column(((std::string)"wgt_")+nsd.source_names[i]);
     if (!set.norm_max) {
       this->tab->set_unit(((std::string)"wgt_")+nsd.source_names[i],
@@ -335,13 +337,13 @@ int bamr_class::mcmc_init() {
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     this->tab->new_column(((std::string)"Rns_")+nsd.source_names[i]);
     this->tab->set_unit(((std::string)"Rns_")+nsd.source_names[i],
 			"km");
   }
   
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     this->tab->new_column(((std::string)"Mns_")+nsd.source_names[i]);
     this->tab->set_unit(((std::string)"Mns_")+nsd.source_names[i],
 			"Msun");
@@ -394,13 +396,13 @@ int bamr_class::mcmc_init() {
       this->tab->new_column("nb_max");
       this->tab->set_unit("nb_max","1/fm^3");
     }
-    for(size_t i=0;i<nsd.nsources;i++) {
+    for(size_t i=0;i<nsd.n_sources;i++) {
       this->tab->new_column(((string)"ce_")+nsd.source_names[i]);
       this->tab->set_unit(((string)"ce_")+nsd.source_names[i],
 			  "1/fm^4");
     }
     if (set.baryon_density) {
-      for(size_t i=0;i<nsd.nsources;i++) {
+      for(size_t i=0;i<nsd.n_sources;i++) {
 	this->tab->new_column(((string)"cnb_")+nsd.source_names[i]);
 	this->tab->set_unit(((string)"cnb_")+nsd.source_names[i],
 			      "1/fm^3");
@@ -466,9 +468,9 @@ int bamr_class::mcmc_init() {
   // Prepare data objects
 
   for(size_t i=0;i<data_arr.size();i++) {
-    data_arr[i].rad.resize(nsd.nsources);
-    data_arr[i].mass.resize(nsd.nsources);
-    data_arr[i].wgts.resize(nsd.nsources);
+    data_arr[i].rad.resize(nsd.n_sources);
+    data_arr[i].mass.resize(nsd.n_sources);
+    data_arr[i].wgts.resize(nsd.n_sources);
   }
 
   if (this->verbose>=2) {
@@ -580,7 +582,7 @@ int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
 
 void bamr_class::setup_cli() {
   
-  mcmc_bamr::setup_cli();
+  mcmc_cli::setup_cli();
 
   set.setup_cli(cl);
   

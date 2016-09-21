@@ -90,13 +90,13 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
   
-  if (nsources>0) {
+  if (n_sources>0) {
     
     if (set.verbose>=2) {
-      cout << "bamr: Loading " << nsources << " data files." << endl;
+      cout << "bamr: Loading " << n_sources << " data files." << endl;
     }
     
-    source_tables.resize(nsources);
+    source_tables.resize(n_sources);
     
 #ifdef BAMR_MPI_LOAD
 
@@ -105,7 +105,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
     // Choose which file to read first for this rank
     int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int) nsources) && mpi_rank>0) {
+    if (mpi_rank>mpi_nprocs-((int) n_sources) && mpi_rank>0) {
       filestart=mpi_nprocs-mpi_rank;
     }
     if (mpi_load_debug) {
@@ -114,11 +114,11 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     }
     
     // Loop through all files
-    for(int k=0;k<((int) nsources);k++) {
+    for(int k=0;k<((int) n_sources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int) nsources))) {
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int) n_sources))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -131,7 +131,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Determine which file to read next
       int file=filestart+k;
-      if (file>=((int) nsources)) file-= nsources;
+      if (file>=((int) n_sources)) file-= n_sources;
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
@@ -149,7 +149,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Send a message, unless the rank is the last one to read a
       // file.
-      if (k<((int)nsources)-1 || mpi_rank<mpi_nprocs-((int)nsources)) {
+      if (k<((int)n_sources)-1 || mpi_rank<mpi_nprocs-((int)n_sources)) {
 	int next=mpi_rank+1;
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
 	if (mpi_load_debug) {
@@ -163,7 +163,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
 #else
     
-    for(size_t k=0;k<nsources;k++) {
+    for(size_t k=0;k<n_sources;k++) {
       
       hdf_file hf;
       hf.open(source_fnames[k]);
@@ -188,7 +188,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     scr_out << "File                          name   total        "
 	    << "max          P(10,1.4)" << std::endl;
 
-    for(size_t k=0;k<nsources;k++) {
+    for(size_t k=0;k<n_sources;k++) {
       scr_out << "Here: " << k << endl;
       
       // Update input limits
@@ -308,7 +308,7 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
     table_names.push_back("");
   }
       
-  nsources++;
+  n_sources++;
 
   return 0;
 }
@@ -786,7 +786,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // Compute the masses and radii for each source
-    for(size_t i=0;i<nsd.nsources;i++) {
+    for(size_t i=0;i<nsd.n_sources;i++) {
       if (set.mass_switch==0) {
 	dat.mass[i]=m_max*pars[this->n_eos_params+i];
       } else if (set.mass_switch==1) {
@@ -807,7 +807,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // Compute the masses and radii for each source
-    for(size_t i=0;i<nsd.nsources;i++) {
+    for(size_t i=0;i<nsd.n_sources;i++) {
       dat.mass[i]=pars[this->n_eos_params+i];
       dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
@@ -851,7 +851,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
   } else {
 
-    for(size_t i=0;i<nsd.nsources;i++) {
+    for(size_t i=0;i<nsd.n_sources;i++) {
       if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
 	scr_out << "Source " << nsd.source_names[i] << " acausal."
 		<< std::endl;
@@ -905,7 +905,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     return iret;
   }
   
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
     if (dat.mass[i]<set.in_m_min || dat.mass[i]>set.in_m_max || 
 	dat.rad[i]<set.in_r_min || dat.rad[i]>set.in_r_max) {
       scr_out << "Rejected: Mass or radius outside range." << std::endl;
@@ -913,14 +913,14 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	      << set.in_m_max << std::endl;
       scr_out << "R limits: " << set.in_r_min << " "
 	      << set.in_r_max << std::endl;
-      if (nsd.nsources>0) {
+      if (nsd.n_sources>0) {
 	scr_out.precision(2);
 	scr_out.setf(ios::showpos);
-	for(size_t i=0;i<nsd.nsources;i++) {
+	for(size_t i=0;i<nsd.n_sources;i++) {
 	  scr_out << dat.mass[i] << " ";
 	}
 	scr_out << std::endl;
-	for(size_t i=0;i<nsd.nsources;i++) {
+	for(size_t i=0;i<nsd.n_sources;i++) {
 	  scr_out << dat.rad[i] << " ";
 	}
 	scr_out << std::endl;
@@ -942,7 +942,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
   if (set.debug_star) scr_out << "Name M R Weight" << std::endl;
   
-  for(size_t i=0;i<nsd.nsources;i++) {
+  for(size_t i=0;i<nsd.n_sources;i++) {
 	
     // Double check that current M and R is in the range of
     // the provided input data
@@ -1060,7 +1060,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1072,7 +1072,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   low[6]=0.75;
   low[7]=0.2;
   
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
   high[1]=-200.0/hc_mev_fm;
@@ -1519,7 +1519,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
 
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
   
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1534,7 +1534,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   // a4
   low[8]=0.045;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
   high[1]=-200.0/hc_mev_fm;
@@ -1781,7 +1781,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
 
   units={"1/fm","","1/fm","1/fm"};
   
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   // B
   low[0]=-10.0;
   // c
@@ -1791,7 +1791,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   // ms
   low[3]=0.75;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   // B
   high[0]=10.0;
   // c
@@ -1985,7 +1985,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   low[0]=12.7;
   low[1]=0.48;
   low[2]=1.0;
@@ -1994,7 +1994,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   low[5]=2.0;
   low[6]=0.2;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=13.3;
   high[1]=0.52;
   high[2]=5.0;
@@ -2153,7 +2153,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2168,7 +2168,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   low[7]=0.75;
   low[8]=0.2;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2393,7 +2393,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2407,7 +2407,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2627,7 +2627,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
 
-  low.resize(n_eos_params+nsd.nsources);
+  low.resize(n_eos_params+nsd.n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2641,7 +2641,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd.nsources);
+  high.resize(n_eos_params+nsd.n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;

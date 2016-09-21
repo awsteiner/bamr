@@ -411,7 +411,7 @@ namespace bamr {
   public:
 
     ns_data() {
-      nsources=0;
+      n_sources=0;
     }      
     
     /// \name Input neutron star data
@@ -436,7 +436,7 @@ namespace bamr {
 
     /** \brief The number of sources
      */
-    size_t nsources;
+    size_t n_sources;
 
     /** \brief Add a data distribution to the list
      */
@@ -569,7 +569,7 @@ namespace bamr {
     /** \brief Specify the initial point
      */
     virtual void initial_point(ubvector &pars) {
-      for(size_t i=0;i<nsd.nsources;i++) {
+      for(size_t i=0;i<nsd.n_sources;i++) {
 	pars[i+n_eos_params]=nsd.init_mass_fracs[i];
       }
       return;
@@ -580,7 +580,7 @@ namespace bamr {
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
 				ubvector &low, ubvector &high) {
-      for(size_t i=0;i<nsd.nsources;i++) {
+      for(size_t i=0;i<nsd.n_sources;i++) {
 	names.push_back("mf_"+nsd.source_names[i]);
 	units.push_back("");
 	low[i+n_eos_params]=0.0;
