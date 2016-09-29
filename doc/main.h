@@ -349,60 +349,88 @@
     
     \anchor Bedaque15sv Bedaque15sv:
     <a href="http://dx.doi.org/10.1103/PhysRevLett.114.031103">
-    P. Bedaque and A.W. Steiner</a>,
+    Paulo Bedaque and Andrew W. Steiner</a>,
     Phys. Rev. Lett. \b 114 (2015) 031103.
+    \comment
+    Title: {Sound velocity bound and neutron stars}
+    \endcomment
 
     \anchor Fryer15tf Fryer15tf:
     <a href="http://dx.doi.org/10.1088/0004-637X/812/1/24">
-    C.L. Fryer, K. Belczynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and 
-    A.W. Steiner</a>,
+    C. L. Fryer, K. Belczynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and A. W. Steiner</a>,
     Astrophys. J. \b 812 (2015) 1.
-
-    \anchor Gandolfi12mm Gandolfi12mm:
-    <a href="http://dx.doi.org/10.1103/PhysRevC.85.032801">
-    S. Gandolfi, J. Carlson, and S. Reddy</a>
-    Phys. Rev. C \b 85 (2012) 032801.
+    \comment
+    Title: The Fate of the Compact Remnant in Neutron Star Mergers
+    \endcomment
 
     \anchor Lattimer14co Lattimer14co:
     <a href="http://dx.doi.org/10.1140/epja/i2014-14040-y">
-    J.M. Lattimer and A.W. Steiner</a>,
+    James~M. Lattimer and Andrew~W. Steiner</a>,
     Eur. Phys. J. A \b 50 (2014) 40.
+    \comment
+    Title: Constraints on the symmetry energy using the mass-radius relation of
+    neutron stars
+    \endcomment
 
     \anchor Lattimer14ns Lattimer14ns:
     <a href="http://dx.doi.org/10.1088/0004-637X/784/2/123">
-    J.M. Lattimer and A.W. Steiner</a>,
+    J.~M. Lattimer and A.~W. Steiner</a>,
     Astrophys. J. \b 784 (2014) 123.
+    \comment
+    Title: Neutron Star Masses and Radii from Quiescent Low-Mass X-ray Binaries
+    \endcomment
 
-    \anchor Nattila15eo Nattila15eo:
-    <a href="http://arxiv.org/abs/1509.06561">
-    J. N&auml;ttil&auml;, A.W. Steiner, J.J.E. Kajava, V.F. Suleimanov, and
-    J. Poutanen</a>,
-    arxiv.org/1509.06561.
+    \anchor Nattila16eo Nattila16eo:
+    <a href="http://dx.doi.org/10.1051/0004-6361/201527416">
+    J. N\"{a}ttil\"{a}, A. W. Steiner, J. J. E. Kajava, V. F. Suleimanov, and J. Poutanen</a>,
+    Astron. Astrophys. Suppl. \b 591 (2016) A25.
+    \comment
+    Title: Equation of state constraints for the cold dense matter inside
+    neutron stars using the cooling tail method
+    \endcomment
 
     \anchor Steiner10te Steiner10te:
     <a href="http://dx.doi.org/10.1088/0004-637X/722/1/33">
-    A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
+    A.~W. {Steiner}, J.~M. {Lattimer}, and E.~F. {Brown}</a>,
     Astrophys. J. \b 722 (2010) 33.
+    \comment
+    Title: The Equation of State from Observed Masses and Radii of Neutron Stars
+    \endcomment
 
     \anchor Steiner12cn Steiner12cn:
-    <a href="http://dx.doi.org/10.1103/PhysRevLett.108.081102">
-    A.W. Steiner and S. Gandolfi</a>,
+    A.~W. Steiner and S. Gandolfi,
     Phys. Rev. Lett. \b 108 (2012) 081102.
+    \comment
+    Title: Connecting Neutron Star Observations to Three-Body Forces in N eutron
+    Matter and to the Nuclear Symmetry Energy
+    \endcomment
 
     \anchor Steiner13tn Steiner13tn:
-    <a href="http://dx.doi.org/10.1088/2041-8205/765/1/L5">
-    A.W. Steiner, J.M. Lattimer, E.F. Brown</a>,
+    A.~W. Steiner, J.~M. Lattimer, and E.~F. Brown,
     Astrophys. J. Lett. \b 765 (2013) 5.
+    \comment
+    Title: The Neutron Star Mass-Radius Relation and the Equation of State of
+    Dense Matter
+    \endcomment
 
     \anchor Steiner15un Steiner15un:
-    <a href="http://dx.doi.org/10.1103/PhysRevC.91.015804">
-    A.W. Steiner, S. Gandolfi, F.J. Fattoyev, and W.G. Newton</a>,
+    A.~W. Steiner, S. Gandolfi, F.~J. Fattoyev, and W.~G. Newton ,
     Phys. Rev. C \b 91 (2015) 015804.
+    \comment
+    Title: Using neutron star observations to determine crust thicknesses ,
+    moments of inertia, and tidal deformabilities
+    \endcomment
 
     \anchor Steiner16ns Steiner16ns:
-    <a href="http://arxiv.org/abs/1510.07515">
-    A.W. Steiner, J.M. Lattimer, and E.F. Brown</a>,
-    Eur. Phys. J. A (in press).
+    <a href="http://dx.doi.org/10.1140/epja/i2016-16018-1">
+    A. W. Steiner, J. M. Lattimer, and E. F. Brown</a>,
+    Eur. Phys. J. A \b 52 (2016) 18.
+    \comment
+    Title: Neutron Star Radii, Universal Relations, and the Role of Prior
+    Distributions
+    \endcomment
+
+
 
     \page license_page Licensing
    
