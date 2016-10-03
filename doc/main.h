@@ -352,7 +352,7 @@
     Paulo Bedaque and Andrew W. Steiner</a>,
     Phys. Rev. Lett. \b 114 (2015) 031103.
     \comment
-    Title: {Sound velocity bound and neutron stars}
+    Title: Sound velocity bound and neutron stars
     \endcomment
 
     \anchor Fryer15tf Fryer15tf:
@@ -383,7 +383,7 @@
     \anchor Nattila16eo Nattila16eo:
     <a href="http://dx.doi.org/10.1051/0004-6361/201527416">
     J. N\"{a}ttil\"{a}, A. W. Steiner, J. J. E. Kajava, V. F. Suleimanov, and J. Poutanen</a>,
-    Astron. Astrophys. Suppl. \b 591 (2016) A25.
+    Astron. Astrophys. \b 591 (2016) A25.
     \comment
     Title: Equation of state constraints for the cold dense matter inside
     neutron stars using the cooling tail method
@@ -429,8 +429,6 @@
     Title: Neutron Star Radii, Universal Relations, and the Role of Prior
     Distributions
     \endcomment
-
-
 
     \page license_page Licensing
    
