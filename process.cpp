@@ -1182,7 +1182,9 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
       // Read table
       std::string tab_name="markov_chain"+szttos(j);
       table_units<> tab;
+      cout << "H1." << endl;
       hdf_input(hf,tab,tab_name);
+      cout << "H2." << endl;
 	
       // Set up columns in fill table over all files
       if (i==0 && j==0) {
@@ -1202,8 +1204,8 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
 	//hf.getd_vec_copy("low",low);
 	//hf.getd_vec_copy("high",high);
 	hf.get_szt("grid_size",lgrid_size);
-	hf.get_szt("nparams",nparams);
-	hf.get_szt("nsources",nsources);
+	hf.get_szt("n_params",nparams);
+	hf.get_szt("n_sources",nsources);
 	//hf.gets_vec("param_names",param_names);
 	hf.gets_vec("source_names",source_names);
       }
