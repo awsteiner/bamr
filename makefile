@@ -170,6 +170,13 @@ test_all:
 	bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
+	bamr -set max_iters 100 -set prefix data_temp/twop_chain \
+		-set max_chain_size 10 -model twop -mcmc \
+		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
+	bamr -set max_iters 100 -set prefix data_temp/twop_aic -set aff_inv 1 \
+		-set step_fac 2.0 -model twop -set n_walk 20 \
+		-set max_chain_size 10 -mcmc \
+		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
 # ----------------------------------------------------------------------
 # Internal 
