@@ -1182,9 +1182,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
       // Read table
       std::string tab_name="markov_chain"+szttos(j);
       table_units<> tab;
-      cout << "H1." << endl;
       hdf_input(hf,tab,tab_name);
-      cout << "H2." << endl;
 	
       // Set up columns in fill table over all files
       if (i==0 && j==0) {
