@@ -230,9 +230,10 @@ namespace bamr {
 		       fill_t &fill) {
 
     if (output_meas) {
-      scr_out << "Line: ";
+      scr_out << "Parameters: ";
       o2scl::vector_out(scr_out,pars);
-      scr_out << " " << weight << " " << ix << " " << new_meas << std::endl;
+      scr_out << " weight: " << weight << " index: " << ix << " new?: "
+      << new_meas << std::endl;
     }
     
     o2scl::mcmc_table<func_t,fill_t,data_t,ubvector>::add_line
@@ -326,6 +327,8 @@ namespace bamr {
     }
 
 #ifndef BAMR_NO_MPI
+    // Avoid too much concurrent file I/O by forcing each processor
+    // to load the initial point in turn
     int buffer=0, tag=0;
     if (this->mpi_nprocs>1 && this->mpi_rank>0) {
       MPI_Recv(&buffer,1,MPI_INT,this->mpi_rank-1,tag,MPI_COMM_WORLD,
@@ -338,8 +341,8 @@ namespace bamr {
       if (initial_point_type==fp_last) {
 
 	// Read file 
-	this->scr_out << "Reading last point from file '" << initial_point_file
-	<< "'." << std::endl;
+	this->scr_out << "Reading last point from file '"
+	<< initial_point_file << "'." << std::endl;
 	o2scl_hdf::hdf_file hf;
 	hf.open(initial_point_file);
       
@@ -354,11 +357,10 @@ namespace bamr {
 
 	// Get parameters
 	for(size_t i=0;i<n_params;i++) {
-	  std::string pname=((std::string)"param_")+this->col_names[i];
-	  this->current[0][i]=file_tab.get(pname,last_line);
-	  this->scr_out << "Parameter named "
-			<< this->col_names[i] << " " 
-			<< this->current[0][i] << std::endl;
+	  this->current[0][i]=file_tab.get(this->col_names[i],last_line);
+	  this->scr_out << "Initial value for parameter named "
+			<< this->col_names[i] << " is " 
+			<< this->current[0][i] << " ." << std::endl;
 	}
       
 	// Finish up
@@ -415,8 +417,7 @@ namespace bamr {
       
 	// Get parameters
 	for(size_t i=0;i<n_params;i++) {
-	  std::string pname=((std::string)"param_")+this->col_names[i];
-	  this->current[0][i]=file_tab.get(pname,row);
+	  this->current[0][i]=file_tab.get(this->col_names[i],row);
 	  this->scr_out << "Parameter named "
 	  << this->col_names[i] << " " 
 	  << this->current[0][i] << std::endl;
@@ -443,6 +444,8 @@ namespace bamr {
     }
 
 #ifndef BAMR_NO_MPI
+    // Let the next processor know that it can read the initial
+    // point file
     if (this->mpi_nprocs>1 && this->mpi_rank<this->mpi_nprocs-1) {
       MPI_Send(&buffer,1,MPI_INT,this->mpi_rank+1,tag,MPI_COMM_WORLD);
     }
