@@ -348,7 +348,7 @@ namespace bamr {
       
 	// Read table
 	size_t file_n_chains;
-	hf.get_szt("n_chains",file_n_chains);
+	hf.get_szt_def("n_chains",1,file_n_chains);
 	std::string chain_name=std::string("markov_chain")+
 	o2scl::szttos(file_n_chains-1);
 	o2scl::table_units<> file_tab;
