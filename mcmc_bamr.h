@@ -225,19 +225,20 @@ namespace bamr {
   
   /** \brief Add a measurement to the table
    */
-  virtual int add_line(const ubvector &pars, double weight,
-		       size_t ix, bool new_meas, data_t &dat,
+  virtual int add_line(const ubvector &pars, double log_weight,
+		       size_t walker_ix, bool new_meas, data_t &dat,
 		       fill_t &fill) {
-
+    
     if (output_meas) {
       scr_out << "Parameters: ";
       o2scl::vector_out(scr_out,pars);
-      scr_out << " weight: " << weight << " index: " << ix << " new?: "
+      scr_out << " log_wgt: " << log_weight
+      << " walker: " << walker_ix << " new?: "
       << new_meas << std::endl;
     }
     
     o2scl::mcmc_table<func_t,fill_t,data_t,ubvector>::add_line
-    (pars,weight,ix,new_meas,dat,fill);
+    (pars,log_weight,walker_ix,new_meas,dat,fill);
       
     bool files_updated=false;
     if (((int)this->tab->get_nlines())==max_chain_size) {
