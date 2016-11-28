@@ -487,6 +487,7 @@ namespace bamr {
     
     hf.set_szt("n_params",n_params);
     hf.setd("max_time",this->max_time);
+    hf.setd("ai_initial_step",this->ai_initial_step);
     hf.seti("user_seed",this->user_seed);
     hf.seti("n_warm_up",this->n_warm_up);
     hf.setd("step_fac",this->step_fac);
@@ -794,6 +795,7 @@ namespace bamr {
   /// \name Parameter objects for the 'set' command
   //@{
   o2scl::cli::parameter_double p_step_fac;
+  o2scl::cli::parameter_double p_ai_initial_step;
   o2scl::cli::parameter_size_t p_n_warm_up;
   o2scl::cli::parameter_int p_user_seed;
   o2scl::cli::parameter_size_t p_max_bad_steps;
@@ -918,6 +920,11 @@ namespace bamr {
     "this step size is smaller than 1.0, it is reset to 1.0 .";
     this->cl.par_list.insert(std::make_pair("step_fac",&p_step_fac));
 
+    p_ai_initial_step.d=&this->ai_initial_step;
+    p_ai_initial_step.help=((std::string)"");
+    this->cl.par_list.insert(std::make_pair("ai_initial_step",
+					    &p_ai_initial_step));
+    
     p_n_warm_up.s=&this->n_warm_up;
     p_n_warm_up.help=((std::string)"Minimum number of warm up iterations ")+
     "(default 0).";
