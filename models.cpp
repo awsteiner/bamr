@@ -965,8 +965,11 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (dat.wgts[i]<set.input_dist_thresh) {
       dat.wgts[i]=set.input_dist_thresh;
     }
-	
-    // Include the weight for this source 
+    // Include the weight for this source
+    if (dat.wgts[i]<=0.0) {
+      scr_out << "Weight zero for source " << nsd.source_names[i] << endl;
+      return ix_mr_outside;
+    }
     log_weight+=log(dat.wgts[i]);
 	
     if (set.debug_star) {
