@@ -175,6 +175,7 @@ namespace bamr {
   static const int fp_unspecified=-1;
   static const int fp_last=-2;
   static const int fp_best=-3;
+  static const int fp_even=-3;
   //@}
 
   /// If true, then \ref first_update() has been called
@@ -359,6 +360,63 @@ namespace bamr {
 	// Get parameters
 	for(size_t i=0;i<n_params;i++) {
 	  this->current[0][i]=file_tab.get(this->col_names[i],last_line);
+	  this->scr_out << "Initial value for parameter named "
+			<< this->col_names[i] << " is " 
+			<< this->current[0][i] << " ." << std::endl;
+	}
+      
+	// Finish up
+	this->scr_out << std::endl;
+	hf.close();
+
+      } else if (initial_point_type==fp_even) {
+
+	// Read file 
+	this->scr_out << "Reading evenly-spaced point from file '"
+	<< initial_point_file << "'." << std::endl;
+	o2scl_hdf::hdf_file hf;
+	hf.open(initial_point_file);
+      
+	// Read table
+	size_t file_n_chains, total_lines=0;
+	o2scl::table_units<> file_tab;
+	hf.get_szt_def("n_chains",1,file_n_chains);
+
+	// FIrst pass, find out how many total lines there are
+	for(size_t k=0;k<file_n_chains;k++) {
+	  std::string chain_name=std::string("markov_chain")+o2scl::szttos(k);
+	  hdf_input(hf,file_tab,chain_name);
+	  total_lines+=file_tab.get_nlines();
+	}
+
+	// Choose the line we want
+	size_t line_ix=((size_t)(((double)total_lines)/
+			    ((double)(this->mpi_nprocs+1))*
+			    ((double)(this->mpi_rank+1))));
+	scr_out << "Chose line " << line_ix << " of " << total_lines
+	<< std::endl;
+
+	// Second pass, find the table which has the line we want
+	total_lines=0;
+	bool found=false;
+	for(size_t k=0;k<file_n_chains && found==false;k++) {
+	  std::string chain_name=std::string("markov_chain")+o2scl::szttos(k);
+	  hdf_input(hf,file_tab,chain_name);
+	  if (line_ix<total_lines+file_tab.get_nlines()) {
+	    line_ix-=total_lines;
+	    found=true;
+	  }
+	  total_lines+=file_tab.get_nlines();
+	}
+	if (found==false) {
+	  O2SCL_ERR("Failed to find line in fp_even.",o2scl::exc_esanity);
+	}
+	scr_out << "Chose line " << line_ix << " of "
+	<< file_tab.get_nlines() << std::endl;
+	
+	// Get parameters
+	for(size_t i=0;i<n_params;i++) {
+	  this->current[0][i]=file_tab.get(this->col_names[i],line_ix);
 	  this->scr_out << "Initial value for parameter named "
 			<< this->col_names[i] << " is " 
 			<< this->current[0][i] << " ." << std::endl;
@@ -727,6 +785,9 @@ namespace bamr {
       
     } else if (sv[1]==((std::string)"last")) {
       initial_point_type=fp_last;
+      initial_point_file=sv[2];
+    } else if (sv[1]==((std::string)"even")) {
+      initial_point_type=fp_even;
       initial_point_file=sv[2];
     } else if (sv[1]==((std::string)"best")) {
       initial_point_type=fp_best;
