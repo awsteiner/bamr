@@ -1199,12 +1199,12 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
 	hf.getd("nb_high",nb_high);
 	hf.getd("m_low",m_low);
 	hf.getd("m_high",m_high);
-	//hf.getd_vec_copy("low",low);
-	//hf.getd_vec_copy("high",high);
+	hf.getd_vec_copy("low",low);
+	hf.getd_vec_copy("high",high);
 	hf.get_szt("grid_size",lgrid_size);
 	hf.get_szt("n_params",nparams);
 	hf.get_szt("n_sources",nsources);
-	//hf.gets_vec("param_names",param_names);
+	hf.gets_vec("param_names",param_names);
 	hf.gets_vec("source_names",source_names);
       }
 	  
@@ -1284,8 +1284,8 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
   hf.setd("m_high",m_high);
   hf.set_szt("grid_size",lgrid_size);
   hf.set_szt("n_chains",1);
-  //hf.setd_vec_copy("low",low);
-  //hf.setd_vec_copy("high",high);
+  hf.setd_vec_copy("low",low);
+  hf.setd_vec_copy("high",high);
   hf.set_szt("nparams",nparams);
   hf.set_szt("nsources",nsources);
   hf.sets_vec("param_names",param_names);
