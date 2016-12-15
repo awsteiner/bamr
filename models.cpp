@@ -916,10 +916,12 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (nsd.n_sources>0) {
 	scr_out.precision(2);
 	scr_out.setf(ios::showpos);
+	scr_out << "M ";
 	for(size_t i=0;i<nsd.n_sources;i++) {
 	  scr_out << dat.mass[i] << " ";
 	}
 	scr_out << std::endl;
+	scr_out << "R ";
 	for(size_t i=0;i<nsd.n_sources;i++) {
 	  scr_out << dat.rad[i] << " ";
 	}
