@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2016, Andrew W. Steiner
+  Copyright (C) 2012-2017, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -350,19 +350,46 @@ namespace bamr {
       
 	// Read table
 	size_t file_n_chains;
-	hf.get_szt_def("n_chains",1,file_n_chains);
-	std::string chain_name=std::string("markov_chain")+
-	o2scl::szttos(file_n_chains-1);
 	o2scl::table_units<> file_tab;
+	
+	hf.get_szt_def("n_chains",1,file_n_chains);
+	size_t chain_index=file_n_chains-1;
+	std::string chain_name=std::string("markov_chain")+
+	o2scl::szttos(chain_index);
 	hdf_input(hf,file_tab,chain_name);
 	size_t last_line=file_tab.get_nlines()-1;
 
 	// Get parameters
-	for(size_t i=0;i<n_params;i++) {
-	  this->current[0][i]=file_tab.get(this->col_names[i],last_line);
-	  this->scr_out << "Initial value for parameter named "
-			<< this->col_names[i] << " is " 
-			<< this->current[0][i] << " ." << std::endl;
+	if (this->aff_inv) {
+	  for(size_t j=0;j<this->n_walk;j++) {
+	    for(size_t i=0;i<n_params;i++) {
+	      this->current[j][i]=file_tab.get(this->col_names[i],last_line);
+	      this->scr_out << "Initial value for walker " << j
+			    << " for parameter named "
+			    << this->col_names[i] << " is " 
+			    << this->current[0][i] << " ." << std::endl;
+	    }
+	    if (last_line==0) {
+	      if (chain_index==0) {
+		O2SCL_ERR("Couldn't read initial point from file.",
+			  o2scl::exc_einval);
+	      }
+	      chain_index--;
+	      chain_name=std::string("markov_chain")+
+		o2scl::szttos(chain_index);
+	      hdf_input(hf,file_tab,chain_name);
+	      last_line=file_tab.get_nlines()-1;
+	    }
+	    last_line--;
+	  }
+	  this->n_init_points=this->n_walk;
+	} else {
+	  for(size_t i=0;i<n_params;i++) {
+	    this->current[0][i]=file_tab.get(this->col_names[i],last_line);
+	    this->scr_out << "Initial value for parameter named "
+	    << this->col_names[i] << " is " 
+	    << this->current[0][i] << " ." << std::endl;
+	  }
 	}
       
 	// Finish up
@@ -382,7 +409,7 @@ namespace bamr {
 	o2scl::table_units<> file_tab;
 	hf.get_szt_def("n_chains",1,file_n_chains);
 
-	// FIrst pass, find out how many total lines there are
+	// First pass, find out how many total lines there are
 	for(size_t k=0;k<file_n_chains;k++) {
 	  std::string chain_name=std::string("markov_chain")+o2scl::szttos(k);
 	  hdf_input(hf,file_tab,chain_name);
