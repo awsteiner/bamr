@@ -367,7 +367,7 @@ namespace bamr {
 	      this->scr_out << "Initial value for walker " << j
 			    << " for parameter named "
 			    << this->col_names[i] << " is " 
-			    << this->current[0][i] << " ." << std::endl;
+			    << this->current[j][i] << " ." << std::endl;
 	    }
 	    if (last_line==0) {
 	      if (chain_index==0) {
