@@ -40,7 +40,7 @@ ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
-	-lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
+	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
 
 # ----------------------------------------------------------------------
 # Targets for bamr
