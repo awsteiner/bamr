@@ -776,7 +776,28 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // Remove table entries with pressures above the maximum pressure
     dat.mvsr->set_nlines(ix_max+1);
-  
+    
+    // Check for multiple branches in M vs. R
+    int max_count=0;
+    for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
+      if (i==0 && dat.mvsr->get("gm",0) > dat.mvsr->get("gm",1)) max_count++;
+      else if (i==dat.mvsr->get_nlines()-1 &&
+	       dat.mvsr->get("gm",dat.mvsr->get_nlines()-1) >
+	       dat.mvsr->get("gm",dat.mvsr->get_nlines()-2)) max_count++;
+      else if (dat.mvsr->get("gm",i)>dat.mvsr->get("gm",i-1) &&
+	       dat.mvsr->get("gm",i)>dat.mvsr->get("gm",i+1)) {
+	max_count++;
+      }
+    }
+    if (max_count>1) {
+      scr_out << "Multiple peaks in M vs. R" << endl;
+      cout << "Multiple peaks in M vs. R" << endl;
+      for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
+	cout << dat.mvsr->get("gm",i) << " " << dat.mvsr->get("r",i) << endl;
+      }
+      exit(-1);
+    }
+    
     // Make sure that the M vs. R curve generated enough data. This
     // is not typically an issue.
     if (dat.mvsr->get_nlines()<10) {
