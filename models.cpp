@@ -795,7 +795,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       for(size_t i=0;i<dat.mvsr->get_nlines();i++) {
 	cout << dat.mvsr->get("gm",i) << " " << dat.mvsr->get("r",i) << endl;
       }
-      exit(-1);
     }
     
     // Make sure that the M vs. R curve generated enough data. This
