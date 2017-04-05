@@ -56,7 +56,7 @@ int nstar_cold2::calc_eos(double np_0) {
   if (fabs(np_0)<1.0e-12) x=nb_start/3.0;
   else x=np_0;
   
-  funct11 sf=std::bind(std::mem_fn<double(double)>
+  funct sf=std::bind(std::mem_fn<double(double)>
 		       (&nstar_cold2::solve_fun),
 		       this,std::placeholders::_1);
   

@@ -1876,7 +1876,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
 
   // Then call the root finder
   x[0]=mu_0;
-  mm_funct11 fmf=std::bind(std::mem_fn<int(size_t,const ubvector &,ubvector &)>
+  mm_funct fmf=std::bind(std::mem_fn<int(size_t,const ubvector &,ubvector &)>
 			   (&quark_star::pressure),
 			   this,std::placeholders::_1,std::placeholders::_2,
 			   std::placeholders::_3);
