@@ -860,7 +860,7 @@ namespace bamr {
     // Set error handler for this thread
     
     o2scl::err_hnd=&this->error_handler;
-      
+
   }
 
   };
@@ -939,6 +939,18 @@ namespace bamr {
   */
   virtual void setup_cli() {
 
+    // ---------------------------------------
+    // Setup CLI readline history
+
+#ifdef O2SCL_READLINE
+    char *hd=getenv("HOME");
+    std::string histfile;
+    if (hd) {
+      histfile=((std::string)hd)+"/.bamr_hist";
+      cl.set_histfile(histfile);
+    }
+#endif
+    
     // ---------------------------------------
     // Set commands/options
 

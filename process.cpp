@@ -1324,6 +1324,18 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
 
 void process::setup_cli() {
 
+    // ---------------------------------------
+    // Setup CLI readline history
+
+#ifdef O2SCL_READLINE
+    char *hd=getenv("HOME");
+    std::string histfile;
+    if (hd) {
+      histfile=((std::string)hd)+"/.process_hist";
+      cl.set_histfile(histfile);
+    }
+#endif
+    
   // ---------------------------------------
   // Set options
   
