@@ -609,7 +609,7 @@ namespace bamr {
     
   };
 
-  /** \brief Two polytropes (8 parameters) from \ref Steiner10te
+  /** \brief Two polytropes (8 parameters) from Steiner10te
 
       Based on the model from \ref Steiner10te. The original limits on
       the parameters are maintained here. This model is referred to as

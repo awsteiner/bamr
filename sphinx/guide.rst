@@ -210,12 +210,6 @@ I would like to thank Paulo Bedaque, Ed Brown, Farrukh Fattoyev, Chris
 Fryer, Stefano Gandolfi, Jim Lattimer, Joonas Nattila and Will Newton
 for their collaboration on these projects.
 
-Bibliography
-------------
-
-Some of the references which contain links should direct you to
-the work referred to using its DOI identifer.
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents
