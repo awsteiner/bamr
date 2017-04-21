@@ -34,6 +34,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.mathjax',
               'sphinx.ext.ifconfig',
+              'sphinx.ext.autosectionlabel',
               'breathe']
 
 #
