@@ -30,7 +30,6 @@ you to contact me so that I can help you with the details and so that
 you can let me know if and how this code is useful to you.
 Nevertheless, you are not required to contact me and I will be
 improving documentation and updating this code as time permits.
-[Steiner10te]_
 
 .. note:: The bamr source code is undergoing some major 
 	  upgrades which have not yet been documented. 

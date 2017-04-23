@@ -611,11 +611,12 @@ namespace bamr {
 
   /** \brief Two polytropes (8 parameters) from Steiner10te
 
-      Based on the model from \ref Steiner10te. The original limits on
+      \verbatim embed:rst
+      Based on the model from [Steiner10te]_. The original limits on
       the parameters are maintained here. This model is referred to as
-      Model A in \ref Steiner13tn and was also used in \ref
-      Lattimer14ns (where it was the "Base" model) and in \ref
-      Lattimer14co .
+      Model A in [Steiner13tn]_ and was also used in [Lattimer14ns]_
+      (where it was the "Base" model) and in [Lattimer14co]_ .
+      \endverbatim
 
       The EOS from \ref o2scl::eos_had_schematic is used for the EOS
       near the saturation density. The first parameter is \ref

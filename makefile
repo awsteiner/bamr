@@ -196,6 +196,9 @@ doc: empty
 	git rev-parse HEAD | awk \
 		'{print "`" $$1 " <http://github.com/awsteiner/bamr/tree/" $$1 ">`_"}' \
 		 > sphinx/commit.rst
+	cd sphinx/static; cat bib_header.txt > ../bib.rst
+	cd sphinx/static; btmanip -parse bamr.bib -rst ../bib_temp.rst
+	cd sphinx; cat bib_temp.rst >> bib.rst; rm -f bib_temp.rst
 	cd doc; doxygen doxyfile
 	cd sphinx; make html
 
