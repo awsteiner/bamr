@@ -1,5 +1,5 @@
-Bayesian analysis of neutron star masses and radii
-==================================================
+Introduction
+============
 
 This user's guide describes the open-source MPI implementation of
 a Bayesian analysis of mass and radius data to determine the mass
@@ -34,17 +34,6 @@ improving documentation and updating this code as time permits.
 .. note:: The bamr source code is undergoing some major 
 	  upgrades which have not yet been documented. 
 
-.. toctree::
-   :maxdepth: 2
-
-   intro
-   guide
-   classdoc
-   bib
-   
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
    
   
