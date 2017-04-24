@@ -1,1 +1,1 @@
-`783fc1e49bec8880a42fa3321aec5b1fd11fa968 <http://github.com/awsteiner/bamr/tree/783fc1e49bec8880a42fa3321aec5b1fd11fa968>`_
+`ec0d6b6be97312a2f0f9fcca3208ebd93f88e774 <http://github.com/awsteiner/bamr/tree/ec0d6b6be97312a2f0f9fcca3208ebd93f88e774>`_

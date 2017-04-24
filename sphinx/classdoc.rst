@@ -9,6 +9,22 @@ bamr_class
    :protected-members:
    :undoc-members:
 
+mcmc_cli
+--------
+	     
+.. doxygenclass:: bamr::mcmc_cli
+   :members:
+   :protected-members:
+   :undoc-members:
+
+mcmc_mpi
+--------
+	     
+.. doxygenclass:: bamr::mcmc_mpi
+   :members:
+   :protected-members:
+   :undoc-members:
+
 model_data
 ----------
       
