@@ -201,32 +201,8 @@ doc: empty
 	cd sphinx; cat bib_temp.rst >> bib.rst; rm -f bib_temp.rst
 	cd doc; doxygen doxyfile
 	cd sphinx; make html
+	cp -r sphinx/build/html/* $(HOME)/wcs/int4/web/utk/bamr
 
 clean:
 	rm -f *.o bamr bamr_nompi process
-
-# ----------------------------------------------------------------------
-# Old
-# ----------------------------------------------------------------------
-
-docp: empty
-	cd doc/latex; $(MAKE)
-
-VERSION = 0.2
-
-dist:	
-	mkdir -p bamr-$(VERSION)
-	mkdir -p bamr-$(VERSION)/doc
-	mkdir -p bamr-$(VERSION)/doc/html
-	mkdir -p bamr-$(VERSION)/doc/latex
-	cp *.cpp *.h makefile bamr-$(VERSION)
-	cp doc/latex/refman.pdf bamr-$(VERSION)/doc/latex
-	cp -r doc/html/*.html doc/html/*.png doc/html/*.js \
-		doc/html/search doc/html/*.css bamr-$(VERSION)/doc/html
-	tar cvzf bamr-$(VERSION).tar.gz bamr-$(VERSION)
-
-dist-clean:
-	rm -rf bamr-$(VERSION).tar.gz bamr-$(VERSION)
-
-
 

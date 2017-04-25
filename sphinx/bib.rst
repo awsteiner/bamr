@@ -13,7 +13,7 @@ the work referred to using its DOI identifer.
    <http://dx.doi.org/10.1088/0004-637X/812/1/24>`_,
    Astrophys. J. **812** (2015) 1.
 
-.. [Lattimer14co] `James~M. Lattimer and Andrew~W. Steiner
+.. [Lattimer14co] `James M. Lattimer and Andrew W. Steiner
    <http://dx.doi.org/10.1140/epja/i2014-14040-y>`_,
    Eur. Phys. J. A **50** (2014) 40.
 
