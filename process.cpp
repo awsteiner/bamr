@@ -894,15 +894,14 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	    string col=set_prefix+"_"+szttos(ell);
 	    double val=tab.get(col,k);
 
-	    // Add the value even if it's zero (blank)
+	    // Add the value even if it's zero
 	    if (low_name=="e_low" && high_name=="e_high" &&
-		set_prefix=="P" && type=="x") {
-	      if (val<emax) {
-		values_ser[ell].push_back(val);
-	      }
-	    } else {
-	      values_ser[ell].push_back(val);
+		set_prefix=="P" && type=="x" && index_grid[ell]>emax) {
+	      val=0.0;
 	    }
+	    
+	    // Add the value even if it's zero (blank)
+	    values_ser[ell].push_back(val);
 
 	    // But if it's less than or equal to zero, don't count
 	    // it for min, max, or count. This is important
@@ -1013,8 +1012,14 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	if (type==((string)"x")) val*=yscale;
 	else val*=xscale;
 	if (val>ser_min && val<ser_max) {
-	  h.update(val,weights[i*block_size+j]);
-	  hsum.update(val,weights[i*block_size+j]);
+	  if (low_name=="e_low" && high_name=="e_high" &&
+	      set_prefix=="P" && type=="x") {
+	    h.update(val,weights[i*block_size+j]*count[k]);
+	    hsum.update(val,weights[i*block_size+j]*count[k]);
+	  } else {
+	    h.update(val,weights[i*block_size+j]);
+	    hsum.update(val,weights[i*block_size+j]);
+	  }
 	}
       }
       for(size_t j=0;j<hist_size;j++) {
