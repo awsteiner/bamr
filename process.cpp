@@ -880,7 +880,13 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
       for(size_t k=0;k<tab.get_nlines();k++) {
 	  
 	if (((int)line_counter)>=line_start) {
-	    
+
+	  double emax=100.0;
+	  if (low_name=="e_low" && high_name=="e_high" &&
+	      set_prefix=="P" && type=="x") {
+	    emax=tab.get("e_max",k);
+	  }
+
 	  // For each column in the series
 	  for(size_t ell=0;ell<grid_size;ell++) {
 
@@ -889,7 +895,14 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	    double val=tab.get(col,k);
 
 	    // Add the value even if it's zero (blank)
-	    values_ser[ell].push_back(val);
+	    if (low_name=="e_low" && high_name=="e_high" &&
+		set_prefix=="P" && type=="x") {
+	      if (val<emax) {
+		values_ser[ell].push_back(val);
+	      }
+	    } else {
+	      values_ser[ell].push_back(val);
+	    }
 
 	    // But if it's less than or equal to zero, don't count
 	    // it for min, max, or count. This is important
