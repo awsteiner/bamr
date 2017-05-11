@@ -109,7 +109,7 @@ namespace bamr {
       grid_size=100;
       debug_load=false;
       min_max_mass=2.0;
-      min_mass=0.8;
+      min_mass=1.0;
       debug_star=false;
       debug_eos=false;
       baryon_density=true;
@@ -127,7 +127,7 @@ namespace bamr {
       m_low=0.2;
       m_high=3.0;
       verbose=0;
-      in_m_min=0.8;
+      in_m_min=1.0;
       in_m_max=3.0;
       in_r_min=5.0;
       in_r_max=18.0;
@@ -218,7 +218,7 @@ namespace bamr {
     double exit_mass;
 
     /** \brief Minimum mass allowed for any of the individual neutron
-	stars (default 0.8)
+	stars (default 1.0)
     */
     double min_mass;
   
@@ -279,7 +279,7 @@ namespace bamr {
       p_min_mass.d=&min_mass;
       p_min_mass.help=
 	((std::string)"Minimum possible mass for any of individual ")+
-	"neutron stars in solar masses. The default is 0.8 solar masses.";
+	"neutron stars in solar masses. The default is 1.0 solar masses.";
       cl.par_list.insert(std::make_pair("min_mass",&p_min_mass));
       
       p_exit_mass.d=&exit_mass;
