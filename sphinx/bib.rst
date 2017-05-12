@@ -13,6 +13,14 @@ the work referred to using its DOI identifer.
    <http://dx.doi.org/10.1088/0004-637X/812/1/24>`_,
    Astrophys. J. **812** (2015) 1.
 
+.. [Guillot13mo] `S. Guillot, M. Servillat, N. A. Webb, and R. E. Rutledge
+   <http://dx.doi.org/10.1088/0004-637X/772/1/7>`_,
+   Astrophys. J. **772** (2013) 7.
+
+.. [Guver13tm] `T. {G{\"u}ver} and F. {{\"O}zel}
+   <http://dx.doi.org/10.1088/2041-8205/765/1/L1>`_,
+   Astrophys. J. Lett. **765** (2013) L1.
+
 .. [Lattimer14co] `James M. Lattimer and Andrew W. Steiner
    <http://dx.doi.org/10.1140/epja/i2014-14040-y>`_,
    Eur. Phys. J. A **50** (2014) 40.
@@ -24,6 +32,18 @@ the work referred to using its DOI identifer.
 .. [Nattila16eo] `J. N\"{a}ttil\"{a}, A. W. Steiner, J. J. E. Kajava, V. F. Suleimanov, and J. Poutanen
    <http://dx.doi.org/10.1051/0004-6361/201527416>`_,
    Astron. Astrophys. **591** (2016) A25.
+
+.. [Ozel09tm] `F. {{\"O}zel}, T. {G{\"u}ver}, and D. {Psaltis}
+   <http://dx.doi.org/10.1088/0004-637X/693/2/1775>`_,
+   Astrophys. J. **693** (2009) 1775.
+
+.. [Ozel10td] .. [Ozel10tm] `T. {G{\"u}ver}, P. {Wroblewski}, L. {Camarota}, and F. {{\"O}zel}
+   <http://dx.doi.org/10.1088/0004-637X/719/2/1807>`_,
+   Astrophys. J. **719** (2010) 1807.
+
+.. [Ozel12tm] `F. {{\"O}zel}, A. {Gould}, and T. {G{\"u}ver}
+   <http://dx.doi.org/10.1088/0004-637X/748/1/5>`_,
+   Astrophys. J. **748** (2012) 5.
 
 .. [Steiner10te] `A. W. {Steiner}, J. M. {Lattimer}, and E. F. {Brown}
    <http://dx.doi.org/10.1088/0004-637X/722/1/33>`_,
