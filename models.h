@@ -39,6 +39,7 @@
 #include <o2scl/prob_dens_func.h>
 #include <o2scl/table3d.h>
 #include <o2scl/hdf_io.h>
+#include <o2scl/mcmc_para.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -47,7 +48,6 @@
 #endif
 
 #include "nstar_cold2.h"
-#include "mcmc_bamr.h"
 
 namespace bamr {
   

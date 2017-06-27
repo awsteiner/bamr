@@ -40,6 +40,7 @@
 #include <o2scl/hdf_file.h>
 #include <o2scl/exception.h>
 #include <o2scl/cholesky.h>
+#include <o2scl/mcmc_para.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -47,7 +48,6 @@
 #include <o2scl/cli.h>
 #endif
 
-#include "mcmc_bamr.h"
 #include "nstar_cold2.h"
 #include "models.h"
 
@@ -104,7 +104,7 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class bamr_class :
-    public bamr::mcmc_cli<point_funct,fill_funct,model_data,ubvector> {
+    public o2scl::mcmc_para_cli<point_funct,fill_funct,model_data,ubvector> {
 
   protected:
 
