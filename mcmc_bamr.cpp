@@ -37,9 +37,8 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
   mcmc_para_cli::file_header(hf);
 
-#ifdef O2SCL_NEVER_DEFINED
-
-  model &m=*this->mod;
+  model &m=*(bc_arr[0].mod);
+  ns_data &nsd=bc_arr[0].nsd;
   
   hf.sets_vec("source_names",nsd.source_names);
   hf.sets_vec("source_fnames",nsd.source_fnames);
@@ -69,20 +68,17 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   hdf_output(hf,m.e_grid,"e_grid");
   hdf_output(hf,m.m_grid,"m_grid");
 
-#endif
-  
   return;
 }
 
 int mcmc_bamr::mcmc_init() {
 
-#ifdef O2SCL_NEVER_DEFINED
-
   if (this->verbose>=2) {
     std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
   }
   
-  model &m=*this->mod;
+  model &m=*(bc_arr[0].mod);
+  ns_data &nsd=bc_arr[0].nsd;
 
   // This ensures enough space for all the
   // default return values in models.h
@@ -288,13 +284,10 @@ int mcmc_bamr::mcmc_init() {
     std::cout << "End mcmc_bamr::mcmc_init()." << std::endl;
   }
 
-#endif
-  
   return 0;
 }
 
 int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
-#ifdef O2SCL_NEVER_DEFINED
   
   // We cannot use scr_out here because it isn't set until the call
   // to mcmc().
@@ -307,42 +300,59 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
     return 0;
   }
   if (model_type.length()>0) {
-    mod->remove_params(cl);
+    bc_arr[0].mod->remove_params(cl);
   }
   if (sv[1]==((string)"twop")) {
-    std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new two_polytropes(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"altp")) {
-    std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new alt_polytropes(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"fixp")) {
-    std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new fixed_pressure(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"qstar")) {
-    std::shared_ptr<model> mnew(new quark_star(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new quark_star(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"genq")) {
-    std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new generic_quarks(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"qmc")) {
-    std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new qmc_neut(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"qmc_threep")) {
-    std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new qmc_threep(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"qmc_fixp")) {
-    std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new qmc_fixp(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else if (sv[1]==((string)"qmc_twolines")) {
-    std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
-    mod=mnew;
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new qmc_twolines(set,bc_arr[i].nsd));
+      bc_arr[i].mod=mnew;
+    }
   } else {
     cerr << "Model unknown." << endl;
     return exc_efailed;
   }
   model_type=sv[1];
-  mod->setup_params(cl);
-#endif
+  bc_arr[0].mod->setup_params(cl);
   return 0;
 }
 
@@ -390,7 +400,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
-  //nsd.add_data(sv,itive_com);
+  for(size_t i=0;i<n_threads;i++) {
+    bc_arr[i].nsd.add_data(sv,itive_com);
+  }
   return 0;
 }
 

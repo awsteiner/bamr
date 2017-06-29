@@ -36,8 +36,6 @@ using namespace bamr;
 int bamr_class::fill(const ubvector &pars, double weight, 
 		     std::vector<double> &line, model_data &dat) {
 
-#ifdef O2SCL_NEVER_DEFINED
-  
   model &m=*this->mod;
   
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
@@ -53,7 +51,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
     // The radius of the maximum mass star
     rmax=dat.mvsr->get_constant("r_max");
     
-    if (set.baryon_density) {
+    if (setp->baryon_density) {
 
       // The highest baryon density in the EOS table
       nbmax2=dat.eos->max("nb");
@@ -79,7 +77,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   }
   
   if (m.has_eos) {
-    for(int i=0;i<set.grid_size;i++) {
+    for(int i=0;i<setp->grid_size;i++) {
       double eval=m.e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
@@ -101,7 +99,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(int i=0;i<set.grid_size;i++) {
+  for(int i=0;i<setp->grid_size;i++) {
     double mval=m.m_grid[i];
     if (mval<mmax) {
       line.push_back(dat.mvsr->interp("gm",mval,"r"));
@@ -116,8 +114,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
   }
   if (m.has_eos) {
-    if (set.baryon_density) {
-      for(int i=0;i<set.grid_size;i++) {
+    if (setp->baryon_density) {
+      for(int i=0;i<setp->grid_size;i++) {
 	double nbval=m.nb_grid[i];
 	if (nbval<nbmax2) {
 	  double pres_temp=dat.eos->interp("nb",nbval,"pr");
@@ -143,21 +141,25 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(mmax);
     line.push_back(pmax);
     line.push_back(emax);
-    if (set.baryon_density) line.push_back(nbmax);
+    if (setp->baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<nsd.n_sources;i++) {
-      double val=dat.mvsr->interp
-	("gm",pars[this->n_params-nsd.n_sources+i],"ed");
-      line.push_back(val);
+      cout << "Here2." << endl;
+      exit(-1);
+      //double val=dat.mvsr->interp
+      //("gm",pars[this->n_params-nsd.n_sources+i],"ed");
+      //line.push_back(val);
     }
-    if (set.baryon_density) {
+    if (setp->baryon_density) {
       for(size_t i=0;i<nsd.n_sources;i++) {
-	line.push_back(dat.mvsr->interp
-		       ("gm",pars[this->n_params-nsd.n_sources+i],"nb"));
+	cout << "Here3." << endl;
+	exit(-1);
+	//line.push_back(dat.mvsr->interp
+	//("gm",pars[this->n_params-nsd.n_sources+i],"nb"));
       }
     }
   }
   
-  if (set.baryon_density) {
+  if (setp->baryon_density) {
     line.push_back(dat.mvsr->get_constant("gm_nb1"));
     line.push_back(dat.mvsr->get_constant("r_nb1"));
     line.push_back(dat.mvsr->get_constant("gm_nb2"));
@@ -169,10 +171,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(dat.mvsr->get_constant("gm_nb5"));
     line.push_back(dat.mvsr->get_constant("r_nb5"));
   }
-  if (set.compute_cthick) {
+  if (setp->compute_cthick) {
     line.push_back(dat.eos->get_constant("nt"));
     line.push_back(dat.eos->get_constant("prt"));
-    for(int i=0;i<set.grid_size;i++) {
+    for(int i=0;i<setp->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
 	double rval=dat.mvsr->interp("gm",mval,"r");
@@ -182,9 +184,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
   }
-  if (set.addl_quants) {
+  if (setp->addl_quants) {
     double mmax=dat.mvsr->get_constant("m_max");
-    for(int i=0;i<set.grid_size;i++) {
+    for(int i=0;i<setp->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
 	double bm=dat.mvsr->interp("gm",mval,"bm");
@@ -229,16 +231,11 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
   }
 
-#endif
-  
   return o2scl::success;
 }
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &weight, model_data &dat) {
-#ifdef O2SCL_NEVER_DEFINED
   return mod->compute_point(pars,scr_out,weight,dat);
-#endif
-  return 0;
 }
 

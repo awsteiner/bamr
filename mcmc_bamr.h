@@ -117,6 +117,9 @@ namespace bamr {
 
     /// Settings object
     settings set;
+
+    /// Number of OpenMP threads
+    size_t n_threads;
     
     /// \name Main functions called from the command-line interface
     //@{
@@ -149,16 +152,24 @@ namespace bamr {
     
   public:
 
-    /** \brief Desc
+    /** \brief The command-line interface object
      */
 #ifdef BAMR_READLINE
     o2scl::cli_readline cl;
 #else
     o2scl::cli cl;
 #endif
-    
-    mcmc_bamr() {
+
+    /** \brief Create a \ref mcmc_bamr object with the specified
+	number of OpenMP threads (default 1)
+     */
+    mcmc_bamr(size_t n_omp_threads=1) {
       model_type="";
+      n_threads=n_omp_threads;
+      bc_arr.resize(n_threads);
+      for(size_t i=0;i<n_threads;i++) {
+	bc_arr[i].setp=&set;
+      }
     }
     
     virtual ~mcmc_bamr() {
