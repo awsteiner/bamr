@@ -116,7 +116,7 @@ namespace bamr {
     std::vector<bamr_class> bc_arr;
 
     /// Settings object
-    settings set;
+    std::shared_ptr<settings> set;
 
     /// Number of OpenMP threads
     size_t n_threads;
@@ -167,8 +167,9 @@ namespace bamr {
       model_type="";
       n_threads=n_omp_threads;
       bc_arr.resize(n_threads);
+      set=std::shared_ptr<settings>(new settings);
       for(size_t i=0;i<n_threads;i++) {
-	bc_arr[i].setp=&set;
+	bc_arr[i].set=set;
       }
     }
     

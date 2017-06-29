@@ -137,12 +137,13 @@ namespace bamr {
     o2scl::eos_tov_interp teos;
 
     /// Settings object
-    settings &set;
+    std::shared_ptr<const settings> set;
 
     /// Mass-radius data
-    ns_data &nsd;
+    std::shared_ptr<const ns_data> nsd;
 
-    model(settings &s, ns_data &n);
+    model(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
 
     virtual ~model() {}
 
@@ -173,8 +174,8 @@ namespace bamr {
     /** \brief Specify the initial point
      */
     virtual void initial_point(ubvector &pars) {
-      for(size_t i=0;i<nsd.n_sources;i++) {
-	pars[i+n_eos_params]=nsd.init_mass_fracs[i];
+      for(size_t i=0;i<nsd->n_sources;i++) {
+	pars[i+n_eos_params]=nsd->init_mass_fracs[i];
       }
       return;
     }
@@ -184,8 +185,8 @@ namespace bamr {
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
 				ubvector &low, ubvector &high) {
-      for(size_t i=0;i<nsd.n_sources;i++) {
-	names.push_back("mf_"+nsd.source_names[i]);
+      for(size_t i=0;i<nsd->n_sources;i++) {
+	names.push_back("mf_"+nsd->source_names[i]);
 	units.push_back("");
 	low[i+n_eos_params]=0.0;
 	high[i+n_eos_params]=1.0;
@@ -299,7 +300,8 @@ namespace bamr {
     //@}
 
     /// Create a model object
-    two_polytropes(settings &s, ns_data &n);
+    two_polytropes(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
 
     virtual ~two_polytropes() {}
 
@@ -347,7 +349,8 @@ namespace bamr {
 
   public:
 
-  alt_polytropes(settings &s, ns_data &n) : two_polytropes(s,n) {
+  alt_polytropes(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~alt_polytropes() {}
@@ -411,7 +414,8 @@ namespace bamr {
 
   public:
 
-  fixed_pressure(settings &s, ns_data &n) : two_polytropes(s,n) {
+  fixed_pressure(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~fixed_pressure() {}
@@ -503,7 +507,8 @@ namespace bamr {
   
   public:
   
-  generic_quarks(settings &s, ns_data &n) : two_polytropes(s,n) {
+  generic_quarks(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~generic_quarks() {}
@@ -564,7 +569,8 @@ namespace bamr {
     /// An alternative root finder
     o2scl::root_brent_gsl<> grb;
     
-  quark_star(settings &s, ns_data &n) : model(s,n) {
+  quark_star(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n) : model(s,n) {
     }
 
     virtual ~quark_star() {}
@@ -638,7 +644,8 @@ namespace bamr {
 
   public:
   
-    qmc_neut(settings &s, ns_data &n);
+    qmc_neut(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_neut();
     
@@ -736,7 +743,8 @@ namespace bamr {
 
   public:
   
-    qmc_threep(settings &s, ns_data &n);
+    qmc_threep(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_threep();
     
@@ -814,7 +822,8 @@ namespace bamr {
 
   public:
   
-    qmc_fixp(settings &s, ns_data &n);
+    qmc_fixp(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_fixp();
 
@@ -869,7 +878,8 @@ namespace bamr {
 
   public:
   
-    qmc_twolines(settings &s, ns_data &n);
+    qmc_twolines(std::shared_ptr<const settings> s,
+	  std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_twolines();
 

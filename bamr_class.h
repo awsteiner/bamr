@@ -55,7 +55,7 @@
     
     The bamr namespace which holds all classes and functions.
     
-    This file is documented in bamr.h .
+    This file is documented in bamr_class.h .
 */
 namespace bamr {
   
@@ -67,8 +67,11 @@ namespace bamr {
   typedef std::function<int(const ubvector &,double,
 			    std::vector<double> &,model_data &)> fill_funct;
 
-  /** \brief Desc
-   */
+  /** \brief Compute neutron star structure for each MCMC point
+
+      This class will have a number of instances of this class
+      equal to the number of OpenMP threads.
+  */
   class bamr_class {
     
   public:
@@ -77,10 +80,10 @@ namespace bamr {
     double schwarz_km;
     
     /// Neutron star data
-    ns_data nsd;
-
+    std::shared_ptr<const ns_data> nsd;
+    
     /// Pointer to settings object
-    settings *setp;
+    std::shared_ptr<const settings> set;
     
     /// Model object
     std::shared_ptr<model> mod;
@@ -96,8 +99,8 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 double &weight, model_data &dat);
-
+			      double &weight, model_data &dat);
+    
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */

@@ -38,31 +38,31 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   mcmc_para_cli::file_header(hf);
 
   model &m=*(bc_arr[0].mod);
-  ns_data &nsd=bc_arr[0].nsd;
+  std::shared_ptr<const ns_data> nsd=bc_arr[0].nsd;
   
-  hf.sets_vec("source_names",nsd.source_names);
-  hf.sets_vec("source_fnames",nsd.source_fnames);
-  hf.sets_vec("slice_names",nsd.slice_names);
+  hf.sets_vec("source_names",nsd->source_names);
+  hf.sets_vec("source_fnames",nsd->source_fnames);
+  hf.sets_vec("slice_names",nsd->slice_names);
 
-  hf.set_szt("grid_size",set.grid_size);
-  hf.set_szt("n_sources",nsd.n_sources);
+  hf.set_szt("grid_size",set->grid_size);
+  hf.set_szt("n_sources",nsd->n_sources);
   hf.sets("model",model_type);
-  hf.setd("min_mass",set.min_mass);
-  hf.setd("exit_mass",set.exit_mass);
-  hf.setd("min_max_mass",set.min_max_mass);
-  hf.setd("input_dist_thresh",set.input_dist_thresh);
-  hf.seti("use_crust",set.use_crust);
-  hf.seti("baryon_density",set.baryon_density);
-  hf.seti("debug_load",set.debug_load);
-  hf.seti("debug_eos",set.debug_eos);
-  hf.seti("debug_star",set.debug_star);
-  hf.seti("inc_baryon_mass",set.inc_baryon_mass);
-  hf.setd("nb_low",set.nb_low);
-  hf.setd("nb_high",set.nb_high);
-  hf.setd("e_low",set.e_low);
-  hf.setd("e_high",set.e_high);
-  hf.setd("m_low",set.m_low);
-  hf.setd("m_high",set.m_high);
+  hf.setd("min_mass",set->min_mass);
+  hf.setd("exit_mass",set->exit_mass);
+  hf.setd("min_max_mass",set->min_max_mass);
+  hf.setd("input_dist_thresh",set->input_dist_thresh);
+  hf.seti("use_crust",set->use_crust);
+  hf.seti("baryon_density",set->baryon_density);
+  hf.seti("debug_load",set->debug_load);
+  hf.seti("debug_eos",set->debug_eos);
+  hf.seti("debug_star",set->debug_star);
+  hf.seti("inc_baryon_mass",set->inc_baryon_mass);
+  hf.setd("nb_low",set->nb_low);
+  hf.setd("nb_high",set->nb_high);
+  hf.setd("e_low",set->e_low);
+  hf.setd("e_high",set->e_high);
+  hf.setd("m_low",set->m_low);
+  hf.setd("m_high",set->m_high);
 
   hdf_output(hf,m.nb_grid,"nb_grid");
   hdf_output(hf,m.e_grid,"e_grid");
@@ -78,7 +78,7 @@ int mcmc_bamr::mcmc_init() {
   }
   
   model &m=*(bc_arr[0].mod);
-  ns_data &nsd=bc_arr[0].nsd;
+  std::shared_ptr<const ns_data> nsd=bc_arr[0].nsd;
 
   // This ensures enough space for all the
   // default return values in models.h
@@ -102,28 +102,28 @@ int mcmc_bamr::mcmc_init() {
   // Make sure the settings are consistent
 
   // Does inc_baryon_mass also need baryon_density?
-  if (set.inc_baryon_mass && !set.baryon_density) {
+  if (set->inc_baryon_mass && !set->baryon_density) {
     scr_out << "Cannot use inc_baryon_mass=true with "
 	    << "baryon_density=false." << endl;
     return exc_efailed;
   }
-  if (set.compute_cthick && (!set.baryon_density || !set.use_crust)) {
+  if (set->compute_cthick && (!set->baryon_density || !set->use_crust)) {
     scr_out << "Cannot use compute_cthick=true with "
 	    << "baryon_density=false or use_crust=false." << endl;
     return exc_efailed;
   }
-  if (set.crust_from_L && (!m.has_esym || !set.use_crust ||
-			   !set.baryon_density)) {
-    scr_out << "crust_from_L: " << set.crust_from_L << std::endl;
+  if (set->crust_from_L && (!m.has_esym || !set->use_crust ||
+			   !set->baryon_density)) {
+    scr_out << "crust_from_L: " << set->crust_from_L << std::endl;
     scr_out << "has_esym: " << m.has_esym << std::endl;
-    scr_out << "use_crust: " << set.use_crust << std::endl;
-    scr_out << "baryon_density: " << set.baryon_density << std::endl;
+    scr_out << "use_crust: " << set->use_crust << std::endl;
+    scr_out << "baryon_density: " << set->baryon_density << std::endl;
     scr_out << "Cannot use crust_from_L=true with a model which does not "
 	    << "provide S and L\nor with use_crust=false or with "
 	    << "baryon_density=false." << endl;
     return exc_efailed;
   }
-  if (set.addl_quants && !set.inc_baryon_mass) {
+  if (set->addl_quants && !set->inc_baryon_mass) {
     scr_out << "Cannot do additional quantities without including "
 	    << "baryon mass." << endl;
     return exc_efailed;
@@ -132,10 +132,10 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
   // Add columns to table
 
-  for(size_t i=0;i<nsd.n_sources;i++) {
-    this->table->new_column(((std::string)"wgt_")+nsd.source_names[i]);
-    if (!set.norm_max) {
-      this->table->set_unit(((std::string)"wgt_")+nsd.source_names[i],
+  for(size_t i=0;i<nsd->n_sources;i++) {
+    this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
+    if (!set->norm_max) {
+      this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
 			  "1/km/Msun");
     }
   }
@@ -144,27 +144,27 @@ int mcmc_bamr::mcmc_init() {
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(size_t i=0;i<nsd.n_sources;i++) {
-    this->table->new_column(((std::string)"Rns_")+nsd.source_names[i]);
-    this->table->set_unit(((std::string)"Rns_")+nsd.source_names[i],
+  for(size_t i=0;i<nsd->n_sources;i++) {
+    this->table->new_column(((std::string)"Rns_")+nsd->source_names[i]);
+    this->table->set_unit(((std::string)"Rns_")+nsd->source_names[i],
 			"km");
   }
   
-  for(size_t i=0;i<nsd.n_sources;i++) {
-    this->table->new_column(((std::string)"Mns_")+nsd.source_names[i]);
-    this->table->set_unit(((std::string)"Mns_")+nsd.source_names[i],
+  for(size_t i=0;i<nsd->n_sources;i++) {
+    this->table->new_column(((std::string)"Mns_")+nsd->source_names[i]);
+    this->table->set_unit(((std::string)"Mns_")+nsd->source_names[i],
 			"Msun");
   }
   
   if (m.has_eos) {
-    for(int i=0;i<set.grid_size;i++) {
+    for(int i=0;i<set->grid_size;i++) {
       this->table->new_column(((string)"P_")+o2scl::itos(i));
       this->table->set_unit(((string)"P_")+o2scl::itos(i),
 			  "1/fm^4");
     }
   }
   
-  for(int i=0;i<set.grid_size;i++) {
+  for(int i=0;i<set->grid_size;i++) {
     this->table->new_column(((string)"R_")+o2scl::itos(i));
     this->table->set_unit(((string)"R_")+o2scl::itos(i),
 			"km");
@@ -175,8 +175,8 @@ int mcmc_bamr::mcmc_init() {
     }
   }
   if (m.has_eos) {
-    if (set.baryon_density) {
-      for(int i=0;i<set.grid_size;i++) {
+    if (set->baryon_density) {
+      for(int i=0;i<set->grid_size;i++) {
 	this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
 	this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
 			    "1/fm^4");
@@ -199,19 +199,19 @@ int mcmc_bamr::mcmc_init() {
     this->table->set_unit("P_max","1/fm^4");
     this->table->new_column("e_max");
     this->table->set_unit("e_max","1/fm^4");
-    if (set.baryon_density) {
+    if (set->baryon_density) {
       this->table->new_column("nb_max");
       this->table->set_unit("nb_max","1/fm^3");
     }
-    for(size_t i=0;i<nsd.n_sources;i++) {
-      this->table->new_column(((string)"ce_")+nsd.source_names[i]);
-      this->table->set_unit(((string)"ce_")+nsd.source_names[i],
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      this->table->new_column(((string)"ce_")+nsd->source_names[i]);
+      this->table->set_unit(((string)"ce_")+nsd->source_names[i],
 			  "1/fm^4");
     }
-    if (set.baryon_density) {
-      for(size_t i=0;i<nsd.n_sources;i++) {
-	this->table->new_column(((string)"cnb_")+nsd.source_names[i]);
-	this->table->set_unit(((string)"cnb_")+nsd.source_names[i],
+    if (set->baryon_density) {
+      for(size_t i=0;i<nsd->n_sources;i++) {
+	this->table->new_column(((string)"cnb_")+nsd->source_names[i]);
+	this->table->set_unit(((string)"cnb_")+nsd->source_names[i],
 			      "1/fm^3");
       }
       this->table->new_column("gm_nb1");
@@ -235,19 +235,19 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("r_nb5");
       this->table->set_unit("r_nb5","km");
     }
-    if (set.compute_cthick) {
+    if (set->compute_cthick) {
       this->table->new_column("nt");
       this->table->set_unit("nt","1/fm^3");
       this->table->new_column("prt");
       this->table->set_unit("prt","1/fm^4");
-      for(int i=0;i<set.grid_size;i++) {
+      for(int i=0;i<set->grid_size;i++) {
         this->table->new_column(((string)"ct_")+o2scl::itos(i));
         this->table->set_unit(((string)"ct_")+o2scl::itos(i),"km");
       }
     }
   }
-  if (set.addl_quants) {
-    for(int i=0;i<set.grid_size;i++) {
+  if (set->addl_quants) {
+    for(int i=0;i<set->grid_size;i++) {
       this->table->new_column(((string)"Mb_")+o2scl::itos(i));
       this->table->set_unit(((string)"Mb_")+o2scl::itos(i),"Msun");
       this->table->new_column(((string)"be_")+o2scl::itos(i));
@@ -262,22 +262,24 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
   // Make grids
 
-  m.nb_grid=uniform_grid_end<double>(set.nb_low,set.nb_high,set.grid_size-1);
-  m.e_grid=uniform_grid_end<double>(set.e_low,set.e_high,set.grid_size-1);
-  m.m_grid=uniform_grid_end<double>(set.m_low,set.m_high,set.grid_size-1);
+  m.nb_grid=uniform_grid_end<double>(set->nb_low,set->nb_high,set->grid_size-1);
+  m.e_grid=uniform_grid_end<double>(set->e_low,set->e_high,set->grid_size-1);
+  m.m_grid=uniform_grid_end<double>(set->m_low,set->m_high,set->grid_size-1);
 
   // -----------------------------------------------------------
   // Load data
 
-  nsd.load_mc(this->scr_out,mpi_size,mpi_rank,set);
+  cout << "Here5." << endl;
+  exit(-1);
+  //nsd->load_mc(this->scr_out,mpi_size,mpi_rank,*set);
 
   // -----------------------------------------------------------
   // Prepare data objects
 
   for(size_t i=0;i<data_arr.size();i++) {
-    data_arr[i].rad.resize(nsd.n_sources);
-    data_arr[i].mass.resize(nsd.n_sources);
-    data_arr[i].wgts.resize(nsd.n_sources);
+    data_arr[i].rad.resize(nsd->n_sources);
+    data_arr[i].mass.resize(nsd->n_sources);
+    data_arr[i].wgts.resize(nsd->n_sources);
   }
 
   if (this->verbose>=2) {
@@ -358,7 +360,6 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
 
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
-#ifdef O2SCL_NEVER_DEFINED
   if (model_type.length()==0) {
     cerr << "Model not set in 'mcmc' command." << endl;
     return 1;
@@ -369,39 +370,46 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   ubvector low;
   ubvector high;
-  // Get names and units for parameters from model (which also
-  // automatically includes nuisance variables for the data points)
-  // The other columns and units are specified in mcmc_init()
-  // function manually using a call to table::new_column().
-  mod->get_param_info(names,units,low,high);
+  // Get upper and lower parameter limits and also the column names
+  // and units for the data table (which also automatically includes
+  // nuisance variables for the data points). The other columns and
+  // units are specified in mcmc_init() function manually using a call
+  // to table::new_column().
+  bc_arr[0].mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
-  ubvector init(names.size());
-  mod->initial_point(init);
-  
-  bamr::point_funct mf=std::bind
-    (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
-     (&bamr_class::compute_point),this,
-     std::placeholders::_2,std::ref(scr_out),std::placeholders::_3,
-     std::placeholders::_4);
-  bamr::fill_funct mt=std::bind
-    (std::mem_fn<int(const ubvector &,double,std::vector<double> &,
-		     model_data &)>
-     (&bamr_class::fill),this,std::placeholders::_1,
-     std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
-
-  set.verbose=this->verbose;
-  cout << "Here1." << endl;
+  // Get the parameter initial values for this
+  cout << "Here3." << endl;
   exit(-1);
-  //this->mcmc(init.size(),low,high,mf,mt);
-#endif
+  // I'm not sure how this needs to be modified
+  ubvector init(names.size());
+  bc_arr[0].mod->initial_point(init);
+
+  vector<bamr::point_funct> pfa(n_threads);
+  vector<bamr::fill_funct> ffa(n_threads);
+  for(size_t i=0;i<n_threads;i++) {
+    pfa[i]=std::bind
+      (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
+       (&bamr_class::compute_point),&bc_arr[i],std::placeholders::_2,
+       std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
+    ffa[i]=std::bind
+      (std::mem_fn<int(const ubvector &,double,vector<double> &,
+		       model_data &)>
+       (&bamr_class::fill),&bc_arr[i],std::placeholders::_1,
+       std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
+  }
+  
+  set->verbose=this->verbose;
+  this->mcmc(init.size(),low,high,pfa,ffa);
   
   return 0;
 }
 
 int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
   for(size_t i=0;i<n_threads;i++) {
-    bc_arr[i].nsd.add_data(sv,itive_com);
+    cout << "Here7." << endl;
+    exit(-1);
+    //bc_arr[i].nsd->add_data(sv,itive_com);
   }
   return 0;
 }
@@ -410,7 +418,7 @@ void mcmc_bamr::setup_cli() {
   
   mcmc_para_cli::setup_cli(cl);
 
-  set.setup_cli(cl);
+  set->setup_cli(cl);
   
   // ---------------------------------------
   // Set options

@@ -46,15 +46,18 @@ LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o
+bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o nstar_cold2.o \
-		models.o mcmc_bamr.o bamr_class.o $(LIB) 
+		ns_data.o models.o mcmc_bamr.o bamr_class.o $(LIB) 
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
 
 nstar_cold2.o: nstar_cold2.cpp nstar_cold2.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o nstar_cold2.o -c nstar_cold2.cpp
+
+ns_data.o: ns_data.cpp ns_data.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o ns_data.o -c ns_data.cpp
 
 models.o: models.cpp models.h
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o models.o -c models.cpp

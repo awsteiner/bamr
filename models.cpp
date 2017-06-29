@@ -31,7 +31,10 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-model::model(settings &s, ns_data &n) : set(s), nsd(n) {
+model::model(std::shared_ptr<const settings> s,
+	     std::shared_ptr<const ns_data> n) {
+  set=s;
+  nsd=n;
   
   cns.nb_start=0.01;
   ts.verbose=0;
@@ -60,7 +63,7 @@ model::model(settings &s, ns_data &n) : set(s), nsd(n) {
   // -----------------------------------------------------------
   // Prepare crust
 
-  if (set.use_crust) {
+  if (set->use_crust) {
     teos.default_low_dens_eos();
     
     // Get the transition density from the crust
@@ -292,32 +295,10 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
   return;
 }
   
-int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
-
-  if (sv.size()<5) {
-    std::cerr << "Not enough arguments given to 'add-data'." << std::endl;
-    return o2scl::exc_efailed;
-  }
-      
-  source_names.push_back(sv[1]);
-  source_fnames.push_back(sv[2]);
-  slice_names.push_back(sv[3]);
-  init_mass_fracs.push_back(o2scl::stod(sv[4]));
-  if (sv.size()==6) {
-    table_names.push_back(sv[5]);
-  } else {
-    table_names.push_back("");
-  }
-      
-  n_sources++;
-
-  return 0;
-}
-    
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &ret, model_data &dat) {
 
-  if (set.verbose>=2) {
+  if (set->verbose>=2) {
     cout << "Start model::compute_star()." << endl;
   }
   
@@ -328,12 +309,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Compute the EOS
   
-    if (set.verbose>=2) {
+    if (set->verbose>=2) {
       cout << "Going to model::compute_eos()." << endl;
     }
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
-    if (set.verbose>=2) {
+    if (set->verbose>=2) {
       cout << "Back from model::compute_eos()." << endl;
     }
 
@@ -348,7 +329,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   
     for(size_t i=0;(dat.eos->get_nlines()>0 &&
 		    i<dat.eos->get_nlines()-1);i++) {
-      if ((!set.use_crust || dat.eos->get("ed",i)>0.6) && 
+      if ((!set->use_crust || dat.eos->get("ed",i)>0.6) && 
 	  dat.eos->get("pr",i+1)<dat.eos->get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << std::endl;
 	scr_out << "ed=" << dat.eos->get("ed",i) 
@@ -364,7 +345,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
   
-  if (has_eos && set.baryon_density && !dat.eos->is_column("nb")) {
+  if (has_eos && set->baryon_density && !dat.eos->is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
     if (nb_n1<=0.0 && nb_e1<=0.0) {
@@ -451,7 +432,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // This pressure (10^{-5} fm^{-4}) corresponds to a baryon 
       // density of about 3e-3 fm^{-3}.
 
-      if (set.use_crust==false && dat.eos->get("pr",i)<1.0e-5) {
+      if (set->use_crust==false && dat.eos->get("pr",i)<1.0e-5) {
 
 	dat.eos->set("nb",i,0.0);
 
@@ -479,14 +460,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Compute crust transition density and set crust (if necessary)
 
-    if (set.compute_cthick && set.baryon_density) {
+    if (set->compute_cthick && set->baryon_density) {
 
       // If crust_from_L is true, compute the pressure at the number density
       // specified by the correlation. Otherwise, just use 0.08
 
-      if (set.crust_from_L) {
+      if (set->crust_from_L) {
 
-	if (set.verbose>=2) {
+	if (set->verbose>=2) {
 	  std::cout << "Starting crust from L." << std::endl;
 	}
 	
@@ -559,7 +540,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	teos.set_transition(o2scl_settings.get_convert_units().convert
 			    ("1/fm^4","Msun/km^3",prt),1.4);
 
-	if (set.verbose>=2) {
+	if (set->verbose>=2) {
 	  std::cout << "Done with crust from L." << std::endl;
 	}
 	
@@ -592,25 +573,25 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Read the EOS into the tov_eos object
     
     table_units<> &teos_temp=*(dat.eos);
-    if (set.baryon_density && set.inc_baryon_mass) {
+    if (set->baryon_density && set->inc_baryon_mass) {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
       dat.eos->set_unit("nb","1/fm^3");
-      if (set.verbose>=2) {
+      if (set->verbose>=2) {
 	std::cout << "Going to read_table() (with nb)." << std::endl;
       }
       teos.read_table(teos_temp,"ed","pr","nb");
-      if (set.verbose>=2) {
+      if (set->verbose>=2) {
 	std::cout << "Done in read_table() (with nb)." << std::endl;
       }
     } else {
       dat.eos->set_unit("ed","1/fm^4");
       dat.eos->set_unit("pr","1/fm^4");
-      if (set.verbose>=2) {
+      if (set->verbose>=2) {
 	std::cout << "Going to read_table() (without nb)." << std::endl;
       }
       teos.read_table(teos_temp,"ed","pr");
-      if (set.verbose>=2) {
+      if (set->verbose>=2) {
 	std::cout << "Done in read_table() (without nb)." << std::endl;
       }
     }
@@ -620,7 +601,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // earlier. Here we also double check that the EOS is increasing
     // near the crust-core transition.
     
-    if (set.use_crust) {
+    if (set->use_crust) {
     
       double ed_last=0.0;
       // This range corresponds to between about n_B=0.01 and 0.17
@@ -652,7 +633,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ed_last=ed;
       }
 
-      // End of 'if (set.use_crust)'
+      // End of 'if (set->use_crust)'
     }
 
     // ---------------------------------------------------------------
@@ -660,7 +641,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // this is after tov_eos::read_table() so that we can debug the
     // core-crust transition)
     
-    if (set.debug_eos) {
+    if (set->debug_eos) {
       o2scl_hdf::hdf_file hfde;
 
       hfde.open_or_create("debug_eos.o2");
@@ -683,7 +664,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfde,full_eos,"full_eos");
 
       hfde.close();
-      if (!set.debug_star) {
+      if (!set->debug_star) {
 	scr_out << "Automatically exiting since 'debug_eos' is true."
 		<< std::endl;
 	exit(0);
@@ -694,20 +675,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Solve for M vs. R curve
     
     double m_max=0.0;
-    ts.princ=set.mvsr_pr_inc;
+    ts.princ=set->mvsr_pr_inc;
     ts.set_table(dat.mvsr);
-    if (set.addl_quants) {
+    if (set->addl_quants) {
       ts.ang_vel=true;
       ts.calc_gpot=true;
     } else {
       ts.ang_vel=false;
       ts.calc_gpot=false;
     }
-    if (set.verbose>=2) {
+    if (set->verbose>=2) {
       std::cout << "Going to TOV." << std::endl;
     }
     int info=ts.mvsr();
-    if (set.verbose>=2) {
+    if (set->verbose>=2) {
       cout << "Done with TOV." << endl;
     }
     if (info!=0) {
@@ -720,7 +701,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Add baryon density to M vs. R table if it's not already there
 
-    if (set.baryon_density && !set.inc_baryon_mass) {
+    if (set->baryon_density && !set->inc_baryon_mass) {
       dat.mvsr->add_col_from_table(*dat.eos,"pr","nb","pr");
       dat.mvsr->set_unit("nb","1/fm^3");
     }
@@ -729,13 +710,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Check that maximum mass is large enough. Note that the
     // mass-radius curve is not differentiable near M_{max}, so the
     // best way to increase the accuracy here is to make
-    // set.mvsr_pr_inc smaller.
+    // set->mvsr_pr_inc smaller.
     
     m_max=dat.mvsr->max("gm");
     dat.mvsr->add_constant("m_max",m_max);
-    if (m_max<set.min_max_mass) {
+    if (m_max<set->min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
-	      << set.min_max_mass << "." << std::endl;
+	      << set->min_max_mass << "." << std::endl;
       ret=ix_small_max;
       return;
     }
@@ -770,7 +751,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
 
     // Compute the central baryon density in the maximum mass star
-    if (set.baryon_density) {
+    if (set->baryon_density) {
       double nb_max=dat.mvsr->get("nb",ix_max);
       dat.mvsr->add_constant("nb_max",nb_max);
     }
@@ -807,10 +788,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // Compute the masses and radii for each source
-    for(size_t i=0;i<nsd.n_sources;i++) {
-      if (set.mass_switch==0) {
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      if (set->mass_switch==0) {
 	dat.mass[i]=m_max*pars[this->n_eos_params+i];
-      } else if (set.mass_switch==1) {
+      } else if (set->mass_switch==1) {
 	dat.mass[i]=0.4*pars[this->n_eos_params+i]+1.3;
       } else {
 	dat.mass[i]=0.2*pars[this->n_eos_params+i]+1.3;
@@ -828,7 +809,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // Compute the masses and radii for each source
-    for(size_t i=0;i<nsd.n_sources;i++) {
+    for(size_t i=0;i<nsd->n_sources;i++) {
       dat.mass[i]=pars[this->n_eos_params+i];
       dat.rad[i]=dat.mvsr->interp("gm",dat.mass[i],"r");
     }
@@ -836,7 +817,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   }
   
   // Output M vs. R curve
-  if (set.debug_star) {
+  if (set->debug_star) {
     o2scl_hdf::hdf_file hfds;
     hfds.open_or_create("debug_star.o2");
     hdf_output(hfds,*dat.mvsr,"mvsr");
@@ -872,9 +853,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
   } else {
 
-    for(size_t i=0;i<nsd.n_sources;i++) {
+    for(size_t i=0;i<nsd->n_sources;i++) {
       if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
-	scr_out << "Source " << nsd.source_names[i] << " acausal."
+	scr_out << "Source " << nsd->source_names[i] << " acausal."
 		<< std::endl;
 	ret=ix_acausal_mr;
 	return;
@@ -886,7 +867,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // ---------------------------------------------------------------
   // Compute M, R for fixed central baryon densities
 
-  if (has_eos && set.baryon_density) {
+  if (has_eos && set->baryon_density) {
     double ed1=dat.eos->interp("nb",0.16,"ed");
     dat.mvsr->add_constant("gm_nb1",dat.mvsr->interp("ed",ed1,"gm"));
     dat.mvsr->add_constant("r_nb1",dat.mvsr->interp("ed",ed1,"r"));
@@ -904,7 +885,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr->add_constant("r_nb5",dat.mvsr->interp("ed",ed5,"r"));
   }
 
-  if (set.verbose>=2) {
+  if (set->verbose>=2) {
     cout << "End model::compute_star()." << endl;
   }
 
@@ -914,7 +895,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			 double &log_weight, model_data &dat) {
 
-  if (set.verbose>=2) {
+  if (set->verbose>=2) {
     cout << "Start model::compute_point()." << endl;
   }
 
@@ -926,24 +907,24 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     return iret;
   }
   
-  for(size_t i=0;i<nsd.n_sources;i++) {
-    if (dat.mass[i]<set.in_m_min || dat.mass[i]>set.in_m_max || 
-	dat.rad[i]<set.in_r_min || dat.rad[i]>set.in_r_max) {
+  for(size_t i=0;i<nsd->n_sources;i++) {
+    if (dat.mass[i]<set->in_m_min || dat.mass[i]>set->in_m_max || 
+	dat.rad[i]<set->in_r_min || dat.rad[i]>set->in_r_max) {
       scr_out << "Rejected: Mass or radius outside range." << std::endl;
-      scr_out << "M limits: " << set.in_m_min << " "
-	      << set.in_m_max << std::endl;
-      scr_out << "R limits: " << set.in_r_min << " "
-	      << set.in_r_max << std::endl;
-      if (nsd.n_sources>0) {
+      scr_out << "M limits: " << set->in_m_min << " "
+	      << set->in_m_max << std::endl;
+      scr_out << "R limits: " << set->in_r_min << " "
+	      << set->in_r_max << std::endl;
+      if (nsd->n_sources>0) {
 	scr_out.precision(2);
 	scr_out.setf(ios::showpos);
 	scr_out << "M ";
-	for(size_t i=0;i<nsd.n_sources;i++) {
+	for(size_t i=0;i<nsd->n_sources;i++) {
 	  scr_out << dat.mass[i] << " ";
 	}
 	scr_out << std::endl;
 	scr_out << "R ";
-	for(size_t i=0;i<nsd.n_sources;i++) {
+	for(size_t i=0;i<nsd->n_sources;i++) {
 	  scr_out << dat.rad[i] << " ";
 	}
 	scr_out << std::endl;
@@ -963,45 +944,47 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   // -----------------------------------------------
   // Compute the weights for each source
       
-  if (set.debug_star) scr_out << "Name M R Weight" << std::endl;
+  if (set->debug_star) scr_out << "Name M R Weight" << std::endl;
   
-  for(size_t i=0;i<nsd.n_sources;i++) {
+  for(size_t i=0;i<nsd->n_sources;i++) {
 	
     // Double check that current M and R is in the range of
     // the provided input data
-    if (dat.rad[i]<nsd.source_tables[i].get_x_data()[0] ||
-	dat.rad[i]>nsd.source_tables[i].get_x_data()
-	[nsd.source_tables[i].get_nx()-1] ||
-	dat.mass[i]<nsd.source_tables[i].get_y_data()[0] ||
-	dat.mass[i]>nsd.source_tables[i].get_y_data()
-	[nsd.source_tables[i].get_ny()-1]) {
+    if (dat.rad[i]<nsd->source_tables[i].get_x_data()[0] ||
+	dat.rad[i]>nsd->source_tables[i].get_x_data()
+	[nsd->source_tables[i].get_nx()-1] ||
+	dat.mass[i]<nsd->source_tables[i].get_y_data()[0] ||
+	dat.mass[i]>nsd->source_tables[i].get_y_data()
+	[nsd->source_tables[i].get_ny()-1]) {
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
-      dat.wgts[i]=nsd.source_tables[i].interp
-	(dat.rad[i],dat.mass[i],nsd.slice_names[i]);
+      cout << "Here6." << endl;
+      exit(-1);
+      //dat.wgts[i]=nsd->source_tables[i].interp
+      //(dat.rad[i],dat.mass[i],nsd->slice_names[i]);
 				      
     }
 	
     // If the weight is lower than the threshold, set it equal
     // to the threshold
-    if (dat.wgts[i]<set.input_dist_thresh) {
-      dat.wgts[i]=set.input_dist_thresh;
+    if (dat.wgts[i]<set->input_dist_thresh) {
+      dat.wgts[i]=set->input_dist_thresh;
     }
     // Include the weight for this source
     if (dat.wgts[i]<=0.0) {
-      scr_out << "Weight zero for source " << nsd.source_names[i] << endl;
+      scr_out << "Weight zero for source " << nsd->source_names[i] << endl;
       return ix_mr_outside;
     }
     log_weight+=log(dat.wgts[i]);
 	
-    if (set.debug_star) {
-      scr_out << nsd.source_names[i] << " "
+    if (set->debug_star) {
+      scr_out << nsd->source_names[i] << " "
 	      << dat.mass[i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
-    if (set.verbose>=2) {
-      cout << nsd.source_names[i] << " "
+    if (set->verbose>=2) {
+      cout << nsd->source_names[i] << " "
 	   << dat.mass[i] << " " 
 	   << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
@@ -1009,15 +992,15 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // Go to the next source
   }
       
-  if (set.debug_star) scr_out << std::endl;
+  if (set->debug_star) scr_out << std::endl;
       
   // -----------------------------------------------
   // Exit if the current maximum mass is too large
       
-  if (m_max_current>set.exit_mass) {
+  if (m_max_current>set->exit_mass) {
     scr_out.setf(ios::scientific);
     scr_out << "Exiting because maximum mass (" << m_max_current 
-	    << ") larger than exit_mass (" << set.exit_mass << ")." 
+	    << ") larger than exit_mass (" << set->exit_mass << ")." 
 	    << std::endl;
     scr_out.precision(12);
     vector_out(scr_out,pars);
@@ -1026,7 +1009,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     exit(0);
   }
 
-  if (set.verbose>=2) {
+  if (set->verbose>=2) {
     cout << "End model::compute_point()." << endl;
   }
 
@@ -1063,7 +1046,9 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
   return;
 }
 
-two_polytropes::two_polytropes(settings &s, ns_data &n) : model(s,n) {
+two_polytropes::two_polytropes(std::shared_ptr<const settings> s,
+			       std::shared_ptr<const ns_data> n) :
+  model(s,n) {
 
   se.kpp=0.0;
   se.n0=0.16;
@@ -1086,7 +1071,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1098,7 +1083,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   low[6]=0.75;
   low[7]=0.2;
   
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
   high[1]=-200.0/hc_mev_fm;
@@ -1545,7 +1530,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
 
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
   
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1560,7 +1545,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   // a4
   low[8]=0.045;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
   high[1]=-200.0/hc_mev_fm;
@@ -1807,7 +1792,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
 
   units={"1/fm","","1/fm","1/fm"};
   
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   // B
   low[0]=-10.0;
   // c
@@ -1817,7 +1802,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   // ms
   low[3]=0.75;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   // B
   high[0]=10.0;
   // c
@@ -1958,7 +1943,8 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
 
 // --------------------------------------------------------------
 
-qmc_neut::qmc_neut(settings &s, ns_data &n) :
+qmc_neut::qmc_neut(std::shared_ptr<const settings> s,
+	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
   
   rho0=0.16;
@@ -2011,7 +1997,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   low[0]=12.7;
   low[1]=0.48;
   low[2]=1.0;
@@ -2020,7 +2006,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   low[5]=2.0;
   low[6]=0.2;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=13.3;
   high[1]=0.52;
   high[2]=5.0;
@@ -2157,7 +2143,8 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
 
 // --------------------------------------------------------------
 
-qmc_threep::qmc_threep(settings &s, ns_data &n) :
+qmc_threep::qmc_threep(std::shared_ptr<const settings> s,
+	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
   
   rho0=0.16;
@@ -2179,7 +2166,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2194,7 +2181,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   low[7]=0.75;
   low[8]=0.2;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2393,7 +2380,8 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
 
 // --------------------------------------------------------------
 
-qmc_fixp::qmc_fixp(settings &s, ns_data &n) :
+qmc_fixp::qmc_fixp(std::shared_ptr<const settings> s,
+	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
   
   nb0=0.16;
@@ -2419,7 +2407,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2433,7 +2421,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2637,7 +2625,8 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
 
 // --------------------------------------------------------------
 
-qmc_twolines::qmc_twolines(settings &s, ns_data &n) :model(s,n) {
+qmc_twolines::qmc_twolines(std::shared_ptr<const settings> s,
+	     std::shared_ptr<const ns_data> n) :model(s,n) {
   nb0=0.16;
   nb_trans=0.16;
 }
@@ -2653,7 +2642,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
 
-  low.resize(n_eos_params+nsd.n_sources);
+  low.resize(n_eos_params+nsd->n_sources);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2667,7 +2656,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd.n_sources);
+  high.resize(n_eos_params+nsd->n_sources);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;

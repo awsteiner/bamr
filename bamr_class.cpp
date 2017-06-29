@@ -50,8 +50,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
     mmax=dat.mvsr->get_constant("m_max");
     // The radius of the maximum mass star
     rmax=dat.mvsr->get_constant("r_max");
-    
-    if (setp->baryon_density) {
+
+    if (set->baryon_density) {
 
       // The highest baryon density in the EOS table
       nbmax2=dat.eos->max("nb");
@@ -66,18 +66,18 @@ int bamr_class::fill(const ubvector &pars, double weight,
     mmax=3.0;
   }
 
-  for(size_t i=0;i<nsd.n_sources;i++) {
+  for(size_t i=0;i<nsd->n_sources;i++) {
     line.push_back(dat.wgts[i]);
   }
-  for(size_t i=0;i<nsd.n_sources;i++) {
+  for(size_t i=0;i<nsd->n_sources;i++) {
     line.push_back(dat.rad[i]);
   }
-  for(size_t i=0;i<nsd.n_sources;i++) {
+  for(size_t i=0;i<nsd->n_sources;i++) {
     line.push_back(dat.mass[i]);
   }
   
   if (m.has_eos) {
-    for(int i=0;i<setp->grid_size;i++) {
+    for(int i=0;i<set->grid_size;i++) {
       double eval=m.e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
@@ -99,7 +99,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   // over a grid are either always positive or always negative,
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
-  for(int i=0;i<setp->grid_size;i++) {
+  for(int i=0;i<set->grid_size;i++) {
     double mval=m.m_grid[i];
     if (mval<mmax) {
       line.push_back(dat.mvsr->interp("gm",mval,"r"));
@@ -114,8 +114,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
   }
   if (m.has_eos) {
-    if (setp->baryon_density) {
-      for(int i=0;i<setp->grid_size;i++) {
+    if (set->baryon_density) {
+      for(int i=0;i<set->grid_size;i++) {
 	double nbval=m.nb_grid[i];
 	if (nbval<nbmax2) {
 	  double pres_temp=dat.eos->interp("nb",nbval,"pr");
@@ -141,25 +141,25 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(mmax);
     line.push_back(pmax);
     line.push_back(emax);
-    if (setp->baryon_density) line.push_back(nbmax);
-    for(size_t i=0;i<nsd.n_sources;i++) {
+    if (set->baryon_density) line.push_back(nbmax);
+    for(size_t i=0;i<nsd->n_sources;i++) {
       cout << "Here2." << endl;
       exit(-1);
       //double val=dat.mvsr->interp
-      //("gm",pars[this->n_params-nsd.n_sources+i],"ed");
+      //("gm",pars[this->n_params-nsd->n_sources+i],"ed");
       //line.push_back(val);
     }
-    if (setp->baryon_density) {
-      for(size_t i=0;i<nsd.n_sources;i++) {
+    if (set->baryon_density) {
+      for(size_t i=0;i<nsd->n_sources;i++) {
 	cout << "Here3." << endl;
 	exit(-1);
 	//line.push_back(dat.mvsr->interp
-	//("gm",pars[this->n_params-nsd.n_sources+i],"nb"));
+	//("gm",pars[this->n_params-nsd->n_sources+i],"nb"));
       }
     }
   }
   
-  if (setp->baryon_density) {
+  if (set->baryon_density) {
     line.push_back(dat.mvsr->get_constant("gm_nb1"));
     line.push_back(dat.mvsr->get_constant("r_nb1"));
     line.push_back(dat.mvsr->get_constant("gm_nb2"));
@@ -171,10 +171,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(dat.mvsr->get_constant("gm_nb5"));
     line.push_back(dat.mvsr->get_constant("r_nb5"));
   }
-  if (setp->compute_cthick) {
+  if (set->compute_cthick) {
     line.push_back(dat.eos->get_constant("nt"));
     line.push_back(dat.eos->get_constant("prt"));
-    for(int i=0;i<setp->grid_size;i++) {
+    for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
 	double rval=dat.mvsr->interp("gm",mval,"r");
@@ -184,9 +184,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
   }
-  if (setp->addl_quants) {
+  if (set->addl_quants) {
     double mmax=dat.mvsr->get_constant("m_max");
-    for(int i=0;i<setp->grid_size;i++) {
+    for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
 	double bm=dat.mvsr->interp("gm",mval,"bm");
