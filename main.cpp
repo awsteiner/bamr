@@ -33,22 +33,37 @@ using namespace bamr;
 int main(int argc, char *argv[]) {
 
   cout.setf(ios::scientific);
+
+  // Set error handler for this thread
+  o2scl::err_hnd_cpp error_handler;
+  o2scl::err_hnd=&error_handler;
   
 #ifndef BAMR_NO_MPI
   // Init MPI
   MPI_Init(&argc,&argv);
 #endif
 
-  settings s;
-
-  ns_data n;
-  
   // Main bamr object
-  bamr::bamr_class b(s,n);
+  bamr::mcmc_bamr b;
 
-  // Run!
-  b.run(argc,argv);
+  // Set starting time
+#ifdef O2SCL_MPI
+  b.mpi_start_time=MPI_Wtime();
+#else
+  b.mpi_start_time=time(0);
+#endif
+
+  b.setup_cli();
   
+  // Set command-line args
+  b.cl_args.clear();
+  for(int i=0;i<argc;i++) {
+    b.cl_args.push_back(argv[i]);
+  }
+
+  b.cl.prompt="bamr> ";
+  b.cl.run_auto(argc,argv);
+
 #ifndef BAMR_NO_MPI
   // Finalize MPI
   MPI_Finalize();

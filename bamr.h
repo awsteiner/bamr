@@ -66,6 +66,39 @@ namespace bamr {
   
   typedef std::function<int(const ubvector &,double,
 			    std::vector<double> &,model_data &)> fill_funct;
+
+  /** \brief Desc
+   */
+  class bamr_class {
+    
+  public:
+
+    /// The Schwarzchild radius in km
+    double schwarz_km;
+    
+    /// Neutron star data
+    ns_data nsd;
+    
+    /// Model object
+    std::shared_ptr<model> mod;
+
+    bamr_class() {
+      schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
+    }
+
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
+				 double &weight, model_data &dat);
+
+    /** \brief Fill vector in <tt>line</tt> with data from the
+	current Monte Carlo point
+    */
+    virtual int fill(const ubvector &pars, double weight, 
+		      std::vector<double> &line, model_data &dat);
+    
+  };
   
   /** \brief Statistical analysis of EOS from M and R constraints
 
@@ -103,19 +136,17 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-  class bamr_class :
+  class mcmc_bamr :
     public o2scl::mcmc_para_cli<point_funct,fill_funct,model_data,ubvector> {
 
   protected:
 
-    /// The Schwarzchild radius in km
-    double schwarz_km;
-    
-  public:
-
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
+    /// Settings object
+    settings set;
+    
     /// \name Main functions called from the command-line interface
     //@{
     /** \brief Set the model for the EOS to use
@@ -123,15 +154,9 @@ namespace bamr {
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
     //@}
 
-    /** \brief Fill vector in <tt>line</tt> with data from the
-	current Monte Carlo point
-    */
-    virtual int fill(const ubvector &pars, double weight, 
-		      std::vector<double> &line, model_data &dat);
-
     /** \brief Write initial data to HDF file
      */
-    virtual void first_update(o2scl_hdf::hdf_file &hf);
+    virtual void file_header(o2scl_hdf::hdf_file &hf);
     
     /** \brief Make any necessary preparations for the mcmc() function
 
@@ -143,12 +168,6 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
-    /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
-    */
-    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 double &weight, model_data &dat);
-
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
@@ -157,23 +176,23 @@ namespace bamr {
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
-  bamr_class(settings &s, ns_data &n) : set(s), nsd(n) {
+  public:
+
+    /** \brief Desc
+     */
+#ifdef BAMR_READLINE
+    o2scl::cli_readline cl;
+#else
+    o2scl::cli cl;
+#endif
+    
+    mcmc_bamr() {
       model_type="";
-      schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }
     
-    virtual ~bamr_class() {
+    virtual ~mcmc_bamr() {
     }
     
-    /// Settings object
-    settings &set;
-
-    /// Neutron star data
-    ns_data &nsd;
-
-    /// Model object
-    std::shared_ptr<model> mod;
-
     /** \brief Set up the 'cli' object
 
 	This function just adds the four commands and the 'set' parameters

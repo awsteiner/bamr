@@ -34,7 +34,9 @@ using namespace o2scl_const;
 using namespace bamr;
 
 int bamr_class::fill(const ubvector &pars, double weight, 
-		      std::vector<double> &line, model_data &dat) {
+		     std::vector<double> &line, model_data &dat) {
+
+#ifdef O2SCL_NEVER_DEFINED
   
   model &m=*this->mod;
   
@@ -226,13 +228,25 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
   }
+
+#endif
   
   return o2scl::success;
 }
 
-void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
+int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
+			      double &weight, model_data &dat) {
+#ifdef O2SCL_NEVER_DEFINED
+  return mod->compute_point(pars,scr_out,weight,dat);
+#endif
+  return 0;
+}
 
-  mcmc_cli::first_update(hf);
+void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
+
+  mcmc_para_cli::file_header(hf);
+
+#ifdef O2SCL_NEVER_DEFINED
 
   model &m=*this->mod;
   
@@ -263,14 +277,18 @@ void bamr_class::first_update(o2scl_hdf::hdf_file &hf) {
   hdf_output(hf,m.nb_grid,"nb_grid");
   hdf_output(hf,m.e_grid,"e_grid");
   hdf_output(hf,m.m_grid,"m_grid");
-    
+
+#endif
+  
   return;
 }
 
-int bamr_class::mcmc_init() {
+int mcmc_bamr::mcmc_init() {
+
+#ifdef O2SCL_NEVER_DEFINED
 
   if (this->verbose>=2) {
-    std::cout << "Start bamr_class::mcmc_init()." << std::endl;
+    std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
   }
   
   model &m=*this->mod;
@@ -279,17 +297,19 @@ int bamr_class::mcmc_init() {
   // default return values in models.h
   this->ret_value_counts.resize(21);
   
-  mcmc_cli::mcmc_init();
+  mcmc_para_cli::mcmc_init();
 
-  if (this->file_opened==false) {
+  /*
+    if (this->file_opened==false) {
     // Open main output file
     this->scr_out.open((this->prefix+"_"+
-			o2scl::itos(this->mpi_rank)+"_scr").c_str());
+    o2scl::itos(this->mpi_rank)+"_scr").c_str());
     this->scr_out.setf(std::ios::scientific);
     this->file_opened=true;
-    this->scr_out << "Opened main file in function 'bamr_class::mcmc_init()'."
-		  << std::endl;
-  }
+    this->scr_out << "Opened main file in function 'mcmc_bamr::mcmc_init()'."
+    << std::endl;
+    }
+  */
   
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -326,9 +346,9 @@ int bamr_class::mcmc_init() {
   // Add columns to table
 
   for(size_t i=0;i<nsd.n_sources;i++) {
-    this->tab->new_column(((std::string)"wgt_")+nsd.source_names[i]);
+    this->table->new_column(((std::string)"wgt_")+nsd.source_names[i]);
     if (!set.norm_max) {
-      this->tab->set_unit(((std::string)"wgt_")+nsd.source_names[i],
+      this->table->set_unit(((std::string)"wgt_")+nsd.source_names[i],
 			  "1/km/Msun");
     }
   }
@@ -338,117 +358,117 @@ int bamr_class::mcmc_init() {
   // because the code reports zero in the fill_line() function for
   // values beyond the end of the EOS or the M-R curve. 
   for(size_t i=0;i<nsd.n_sources;i++) {
-    this->tab->new_column(((std::string)"Rns_")+nsd.source_names[i]);
-    this->tab->set_unit(((std::string)"Rns_")+nsd.source_names[i],
+    this->table->new_column(((std::string)"Rns_")+nsd.source_names[i]);
+    this->table->set_unit(((std::string)"Rns_")+nsd.source_names[i],
 			"km");
   }
   
   for(size_t i=0;i<nsd.n_sources;i++) {
-    this->tab->new_column(((std::string)"Mns_")+nsd.source_names[i]);
-    this->tab->set_unit(((std::string)"Mns_")+nsd.source_names[i],
+    this->table->new_column(((std::string)"Mns_")+nsd.source_names[i]);
+    this->table->set_unit(((std::string)"Mns_")+nsd.source_names[i],
 			"Msun");
   }
   
   if (m.has_eos) {
     for(int i=0;i<set.grid_size;i++) {
-      this->tab->new_column(((string)"P_")+o2scl::itos(i));
-      this->tab->set_unit(((string)"P_")+o2scl::itos(i),
+      this->table->new_column(((string)"P_")+o2scl::itos(i));
+      this->table->set_unit(((string)"P_")+o2scl::itos(i),
 			  "1/fm^4");
     }
   }
   
   for(int i=0;i<set.grid_size;i++) {
-    this->tab->new_column(((string)"R_")+o2scl::itos(i));
-    this->tab->set_unit(((string)"R_")+o2scl::itos(i),
+    this->table->new_column(((string)"R_")+o2scl::itos(i));
+    this->table->set_unit(((string)"R_")+o2scl::itos(i),
 			"km");
     if (m.has_eos) {
-      this->tab->new_column(((string)"PM_")+o2scl::itos(i));
-      this->tab->set_unit(((string)"PM_")+o2scl::itos(i),
+      this->table->new_column(((string)"PM_")+o2scl::itos(i));
+      this->table->set_unit(((string)"PM_")+o2scl::itos(i),
 			  "1/fm^4");
     }
   }
   if (m.has_eos) {
     if (set.baryon_density) {
       for(int i=0;i<set.grid_size;i++) {
-	this->tab->new_column(((string)"Pnb_")+o2scl::itos(i));
-	this->tab->set_unit(((string)"Pnb_")+o2scl::itos(i),
+	this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
+	this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
 			    "1/fm^4");
-	this->tab->new_column(((string)"EoA_")+o2scl::itos(i));
-	this->tab->set_unit(((string)"EoA_")+o2scl::itos(i),
+	this->table->new_column(((string)"EoA_")+o2scl::itos(i));
+	this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
 			    "MeV");
       }
     }
     if (m.has_esym) {
-      this->tab->new_column("S");
-      this->tab->set_unit("S","1/fm");
-      this->tab->new_column("L");
-      this->tab->set_unit("L","1/fm");
+      this->table->new_column("S");
+      this->table->set_unit("S","1/fm");
+      this->table->new_column("L");
+      this->table->set_unit("L","1/fm");
     }
-    this->tab->new_column("R_max");
-    this->tab->set_unit("R_max","km");
-    this->tab->new_column("M_max");
-    this->tab->set_unit("M_max","Msun");
-    this->tab->new_column("P_max");
-    this->tab->set_unit("P_max","1/fm^4");
-    this->tab->new_column("e_max");
-    this->tab->set_unit("e_max","1/fm^4");
+    this->table->new_column("R_max");
+    this->table->set_unit("R_max","km");
+    this->table->new_column("M_max");
+    this->table->set_unit("M_max","Msun");
+    this->table->new_column("P_max");
+    this->table->set_unit("P_max","1/fm^4");
+    this->table->new_column("e_max");
+    this->table->set_unit("e_max","1/fm^4");
     if (set.baryon_density) {
-      this->tab->new_column("nb_max");
-      this->tab->set_unit("nb_max","1/fm^3");
+      this->table->new_column("nb_max");
+      this->table->set_unit("nb_max","1/fm^3");
     }
     for(size_t i=0;i<nsd.n_sources;i++) {
-      this->tab->new_column(((string)"ce_")+nsd.source_names[i]);
-      this->tab->set_unit(((string)"ce_")+nsd.source_names[i],
+      this->table->new_column(((string)"ce_")+nsd.source_names[i]);
+      this->table->set_unit(((string)"ce_")+nsd.source_names[i],
 			  "1/fm^4");
     }
     if (set.baryon_density) {
       for(size_t i=0;i<nsd.n_sources;i++) {
-	this->tab->new_column(((string)"cnb_")+nsd.source_names[i]);
-	this->tab->set_unit(((string)"cnb_")+nsd.source_names[i],
+	this->table->new_column(((string)"cnb_")+nsd.source_names[i]);
+	this->table->set_unit(((string)"cnb_")+nsd.source_names[i],
 			      "1/fm^3");
       }
-      this->tab->new_column("gm_nb1");
-      this->tab->set_unit("gm_nb1","Msun");
-      this->tab->new_column("r_nb1");
-      this->tab->set_unit("r_nb1","km");
-      this->tab->new_column("gm_nb2");
-      this->tab->set_unit("gm_nb2","Msun");
-      this->tab->new_column("r_nb2");
-      this->tab->set_unit("r_nb2","km");
-      this->tab->new_column("gm_nb3");
-      this->tab->set_unit("gm_nb3","Msun");
-      this->tab->new_column("r_nb3");
-      this->tab->set_unit("r_nb3","km");
-      this->tab->new_column("gm_nb4");
-      this->tab->set_unit("gm_nb4","Msun");
-      this->tab->new_column("r_nb4");
-      this->tab->set_unit("r_nb4","km");
-      this->tab->new_column("gm_nb5");
-      this->tab->set_unit("gm_nb5","Msun");
-      this->tab->new_column("r_nb5");
-      this->tab->set_unit("r_nb5","km");
+      this->table->new_column("gm_nb1");
+      this->table->set_unit("gm_nb1","Msun");
+      this->table->new_column("r_nb1");
+      this->table->set_unit("r_nb1","km");
+      this->table->new_column("gm_nb2");
+      this->table->set_unit("gm_nb2","Msun");
+      this->table->new_column("r_nb2");
+      this->table->set_unit("r_nb2","km");
+      this->table->new_column("gm_nb3");
+      this->table->set_unit("gm_nb3","Msun");
+      this->table->new_column("r_nb3");
+      this->table->set_unit("r_nb3","km");
+      this->table->new_column("gm_nb4");
+      this->table->set_unit("gm_nb4","Msun");
+      this->table->new_column("r_nb4");
+      this->table->set_unit("r_nb4","km");
+      this->table->new_column("gm_nb5");
+      this->table->set_unit("gm_nb5","Msun");
+      this->table->new_column("r_nb5");
+      this->table->set_unit("r_nb5","km");
     }
     if (set.compute_cthick) {
-      this->tab->new_column("nt");
-      this->tab->set_unit("nt","1/fm^3");
-      this->tab->new_column("prt");
-      this->tab->set_unit("prt","1/fm^4");
+      this->table->new_column("nt");
+      this->table->set_unit("nt","1/fm^3");
+      this->table->new_column("prt");
+      this->table->set_unit("prt","1/fm^4");
       for(int i=0;i<set.grid_size;i++) {
-        this->tab->new_column(((string)"ct_")+o2scl::itos(i));
-        this->tab->set_unit(((string)"ct_")+o2scl::itos(i),"km");
+        this->table->new_column(((string)"ct_")+o2scl::itos(i));
+        this->table->set_unit(((string)"ct_")+o2scl::itos(i),"km");
       }
     }
   }
   if (set.addl_quants) {
     for(int i=0;i<set.grid_size;i++) {
-      this->tab->new_column(((string)"Mb_")+o2scl::itos(i));
-      this->tab->set_unit(((string)"Mb_")+o2scl::itos(i),"Msun");
-      this->tab->new_column(((string)"be_")+o2scl::itos(i));
-      this->tab->set_unit(((string)"be_")+o2scl::itos(i),"Msun");
-      this->tab->new_column(((string)"I_")+o2scl::itos(i));
-      this->tab->set_unit(((string)"I_")+o2scl::itos(i),
+      this->table->new_column(((string)"Mb_")+o2scl::itos(i));
+      this->table->set_unit(((string)"Mb_")+o2scl::itos(i),"Msun");
+      this->table->new_column(((string)"be_")+o2scl::itos(i));
+      this->table->set_unit(((string)"be_")+o2scl::itos(i),"Msun");
+      this->table->new_column(((string)"I_")+o2scl::itos(i));
+      this->table->set_unit(((string)"I_")+o2scl::itos(i),
 			    "Msun*km^2");
-      //this->tab->new_column(((string)"lambda_")+o2scl::itos(i));
+      //this->table->new_column(((string)"lambda_")+o2scl::itos(i));
     }
   }
 
@@ -462,7 +482,7 @@ int bamr_class::mcmc_init() {
   // -----------------------------------------------------------
   // Load data
 
-  nsd.load_mc(this->scr_out,mpi_nprocs,mpi_rank,set);
+  nsd.load_mc(this->scr_out,mpi_size,mpi_rank,set);
 
   // -----------------------------------------------------------
   // Prepare data objects
@@ -474,13 +494,17 @@ int bamr_class::mcmc_init() {
   }
 
   if (this->verbose>=2) {
-    std::cout << "End bamr_class::mcmc_init()." << std::endl;
+    std::cout << "End mcmc_bamr::mcmc_init()." << std::endl;
   }
 
+#endif
+  
   return 0;
 }
 
-int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
+int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
+#ifdef O2SCL_NEVER_DEFINED
+  
   // We cannot use scr_out here because it isn't set until the call
   // to mcmc().
   if (sv.size()<2) {
@@ -527,17 +551,13 @@ int bamr_class::set_model(std::vector<std::string> &sv, bool itive_com) {
   }
   model_type=sv[1];
   mod->setup_params(cl);
-
+#endif
   return 0;
 }
 
-int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			      double &weight, model_data &dat) {
-  return mod->compute_point(pars,scr_out,weight,dat);
-}
+int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
-int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
-
+#ifdef O2SCL_NEVER_DEFINED
   if (model_type.length()==0) {
     cerr << "Model not set in 'mcmc' command." << endl;
     return 1;
@@ -570,19 +590,22 @@ int bamr_class::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
      std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
 
   set.verbose=this->verbose;
-  this->mcmc(init.size(),init,low,high,mf,mt);
+  cout << "Here1." << endl;
+  exit(-1);
+  //this->mcmc(init.size(),low,high,mf,mt);
+#endif
   
   return 0;
 }
 
-int bamr_class::add_data(std::vector<std::string> &sv, bool itive_com) {
-  nsd.add_data(sv,itive_com);
+int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
+  //nsd.add_data(sv,itive_com);
   return 0;
 }
 
-void bamr_class::setup_cli() {
+void mcmc_bamr::setup_cli() {
   
-  mcmc_cli::setup_cli();
+  mcmc_para_cli::setup_cli(cl);
 
   set.setup_cli(cl);
   
@@ -595,14 +618,14 @@ void bamr_class::setup_cli() {
      0,0,"",((std::string)"This is the main part of ")+
      "the code which performs the simulation. Make sure to set the "+
      "model first using the 'model' command first.",
-     new o2scl::comm_option_mfptr<bamr_class>(this,&bamr_class::mcmc_func),
+     new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc_func),
      o2scl::cli::comm_option_both},
     {'o',"model","Choose model.",
      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
      "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
      "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
      "model must be chosen before a MCMC run.",
-     new comm_option_mfptr<bamr_class>(this,&bamr_class::set_model),
+     new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
      cli::comm_option_both},
     {'a',"add-data","Add data source to the list.",
      4,5,"<name> <file> <slice> <initial mass> [obj name]",
@@ -612,7 +635,7 @@ void bamr_class::setup_cli() {
      "<initial mass> is the initial mass for the first point, and "+
      "[obj name] is the optional name of table3d object in <file>. "+
      "If [obj name] is not specified, then the first table3d object "+
-     "is used.",new comm_option_mfptr<bamr_class>(this,&bamr_class::add_data),
+     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data),
      cli::comm_option_both},
   };
   cl.set_comm_option_vec(nopt,options);
