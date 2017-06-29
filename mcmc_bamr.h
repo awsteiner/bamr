@@ -67,39 +67,6 @@ namespace bamr {
   typedef std::function<int(const ubvector &,double,
 			    std::vector<double> &,model_data &)> fill_funct;
 
-  /** \brief Desc
-   */
-  class bamr_class {
-    
-  public:
-
-    /// The Schwarzchild radius in km
-    double schwarz_km;
-    
-    /// Neutron star data
-    ns_data nsd;
-    
-    /// Model object
-    std::shared_ptr<model> mod;
-
-    bamr_class() {
-      schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
-    }
-
-    /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
-    */
-    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-				 double &weight, model_data &dat);
-
-    /** \brief Fill vector in <tt>line</tt> with data from the
-	current Monte Carlo point
-    */
-    virtual int fill(const ubvector &pars, double weight, 
-		      std::vector<double> &line, model_data &dat);
-    
-  };
-  
   /** \brief Statistical analysis of EOS from M and R constraints
 
       \comment
@@ -143,6 +110,9 @@ namespace bamr {
 
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
+    
+    /// Vector of \ref bamr_class objects
+    std::vector<bamr_class> bc_arr;
 
     /// Settings object
     settings set;
