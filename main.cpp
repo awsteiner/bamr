@@ -25,7 +25,8 @@
 #endif
 
 #include "models.h"
-#include "bamr.h"
+#include "bamr_class.h"
+#include "mcmc_bamr.h"
 
 using namespace std;
 using namespace bamr;

@@ -20,11 +20,11 @@
 
   -------------------------------------------------------------------
 */
-/** \file bamr.h
+/** \file bamr_class.h
     \brief Definition of main bamr class
 */
-#ifndef BAMR_H
-#define BAMR_H
+#ifndef BAMR_CLASS_H
+#define BAMR_CLASS_H
 
 #include <iostream>
 

@@ -20,11 +20,11 @@
 
   -------------------------------------------------------------------
 */
-/** \file bamr.h
+/** \file mcmc_bamr.h
     \brief Definition of main bamr class
 */
-#ifndef BAMR_H
-#define BAMR_H
+#ifndef MCMC_BAMR_H
+#define MCMC_BAMR_H
 
 #include <iostream>
 
@@ -50,6 +50,7 @@
 
 #include "nstar_cold2.h"
 #include "models.h"
+#include "bamr_class.h"
 
 /** \brief Main namespace
     
