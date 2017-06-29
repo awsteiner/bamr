@@ -95,7 +95,7 @@ namespace bamr {
     static const int ix_SL_invalid=20;
     //@}
 
-    /// Number of parameters (EOS parameters plus mass of each source)
+    /// Number of EOS parameters
     size_t n_eos_params;
     
     /** \brief TOV solver

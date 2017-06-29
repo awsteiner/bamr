@@ -37,6 +37,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
 		     std::vector<double> &line, model_data &dat) {
 
   model &m=*this->mod;
+
+  size_t n_params=pars.size();
   
   double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
@@ -143,18 +145,15 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(emax);
     if (set->baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<nsd->n_sources;i++) {
-      cout << "Here2." << endl;
-      exit(-1);
-      //double val=dat.mvsr->interp
-      //("gm",pars[this->n_params-nsd->n_sources+i],"ed");
-      //line.push_back(val);
+      double val=dat.mvsr->interp
+	("gm",pars[n_params-nsd->n_sources+i],"ed");
+      line.push_back(val);
     }
     if (set->baryon_density) {
       for(size_t i=0;i<nsd->n_sources;i++) {
-	cout << "Here3." << endl;
-	exit(-1);
-	//line.push_back(dat.mvsr->interp
-	//("gm",pars[this->n_params-nsd->n_sources+i],"nb"));
+	double val2=dat.mvsr->interp
+	  ("gm",pars[n_params-nsd->n_sources+i],"nb");
+	line.push_back(val2);
       }
     }
   }

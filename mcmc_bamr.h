@@ -118,6 +118,9 @@ namespace bamr {
     /// Settings object
     std::shared_ptr<settings> set;
 
+    /// Data object
+    std::shared_ptr<ns_data> nsd;
+
     /// Number of OpenMP threads
     size_t n_threads;
     
@@ -168,8 +171,10 @@ namespace bamr {
       n_threads=n_omp_threads;
       bc_arr.resize(n_threads);
       set=std::shared_ptr<settings>(new settings);
+      nsd=std::shared_ptr<ns_data>(new ns_data);
       for(size_t i=0;i<n_threads;i++) {
 	bc_arr[i].set=set;
+	bc_arr[i].nsd=nsd;
       }
     }
     

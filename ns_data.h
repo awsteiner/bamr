@@ -93,7 +93,7 @@ namespace bamr {
     /** \brief Load input probability distributions
      */
     virtual void load_mc(std::ofstream &scr_out, int mpi_nprocs,
-			 int mpi_rank, settings &set);
+			 int mpi_rank, std::shared_ptr<settings> set);
     //@}
 
   };

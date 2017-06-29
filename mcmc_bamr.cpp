@@ -78,7 +78,6 @@ int mcmc_bamr::mcmc_init() {
   }
   
   model &m=*(bc_arr[0].mod);
-  std::shared_ptr<const ns_data> nsd=bc_arr[0].nsd;
 
   // This ensures enough space for all the
   // default return values in models.h
@@ -269,9 +268,7 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
   // Load data
 
-  cout << "Here5." << endl;
-  exit(-1);
-  //nsd->load_mc(this->scr_out,mpi_size,mpi_rank,*set);
+  nsd->load_mc(this->scr_out,mpi_size,mpi_rank,set);
 
   // -----------------------------------------------------------
   // Prepare data objects
@@ -378,12 +375,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   bc_arr[0].mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
-  // Get the parameter initial values for this
-  cout << "Here3." << endl;
-  exit(-1);
-  // I'm not sure how this needs to be modified
+  // Get the parameter initial values for this model 
   ubvector init(names.size());
   bc_arr[0].mod->initial_point(init);
+  this->initial_points.clear();
+  for(size_t i=0;i<n_threads;i++) {
+    this->initial_points.push_back(init);
+  }
 
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
@@ -407,9 +405,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
 int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
   for(size_t i=0;i<n_threads;i++) {
-    cout << "Here7." << endl;
-    exit(-1);
-    //bc_arr[i].nsd->add_data(sv,itive_com);
+    nsd->add_data(sv,itive_com);
   }
   return 0;
 }

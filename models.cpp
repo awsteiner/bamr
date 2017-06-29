@@ -20,8 +20,8 @@
 
   -------------------------------------------------------------------
 */
-#include "models.h"
 
+#include "models.h"
 #include "bamr_class.h"
 #include "mcmc_bamr.h"
 
@@ -82,219 +82,6 @@ model::model(std::shared_ptr<const settings> s,
   
 }
 
-void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
-		      settings &set) {
-      
-  double tot, max;
-      
-  std::string name;
-
-  if (source_names.size()!=source_fnames.size() ||
-      source_names.size()!=init_mass_fracs.size()) {
-    O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
-  }
-  
-  if (n_sources>0) {
-    
-    if (set.verbose>=2) {
-      cout << "bamr: Loading " << n_sources << " data files." << endl;
-    }
-    
-    source_tables.resize(n_sources);
-    
-#ifdef BAMR_MPI_LOAD
-
-    bool mpi_load_debug=false;
-    int buffer=0, tag=0;
-    
-    // Choose which file to read first for this rank
-    int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int) n_sources) && mpi_rank>0) {
-      filestart=mpi_nprocs-mpi_rank;
-    }
-    if (mpi_load_debug) {
-      scr_out << "Variable 'filestart' is " << filestart << " for rank "
-	      << mpi_rank << "." << std::endl;
-    }
-    
-    // Loop through all files
-    for(int k=0;k<((int) n_sources);k++) {
-      
-      // For k=0, we choose some ranks to begin reading, the others
-      // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int) n_sources))) {
-	int prev=mpi_rank-1;
-	if (prev<0) prev+=mpi_nprocs;
-	if (mpi_load_debug) {
-	  scr_out << "Rank " << mpi_rank << " waiting for " 
-		  << prev << "." << std::endl;
-	}
-	MPI_Recv(&buffer,1,MPI_INT,prev,tag,MPI_COMM_WORLD,
-		 MPI_STATUS_IGNORE);
-      }
-      
-      // Determine which file to read next
-      int file=filestart+k;
-      if (file>=((int) n_sources)) file-= n_sources;
-
-      if (mpi_load_debug) {
-	scr_out << "Rank " << mpi_rank << " reading file " 
-		<< file << "." << std::endl;
-      }
-
-      o2scl_hdf::hdf_file hf;
-      hf.open(source_fnames[file]);
-      if (table_names[file].length()>0) {
-	hdf_input(hf,source_tables[file],table_names[file]);
-      } else {
-	hdf_input(hf,source_tables[file]);
-      }
-      hf.close();
-      
-      // Send a message, unless the rank is the last one to read a
-      // file.
-      if (k<((int)n_sources)-1 || mpi_rank<mpi_nprocs-((int)n_sources)) {
-	int next=mpi_rank+1;
-	if (next>=mpi_nprocs) next-=mpi_nprocs;
-	if (mpi_load_debug) {
-	  scr_out << "Rank " << mpi_rank << " sending to " 
-		  << next << "." << std::endl;
-	}
-	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
-      }
-      
-    }
-    
-#else
-    
-    for(size_t k=0;k<n_sources;k++) {
-      
-      hdf_file hf;
-      hf.open(source_fnames[k]);
-      if (table_names[k].length()>0) {
-	hdf_input(hf,source_tables[k],table_names[k]);
-      } else {
-	hdf_input(hf,source_tables[k]);
-      }
-      hf.close();
-    }
-    
-#endif
-
-    scr_out << "\nInput data files: " << std::endl;
-    
-    if (set.norm_max) {
-      scr_out << "Normalizing maximum probability to 1." << std::endl;
-    } else {
-      scr_out << "Normalizing integral of distribution to 1." << std::endl;
-    }
-
-    scr_out << "File                          name   total        "
-	    << "max          P(10,1.4)" << std::endl;
-
-    for(size_t k=0;k<n_sources;k++) {
-      scr_out << "Here: " << k << endl;
-      
-      // Update input limits
-      if (k==0) {
-	set.in_r_min=source_tables[k].get_grid_x(0);
-	set.in_r_max=source_tables[k].get_grid_x
-	  (source_tables[k].get_nx()-1);
-	set.in_m_min=source_tables[k].get_grid_y(0);
-	set.in_m_max=source_tables[k].get_grid_y
-	  (source_tables[k].get_ny()-1);
-      } else {
-	if (set.in_r_min>source_tables[k].get_grid_x(0)) {
-	  set.in_r_min=source_tables[k].get_grid_x(0);
-	}
-	if (set.in_r_max<source_tables[k].get_grid_x
-	    (source_tables[k].get_nx()-1)) {
-	  set.in_r_max=source_tables[k].get_grid_x
-	    (source_tables[k].get_nx()-1);
-	}
-	if (set.in_m_min>source_tables[k].get_grid_y(0)) {
-	  set.in_m_min= source_tables[k].get_grid_y(0);
-	}
-	if (set.in_m_max<source_tables[k].get_grid_y
-	    (source_tables[k].get_ny()-1)) {
-	  set.in_m_max= source_tables[k].get_grid_y
-	    (source_tables[k].get_ny()-1);
-	}
-      }
-
-      // Renormalize
-      tot=0.0;
-      max=0.0;
-      for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  tot+=source_tables[k].get(i,j,slice_names[k]);
-	  if (source_tables[k].get(i,j,slice_names[k])>max) {
-	    max=source_tables[k].get(i,j,slice_names[k]);
-	  }
-	}
-      }
-      for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  if (set.norm_max) {
-	     source_tables[k].set
-	      (i,j,slice_names[k],source_tables[k].get
-	       (i,j,slice_names[k])/max);		   
-	  } else {
-	     source_tables[k].set
-	      (i,j,slice_names[k],source_tables[k].get
-	       (i,j,slice_names[k])/tot);		   
-	  }
-	}
-      }
-
-      if (set.debug_load) {
-	std::cout << source_fnames[k] << std::endl;
-	for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	  std::cout << i << " " << source_tables[k].get_grid_x(i)
-		    << std::endl;
-	}
-	for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	  std::cout << j << " " << source_tables[k].get_grid_y(j)
-		    << std::endl;
-	}
-	for(size_t i=0;i<source_tables[k].get_nx();i++) {
-	  for(size_t j=0;j<source_tables[k].get_ny();j++) {
-	    std::cout << source_tables[k].get(i,j,slice_names[k])
-		      << " ";
-	  }
-	  std::cout << std::endl;
-	}
-      }
-
-      scr_out.setf(std::ios::left);
-      scr_out.width(29);
-      std::string stempx=source_fnames[k].substr(0,29);
-      scr_out << stempx << " ";
-      scr_out.width(6);
-      scr_out << source_names[k] << " " << tot << " " << max << " ";
-      scr_out.unsetf(std::ios::left);
-      scr_out << source_tables[k].interp(10.0,1.4,slice_names[k])
-	      << std::endl;
-      
-    }
-    
-    scr_out << std::endl;
-  } else {
-    if (set.verbose>=2) {
-      cout << "bamr: no sources." << endl;
-    }
-  }    
-
-  if (set.in_m_min<set.min_mass) set.in_m_min=set.min_mass;
-  
-  scr_out << "M limits: (" 
-	  << set.in_m_min << "," << set.in_m_max << ")" << std::endl;
-  scr_out << "R limits: ("
-	  << set.in_r_min << "," << set.in_r_max << ")" << std::endl;
-  
-  return;
-}
-  
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &ret, model_data &dat) {
 
@@ -959,11 +746,8 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
-      cout << "Here6." << endl;
-      exit(-1);
-      //dat.wgts[i]=nsd->source_tables[i].interp
-      //(dat.rad[i],dat.mass[i],nsd->slice_names[i]);
-				      
+      dat.wgts[i]=nsd->source_tables[i].interp
+	(dat.rad[i],dat.mass[i],nsd->slice_names[i]);
     }
 	
     // If the weight is lower than the threshold, set it equal
@@ -2328,7 +2112,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
       cerr << index1 << " " << exp1 << endl;
       cerr << coeff1 << " " << exp1 << " " << ed_last << " " << trans1 << endl;
       cerr << ed << " " << pr << " " << nb_n1 << " " << nb_e1 << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 1 in qmc_threep.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
@@ -2350,7 +2134,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
       cerr << index2 << " " << exp2 << endl;
       cerr << trans1 << " " << trans2 << " " << coeff2 << " "
 	   << pr_last << " " << ed_last << " " << exp2 << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 2 in qmc_threep.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
@@ -2369,7 +2153,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_threep (4): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 3 in qmc_threep.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) scr_out << line[0] << " " << line[1] << endl;
@@ -2519,7 +2303,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (4): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 1 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << ed << " " << pr << endl;
@@ -2558,7 +2342,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (5): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
@@ -2575,7 +2359,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (6): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 3 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
@@ -2592,7 +2376,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (7): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 4 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
@@ -2609,7 +2393,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (8): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 5 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
@@ -2617,7 +2401,8 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     cout << "Exiting since debug in qmc_fixp::compute_eos() is true."
 	 << endl;
-    exit(-1);
+    cout << endl;
+    exit(0);
   }
 
   return;
@@ -2756,7 +2541,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
       if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
 	cerr << "Problem in qmc_twolines (4): " << line[0] << " "
 	     << line[1] << endl;
-	exit(-1);
+	O2SCL_ERR("EOS problem 1 in qmc_twolines.",o2scl::exc_esanity);
       }
       dat.eos->line_of_data(2,line);
       if (debug) cout << ed << " " << pr << endl;
@@ -2787,7 +2572,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_twolines (5): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 2 in qmc_twolines.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
@@ -2804,14 +2589,15 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_twolines (6): " << line[0] << " "
 	   << line[1] << endl;
-      exit(-1);
+      O2SCL_ERR("EOS problem 3 in qmc_twolines.",o2scl::exc_esanity);
     }
     dat.eos->line_of_data(2,line);
     if (debug) cout << line[0] << " " << line[1] << endl;
   }
   if (debug) {
+    cout << "Stopping because debug is true in qmc_twolines." << endl;
     cout << endl;
-    exit(-1);
+    exit(0);
   }
 
   return;
