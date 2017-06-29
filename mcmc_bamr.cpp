@@ -38,7 +38,6 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   mcmc_para_cli::file_header(hf);
 
   model &m=*(bc_arr[0].mod);
-  std::shared_ptr<const ns_data> nsd=bc_arr[0].nsd;
   
   hf.sets_vec("source_names",nsd->source_names);
   hf.sets_vec("source_fnames",nsd->source_fnames);
@@ -82,21 +81,15 @@ int mcmc_bamr::mcmc_init() {
   // This ensures enough space for all the
   // default return values in models.h
   this->ret_value_counts.resize(21);
+
+  // Copy parameter values to all of the model objects
+  for(size_t i=1;i<bc_arr.size();i++) {
+    model &m2=*(bc_arr[i].mod);
+    m.copy_params(m2);
+  }
   
   mcmc_para_cli::mcmc_init();
 
-  /*
-    if (this->file_opened==false) {
-    // Open main output file
-    this->scr_out.open((this->prefix+"_"+
-    o2scl::itos(this->mpi_rank)+"_scr").c_str());
-    this->scr_out.setf(std::ios::scientific);
-    this->file_opened=true;
-    this->scr_out << "Opened main file in function 'mcmc_bamr::mcmc_init()'."
-    << std::endl;
-    }
-  */
-  
   // -----------------------------------------------------------
   // Make sure the settings are consistent
 
@@ -404,9 +397,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
-  for(size_t i=0;i<n_threads;i++) {
-    nsd->add_data(sv,itive_com);
-  }
+  nsd->add_data(sv,itive_com);
   return 0;
 }
 

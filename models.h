@@ -60,16 +60,11 @@ namespace bamr {
     
   public:
     
-    /// Random number generator
-    o2scl::rng_gsl gr;
-  
     /// The fiducial baryon density
     double nb_n1;
     
     /// The fiducial energy density
     double nb_e1;
-
-  public:
 
     /// \name Return codes for each point
     //@{
@@ -97,6 +92,8 @@ namespace bamr {
 
     /// Number of EOS parameters
     size_t n_eos_params;
+
+  protected:
     
     /** \brief TOV solver
 	
@@ -108,11 +105,38 @@ namespace bamr {
     /// TOV solver
     o2scl::tov_solve ts;
     
-    /// True if the model has an EOS
-    bool has_eos;
-
     /// Schwarzchild radius (set in constructor)
     double schwarz_km;
+
+    /// Gaussians for core-crust transition
+    o2scl::prob_dens_gaussian nt_a, nt_b, nt_c;
+    
+    /// EOS interpolation object for TOV solver
+    o2scl::eos_tov_interp teos;
+
+    /// Settings object
+    std::shared_ptr<const settings> set;
+
+    /// Mass-radius data
+    std::shared_ptr<const ns_data> nsd;
+
+    /** \brief Compute the EOS corresponding to parameters in 
+	\c e and put output in \c tab_eos
+    */
+    virtual void compute_eos(const ubvector &pars, int &success,
+			     std::ofstream &scr_out, model_data &dat) {
+      return;
+    }
+
+    /** \brief Tabulate EOS and then use in cold_nstar
+     */
+    virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
+			      int &success, model_data &dat);
+    
+  public:
+
+    /// True if the model has an EOS
+    bool has_eos;
 
     /// True if the model provides S and L
     bool has_esym;
@@ -130,41 +154,18 @@ namespace bamr {
     /// Upper limit for baryon density of core-crust transition
     double nt_high;
 
-    /// Gaussians for core-crust transition
-    o2scl::prob_dens_gaussian nt_a, nt_b, nt_c;
-    
-    /// EOS interpolation object for TOV solver
-    o2scl::eos_tov_interp teos;
-
-    /// Settings object
-    std::shared_ptr<const settings> set;
-
-    /// Mass-radius data
-    std::shared_ptr<const ns_data> nsd;
-
     model(std::shared_ptr<const settings> s,
 	  std::shared_ptr<const ns_data> n);
 
     virtual ~model() {}
 
-    /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
-    */
-    virtual void compute_eos(const ubvector &pars, int &success,
-			     std::ofstream &scr_out, model_data &dat) {
-      return;
-    }
-
+    /** \brief Desc
+     */
     virtual void compute_mr(const ubvector &pars, int &success,
 			    std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
-    /** \brief Tabulate EOS and then use in cold_nstar
-     */
-    virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			      int &success, model_data &dat);
-    
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */

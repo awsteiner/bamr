@@ -35,7 +35,7 @@ using namespace bamr;
 
 int bamr_class::fill(const ubvector &pars, double weight, 
 		     std::vector<double> &line, model_data &dat) {
-
+  
   model &m=*this->mod;
 
   size_t n_params=pars.size();
