@@ -105,7 +105,7 @@ namespace bamr {
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
-    /// Vector of \ref bamr_class objects
+    /// Vector of \ref bamr_class objects (one for each OpenMP thread)
     std::vector<bamr_class> bc_arr;
 
     /// Settings object
@@ -142,7 +142,7 @@ namespace bamr {
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
 
-    /** \brief Desc
+    /** \brief Perform the MCMC simulation
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
@@ -176,7 +176,8 @@ namespace bamr {
     
     /** \brief Set up the 'cli' object
 
-	This function just adds the four commands and the 'set' parameters
+	This function adds three commands (mcmc, model, add-data) and
+	the 'set' parameters.
     */
     virtual void setup_cli();
     

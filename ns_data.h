@@ -34,7 +34,14 @@
 
 namespace bamr {
   
-  /** \brief Desc
+  /** \brief Neutron star data object
+
+      This class is designed so that multiple OpenMP threads can use
+      the same const instance of this class (i.e. so long as they do
+      not change the member data).
+
+      \future Maybe it would be better to restructure this 
+      object rather than having many vectors of the same size.
    */
   class ns_data {
 

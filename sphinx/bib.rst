@@ -17,7 +17,7 @@ the work referred to using its DOI identifer.
    <http://dx.doi.org/10.1088/0004-637X/772/1/7>`_,
    Astrophys. J. **772** (2013) 7.
 
-.. [Guver13tm] `T. Güver and F. Özel
+.. [Guver13tm] `T. G&uuml;ver and F. {\"O}zel
    <http://dx.doi.org/10.1088/2041-8205/765/1/L1>`_,
    Astrophys. J. Lett. **765** (2013) L1.
 
@@ -29,23 +29,23 @@ the work referred to using its DOI identifer.
    <http://dx.doi.org/10.1088/0004-637X/784/2/123>`_,
    Astrophys. J. **784** (2014) 123.
 
-.. [Nattila16eo] `J. Nättilä, A. W. Steiner, J. J. E. Kajava, V. F. Suleimanov, and J. Poutanen
+.. [Nattila16eo] `J. N&auml;ttil&auml;, A. W. Steiner, J. J. E. Kajava, V. F. Suleimanov, and J. Poutanen
    <http://dx.doi.org/10.1051/0004-6361/201527416>`_,
    Astron. Astrophys. **591** (2016) A25.
 
-.. [Ozel09tm] `F. Özel, T. Güver, and D. Psaltis
+.. [Ozel09tm] `F. {\"O}zel, T. G&uuml;ver, and D. Psaltis
    <http://dx.doi.org/10.1088/0004-637X/693/2/1775>`_,
    Astrophys. J. **693** (2009) 1775.
 
-.. [Ozel10td] `T. Güver, F. Özel, A. Cabrera-Lavers, and P. Wroblewski
+.. [Ozel10td] `T. G&uuml;ver, F. {\"O}zel, A. Cabrera-Lavers, and P. Wroblewski
    <http://dx.doi.org/10.1088/0004-637X/712/2/964>`_,
    Astrophys. J. **712** (2010) 964.
 
-.. [Ozel10tm] `T. Güver, P. Wroblewski, L. Camarota, and F. Özel
+.. [Ozel10tm] `T. G&uuml;ver, P. Wroblewski, L. Camarota, and F. {\"O}zel
    <http://dx.doi.org/10.1088/0004-637X/719/2/1807>`_,
    Astrophys. J. **719** (2010) 1807.
 
-.. [Ozel12tm] `F. Özel, A. Gould, and T. Güver
+.. [Ozel12tm] `F. {\"O}zel, A. Gould, and T. G&uuml;ver
    <http://dx.doi.org/10.1088/0004-637X/748/1/5>`_,
    Astrophys. J. **748** (2012) 5.
 

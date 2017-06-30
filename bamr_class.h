@@ -65,7 +65,7 @@ namespace bamr {
     /// The Schwarzchild radius in km
     double schwarz_km;
     
-    /// Neutron star data
+    /// Pointer to neutron star data
     std::shared_ptr<const ns_data> nsd;
     
     /// Pointer to settings object

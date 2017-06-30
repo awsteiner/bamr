@@ -103,7 +103,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_mvsr_pr_inc;
     //@}
 
-    /// Desc
+    /// Verbosity parameter
     int verbose;
     
     /** \name Limits on mass and radius from source data files

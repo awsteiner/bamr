@@ -154,7 +154,7 @@ namespace bamr {
 
     virtual ~model() {}
 
-    /** \brief Desc
+    /** \brief Compute the mass-radius relation
      */
     virtual void compute_mr(const ubvector &pars, int &success,
 			    std::ofstream &scr_out, model_data &dat) {
