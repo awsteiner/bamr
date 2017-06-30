@@ -22,6 +22,12 @@
 */
 #include "ns_data.h"
 
+#include <o2scl/hdf_io.h>
+
+#ifndef BAMR_NO_MPI
+#include <mpi.h>
+#endif
+
 using namespace std;
 using namespace o2scl;
 using namespace o2scl_hdf;

@@ -34,20 +34,6 @@
 #include <mpi.h>
 #endif
 
-#include <o2scl/rng_gsl.h>
-#include <o2scl/uniform_grid.h>
-#include <o2scl/table3d.h>
-#include <o2scl/hdf_file.h>
-#include <o2scl/exception.h>
-#include <o2scl/cholesky.h>
-#include <o2scl/mcmc_para.h>
-
-#ifdef BAMR_READLINE
-#include <o2scl/cli_readline.h>
-#else
-#include <o2scl/cli.h>
-#endif
-
 #include "nstar_cold2.h"
 #include "models.h"
 

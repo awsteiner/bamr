@@ -32,14 +32,9 @@
 #include <mpi.h>
 #endif
 
-#include <o2scl/nstar_cold.h>
 #include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
-#include <o2scl/cli.h>
 #include <o2scl/prob_dens_func.h>
-#include <o2scl/table3d.h>
-#include <o2scl/hdf_io.h>
-#include <o2scl/mcmc_para.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
