@@ -114,9 +114,6 @@ namespace bamr {
     /// Data object
     std::shared_ptr<ns_data> nsd;
 
-    /// Number of OpenMP threads
-    size_t n_threads;
-    
     /// \name Main functions called from the command-line interface
     //@{
     /** \brief Set the model for the EOS to use
@@ -161,11 +158,11 @@ namespace bamr {
      */
     mcmc_bamr(size_t n_omp_threads=1) {
       model_type="";
-      n_threads=n_omp_threads;
-      bc_arr.resize(n_threads);
+      this->n_threads=n_omp_threads;
+      bc_arr.resize(this->n_threads);
       set=std::shared_ptr<settings>(new settings);
       nsd=std::shared_ptr<ns_data>(new ns_data);
-      for(size_t i=0;i<n_threads;i++) {
+      for(size_t i=0;i<this->n_threads;i++) {
 	bc_arr[i].set=set;
 	bc_arr[i].nsd=nsd;
       }

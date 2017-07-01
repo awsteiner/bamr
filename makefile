@@ -35,7 +35,8 @@ COMPILER_FLAGS = -std=c++0x -O3
 # Secondary variables
 # ----------------------------------------------------------------------
 
-ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_MPI_LOAD
+ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
+	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
 
@@ -123,7 +124,8 @@ process: process.o process_main.o
 # ----------------------------------------------------------------------
 
 test:
-	mpirun -np 2 bamr -run default.in -model twop -mcmc
+	mpirun -np 2 bamr -set max_iters 300 -set prefix test \
+		-set verbose 1 -model twop -mcmc > test.scr 2> test.err &
 
 test_all:
 	-mkdir -p data_temp
