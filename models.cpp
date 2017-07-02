@@ -683,7 +683,12 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 			 double &log_weight, model_data &dat) {
 
   if (set->verbose>=2) {
+#ifdef O2SCL_OPENMP
+    cout << "(thread " << omp_get_thread_num()
+	 << ") Start model::compute_point()." << endl;
+#else
     cout << "Start model::compute_point()." << endl;
+#endif
   }
 
   // Compute the M vs R curve and return if it failed
@@ -951,6 +956,9 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   // the low-density EOS and the first polytrope
   double ed_last=dat.eos->max("ed");
   if (ed_last<ed1) {
+    scr_out << "params: ";
+    vector_out(scr_out,params,true);
+    scr_out << ed_last << " " << ed1 << endl;
     scr_out << "Gap between low-density EOS and polytrope " << endl;
     O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }

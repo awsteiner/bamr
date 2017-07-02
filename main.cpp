@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Main bamr object
-  bamr::mcmc_bamr b(2);
+  bamr::mcmc_bamr b(1);
 
   // Set starting time
 #ifdef O2SCL_MPI

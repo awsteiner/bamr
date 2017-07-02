@@ -73,11 +73,12 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 int mcmc_bamr::mcmc_init() {
 
   if (this->verbose>=2) {
-    std::cout << "Start mcmc_bamr::mcmc_init()." << std::endl;
+    std::cout << "(rank " << this->mpi_rank
+	      << ") Start mcmc_bamr::mcmc_init()." << std::endl;
   }
   
   model &m=*(bc_arr[0].mod);
-
+  
   // This ensures enough space for all the
   // default return values in models.h
   this->ret_value_counts.resize(21);
@@ -254,9 +255,14 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
   // Make grids
 
-  m.nb_grid=uniform_grid_end<double>(set->nb_low,set->nb_high,set->grid_size-1);
-  m.e_grid=uniform_grid_end<double>(set->e_low,set->e_high,set->grid_size-1);
-  m.m_grid=uniform_grid_end<double>(set->m_low,set->m_high,set->grid_size-1);
+  for(size_t i=0;i<n_threads;i++) {
+    bc_arr[i].mod->nb_grid=uniform_grid_end<double>
+      (set->nb_low,set->nb_high,set->grid_size-1);
+    bc_arr[i].mod->e_grid=uniform_grid_end<double>
+      (set->e_low,set->e_high,set->grid_size-1);
+    bc_arr[i].mod->m_grid=uniform_grid_end<double>
+      (set->m_low,set->m_high,set->grid_size-1);
+  }
 
   // -----------------------------------------------------------
   // Load data
@@ -273,7 +279,8 @@ int mcmc_bamr::mcmc_init() {
   }
 
   if (this->verbose>=2) {
-    std::cout << "End mcmc_bamr::mcmc_init()." << std::endl;
+    std::cout << "(rank " << this->mpi_rank
+	      << ") End mcmc_bamr::mcmc_init()." << std::endl;
   }
 
   return 0;

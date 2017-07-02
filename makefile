@@ -125,7 +125,7 @@ process: process.o process_main.o
 
 test:
 	mpirun -np 2 bamr -set max_iters 300 -set prefix test \
-		-set verbose 1 -model twop -mcmc > test.scr 2> test.err &
+		-set verbose 2 -model twop -mcmc > test.scr 2> test.err &
 
 test_all:
 	-mkdir -p data_temp
