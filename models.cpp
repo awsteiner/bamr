@@ -105,6 +105,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       cout << "Back from model::compute_eos()." << endl;
     }
 
+    if (true) {
+      // DEBUG
+      ret=0;
+      return;
+    }
+
     // Ensure we're using linear interpolation
     dat.eos->set_interp_type(o2scl::itp_linear);
 
@@ -696,13 +702,6 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 #endif
   }
 
-  if (true) {
-    if (set->verbose>=2) {
-      cout << "End model::compute_point()." << endl;
-    }
-    return 0;
-  }
-
   // Compute the M vs R curve and return if it failed
   int iret;
   compute_star(pars,scr_out,iret,dat);
@@ -711,6 +710,14 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     return iret;
   }
   
+  if (true) {
+    // DEBUG
+    if (set->verbose>=2) {
+      cout << "End model::compute_point()." << endl;
+    }
+    return 0;
+  }
+
   for(size_t i=0;i<nsd->n_sources;i++) {
     if (dat.mass[i]<set->in_m_min || dat.mass[i]>set->in_m_max || 
 	dat.rad[i]<set->in_r_min || dat.rad[i]>set->in_r_max) {
@@ -941,6 +948,10 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   cns.set_eos_table(dat.eos);
   cns.calc_eos();
   dat.eos->set_interp_type(itp_linear);
+
+  // DEBUG
+  ret=0;
+  return;
 
   dat.eos->add_constant("S",params[2]);
   dat.eos->add_constant("L",se.fesym_slope(0.16));
