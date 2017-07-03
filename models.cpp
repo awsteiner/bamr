@@ -463,6 +463,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     double m_max=0.0;
     ts.princ=set->mvsr_pr_inc;
+
+    // Clear old M-R table (new for MCMC para)
+    dat.mvsr->clear();
+
     ts.set_table(dat.mvsr);
     if (set->addl_quants) {
       ts.ang_vel=true;
@@ -472,7 +476,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.calc_gpot=false;
     }
     if (set->verbose>=2) {
-      std::cout << "Going to TOV." << std::endl;
+      std::cout << "Going to TOV " << &ts << " " << &(*(dat.mvsr))
+		<< " " << omp_get_thread_num() << std::endl;
     }
     int info=ts.mvsr();
     if (set->verbose>=2) {
@@ -689,6 +694,13 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 #else
     cout << "Start model::compute_point()." << endl;
 #endif
+  }
+
+  if (true) {
+    if (set->verbose>=2) {
+      cout << "End model::compute_point()." << endl;
+    }
+    return 0;
   }
 
   // Compute the M vs R curve and return if it failed
@@ -916,7 +928,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
     return;
   }
   
-  // Set hadronic EOS from ubvector information
+  // Set low-density EOS parameters
   se.comp=params[0];
   se.kprime=params[1];
   se.b=params[2]-se.a;
@@ -960,6 +972,11 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
     vector_out(scr_out,params,true);
     scr_out << ed_last << " " << ed1 << endl;
     scr_out << "Gap between low-density EOS and polytrope " << endl;
+    for(size_t j=0;j<dat.eos->get_nlines();j++) {
+      scr_out << j << " " << dat.eos->get("nb",j) << " ";
+      scr_out << dat.eos->get("ed",j) << " ";
+      scr_out << dat.eos->get("pr",j) << std::endl;
+    }
     O2SCL_ERR("Gap between low-density EOS and polytrope.",exc_efailed);
   }
 

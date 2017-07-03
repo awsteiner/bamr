@@ -303,47 +303,47 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   }
   if (sv[1]==((string)"twop")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new two_polytropes(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"altp")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new alt_polytropes(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"fixp")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new fixed_pressure(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"qstar")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new quark_star(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new quark_star(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"genq")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new generic_quarks(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"qmc")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new qmc_neut(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_threep")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new qmc_threep(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_fixp")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new qmc_fixp(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_twolines")) {
     for(size_t i=0;i<n_threads;i++) {
-      std::shared_ptr<model> mnew(new qmc_twolines(set,bc_arr[i].nsd));
+      std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
       bc_arr[i].mod=mnew;
     }
   } else {
