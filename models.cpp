@@ -86,7 +86,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   if (set->verbose>=2) {
-    cout << "Start model::compute_star()." << endl;
+#pragma omp critical (debug1)
+    {
+      cout << omp_get_thread_num()
+	   << "Start model::compute_star()." << endl;
+    }
   }
   
   ret=ix_success;
@@ -97,14 +101,22 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute the EOS
   
     if (set->verbose>=2) {
-      cout << "Going to model::compute_eos()." << endl;
+#pragma omp critical (debug2)
+      {
+	cout << omp_get_thread_num()
+	     << " Going to model::compute_eos()." << endl;
+      }
     }
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     if (set->verbose>=2) {
-      cout << "Back from model::compute_eos()." << endl;
+#pragma omp critical (debug3)
+      {
+	cout << omp_get_thread_num()
+	     << "Back from model::compute_eos()." << endl;
+      }
     }
-
+    
     if (true) {
       // DEBUG
       ret=0;
@@ -695,8 +707,11 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
   if (set->verbose>=2) {
 #ifdef O2SCL_OPENMP
-    cout << "(thread " << omp_get_thread_num()
-	 << ") Start model::compute_point()." << endl;
+#pragma omp critical (debug5)
+    {
+      cout << "(thread " << omp_get_thread_num()
+	   << ") Start model::compute_point()." << endl;
+    }
 #else
     cout << "Start model::compute_point()." << endl;
 #endif
@@ -712,8 +727,12 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   
   if (true) {
     // DEBUG
-    if (set->verbose>=2) {
-      cout << "End model::compute_point()." << endl;
+#pragma omp critical (debug4)
+    {
+      if (set->verbose>=2) {
+	cout << omp_get_thread_num()
+	     << " End model::compute_point()." << endl;
+      }
     }
     return 0;
   }
@@ -1696,7 +1715,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
   mu_0=x[0];
   //grb.solve_bkt(mu_1,mu_0,fmf);
     
-  dat.eos->clear_table();
+  dat.eos->clear();
   dat.eos->new_column("ed");
   dat.eos->new_column("pr");
   dat.eos->new_column("nb");
@@ -1862,7 +1881,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   
   // Hack to start with a fresh table
-  dat.eos->clear_table();
+  dat.eos->clear();
   dat.eos->line_of_names("ed pr");
   dat.eos->set_interp_type(itp_linear);
 
@@ -2044,7 +2063,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   
   // Hack to start with a fresh table
-  dat.eos->clear_table();
+  dat.eos->clear();
   dat.eos->line_of_names("ed pr");
   dat.eos->set_interp_type(itp_linear);
   //dat.eos->set_unit("ed","1/fm^4");
@@ -2285,7 +2304,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   bool debug=false;
   
   // Hack to start with a fresh table
-  dat.eos->clear_table();
+  dat.eos->clear();
   dat.eos->line_of_names("ed pr");
   dat.eos->set_interp_type(itp_linear);
 
@@ -2513,7 +2532,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   bool debug=false;
   
   // Hack to start with a fresh table
-  dat.eos->clear_table();
+  dat.eos->clear();
   dat.eos->line_of_names("ed pr");
   dat.eos->set_interp_type(itp_linear);
 

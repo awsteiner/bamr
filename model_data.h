@@ -70,12 +70,8 @@ namespace bamr {
     /** \brief Copy constructor
      */
     model_data(const model_data &md) {
-      std::shared_ptr<o2scl::table_units<> >
-	mvsr_new(new o2scl::table_units<>);
-      mvsr=mvsr_new;
-      std::shared_ptr<o2scl::table_units<> >
-	eos_new(new o2scl::table_units<>);
-      eos=eos_new;
+      mvsr=std::shared_ptr<o2scl::table_units<> >(new o2scl::table_units<>);
+      eos=std::shared_ptr<o2scl::table_units<> >(new o2scl::table_units<>);
     }
 
 #ifdef O2SCL_NEVER_DEFINED
