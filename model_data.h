@@ -58,20 +58,20 @@ namespace bamr {
     ubvector wgts;
 
     /// M vs. R data
-    std::shared_ptr<o2scl::table_units<> > mvsr;
+    o2scl::table_units<> mvsr;
 
     /// EOS data
-    std::shared_ptr<o2scl::table_units<> > eos;
+    o2scl::table_units<> eos;
     
-  model_data() : mvsr(new o2scl::table_units<>),
-      eos(new o2scl::table_units<>) {
+    model_data() {
     }
     
     /** \brief Copy constructor
      */
     model_data(const model_data &md) {
-      mvsr=std::shared_ptr<o2scl::table_units<> >(new o2scl::table_units<>);
-      eos=std::shared_ptr<o2scl::table_units<> >(new o2scl::table_units<>);
+      rad=md.rad;
+      mass=md.mass;
+      wgts=md.wgts;
     }
 
 #ifdef O2SCL_NEVER_DEFINED

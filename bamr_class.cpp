@@ -52,20 +52,20 @@ int bamr_class::fill(const ubvector &pars, double weight,
   if (m.has_eos) {
 
     // The central energy density in the maximum mass configuration
-    emax=dat.mvsr->max("ed");
+    emax=dat.mvsr.max("ed");
     // The central pressure in the maximum mass configuration
-    pmax=dat.mvsr->max("pr");
+    pmax=dat.mvsr.max("pr");
     // The maximum mass
-    mmax=dat.mvsr->get_constant("m_max");
+    mmax=dat.mvsr.get_constant("m_max");
     // The radius of the maximum mass star
-    rmax=dat.mvsr->get_constant("r_max");
+    rmax=dat.mvsr.get_constant("r_max");
 
     if (set->baryon_density) {
 
       // The highest baryon density in the EOS table
-      nbmax2=dat.eos->max("nb");
+      nbmax2=dat.eos.max("nb");
       // The central baryon density in the maximum mass configuration
-      nbmax=dat.mvsr->get_constant("nb_max");
+      nbmax=dat.mvsr.get_constant("nb_max");
       
     }
 
@@ -90,9 +90,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
       double eval=m.e_grid[i];
       // Make sure the energy density from the grid
       // isn't beyond the table limit
-      double emax2=dat.eos->max("ed");
+      double emax2=dat.eos.max("ed");
       if (eval<emax2) {
-	double pres_temp=dat.eos->interp("ed",eval,"pr");
+	double pres_temp=dat.eos.interp("ed",eval,"pr");
 	//if (pres_temp<pmax) {
 	line.push_back(pres_temp);
 	//} else {
@@ -111,9 +111,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
   for(int i=0;i<set->grid_size;i++) {
     double mval=m.m_grid[i];
     if (mval<mmax) {
-      line.push_back(dat.mvsr->interp("gm",mval,"r"));
+      line.push_back(dat.mvsr.interp("gm",mval,"r"));
       if (m.has_eos) {
-	line.push_back(dat.mvsr->interp("gm",mval,"pr"));
+	line.push_back(dat.mvsr.interp("gm",mval,"pr"));
       }
     } else {
       line.push_back(0.0);
@@ -127,13 +127,13 @@ int bamr_class::fill(const ubvector &pars, double weight,
       for(int i=0;i<set->grid_size;i++) {
 	double nbval=m.nb_grid[i];
 	if (nbval<nbmax2) {
-	  double pres_temp=dat.eos->interp("nb",nbval,"pr");
+	  double pres_temp=dat.eos.interp("nb",nbval,"pr");
 	  if (pres_temp<pmax) {
 	    line.push_back(pres_temp);
 	  } else {
 	    line.push_back(0.0);
 	  }
-	  double eval2=dat.eos->interp("nb",nbval,"ed");
+	  double eval2=dat.eos.interp("nb",nbval,"ed");
 	  double eoa_val2=eval2/nbval-939.0/o2scl_const::hc_mev_fm;
 	  line.push_back(eoa_val2);
 	} else {
@@ -143,8 +143,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
     if (m.has_esym) {
-      line.push_back(dat.eos->get_constant("S"));
-      line.push_back(dat.eos->get_constant("L"));
+      line.push_back(dat.eos.get_constant("S"));
+      line.push_back(dat.eos.get_constant("L"));
     }
     line.push_back(rmax);
     line.push_back(mmax);
@@ -152,13 +152,13 @@ int bamr_class::fill(const ubvector &pars, double weight,
     line.push_back(emax);
     if (set->baryon_density) line.push_back(nbmax);
     for(size_t i=0;i<nsd->n_sources;i++) {
-      double val=dat.mvsr->interp
+      double val=dat.mvsr.interp
 	("gm",pars[n_params-nsd->n_sources+i],"ed");
       line.push_back(val);
     }
     if (set->baryon_density) {
       for(size_t i=0;i<nsd->n_sources;i++) {
-	double val2=dat.mvsr->interp
+	double val2=dat.mvsr.interp
 	  ("gm",pars[n_params-nsd->n_sources+i],"nb");
 	line.push_back(val2);
       }
@@ -166,39 +166,39 @@ int bamr_class::fill(const ubvector &pars, double weight,
   }
   
   if (set->baryon_density) {
-    line.push_back(dat.mvsr->get_constant("gm_nb1"));
-    line.push_back(dat.mvsr->get_constant("r_nb1"));
-    line.push_back(dat.mvsr->get_constant("gm_nb2"));
-    line.push_back(dat.mvsr->get_constant("r_nb2"));
-    line.push_back(dat.mvsr->get_constant("gm_nb3"));
-    line.push_back(dat.mvsr->get_constant("r_nb3"));
-    line.push_back(dat.mvsr->get_constant("gm_nb4"));
-    line.push_back(dat.mvsr->get_constant("r_nb4"));
-    line.push_back(dat.mvsr->get_constant("gm_nb5"));
-    line.push_back(dat.mvsr->get_constant("r_nb5"));
+    line.push_back(dat.mvsr.get_constant("gm_nb1"));
+    line.push_back(dat.mvsr.get_constant("r_nb1"));
+    line.push_back(dat.mvsr.get_constant("gm_nb2"));
+    line.push_back(dat.mvsr.get_constant("r_nb2"));
+    line.push_back(dat.mvsr.get_constant("gm_nb3"));
+    line.push_back(dat.mvsr.get_constant("r_nb3"));
+    line.push_back(dat.mvsr.get_constant("gm_nb4"));
+    line.push_back(dat.mvsr.get_constant("r_nb4"));
+    line.push_back(dat.mvsr.get_constant("gm_nb5"));
+    line.push_back(dat.mvsr.get_constant("r_nb5"));
   }
   if (set->compute_cthick) {
-    line.push_back(dat.eos->get_constant("nt"));
-    line.push_back(dat.eos->get_constant("prt"));
+    line.push_back(dat.eos.get_constant("nt"));
+    line.push_back(dat.eos.get_constant("prt"));
     for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
-	double rval=dat.mvsr->interp("gm",mval,"r");
-	line.push_back(rval-dat.mvsr->interp("gm",mval,"r0"));
+	double rval=dat.mvsr.interp("gm",mval,"r");
+	line.push_back(rval-dat.mvsr.interp("gm",mval,"r0"));
       } else {
 	line.push_back(0.0);
       }
     }
   }
   if (set->addl_quants) {
-    double mmax=dat.mvsr->get_constant("m_max");
+    double mmax=dat.mvsr.get_constant("m_max");
     for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
       if (mval<mmax) {
-	double bm=dat.mvsr->interp("gm",mval,"bm");
-	double rad=dat.mvsr->interp("gm",mval,"r");
+	double bm=dat.mvsr.interp("gm",mval,"bm");
+	double rad=dat.mvsr.interp("gm",mval,"r");
 	// rjw is km^4, so dividing by km/Msun gives Msun*km^2
-	double I=dat.mvsr->interp("gm",mval,"rjw")/3.0/schwarz_km;
+	double I=dat.mvsr.interp("gm",mval,"rjw")/3.0/schwarz_km;
 	line.push_back(bm);
 	line.push_back((bm-mval)/mval);
 	// Make unitless by dividing by G^2

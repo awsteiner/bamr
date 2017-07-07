@@ -45,12 +45,6 @@ int nstar_cold2::calc_eos(double np_0) {
     return exc_efailed;
   }
 
-#pragma omp critical (debug6)
-  {
-    cout << "(thread " << omp_get_thread_num()
-	 << ") table " << eost << endl;
-  }
-
   eost->clear();
 
   eost->line_of_names("ed pr nb");
@@ -58,12 +52,6 @@ int nstar_cold2::calc_eos(double np_0) {
   eost->set_unit("pr","1/fm^4");
   eost->set_unit("nb","1/fm^3");
   
-#pragma omp critical (debug6)
-  {
-    cout << "(thread " << omp_get_thread_num()
-	 << ") table " << eost << " cols " << eost->get_ncolumns() << endl;
-  }
-
   double x;
   // Initial guess for proton number density
   if (fabs(np_0)<1.0e-12) x=nb_start/3.0;
