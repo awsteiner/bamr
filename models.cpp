@@ -85,14 +85,6 @@ model::model(std::shared_ptr<const settings> s,
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &ret, model_data &dat) {
 
-  if (set->verbose>=2) {
-#pragma omp critical (debug1)
-    {
-      cout << omp_get_thread_num()
-	   << "Start model::compute_star()." << endl;
-    }
-  }
-  
   ret=ix_success;
 
   if (has_eos) {
@@ -100,22 +92,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Compute the EOS
   
-    if (set->verbose>=2) {
-#pragma omp critical (debug2)
-      {
-	cout << omp_get_thread_num()
-	     << " Going to model::compute_eos()." << endl;
-      }
-    }
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
-    if (set->verbose>=2) {
-#pragma omp critical (debug3)
-      {
-	cout << omp_get_thread_num()
-	     << "Back from model::compute_eos()." << endl;
-      }
-    }
     
     // Ensure we're using linear interpolation
     dat.eos.set_interp_type(o2scl::itp_linear);
@@ -376,23 +354,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.eos.set_unit("ed","1/fm^4");
       dat.eos.set_unit("pr","1/fm^4");
       dat.eos.set_unit("nb","1/fm^3");
-      if (set->verbose>=2) {
-	std::cout << "Going to read_table() (with nb)." << std::endl;
-      }
       teos.read_table(teos_temp,"ed","pr","nb");
-      if (set->verbose>=2) {
-	std::cout << "Done in read_table() (with nb)." << std::endl;
-      }
     } else {
       dat.eos.set_unit("ed","1/fm^4");
       dat.eos.set_unit("pr","1/fm^4");
-      if (set->verbose>=2) {
-	std::cout << "Going to read_table() (without nb)." << std::endl;
-      }
       teos.read_table(teos_temp,"ed","pr");
-      if (set->verbose>=2) {
-	std::cout << "Done in read_table() (without nb)." << std::endl;
-      }
     }
 
     // ---------------------------------------------------------------
@@ -484,10 +450,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     } else {
       ts.ang_vel=false;
       ts.calc_gpot=false;
-    }
-    if (set->verbose>=2) {
-      std::cout << "Going to TOV " << &ts << " " << &(dat.mvsr)
-		<< " " << omp_get_thread_num() << std::endl;
     }
     int info=ts.mvsr();
     
@@ -698,18 +660,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
 int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			 double &log_weight, model_data &dat) {
-
-  if (set->verbose>=2) {
-#ifdef O2SCL_OPENMP
-#pragma omp critical (debug5)
-    {
-      cout << "(thread " << omp_get_thread_num()
-	   << ") Start model::compute_point()." << endl;
-    }
-#else
-    cout << "Start model::compute_point()." << endl;
-#endif
-  }
 
   // Compute the M vs R curve and return if it failed
   int iret;

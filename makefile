@@ -128,8 +128,8 @@ test:
 		-set verbose 2 -model twop -mcmc > test.scr 2> test.err &
 
 testb:
-	mpirun -np 1 bamr -set max_iters 300 -set prefix test \
-		-set verbose 2 -model twop -mcmc
+	mpirun -np 2 bamr -set max_iters 300 -set prefix test \
+		-set verbose 1 -model twop -mcmc
 
 test_all:
 	-mkdir -p data_temp
