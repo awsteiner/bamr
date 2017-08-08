@@ -91,7 +91,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // ---------------------------------------------------------------
     // Compute the EOS
-  
+
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
@@ -1055,6 +1055,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
+  dat.eos=*(cns.get_eos_results());
   dat.eos.set_interp_type(itp_linear);
 
   dat.eos.add_constant("S",params[2]);
@@ -1217,6 +1218,7 @@ void fixed_pressure::compute_eos(const ubvector &params, int &ret,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
+  dat.eos=*(cns.get_eos_results());
   dat.eos.set_interp_type(itp_linear);
 
   dat.eos.add_constant("S",params[2]);
@@ -1363,6 +1365,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &ret,
   cns.nb_end=0.6;
   cns.set_eos(se);
   cns.calc_eos();
+  dat.eos=*(cns.get_eos_results());
   dat.eos.set_interp_type(itp_linear);
 
   dat.eos.add_constant("S",params[2]);
