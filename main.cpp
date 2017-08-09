@@ -44,8 +44,10 @@ int main(int argc, char *argv[]) {
   MPI_Init(&argc,&argv);
 #endif
 
+  cout << "threads: " << BAMR_OMP_THREADS << endl;
+  
   // Main bamr object
-  bamr::mcmc_bamr b(2);
+  bamr::mcmc_bamr b(BAMR_OMP_THREADS);
 
   // Set starting time
 #ifdef O2SCL_MPI

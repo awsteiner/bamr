@@ -36,9 +36,11 @@ COMPILER_FLAGS = -std=c++0x -O3
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp
+	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
+	-DBAMR_OMP_THREADS=2
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI \
+	-DBAMR_OMP_THREADS=2
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)

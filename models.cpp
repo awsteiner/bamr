@@ -284,14 +284,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	
 	double prt=dat.eos.interp("nb",nt,"pr");
 	dat.eos.add_constant("prt",prt);
-	
+
 	// Add the transition pressure to the tov_solve object
 	
 	if (ts.pr_list.size()>0) {
 	  ts.pr_list.clear();
 	}
 	ts.pr_list.push_back(prt);
-	
+
 	// Set the crust and it's transition pressure
       
 	if (dat.eos.get_constant("S")*hc_mev_fm<28.0 || 
@@ -306,9 +306,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	}
       
 	// This function expects its argument in MeV
-	teos.ngl13_low_dens_eos2
-	  (dat.eos.get_constant("S")*hc_mev_fm,
-	   dat.eos.get_constant("L")*hc_mev_fm,nt,"");
+#ifdef O2SCL_OPENMP
+#pragma omp critical (bamr_ngl13_eos)
+#endif
+	{
+	  teos.ngl13_low_dens_eos2
+	    (dat.eos.get_constant("S")*hc_mev_fm,
+	     dat.eos.get_constant("L")*hc_mev_fm,nt,"");
+	}
       
 	// Set the transition pressure and width. Note that
 	// the ngl13 EOS is in units of Msun/km^3, so we 
