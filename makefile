@@ -5,16 +5,15 @@
 
 # This variable should include the directories for the O2scl, GSL, and
 # HDF5 libraries. In my configuration, I use the environment variables
-# O2SCL_LIB, HDF5_LIB, and GSL_LIB, but you can just replace this
+# O2SCL_LIB, but you can just replace this
 # entire line with whatever you need.
-LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB) -L$(GSL_LIB)
+LIB_DIRS = -L$(O2SCL_LIB) 
 
-# This variable should include the parent directories for the GSL,
-# boost, HDF5, and O2scl header files. If O2scl was installed with
-# Eigen or armadillo support, those header directories may need to be
-# here also.
-INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC) -I$(BOOST_INC) -I$(GSL_INC) \
-	-I$(EIGEN_INC) -I$(ARMA_INC)
+# This variable may need to be modified to specify the include
+# directories for the GSL, boost, HDF5, and O2scl header files. If
+# O2scl was installed with Eigen or armadillo support, those header
+# directories may need to be here also.
+INC_DIRS = -I$(O2SCL_INC) 
 
 # C++ compiler
 # MPI_CXX = mpic++ 
@@ -28,7 +27,7 @@ READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
 
 READLINE_LIBS = -lreadline -lncurses
 
-# Basic optimization flags
+# Basic compiler flags
 COMPILER_FLAGS = -std=c++0x -O3
 
 # ----------------------------------------------------------------------
