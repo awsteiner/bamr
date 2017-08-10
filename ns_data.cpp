@@ -117,18 +117,13 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       }
 
       o2scl_hdf::hdf_file hf;
-      cout << "Going to hf.open(): " << source_fnames[file] << endl;
       hf.open(source_fnames[file]);
       if (table_names[file].length()>0) {
-	cout << "Going to hdf_input()1: " << source_fnames[file] << " "
-	     << table_names[file] << endl;
 	hdf_input(hf,source_tables[file],table_names[file]);
       } else {
-	cout << "Going to hdf_input()2: " << source_fnames[file] << endl;
 	hdf_input(hf,source_tables[file]);
       }
       hf.close();
-      cout << "After hf.close()." << endl;
       
       // Send a message, unless the rank is the last one to read a
       // file.
@@ -149,7 +144,6 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     for(size_t k=0;k<n_sources;k++) {
       
       hdf_file hf;
-      cout << "Going to hf.open2()." << endl;
       hf.open(source_fnames[k]);
       if (table_names[k].length()>0) {
 	hdf_input(hf,source_tables[k],table_names[k]);
@@ -157,7 +151,6 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 	hdf_input(hf,source_tables[k]);
       }
       hf.close();
-      cout << "After hf.close2()." << endl;
     }
     
 #endif

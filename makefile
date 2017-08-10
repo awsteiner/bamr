@@ -138,10 +138,6 @@ test_prep: empty
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 
-test1b: empty
-	bamr_nompi -set prefix data_temp/debug_eos \
-		-set debug_eos 1 -run default.in -model twop -mcmc 
-
 test1: empty
 	bamr -set prefix data_temp/debug_eos \
 		-set debug_eos 1 -run default.in -model twop -mcmc \

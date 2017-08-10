@@ -901,9 +901,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   // Compute low-density eos
   cns.nb_end=0.6;
   cns.set_eos(se);
-  cout << "H1." << endl;
   cns.calc_eos();
-  cout << "H2." << endl;
   dat.eos=*(cns.get_eos_results());
   dat.eos.set_interp_type(itp_linear);
 
