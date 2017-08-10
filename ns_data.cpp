@@ -117,21 +117,18 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       }
 
       o2scl_hdf::hdf_file hf;
-#ifdef O2SCL_OPENMP
-#pragma omp critical (bamr_nsdata_load)
-#endif
-      {
-	cout << "Going to hf.open(): " << source_fnames[file] << endl;
-	hf.open(source_fnames[file]);
-	cout << "Going to hdf_input(): " << source_fnames[file] << endl;
-	if (table_names[file].length()>0) {
-	  hdf_input(hf,source_tables[file],table_names[file]);
-	} else {
-	  hdf_input(hf,source_tables[file]);
-	}
-	hf.close();
-	cout << "After hf.close()." << endl;
+      cout << "Going to hf.open(): " << source_fnames[file] << endl;
+      hf.open(source_fnames[file]);
+      if (table_names[file].length()>0) {
+	cout << "Going to hdf_input()1: " << source_fnames[file] << " "
+	     << table_names[file] << endl;
+	hdf_input(hf,source_tables[file],table_names[file]);
+      } else {
+	cout << "Going to hdf_input()2: " << source_fnames[file] << endl;
+	hdf_input(hf,source_tables[file]);
       }
+      hf.close();
+      cout << "After hf.close()." << endl;
       
       // Send a message, unless the rank is the last one to read a
       // file.

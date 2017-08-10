@@ -37,10 +37,10 @@ COMPILER_FLAGS = -std=c++0x -O3
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
-	-DBAMR_OMP_THREADS=2
+	-DBAMR_OMP_THREADS=1
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI \
-	-DBAMR_OMP_THREADS=2
+	-DBAMR_OMP_THREADS=1
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
@@ -88,11 +88,13 @@ help:
 # Targets for bamr_nompi
 # ----------------------------------------------------------------------
 
-bamr_nompi: bamr_nompi.o models_nompi.o \
-		nstar_cold2_nompi.o main_nompi.o
-	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi main_nompi.o \
-		nstar_cold2_nompi.o models_nompi.o \
-		bamr_nompi.o $(LIB) 
+bamr_nompi: bamr_class_nompi.o models_nompi.o \
+		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
+		ns_data_nompi.o 
+	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
+		bamr_class_nompi.o models_nompi.o \
+		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
+		ns_data_nompi.o $(LIB) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
@@ -103,9 +105,14 @@ nstar_cold2_nompi.o: nstar_cold2.cpp nstar_cold2.h
 models_nompi.o: models.cpp models.h
 	$(CXX) $(ALL_FLAGS) -o models_nompi.o -c models.cpp
 
-bamr_nompi.o: bamr.cpp bamr.h models_nompi.o
-		nstar_cold2_nompi.o main_nompi.o
-	$(CXX) $(ALL_FLAGS) -o bamr_nompi.o -c bamr.cpp
+ns_data_nompi.o: ns_data.cpp ns_data.h
+	$(CXX) $(ALL_FLAGS) -o ns_data_nompi.o -c ns_data.cpp
+
+mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
+	$(CXX) $(ALL_FLAGS) -o mcmc_bamr_nompi.o -c mcmc_bamr.cpp
+
+bamr_class_nompi.o: bamr_class.cpp bamr_class.h
+	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
 
 # ----------------------------------------------------------------------
 # Targets for process
@@ -131,6 +138,10 @@ test_all: test_prep test1 test2 test3 test4 test5 test6 test7 test8 \
 test_prep: empty
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
+
+test1b: empty
+	bamr_nompi -set prefix data_temp/debug_eos \
+		-set debug_eos 1 -run default.in -model twop -mcmc 
 
 test1: empty
 	bamr -set prefix data_temp/debug_eos \
