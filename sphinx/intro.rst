@@ -13,7 +13,9 @@ documentation was generated from git commit
 
 This code was originally supported by Chandra grant
 `TM1-12003X
-<http://cxc.harvard.edu/target_lists/cycle12/theory12.html#12400566>`_.
+<http://cxc.harvard.edu/target_lists/cycle12/theory12.html#12400566>`_
+and is now supported by NSF grant `PHY 15-54876
+<http://www.nsf.gov/awardsearch/showAward?AWD_ID=1554876>`_.
 
 Currently, bamr is hosted as a `git repository
 <http://www.github.com/awsteiner/bamr>`_ . It is also listed at the
@@ -31,8 +33,7 @@ you can let me know if and how this code is useful to you.
 Nevertheless, you are not required to contact me and I will be
 improving documentation and updating this code as time permits.
 
-.. note:: The bamr source code is undergoing some major 
-	  upgrades which have not yet been documented. 
+.. todo:: Update documentation   
 
 
    

@@ -110,9 +110,10 @@ of baryon density (in columns with prefix ``EoA_``).
 Some Details
 ------------
 
-The basic functionality is provided in the class \ref
-bamr::bamr_class and \ref bamr::model . All of the "models" (EOS
-parameterizations) are children of \ref bamr::model .
+The basic functionality is provided in the class
+:cpp:class:`bamr::bamr_class` and :cpp:class:`bamr::model` . All of
+the "models" (EOS parameterizations) are children of
+:cpp::class:`bamr::model` .
 
 If the initial guess has no probability, then the code will fail.
 The easiest fix is just to change the initial guess.
@@ -123,54 +124,55 @@ each, named \c markov_chain0, \c markov_chain1, and so on. The
 total number of tables is stored in the HD5 output in the
 integer ``n_chains``.
 
-Different models have different optimal MC step sizes. The step
-size for each parameter is chosen to be the difference betwen the
-high and low limiting values divided by the value \c
-o2scl::mcmc_base::step_fac (which can be changed from the command
-line using "-set step_fac <value>". Increasing or decreasing this
-value may give better results.
+Different models have different optimal MC step sizes. The step size
+for each parameter is chosen to be the difference betwen the high and
+low limiting values divided by the value
+``o2scl::mcmc_para_base::step_fac`` (which can be changed from the
+command line using ``-set step_fac <value>``. Increasing or decreasing
+this value may give better results.
 
-The EOS results are stored in a table in \ref
-bamr::model_data::eos and the TOV results are stored in \ref
-bamr::model_data::mvsr .
+The EOS results are stored in a table in
+:cpp:member:`bamr::model_data::eos` and the TOV results are stored in
+:cpp:member:`bamr::model_data::mvsr` .
 
 Crust Model
 -----------
     
-The crust is computed in \ref o2scl::eos_tov_interp using the
-crust EOS from \ref o2scl::eos_tov_interp::default_low_dens_eos()
-. In \o2, by default, the transition pressure in this function is
-assumed to be the largest pressure in the crust which for the
-default crust EOS is the pressure corresponding to a baryon
-density of 0.08 $ \mathrm{fm}^{-3} $. In order to ensure that
-the transition is more smooth and that the core EOS (specified by
-the user) is used for all pressures above a baryon density of 0.08
-$ \mathrm{fm}^{-3} $, the default \o2 procedure is modified.
-The transition pressure is decreased by 20 percent and a pressure
-width of 20 percent is supplied to
-o2scl::eos_tov_interp::set_transition() .
+The crust is computed in ``o2scl::eos_tov_interp`` using the crust EOS
+from ``o2scl::eos_tov_interp::default_low_dens_eos()`` . In
+O2scl, by default, the transition pressure in this function
+is assumed to be the largest pressure in the crust which for the
+default crust EOS is the pressure corresponding to a baryon density of
+0.08 :math:`\mathrm{fm}^{-3}`. In order to ensure that the transition is
+more smooth and that the core EOS (specified by the user) is used for
+all pressures above a baryon density of 0.08 :math:`\mathrm{fm}^{-3}`, the
+default \o2 procedure is modified. The transition pressure is
+decreased by 20 percent and a pressure width of 20 percent is supplied
+to ``o2scl::eos_tov_interp::set_transition()`` .
     
-Model ``qstar`` from \ref bamr::quark_star is typically run
+Model ``qstar`` from :cpp:class:`bamr::quark_star` is typically run
 with ``use_crust`` set to false.
 
 EOS Model
 ---------
 
 Several EOS models are provided. New models (i.e. new
-children of the \ref bamr::model class) must perform several tasks
-- The function \ref bamr::model::compute_eos() should use the
-parameters to compute the EOS
+children of the :cpp:class:`bamr::model` class) must perform several tasks
+
+- The function :cpp:func:`bamr::model::compute_eos()` should use the
+  parameters to compute the EOS
 - The energy density should be stored in a column named
-``ed`` and the pressure in ``pr`` with the correct units
-set for each column (currently only ``1/fm^4`` is supported).
+  ``ed`` and the pressure in ``pr`` with the correct units
+  set for each column (currently only ``1/fm^4`` is supported).
 - If the model provides the symmetry energy and its density
-derivative, it should be stored as constants named ``"S"``
-and ``"L"`` in the table (in $ 1/\mathrm{fm} $ ).
-- Causality is automatically checked in bamr::compute_star(), but
-the \ref bamr::model::compute_eos() function should check that the
-pressure is not decreasing.
+  derivative, it should be stored as constants named ``"S"``
+  and ``"L"`` in the table (in :math:`1/\mathrm{fm}` ).
+- Causality is automatically checked in
+  :cpp:func:`bamr::bamr_class::compute_star()`, but the
+  :cpp:func:`bamr::model::compute_eos()` function should check that the
+  pressure is not decreasing.
 - Finally, it is recommended to set the interpolation type in the
-\ref o2scl::table_units object to linear interpolation.
+  ``o2scl::table_units`` object to linear interpolation.
 
 Post-processing Code
 --------------------
@@ -190,7 +192,7 @@ xscale 197.33`` ensures that the new table converts from
 :math:`\mathrm{fm}^{-1}` to :math:`\mathrm{MeV}`. The five columns are
 ``reps``, ``avgs``, ``errs``, ``plus`` and ``minus``, which give:
 
-- The central bin values for $ L $ (in $ \mathrm{MeV} $)
+- The central bin values for :math:`L` (in :math:`\mathrm{MeV}`)
 - The probability of the specified value
 - The uncertainty in the probabiliy of the specified value
 - Column 2 plus column 3
@@ -199,7 +201,10 @@ xscale 197.33`` ensures that the new table converts from
 Recent Change Log
 -----------------
 
-April 2015: Added process.cpp and created new functions \ref
+Summer 2017: Completely reworked for OpenMP/MPI with new O2scl
+class ``mcmc_para_base`` .
+
+April 2015: Added ``process.cpp`` and created new functions \ref
 bamr::model::setup_params and \ref bamr::model::remove_params() .
 Added several new models.
 
