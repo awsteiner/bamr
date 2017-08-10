@@ -108,10 +108,14 @@ namespace bamr {
     /// Vector of \ref bamr_class objects (one for each OpenMP thread)
     std::vector<bamr_class> bc_arr;
 
-    /// Settings object
+    /** \brief The \ref bamr::settings object 
+	(shared by instances of \ref bamr_class)
+    */
     std::shared_ptr<settings> set;
 
-    /// Data object
+    /** \brief The \ref bamr::ns_data object
+	(shared by instances of \ref bamr_class)
+    */
     std::shared_ptr<ns_data> nsd;
 
     /// \name Main functions called from the command-line interface
@@ -130,15 +134,13 @@ namespace bamr {
 	This is called by \ref mcmc(). If the return value is non-zero
 	then it is assumed that the calculation fails and mcmc()
 	returns.
-
-	This function does nothing and returns zero by default.
     */
     virtual int mcmc_init();
 
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
-
+    
     /** \brief Perform the MCMC simulation
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
@@ -152,10 +154,10 @@ namespace bamr {
 #else
     o2scl::cli cl;
 #endif
-
+    
     /** \brief Create a \ref mcmc_bamr object with the specified
 	number of OpenMP threads (default 1)
-     */
+    */
     mcmc_bamr(size_t n_omp_threads=1) {
       model_type="";
       this->n_threads=n_omp_threads;
