@@ -56,6 +56,9 @@ namespace bamr {
     /// Input probability distributions
     std::vector<o2scl::table3d> source_tables;
 
+    /// Alternate input probability distributions
+    std::vector<o2scl::table3d> source_tables_alt;
+
     /// The names for each source
     std::vector<std::string> source_names;
 
@@ -64,6 +67,9 @@ namespace bamr {
 
     /// File names for each source
     std::vector<std::string> source_fnames;
+
+    /// Alternate file names for each source
+    std::vector<std::string> source_fnames_alt;
 
     /// Slice names for each source
     std::vector<std::string> slice_names;
@@ -78,6 +84,10 @@ namespace bamr {
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Add a data distribution to the list
+     */
+    virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
 
     /** \brief Load input probability distributions
      */

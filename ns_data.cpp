@@ -34,28 +34,6 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
-
-  if (sv.size()<5) {
-    std::cerr << "Not enough arguments given to 'add-data'." << std::endl;
-    return o2scl::exc_efailed;
-  }
-      
-  source_names.push_back(sv[1]);
-  source_fnames.push_back(sv[2]);
-  slice_names.push_back(sv[3]);
-  init_mass_fracs.push_back(o2scl::stod(sv[4]));
-  if (sv.size()==6) {
-    table_names.push_back(sv[5]);
-  } else {
-    table_names.push_back("");
-  }
-      
-  n_sources++;
-
-  return 0;
-}
-    
 void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 		      std::shared_ptr<settings> set) {
       
@@ -75,6 +53,9 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     }
     
     source_tables.resize(n_sources);
+    if (source_fnames_alt.size()>0) {
+      source_tables_alt.resize(n_sources);
+    }
     
 #ifdef BAMR_MPI_LOAD
 
@@ -123,7 +104,20 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       } else {
 	hdf_input(hf,source_tables[file]);
       }
+      source_tables[file].set_interp_type(o2scl::itp_linear);
       hf.close();
+      
+      if (source_fnames_alt.size()>0) {
+	o2scl_hdf::hdf_file hf2;
+	hf2.open(source_fnames_alt[file]);
+	if (table_names[file].length()>0) {
+	  hdf_input(hf2,source_tables_alt[file],table_names[file]);
+	} else {
+	  hdf_input(hf2,source_tables_alt[file]);
+	}
+	source_tables_alt[file].set_interp_type(o2scl::itp_linear);
+	hf2.close();
+      }
       
       // Send a message, unless the rank is the last one to read a
       // file.
@@ -221,6 +215,32 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 	}
       }
 
+      if (source_fnames_alt.size()>0) {
+	tot=0.0;
+	max=0.0;
+	for(size_t i=0;i<source_tables_alt[k].get_nx();i++) {
+	  for(size_t j=0;j<source_tables_alt[k].get_ny();j++) {
+	    tot+=source_tables_alt[k].get(i,j,slice_names[k]);
+	    if (source_tables_alt[k].get(i,j,slice_names[k])>max) {
+	      max=source_tables_alt[k].get(i,j,slice_names[k]);
+	    }
+	  }
+	}
+	for(size_t i=0;i<source_tables_alt[k].get_nx();i++) {
+	  for(size_t j=0;j<source_tables_alt[k].get_ny();j++) {
+	    if (set->norm_max) {
+	      source_tables_alt[k].set
+		(i,j,slice_names[k],source_tables_alt[k].get
+		 (i,j,slice_names[k])/max);
+	    } else {
+	      source_tables_alt[k].set
+		(i,j,slice_names[k],source_tables_alt[k].get
+		 (i,j,slice_names[k])/tot);
+	    }
+	  }
+	}
+      }	    
+
       if (set->debug_load) {
 	std::cout << source_fnames[k] << std::endl;
 	for(size_t i=0;i<source_tables[k].get_nx();i++) {
@@ -249,6 +269,17 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       scr_out.unsetf(std::ios::left);
       scr_out << source_tables[k].interp(10.0,1.4,slice_names[k])
 	      << std::endl;
+      if (source_fnames_alt.size()>0) {
+	scr_out.setf(std::ios::left);
+	scr_out.width(29);
+	std::string stempx=source_fnames_alt[k].substr(0,29);
+	scr_out << stempx << " ";
+	scr_out.width(6);
+	scr_out << source_names[k] << " " << tot << " " << max << " ";
+	scr_out.unsetf(std::ios::left);
+	scr_out << source_tables_alt[k].interp(10.0,1.4,slice_names[k])
+		<< std::endl;
+      }
       
     }
     
@@ -269,3 +300,51 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
   return;
 }
   
+int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
+
+  if (sv.size()<5) {
+    std::cerr << "Not enough arguments given to 'add-data'." << std::endl;
+    return o2scl::exc_efailed;
+  }
+      
+  source_names.push_back(sv[1]);
+  source_fnames.push_back(sv[2]);
+  slice_names.push_back(sv[3]);
+  init_mass_fracs.push_back(o2scl::stod(sv[4]));
+  if (sv.size()==6) {
+    table_names.push_back(sv[5]);
+  } else {
+    table_names.push_back("");
+  }
+      
+  n_sources++;
+
+  return 0;
+}
+    
+int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
+      
+  if (sv.size()<6) {
+    std::cerr << "Not enough arguments given to 'add-data-alt'." << std::endl;
+    return o2scl::exc_efailed;
+  }
+
+  if (source_fnames.size()!=source_fnames_alt.size()) {
+    std::cerr << "When using 'add-data-alt' all objects must have an "
+	      << "alternate data set." << std::endl;
+    return o2scl::exc_efailed;
+  }
+      
+  source_names.push_back(sv[1]);
+  source_fnames.push_back(sv[2]);
+  source_fnames_alt.push_back(sv[3]);
+  slice_names.push_back(sv[4]);
+  init_mass_fracs.push_back(o2scl::stod(sv[5]));
+  table_names.push_back(sv[6]);
+
+  n_sources++;
+
+  return 0;
+}
+
+

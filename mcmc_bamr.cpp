@@ -251,6 +251,11 @@ int mcmc_bamr::mcmc_init() {
       //this->table->new_column(((string)"lambda_")+o2scl::itos(i));
     }
   }
+  if (nsd->source_fnames_alt.size()>0) {
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      this->table->new_column(((std::string)"alt_")+o2scl::szttos(i));
+    }
+  }
 
   // -----------------------------------------------------------
   // Make grids
