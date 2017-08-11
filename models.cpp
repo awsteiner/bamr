@@ -434,7 +434,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfde,full_eos,"full_eos");
 
       hfde.close();
-      if (!set->debug_eos) {
+
+      // Exit only if debug_star is not also true
+      if (!set->debug_star) {
 	scr_out << "Automatically exiting since 'debug_eos' is true."
 		<< std::endl;
 	exit(0);
@@ -1998,17 +2000,15 @@ void qmc_threep::initial_point(ubvector &params) {
   params[7]=2.5;
   params[8]=1.0;
 
-  /*
-    params[0]=13.229;
-    params[1]=0.4894965;
-    params[2]=36.07877;
-    params[3]=66.21089;
-    params[4]=0.202468;
-    params[5]=1.008677;
-    params[6]=1.941257;
-    params[7]=4.906005;
-    params[8]=7.687587;
-  */
+  params[0]=13.229;
+  params[1]=0.4894965;
+  params[2]=36.07877;
+  params[3]=66.21089;
+  params[4]=0.202468;
+  params[5]=1.008677;
+  params[6]=1.941257;
+  params[7]=4.906005;
+  params[8]=7.687587;
 
   model::initial_point(params);
   return;
