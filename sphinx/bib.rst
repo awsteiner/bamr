@@ -5,6 +5,10 @@ Some of the references which contain links should direct you to
 the work referred to using its DOI identifer.
 
 
+.. [Alford05hs] `M. Alford, M. Braby, M. Paris, and S. Reddy
+   <http://dx.doi.org/10.1086/430902>`_,
+   Astrophys. J. **629** (2005) 969.
+
 .. [Bedaque15sv] `P. Bedaque and A. W. Steiner
    <http://dx.doi.org/10.1103/PhysRevLett.114.031103>`_,
    Phys. Rev. Lett. **114** (2015) 031103.
@@ -12,6 +16,10 @@ the work referred to using its DOI identifer.
 .. [Fryer15tf] `C. L. Fryer, K. Belczynski, E. Ramirez-Ruiz, S. Rosswog, G. Shen, and A. W. Steiner
    <http://dx.doi.org/10.1088/0004-637X/812/1/24>`_,
    Astrophys. J. **812** (2015) 1.
+
+.. [Gandolfi12mm] `S. Gandolfi, J. Carlson, and S. Reddy
+   <http://dx.doi.org/10.1103/PhysRevC.85.032801>`_,
+   Phys. Rev. C **85** (2012) 032801.
 
 .. [Guillot13mo] `S. Guillot, M. Servillat, N. A. Webb, and R. E. Rutledge
    <http://dx.doi.org/10.1088/0004-637X/772/1/7>`_,

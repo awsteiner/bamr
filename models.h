@@ -210,7 +210,7 @@ namespace bamr {
     
   };
 
-  /** \brief Two polytropes (8 parameters) from Steiner10te
+  /** \brief Two polytropes (8 parameters) from <tt>Steiner10te</tt>
 
       \verbatim embed:rst
       Based on the model from [Steiner10te]_. The original limits on
@@ -219,23 +219,24 @@ namespace bamr {
       (where it was the "Base" model) and in [Lattimer14co]_ .
       \endverbatim
 
-      The EOS from \ref o2scl::eos_had_schematic is used for the EOS
-      near the saturation density. The first parameter is \ref
-      o2scl::eos_had_base::comp (<tt>comp</tt>), the second is \ref
-      o2scl::eos_had_base::kprime (<tt>kprime</tt>), the third is used
-      to fix the sum (<tt>esym</tt>) of \ref
-      o2scl::eos_had_schematic::a and \ref
-      o2scl::eos_had_schematic::b, and the fourth parameter is \ref
-      o2scl::eos_had_schematic::gamma (<tt>gamma</tt>). The value of
-      \ref o2scl::eos_had_schematic::a defaults to \f$
-      17.0~\mathrm{MeV}/(\hbar c) \f$, and can be changed by setting
-      the parameter named <tt>kin_sym</tt> at run time. This EOS is
-      used up to the transition energy density specified by the fifth
-      parameter (<tt>trans1</tt>). The first polytrope is used with an
-      index specified by the sixth parameter (<tt>index1</tt>), up to
-      an energy density specified by the seventh parameter
-      (<tt>trans2</tt>). Finally, the second polytrope is used with an
-      index specified by the eighth parameter (<tt>index2</tt>). 
+      The EOS from <tt>o2scl::eos_had_schematic</tt> is used for the
+      EOS near the saturation density. The first parameter is
+      <tt>o2scl::eos_had_base::comp</tt> (<tt>comp</tt>), the second
+      is <tt>o2scl::eos_had_base::kprime</tt> (<tt>kprime</tt>), the
+      third is used to fix the sum (<tt>esym</tt>) of
+      <tt>o2scl::eos_had_schematic::a</tt> and 
+      <tt>o2scl::eos_had_schematic::b</tt>, and the fourth parameter
+      is <tt>o2scl::eos_had_schematic::gamma</tt>
+      (<tt>gamma</tt>). The value of <tt>o2scl::eos_had_schematic::a</tt>
+      defaults to \f$ 17.0~\mathrm{MeV}/(\hbar c) \f$, and can be
+      changed by setting the parameter named <tt>kin_sym</tt> at run
+      time. This EOS is used up to the transition energy density
+      specified by the fifth parameter (<tt>trans1</tt>). The first
+      polytrope is used with an index specified by the sixth parameter
+      (<tt>index1</tt>), up to an energy density specified by the
+      seventh parameter (<tt>trans2</tt>). Finally, the second
+      polytrope is used with an index specified by the eighth
+      parameter (<tt>index2</tt>).
 
       For a polytrope \f$ P = K \varepsilon^{1+1/n} \f$
       beginning at a pressure of \f$ P_1 \f$, an energy
@@ -319,16 +320,19 @@ namespace bamr {
 
   };
 
-  /** \brief Alternate polytropes from \ref Steiner13tn (8 parameters) 
+  /** \brief Alternate polytropes from <tt>Steiner13tn</tt> (8 parameters) 
 
-      Referred to as Model B in \ref Steiner13tn. 
-
-      This model is just as in \ref two_polytropes, but in terms of
+      \verbatim embed:rst
+      This class is referred to as Model B in [Steiner13tn]_.
+      This model is just as in :cpp:class:`bamr::two_polytropes`, 
+      but in terms of
       the exponents instead of the polytropic indices. The lower limit
-      on 'exp1' is 1.5, as in \ref Steiner13tn, but softer EOSs could
+      on ``exp1`` is 1.5, as in [Steiner13tn]_, but softer EOSs could
       be allowed by setting this to zero. This would not change the
-      the final results in \ref Steiner13tn, because the lowest
-      pressure EOSs came from \ref bamr::fixed_pressure anyway.
+      the final results in [Steiner13tn]_, because the lowest
+      pressure EOSs came from :cpp:class:`bamr::fixed_pressure` anyway.
+      \endverbatim
+
 
       For a polytrope \f$ P = K \varepsilon^{\Gamma} \f$
       beginning at a pressure of \f$ P_1 \f$, an energy
@@ -372,14 +376,16 @@ namespace bamr {
   /** \brief Fix pressure on a grid of energy densities 
       from \ref Steiner13tn (8 parameters)
     
-      This model is referred to as Model C in \ref Steiner13tn and was
-      also used in \ref Lattimer14ns (where it was the model labeled
+      \verbatim embed:rst
+      This class is referred to as Model C in [Steiner13tn]_ and
+      was also used in [Lattimer14ns]_ (where it was the model labeled
       "Exo").
+      \endverbatim
 
       This model is computed as in \ref two_polytropes, but instead of
       using polytropes at high densities, pressures are linearly
       interpolated on a fixed grid of energy densities. The schematic
-      EOS (\ref o2scl::eos_had_schematic) is used up to an energy
+      EOS (<tt>o2scl::eos_had_schematic</tt>) is used up to an energy
       density of \f$ 1~\mathrm{fm^{-4}} \f$. The last four parameters
       are pressures named <tt>pres1</tt> through <tt>pres4</tt>. Then
       the line segments are defined by the points
@@ -434,23 +440,27 @@ namespace bamr {
 
   };
 
-  /** \brief Generic quark model from \ref Steiner13tn (9 parameters)
+  /** \brief Generic quark model from <tt>Steiner13tn</tt> (9 parameters)
 
-      Referred to as Model D in \ref Steiner13tn. 
+      \verbatim embed:rst
+      This class is referred to as Model D in [Steiner13tn]_.
+      \endverbatim
 
-      This model uses \ref o2scl::eos_had_schematic near saturation,
+      This model uses <tt>o2scl::eos_had_schematic</tt> near saturation,
       a polytrope (with a uniform prior in the exponent like
       \ref alt_polytropes) and then a generic quark matter EOS
       at high densities. 
 
-      Alford et al. 2005 parameterizes quark matter with
+      \verbatim embed:rst
+      [Alford05hs]_ parameterizes quark matter with
+      \endverbatim
       \f[
       P = \frac{3 b_4}{4 \pi^2} \mu^4 - \frac{3 b_2}{4 \pi^2} \mu^2 -B 
       \f]
       where \f$ \mu \f$ is the quark chemical potential. QCD corrections 
       can be parameterized by expressing \f$ b_4 \equiv 1-c \f$ , 
       and values of \f$ c \f$ up to 0.4 (or maybe even larger) are
-      reasonable (see discussion after Eq. 4 in Alford et al. (2005)).
+      reasonable (see discussion after Eq. 4).
       Note that, in charge-neutral matter in beta equilibrium, 
       \f$ \sum_{i=u,d,s,e} n_i \mu_i = \mu_B n_B = \mu n_Q \f$.
       where \f$ \mu_B \f$ and \f$ n_B \f$ are the baryon chemical
@@ -527,9 +537,11 @@ namespace bamr {
 
   };
 
-  /** \brief A strange quark star model from \ref Steiner13tn (4 parameters)
+  /** \brief A strange quark star model from ``Steiner13tn`` (4 parameters)
 
-      Referred to as Model E in \ref Steiner13tn. 
+      \verbatim embed:rst
+      This class is referred to as Model E in [Steiner13tn]_.
+      \endverbatim
   */
   class quark_star : public model {
   
@@ -596,11 +608,15 @@ namespace bamr {
   };
 
   /** \brief Use QMC computations of neutron matter from
-      \ref Steiner12cn (7 parameters)
-	
-      \ref Steiner12cn used a parameterization for neutron matter
+      ``Steiner12cn`` (7 parameters)
+
+      \verbatim embed:rst
+      [Steiner12cn]_ used a parameterization for neutron matter
       which is designed to fit results from quantum Monte Carlo (QMC)
-      simulations in \ref Gandolfi12mm . The parameterization is
+      simulations in [Gandolfi12mm]_ . 
+      \endverbatim
+
+      The parameterization is	
       \f[
       E_{\mathrm{neut}} = a \left( \frac{n_B}{n_0} \right)^{\alpha}
       + b \left( \frac{n_B}{n_0} \right)^{\beta}
@@ -619,12 +635,16 @@ namespace bamr {
       \ref bamr::two_polytropes. The transition between neutron matter
       and the first polytrope is at a baryon density specified in \ref
       rho_trans. The remaining 3 parameters are <tt>index1</tt>,
-      <tt>trans1</tt>, and <tt>index2</tt>. In \ref Steiner12cn, the
+      <tt>trans1</tt>, and <tt>index2</tt>. 
+
+      \verbatim embed:rst
+      In [Steiner12cn]_ the
       polytrope indices are between 0.2 and 2.0. The upper limit on
       polytropic indices has since been changed from 2.0 to 4.0. The
       transition between the first and second polytrope at the energy
-      density in <tt>trans1</tt> which is between 2.0 and 8.0 \f$
-      \mathrm{fm}^{-4} \f$. 
+      density in ``trans1`` which is between 2.0 and 8.0 
+      :math:`\mathrm{fm}^{-4}`.
+      \endverbatim
 
       \comment
       Note that since the QMC model provides an EOS for neutron
@@ -687,14 +707,16 @@ namespace bamr {
   /** \brief QMC + three polytropes created for \ref Steiner15un
       (9 parameters)
 
-      This model was also used in \ref Fryer15tf, \ref Nattila15eo,
-      and \ref Steiner16ns .
-      
-      For neutron-rich matter near the saturation density, this class
-      uses the QMC parameterization from \ref Steiner12cn as in \ref
-      qmc_neut. The parameter ranges for for \f$ a \f$ and \f$ \alpha
-      \f$ are expanded and \f$ b \f$ and \f$ \beta \f$ are recast in
-      terms of \f$ S \f$ and \f$ L \f$.
+      \verbatim embed:rst
+      This model was also used in [Fryer15tf]_, [Nattila16eo]_, and
+      [Steiner16ns]_ . For neutron-rich matter near the saturation
+      density, this class uses the QMC parameterization from 
+      [Steiner12cn]_ as in :cpp:class:`bamr::qmc_neut`. The parameter
+      ranges for for :math:`a` and :math:`\alpha` are expanded and
+      :math:`b` and :math:`\beta` are recast in terms of :math:`S` and
+      :math:`L`.
+      \endverbatim
+
       \f{eqnarray*}
       a &=& 12.5~\mathrm{to}~13.5~\mathrm{MeV} \nonumber \\
       \alpha &=& 0.47~\mathrm{to}~0.53 \nonumber \\
@@ -768,11 +790,13 @@ namespace bamr {
   
   };
 
-  /** \brief QMC + line segments model created for \ref Steiner15un
+  /** \brief QMC + line segments model created for ``Steiner15un``
       (8 parameters)
 
-      This model was also used in \ref Fryer15tf, \ref Nattila15eo,
-      and \ref Steiner16ns .
+      \verbatim embed:rst
+      This model was also used in [Fryer15tf]_, [Nattila16eo]_,
+      and [Steiner16ns]_ .
+      \endverbatim
 
       This EOS model is similar to \ref bamr::qmc_threep, except that
       the high-density EOS is a set of line-segments, similar to \ref

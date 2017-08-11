@@ -29,11 +29,11 @@ The basic usage is something like::
 
   ./bamr -model twop -run default.in -mcmc
   
-to perform a one day run with model \c twop with the input
-file in \c default.in. 
+to perform a one day run with model ``twop`` with the input
+file in ``default.in``. 
 
 There are several variables which can be modified with the
-\c set command, e.g.::
+``set`` command, e.g.::
 
   ./bamr -model twop -set max_time 43200 -run default.in -mcmc
 
@@ -56,7 +56,7 @@ Data Files
 ----------
 
 The input data files are HDF5 files (typically named with a
-``.o2`` extension) which contain one \ref o2scl::table3d
+``.o2`` extension) which contain one ``o2scl::table3d``
 object giving the probability density of one neutron star
 observation as a slice in that table. The command
 ``add-data``, which adds a neutron star data set, takes four 
@@ -70,18 +70,17 @@ arguments (and a fifth optional argument):
 - The fifth, optional, argument is the name of the \ref
   ``o2scl::table3d`` object in the data file
 
-It is assumed that the "x" grid in the data file refers to the
-radius and the "y" grid refers to the mass. The data need not
-be normalized. By default \c bm renormalizes the data so that
-the maximum probability is 1. If the parameter ``norm_max``
-is set to false, then the data is renormalized to have a total
-integral of 1.
+It is assumed that the "x" grid in the data file refers to the radius
+and the "y" grid refers to the mass. The data need not be normalized.
+By default ``bamr`` renormalizes the data so that the maximum
+probability is 1. If the parameter ``norm_max`` is set to false, then
+the data is renormalized to have a total integral of 1.
 
 Output Files
 ------------
 
 Output is stored in HDF files with a prefix given by the
-argument to the \c mcmc command, one set of files
+argument to the ``mcmc`` command, one set of files
 for each processor. Output includes files with the 
 following suffixes (where X is the processor index):
 
@@ -113,14 +112,14 @@ Some Details
 The basic functionality is provided in the class
 :cpp:class:`bamr::bamr_class` and :cpp:class:`bamr::model` . All of
 the "models" (EOS parameterizations) are children of
-:cpp::class:`bamr::model` .
+:cpp:class:`bamr::model` .
 
 If the initial guess has no probability, then the code will fail.
 The easiest fix is just to change the initial guess.
 
 In order to make the output more efficient, the table representing
 the full Markov chain is divided up into tables with 10,000 rows
-each, named \c markov_chain0, \c markov_chain1, and so on. The
+each, named ``markov_chain0``, ``markov_chain1``, and so on. The
 total number of tables is stored in the HD5 output in the
 integer ``n_chains``.
 
@@ -135,6 +134,36 @@ The EOS results are stored in a table in
 :cpp:member:`bamr::model_data::eos` and the TOV results are stored in
 :cpp:member:`bamr::model_data::mvsr` .
 
+Object Creation
+---------------
+
+The ``main()`` function creates a :cpp:class:`bamr::mcmc_bamr`
+instance, setting the number of OpenMP threads as an argument to the
+constructor. The ``mcmc_bamr`` constructor creates a
+:cpp:class:`bamr::bamr_class` instance for each OpenMP thread, stored
+in :cpp:member:`bamr::mcmc_bamr::bc_arr` Then, the ``mcmc_bamr``
+constructor creates an instance of the :cpp:class:`bamr::settings` and
+:cpp:class:`bamr::ns_data` classes for the shared pointer objects
+:cpp:member:`bamr::mcmc_bamr::set` and
+:cpp:member:`bamr::mcmc_bamr::nsd` respectively. These two objects are
+shared between all of the :cpp:class:`bamr::bamr_class` instances The
+``main()`` function then calls
+:cpp:func:`bamr::mcmc_bamr::setup_cli()` and then calls the
+``o2scl::cli::run_auto()`` function for the object
+:cpp:member:`bamr::mcmc_bamr::cl` at which point the execution
+proceeds according to the command-line options specified by the user.
+
+Typically the user first specifies the model with ``-model``, at which
+point :cpp:func:`bamr::mcmc_bamr::set_model()` creates one
+descendant of :cpp:class:`bamr::model` and placed in
+:cpp:member:`bamr::bamr_class::mod`. Then the user begins the Monte
+Carlo with ``-mcmc`` which calls
+:cpp:func:`bamr::mcmc_bamr::mcmc_func()` which in turn calls
+``o2scl::mcmc_para_table::mcmc()``. Internally, this latter function
+creates several (two times the number of OpenMP threads times the
+number of Monte Carlo walkers) copies of :cpp:class:`bamr::model_data`
+for use by the Monte Carlo.
+     
 Crust Model
 -----------
     
@@ -168,7 +197,7 @@ children of the :cpp:class:`bamr::model` class) must perform several tasks
   derivative, it should be stored as constants named ``"S"``
   and ``"L"`` in the table (in :math:`1/\mathrm{fm}` ).
 - Causality is automatically checked in
-  :cpp:func:`bamr::bamr_class::compute_star()`, but the
+  :cpp:func:`bamr::model::compute_star()`, but the
   :cpp:func:`bamr::model::compute_eos()` function should check that the
   pressure is not decreasing.
 - Finally, it is recommended to set the interpolation type in the
@@ -177,7 +206,7 @@ children of the :cpp:class:`bamr::model` class) must perform several tasks
 Post-processing Code
 --------------------
 
-The ``process`` program contains some code to analyze the \c bamr
+The ``process`` program contains some code to analyze the ``bamr``
 output files. Principally, it attempts to remove autocorrelations
 from the data by separating the data into blocks, and using the
 fluctuations in the mean of each block to determine the
@@ -185,18 +214,18 @@ uncertainty in the mean. For example::
 
   ./process -set xscale 197.33 -hist L out.o2 bamr_0_out 
 
-creates a new file called \c out.o2 with an object of type \ref
-o2scl::table which represents a probability distribution for $ L $
-from the \c bamr output file named \c bamr_0_out . The option ``-set
+creates a new file called ``out.o2`` with an object of type 
+``o2scl::table`` which represents a probability distribution for $ L $
+from the ``bamr`` output file named ``bamr_0_out``. The option ``-set
 xscale 197.33`` ensures that the new table converts from
 :math:`\mathrm{fm}^{-1}` to :math:`\mathrm{MeV}`. The five columns are
 ``reps``, ``avgs``, ``errs``, ``plus`` and ``minus``, which give:
 
-- The central bin values for :math:`L` (in :math:`\mathrm{MeV}`)
-- The probability of the specified value
-- The uncertainty in the probabiliy of the specified value
-- Column 2 plus column 3
-- Column 2 minus column 3
+- 1. The central bin values for :math:`L` (in :math:`\mathrm{MeV}`)
+- 2. The probability of the specified value
+- 3. The uncertainty in the probabiliy of the specified value
+- 4. Column 2 plus column 3
+- 5. Column 2 minus column 3
 
 Recent Change Log
 -----------------

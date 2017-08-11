@@ -30,13 +30,16 @@ READLINE_LIBS = -lreadline -lncurses
 # Basic compiler flags
 COMPILER_FLAGS = -std=c++0x -O3
 
+# Specify number of OpenMP threads
+THREAD_VAR = -DBAMR_OMP_THREADS=2
+
 # ----------------------------------------------------------------------
 # Secondary variables
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
-	-DBAMR_OMP_THREADS=2
+	$(THREAD_VAR)
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI \
 	-DBAMR_OMP_THREADS=1
@@ -128,7 +131,7 @@ process: process.o process_main.o
 		process.o $(LIB) 
 
 # ----------------------------------------------------------------------
-# test
+# Testing targets
 # ----------------------------------------------------------------------
 
 test_all: test_prep test1 test2 test3 test4 test5 test6 test7 test8 \
@@ -213,10 +216,8 @@ test14: empty
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
 
 # ----------------------------------------------------------------------
-# Internal 
+# Documentation
 # ----------------------------------------------------------------------
-
-empty: 
 
 update-tags:
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
@@ -236,6 +237,12 @@ doc: empty
 	cd doc; doxygen doxyfile
 	cd sphinx; make html
 	cp -r sphinx/build/html/* $(HOME)/wcs/int4/web/utk/bamr
+
+# ----------------------------------------------------------------------
+# Misc
+# ----------------------------------------------------------------------
+
+empty: 
 
 clean:
 	rm -f *.o bamr bamr_nompi process
