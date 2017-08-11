@@ -134,6 +134,25 @@ process: process.o process_main.o
 # Testing targets
 # ----------------------------------------------------------------------
 
+ecsn1:
+	bamr -set prefix ecsn1 -set addl_quants 1 \
+		-set inc_baryon_mass 1 -set crust_from_L 1 \
+		-set debug_eos 1 -model qmc_threep -mcmc 
+
+ecsn2:
+	bamr -set prefix ecsn2 -set addl_quants 1 \
+		-set inc_baryon_mass 1 -set crust_from_L 1 \
+		-set debug_star 1 -model qmc_threep -mcmc
+	acol -read debug_star.o2 -interp gm 1.223 bm \
+		-interp gm 1.237 bm \
+		-interp gm 1.250 bm 
+
+ecsn3:
+	bamr -set prefix ecsn3 -set addl_quants 1 \
+		-set inc_baryon_mass 1 -set crust_from_L 1 \
+		-set max_iters 10 -model qmc_threep -mcmc
+	acol -read ecsn3_0_out -get-row 0
+
 test_all: test_prep test1 test2 test3 test4 test5 test6 test7 test8 \
 		test9 test10 test11 test12 test13 test14
 

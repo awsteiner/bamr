@@ -434,7 +434,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfde,full_eos,"full_eos");
 
       hfde.close();
-      if (!set->debug_star) {
+      if (!set->debug_eos) {
 	scr_out << "Automatically exiting since 'debug_eos' is true."
 		<< std::endl;
 	exit(0);
@@ -726,26 +726,34 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
+      
+      // Compute alternate probability from an insignificant bit
+      // in the mass 
       double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
-      if (alt<2.0) {
+      
+      if (alt<2.0/3.0) {
 	dat.wgts[i]=nsd->source_tables[i].interp
 	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
       } else {
 	dat.wgts[i]=nsd->source_tables_alt[i].interp
 	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
       }
+      
+      // If the weight is lower than the threshold, set it equal
+      // to the threshold
+      if (dat.wgts[i]<set->input_dist_thresh) {
+	dat.wgts[i]=set->input_dist_thresh;
+      }
+      
     }
-	
-    // If the weight is lower than the threshold, set it equal
-    // to the threshold
-    if (dat.wgts[i]<set->input_dist_thresh) {
-      dat.wgts[i]=set->input_dist_thresh;
-    }
-    // Include the weight for this source
+
+    // If the weight is zero, then return failure
     if (dat.wgts[i]<=0.0) {
       scr_out << "Weight zero for source " << nsd->source_names[i] << endl;
       return ix_mr_outside;
     }
+
+    // Include the weight for this source
     log_weight+=log(dat.wgts[i]);
 	
     if (set->debug_star) {
@@ -1989,6 +1997,18 @@ void qmc_threep::initial_point(ubvector &params) {
   params[6]=0.5;
   params[7]=2.5;
   params[8]=1.0;
+
+  /*
+    params[0]=13.229;
+    params[1]=0.4894965;
+    params[2]=36.07877;
+    params[3]=66.21089;
+    params[4]=0.202468;
+    params[5]=1.008677;
+    params[6]=1.941257;
+    params[7]=4.906005;
+    params[8]=7.687587;
+  */
 
   model::initial_point(params);
   return;

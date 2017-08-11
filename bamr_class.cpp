@@ -231,6 +231,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
   }
   if (nsd->source_fnames_alt.size()>0) {
     for(size_t i=0;i<nsd->n_sources;i++) {
+      // Compute alternate probability from an insignificant bit
+      // in the mass 
       double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
       if (alt<2.0/3.0) {
 	line.push_back(0.0);

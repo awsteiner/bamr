@@ -422,7 +422,7 @@ void mcmc_bamr::setup_cli() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=3;
+  static const int nopt=4;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      0,0,"",((std::string)"This is the main part of ")+
@@ -447,6 +447,17 @@ void mcmc_bamr::setup_cli() {
      "If [obj name] is not specified, then the first table3d object "+
      "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data),
      cli::comm_option_both},
+    {0,"add-data-alt","Add data source to the list.",
+     5,6,"<name> <file> <alt file> <slice> <initial mass> [obj name]",
+     ((string)"Specify data as a table3d object in two HDF5 files. ")+
+     "The string <name> is the name used, <file> and <alt file> are "+
+     "the filenames, "+
+     "<slice> is the name of the slice in the table3d object, "+
+     "<initial mass> is the initial mass for the first point, and "+
+     "[obj name] is the optional name of table3d object in <file>. "+
+     "If [obj name] is not specified, then the first table3d object "+
+     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data),
+     cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
 
