@@ -158,17 +158,7 @@ namespace bamr {
     /** \brief Create a \ref mcmc_bamr object with the specified
 	number of OpenMP threads (default 1)
     */
-    mcmc_bamr(size_t n_omp_threads=1) {
-      model_type="";
-      this->n_threads=n_omp_threads;
-      bc_arr.resize(this->n_threads);
-      set=std::shared_ptr<settings>(new settings);
-      nsd=std::shared_ptr<ns_data>(new ns_data);
-      for(size_t i=0;i<this->n_threads;i++) {
-	bc_arr[i].set=set;
-	bc_arr[i].nsd=nsd;
-      }
-    }
+    mcmc_bamr(size_t n_omp_threads=1);
     
     virtual ~mcmc_bamr() {
     }

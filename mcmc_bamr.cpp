@@ -33,6 +33,18 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
+mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
+  model_type="";
+  this->n_threads=n_omp_threads;
+  bc_arr.resize(this->n_threads);
+  set=std::shared_ptr<settings>(new settings);
+  nsd=std::shared_ptr<ns_data>(new ns_data);
+  for(size_t i=0;i<this->n_threads;i++) {
+    bc_arr[i].set=set;
+    bc_arr[i].nsd=nsd;
+  }
+}
+
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
   mcmc_para_cli::file_header(hf);
