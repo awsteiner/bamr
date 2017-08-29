@@ -7,13 +7,13 @@
 # HDF5 libraries. In my configuration, I use the environment variables
 # O2SCL_LIB, but you can just replace this
 # entire line with whatever you need.
-LIB_DIRS = -L$(O2SCL_LIB) 
+LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB)
 
 # This variable may need to be modified to specify the include
 # directories for the GSL, boost, HDF5, and O2scl header files. If
 # O2scl was installed with Eigen or armadillo support, those header
 # directories may need to be here also.
-INC_DIRS = -I$(O2SCL_INC) 
+INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC)
 
 # C++ compiler
 # MPI_CXX = mpic++ 
