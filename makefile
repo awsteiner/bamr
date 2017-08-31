@@ -135,7 +135,7 @@ process: process.o process_main.o
 # ----------------------------------------------------------------------
 
 ecsn1:
-	bamr -set prefix ecsn1 -set addl_quants 1 \
+	bamr_nompi -set prefix ecsn1 -set addl_quants 1 \
 		-set inc_baryon_mass 1 -set crust_from_L 1 \
 		-set debug_eos 1 -model qmc_threep -mcmc 
 

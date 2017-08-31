@@ -421,14 +421,18 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // Output core and crust EOS as reported by the tov_interp_eos object
       o2scl::table_units<> full_eos;
-      full_eos.line_of_names("ed pr");
+      full_eos.line_of_names("ed pr nb");
       full_eos.set_unit("ed","1/fm^4");
       full_eos.set_unit("pr","1/fm^4");
+      full_eos.set_unit("nb","1/fm^3");
       for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
+	
 	double ed, nb;
 	teos.get_eden_user(pr,ed,nb);
-	double line[2]={ed,pr};
-	full_eos.line_of_data(2,line);
+	double line[3]={ed,pr,nb};
+	full_eos.line_of_data(3,line);
+
+	// Choose a slightly more sparse grid at lower pressures
 	if (pr<1.0e-4) pr*=1.2;
       }
       hdf_output(hfde,full_eos,"full_eos");
