@@ -716,7 +716,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   if (set->debug_star) scr_out << "Name M R Weight" << std::endl;
   
   for(size_t i=0;i<nsd->n_sources;i++) {
-	
+
     // Double check that current M and R is in the range of
     // the provided input data
     if (dat.rad[i]<nsd->source_tables[i].get_x_data()[0] ||
@@ -728,16 +728,23 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       dat.wgts[i]=0.0;
     } else {
       // If it is, compute the weight
-      
-      // Compute alternate probability from an insignificant bit
-      // in the mass 
-      double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
-      
-      if (alt<2.0/3.0) {
-	dat.wgts[i]=nsd->source_tables[i].interp
-	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
+
+      if (nsd->source_fnames_alt.size()>0) {
+	
+	// Compute alternate probability from an insignificant bit
+	// in the mass 
+	double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
+	
+	if (alt<2.0/3.0) {
+	  dat.wgts[i]=nsd->source_tables[i].interp
+	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
+	} else {
+	  dat.wgts[i]=nsd->source_tables_alt[i].interp
+	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
+	}
+	
       } else {
-	dat.wgts[i]=nsd->source_tables_alt[i].interp
+	dat.wgts[i]=nsd->source_tables[i].interp
 	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
       }
       
@@ -748,7 +755,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
       
     }
-
+    
     // If the weight is zero, then return failure
     if (dat.wgts[i]<=0.0) {
       scr_out << "Weight zero for source " << nsd->source_names[i] << endl;

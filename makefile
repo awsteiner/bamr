@@ -153,12 +153,17 @@ ecsn3:
 		-set max_iters 10 -model qmc_threep -mcmc
 	acol -read ecsn3_0_out -get-row 0
 
-test_all: test_prep test1 test2 test3 test4 test5 test6 test7 test8 \
+test-all: test-prep test1 test2 test3 test4 test5 test6 test7 test8 \
 		test9 test10 test11 test12 test13 test14
 
-test_prep: empty
+test-prep: empty
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
+
+test3-nompi: empty
+	bamr_nompi -set verbose 3 \
+		-set max_iters 300 -set prefix data_temp/twop_data \
+		-run default.in -model twop -mcmc
 
 test1: empty
 	bamr -set prefix data_temp/debug_eos \
