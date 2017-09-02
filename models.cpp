@@ -121,7 +121,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
-  
+
   if (has_eos && set->baryon_density && !dat.eos.is_column("nb")) {
     
     // Obtain the baryon density calibration point from the model
@@ -1942,6 +1942,8 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
 
 // --------------------------------------------------------------
 
+static const bool new_nb=false;
+
 qmc_threep::qmc_threep(std::shared_ptr<const settings> s,
 	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
@@ -2034,7 +2036,11 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   
   // Hack to start with a fresh table
   dat.eos.clear();
-  dat.eos.line_of_names("ed pr");
+  if (new_nb) {
+    dat.eos.line_of_names("ed pr nb");
+  } else {
+    dat.eos.line_of_names("ed pr");
+  }
   dat.eos.set_interp_type(itp_linear);
   //dat.eos.set_unit("ed","1/fm^4");
   //dat.eos.set_unit("pr","1/fm^4");
@@ -2097,21 +2103,26 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
-    
-    double line[2]={ed,pr};
-    dat.eos.line_of_data(2,line);
-    // double line[3]={ed,pr,rho};
-    // dat.eos.line_of_data(3,line);
-    if (debug) scr_out << line[0] << " " << line[1] << endl;
+
+    if (new_nb) {
+      double line[3]={ed,pr,rho};
+      dat.eos.line_of_data(3,line);
+    } else {
+      double line[2]={ed,pr};
+      dat.eos.line_of_data(2,line);
+      if (debug) scr_out << line[0] << " " << line[1] << endl;
+    }
     ed_last=ed;
     pr_last=pr;
     nb_last=rho;
   }
 
-  // Set values for the computation of the baryon density
-  // from the last point of the QMC parameterization
-  nb_n1=nb_last;
-  nb_e1=ed_last;
+  if (!new_nb) {
+    // Set values for the computation of the baryon density
+    // from the last point of the QMC parameterization
+    nb_n1=nb_last;
+    nb_e1=ed_last;
+  }
 
   // Check that the transition densities are ordered
   if (ed_last>trans1 || trans1>trans2) {
@@ -2127,20 +2138,26 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   // Compute stepsize in energy density
   double delta_ed=(trans1-ed_last)/30.01;
 
+  double ed1=ed_last;
+  double pr1=pr_last;
+  double nb1=nb_last;
+  
   // Add first polytrope to table
   for(ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
     pr=coeff1*pow(ed,exp1);
-    double line[2]={ed,pr};
-    if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in qmc_threep (2): " << line[0] << " "
-	   << line[1] << endl;
-      cerr << index1 << " " << exp1 << endl;
-      cerr << coeff1 << " " << exp1 << " " << ed_last << " " << trans1 << endl;
-      cerr << ed << " " << pr << " " << nb_n1 << " " << nb_e1 << endl;
-      O2SCL_ERR("EOS problem 1 in qmc_threep.",o2scl::exc_esanity);
+    
+    if (new_nb) {
+      double nb=nb1*pow(ed/ed1,1.0+params[4])/
+	pow((ed+pr)/(ed1+pr1),params[4]);
+      double line[3]={ed,pr,nb};
+      dat.eos.line_of_data(3,line);
+      nb_last=nb;
+    } else {
+      double line[2]={ed,pr};
+      dat.eos.line_of_data(2,line);
+      if (debug) scr_out << line[0] << " " << line[1] << endl;
     }
-    dat.eos.line_of_data(2,line);
-    if (debug) scr_out << line[0] << " " << line[1] << endl;
+    
     ed_last=ed;
     pr_last=pr;
   }
@@ -2148,21 +2165,27 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   // Compute second coefficient given index
   double coeff2=pr_last/pow(ed_last,exp2);
 
+  double ed2=ed_last;
+  double pr2=pr_last;
+  double nb2=nb_last;
+  
   // Add second polytrope to table
   delta_ed=(trans2-trans1)/20.01;
   for(ed=trans1;ed<trans2;ed+=delta_ed) {
     pr=coeff2*pow(ed,exp2);
-    double line[2]={ed,pr};
-    if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in qmc_threep (3): " << line[0] << " "
-	   << line[1] << endl;
-      cerr << index2 << " " << exp2 << endl;
-      cerr << trans1 << " " << trans2 << " " << coeff2 << " "
-	   << pr_last << " " << ed_last << " " << exp2 << endl;
-      O2SCL_ERR("EOS problem 2 in qmc_threep.",o2scl::exc_esanity);
+
+    if (new_nb) {
+      double nb=nb2*pow(ed/ed2,1.0+params[6])/
+	pow((ed+pr)/(ed2+pr2),params[6]);
+      double line[3]={ed,pr,nb};
+      dat.eos.line_of_data(3,line);
+      nb_last=nb;
+    } else {
+      double line[2]={ed,pr};
+      dat.eos.line_of_data(2,line);
+      if (debug) scr_out << line[0] << " " << line[1] << endl;
     }
-    dat.eos.line_of_data(2,line);
-    if (debug) scr_out << line[0] << " " << line[1] << endl;
+    
     ed_last=ed;
     pr_last=pr;
   }
@@ -2170,18 +2193,27 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   // Compute third coefficient given index
   double coeff3=pr_last/pow(ed_last,exp3);
 
+  double ed3=ed_last;
+  double pr3=pr_last;
+  double nb3=nb_last;
+
   // Add third polytrope to table
   delta_ed=(10.0-trans2)/20.01;
   for(ed=trans2;ed<10.0;ed+=delta_ed) {
     pr=coeff3*pow(ed,exp3);
-    double line[2]={ed,pr};
-    if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-      cerr << "Problem in qmc_threep (4): " << line[0] << " "
-	   << line[1] << endl;
-      O2SCL_ERR("EOS problem 3 in qmc_threep.",o2scl::exc_esanity);
+
+    if (new_nb) {
+      double nb=nb3*pow(ed/ed3,1.0+params[8])/
+	pow((ed+pr)/(ed3+pr3),params[8]);
+      double line[3]={ed,pr,nb};
+      dat.eos.line_of_data(3,line);
+      nb_last=nb;
+    } else {
+      double line[2]={ed,pr};
+      dat.eos.line_of_data(2,line);
+      if (debug) scr_out << line[0] << " " << line[1] << endl;
     }
-    dat.eos.line_of_data(2,line);
-    if (debug) scr_out << line[0] << " " << line[1] << endl;
+    
   }
 
   return;
