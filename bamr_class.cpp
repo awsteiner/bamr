@@ -187,16 +187,21 @@ int bamr_class::fill(const ubvector &pars, double weight,
     double mmax=dat.mvsr.get_constant("m_max");
     for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
+
       if (mval<mmax) {
+	
+	// Baryonic mass
 	double bm=dat.mvsr.interp("gm",mval,"bm");
+	line.push_back(bm);
+
+	// Binding energy
+	line.push_back(bm-mval);
+
+	// Moment of inertia
 	double rad=dat.mvsr.interp("gm",mval,"r");
 	// rjw is km^4, so dividing by km/Msun gives Msun*km^2
 	double I=dat.mvsr.interp("gm",mval,"rjw")/3.0/schwarz_km;
-	line.push_back(bm);
-	line.push_back((bm-mval)/mval);
-	// Make unitless by dividing by G^2
-	double I_bar=I/mval/mval/mval/schwarz_km/schwarz_km*4.0;
-	line.push_back(I_bar);
+	line.push_back(I);
 
 #ifdef NEVER_DEFINED
 	// Relation for lambda given I from Kent Yagi based

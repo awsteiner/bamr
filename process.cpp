@@ -208,15 +208,125 @@ int process::ylimits(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
   
-/** \brief Create a histogram from a specified column
+int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
+    
+  // mass value
+  double m_val=o2scl::stod(sv[1]);
+  string suffix=sv[2];
+  
+  // Form list of data files
+  vector<string> files;
+  for(size_t i=3;i<sv.size();i++) files.push_back(sv[i]);
+  size_t nf=files.size();
+  
+  // ------------------------------------------------------------
+  // Read all of the data files in order
+      
+  for(size_t i=0;i<nf;i++) {
+    hdf_file hf;
+    
+    // Open file with write access
+    if (verbose>0) cout << "Opening file: " << files[i] << endl;
+    hf.open(files[i],true);
 
-    \future This function isn't that efficient. It first reads all
-    of the data into one long vector and then reparses the long
-    vector into a set of \ref o2scl::expval_scalar objects. The
-    averages and errors for the \ref o2scl::expval_scalar objects
-    are stored into a table, and the table is written to the
-    output file. This could be improved.
-*/
+    // Reading mass grid
+
+    uniform_grid<> m_grid;
+    hdf_input(hf,m_grid,"m_grid");
+    vector<double> m_vec;
+    m_grid.vector(m_vec);
+    
+    // Get number of chains
+    size_t n_chains;
+    hf.get_szt_def("n_chains",1,n_chains);
+    if (verbose>0) {
+      if (n_chains>1) {
+	cout << n_chains << " separate chains." << endl;
+      } else {
+	cout << "1 chain." << endl;
+      }
+    }
+
+    // Read each chain
+    for(size_t j=0;j<n_chains;j++) {
+
+      // Read table
+      std::string tab_name="markov_chain"+szttos(j);
+      table_units<> tab;
+      hdf_input(hf,tab,tab_name);
+
+      if (constraint.size()>0) {
+	size_t nlines_old=tab.get_nlines();
+	tab.delete_rows(constraint);
+	size_t nlines_new=tab.get_nlines();
+	if (verbose>0) {
+	  cout << "Applied constraint \"" << constraint
+	       << "\" and went from " << nlines_old << " to "
+	       << nlines_new << " lines." << endl;
+	}
+      }
+
+      tab.new_column(((std::string)"R")+suffix);
+      tab.set_unit(((std::string)"R")+suffix,"km");
+      tab.new_column(((std::string)"PM")+suffix);
+      tab.set_unit(((std::string)"PM")+suffix,"1/fm^4");
+      tab.new_column(((std::string)"I")+suffix);
+      tab.set_unit(((std::string)"I")+suffix,"Msun*km^2");
+      tab.new_column(((std::string)"MB")+suffix);
+      tab.set_unit(((std::string)"MB")+suffix,"Msun");
+      tab.new_column(((std::string)"BE")+suffix);
+      tab.set_unit(((std::string)"BE")+suffix,"Msun");
+      
+      // Parse table into values and weights
+      for(size_t k=0;k<tab.get_nlines();k++) {
+
+	vector<double> R_y, PM_y, I_y, MB_y, BE_y;
+	for(size_t hh=0;hh<m_grid.get_npoints();hh++) {
+	  R_y.push_back(tab.get(((std::string)"R_")+o2scl::szttos(hh),k));
+	  PM_y.push_back(tab.get(((std::string)"PM_")+o2scl::szttos(hh),k));
+	  I_y.push_back(tab.get(((std::string)"I_")+o2scl::szttos(hh),k));
+	  MB_y.push_back(tab.get(((std::string)"MB_")+o2scl::szttos(hh),k));
+	  BE_y.push_back(tab.get(((std::string)"BE_")+o2scl::szttos(hh),k));
+	}
+
+	interp<vector<double> > oi;
+	oi.set_type(itp_linear);
+	tab.set(((std::string)"R")+suffix,k,
+		oi.eval(m_val,m_grid.get_npoints(),m_vec,R_y));
+	tab.set(((std::string)"PM")+suffix,k,
+		oi.eval(m_val,m_grid.get_npoints(),m_vec,PM_y));
+	tab.set(((std::string)"I")+suffix,k,
+		oi.eval(m_val,m_grid.get_npoints(),m_vec,I_y));
+	tab.set(((std::string)"MB")+suffix,k,
+		oi.eval(m_val,m_grid.get_npoints(),m_vec,MB_y));
+	tab.set(((std::string)"BE")+suffix,k,
+		oi.eval(m_val,m_grid.get_npoints(),m_vec,BE_y));
+      }
+
+      if (verbose>0) {
+	cout << "Table " << tab_name << " lines: " 
+	     << tab.get_nlines();
+	cout << endl;
+      }
+
+      // Output table to file
+      hdf_output(hf,tab,tab_name);
+      
+      // Go to next chain
+    }
+
+    // Close file
+    hf.close();
+    
+    // Go to next file
+  }
+  if (verbose>0) {
+    cout << "Done." << endl;
+  }
+
+  return 0;
+}
+
 int process::hist(std::vector<std::string> &sv, bool itive_com) {
     
   // Setup histogram size
@@ -1357,7 +1467,7 @@ void process::setup_cli() {
   // ---------------------------------------
   // Set options
   
-  static const int nopt=8;
+  static const int nopt=9;
   comm_option_s options[nopt]={
     {'x',"xlimits","Set histogram limits for first variable",0,3,
      "<low-value high-value> or <file> <low-name> <high-name> or <>",
@@ -1391,6 +1501,9 @@ void process::setup_cli() {
      "or they can be 1s, 2s, or 3s, corresponding to 1-, 2-, and 3-"+
      "sigma confidence limits, respectively.",
      new comm_option_mfptr<process>(this,&process::contours),
+     cli::comm_option_both},
+    {0,"mass-sel","",3,-1,"","",
+     new comm_option_mfptr<process>(this,&process::mass_sel),
      cli::comm_option_both},
     {0,"hist2","Create a histogram from two columns of MCMC data.",4,-1,
      "<x> <y> <out_file> <file1> [file2 file 3...]",

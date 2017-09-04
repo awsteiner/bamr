@@ -185,6 +185,8 @@ namespace bamr {
     /** \brief Specify which contour levels to use
      */
     int contours(std::vector<std::string> &sv, bool itive_com);
+
+    int mass_sel(std::vector<std::string> &sv, bool itive_com);
     //@}
 
     /// Desc

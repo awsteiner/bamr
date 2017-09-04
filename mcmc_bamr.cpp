@@ -68,6 +68,7 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   hf.seti("debug_eos",set->debug_eos);
   hf.seti("debug_star",set->debug_star);
   hf.seti("inc_baryon_mass",set->inc_baryon_mass);
+  hf.seti("addl_quants",set->addl_quants);
   hf.setd("nb_low",set->nb_low);
   hf.setd("nb_high",set->nb_high);
   hf.setd("e_low",set->e_low);
@@ -243,20 +244,20 @@ int mcmc_bamr::mcmc_init() {
     if (set->compute_cthick) {
       this->table->new_column("nt");
       this->table->set_unit("nt","1/fm^3");
-      this->table->new_column("prt");
-      this->table->set_unit("prt","1/fm^4");
+      this->table->new_column("Pt");
+      this->table->set_unit("Pt","1/fm^4");
       for(int i=0;i<set->grid_size;i++) {
-        this->table->new_column(((string)"ct_")+o2scl::itos(i));
-        this->table->set_unit(((string)"ct_")+o2scl::itos(i),"km");
+        this->table->new_column(((string)"CT_")+o2scl::itos(i));
+        this->table->set_unit(((string)"CT_")+o2scl::itos(i),"km");
       }
     }
   }
   if (set->addl_quants) {
     for(int i=0;i<set->grid_size;i++) {
-      this->table->new_column(((string)"Mb_")+o2scl::itos(i));
-      this->table->set_unit(((string)"Mb_")+o2scl::itos(i),"Msun");
-      this->table->new_column(((string)"be_")+o2scl::itos(i));
-      this->table->set_unit(((string)"be_")+o2scl::itos(i),"Msun");
+      this->table->new_column(((string)"MB_")+o2scl::itos(i));
+      this->table->set_unit(((string)"MB_")+o2scl::itos(i),"Msun");
+      this->table->new_column(((string)"BE_")+o2scl::itos(i));
+      this->table->set_unit(((string)"BE_")+o2scl::itos(i),"Msun");
       this->table->new_column(((string)"I_")+o2scl::itos(i));
       this->table->set_unit(((string)"I_")+o2scl::itos(i),
 			    "Msun*km^2");
