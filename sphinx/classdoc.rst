@@ -49,6 +49,14 @@ nstar_cold2
    :protected-members:
    :undoc-members:
 
+process
+-------
+      
+.. doxygenclass:: bamr::process
+   :members:
+   :protected-members:
+   :undoc-members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

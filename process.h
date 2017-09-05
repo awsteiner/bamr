@@ -58,12 +58,14 @@ typedef boost::numeric::ublas::matrix<double> ubmatrix;
 
 namespace bamr {
 
-  /** \brief Processing MCMC data from bamr
+  /** \brief Process MCMC data from <tt>bamr</tt>
    */
   class process {
   
   protected:
-    
+
+    /// \name Command-line parameter objects
+    //@{
     o2scl::cli::parameter_double p_xscale;
     o2scl::cli::parameter_double p_yscale;
     o2scl::cli::parameter_bool p_errors;
@@ -75,6 +77,7 @@ namespace bamr {
     o2scl::cli::parameter_int p_line_start;
     o2scl::cli::parameter_int p_verbose;
     o2scl::cli::parameter_string p_constraint;
+    //@}
     
     /// \name Command-line parameters
     //@{
@@ -100,13 +103,15 @@ namespace bamr {
     int n_blocks;
     //@}
 
+    /** \brief Command-line interface object
+     */
 #ifdef BAMR_READLINE
     o2scl::cli_readline cl;
 #else
     o2scl::cli cl;
 #endif
     
-    /// \name Axis limits from 'xlimits' and 'ylimits'
+    /// \name Axis limit variables
     //@{
     /// If true, x limits are set
     bool xset;
@@ -136,9 +141,18 @@ namespace bamr {
     //@{
     /// Constraint to apply to the data
     std::string constraint;
-    /// Contour levels set in 'contours'
+    /// Contour levels set in \ref contours
     std::vector<double> cont_levels;
-    /// Formatter for floating point numbers
+    /** \brief Formatter for floating point numbers
+
+	By default, this is set in the constructor to
+	\code
+	ff.latex_mode();
+	ff.set_sig_figs(4);
+	ff.set_pad_zeros(true);
+	ff.set_exp_limits(-5,5);
+	\endcode
+     */
     o2scl::format_float ff;
     //@}
 
@@ -186,10 +200,13 @@ namespace bamr {
      */
     int contours(std::vector<std::string> &sv, bool itive_com);
 
+    /** \brief Create new columns at a selected mass
+     */
     int mass_sel(std::vector<std::string> &sv, bool itive_com);
     //@}
 
-    /// Desc
+    /** \brief Setup the command-line interface
+     */
     virtual void setup_cli();
     
   public:

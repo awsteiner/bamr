@@ -31,6 +31,31 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
+process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
+		     two_sigma(gsl_sf_erf(2.0/sqrt(2.0))),
+		     three_sigma(gsl_sf_erf(3.0/sqrt(2.0))) {
+  verbose=1;
+  xscale=1.0;
+  yscale=1.0;
+  xset=false;
+  user_xlow=0.0;
+  user_xhigh=0.0;
+  yset=false;
+  user_ylow=0.0;
+  user_yhigh=0.0;
+  errors=true;
+  hist_size_int=100;
+  logx=false;
+  logy=false;
+  logz=false;
+  line_start=0;
+  ff.latex_mode();
+  ff.set_sig_figs(4);
+  ff.set_pad_zeros(true);
+  ff.set_exp_limits(-5,5);
+  n_blocks=0;
+}
+
 int process::auto_corr(std::vector<std::string> &sv, bool itive_com) {
 
   // Setup histogram size
@@ -118,11 +143,10 @@ int process::auto_corr(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Set limits for the x-axis
- */
 int process::xlimits(std::vector<std::string> &sv, bool itive_com) {
 
   if (sv.size()<3) {
+    // If there are less than 2 arguments, reset the y limits
     if (verbose>0) {
       cout << "Setting 'xset' to false." << endl;
     }
@@ -131,6 +155,7 @@ int process::xlimits(std::vector<std::string> &sv, bool itive_com) {
   }
     
   if (sv.size()==3) {
+    // If there are 2 arguments, use them to set the y limits
     user_xlow=o2scl::function_to_double(sv[1]);
     user_xhigh=o2scl::function_to_double(sv[2]);
     xset=true;
@@ -141,6 +166,8 @@ int process::xlimits(std::vector<std::string> &sv, bool itive_com) {
     return 0;
   }
 
+  // If there are three arguments, presume they're stored in
+  // a specified file as named double-precision numbers
   string file=sv[1];
   string low_name=sv[2];
   string high_name=sv[3];
@@ -163,11 +190,10 @@ int process::xlimits(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Set limits for the y-axis
- */
 int process::ylimits(std::vector<std::string> &sv, bool itive_com) {
 
   if (sv.size()<3) {
+    // If there are less than 2 arguments, reset the y limits
     if (verbose>0) {
       cout << "Setting 'yset' to false." << endl;
     }
@@ -176,6 +202,7 @@ int process::ylimits(std::vector<std::string> &sv, bool itive_com) {
   }
 
   if (sv.size()==3) {
+    // If there are 2 arguments, use them to set the y limits
     user_ylow=o2scl::function_to_double(sv[1]);
     user_yhigh=o2scl::function_to_double(sv[2]);
     yset=true;
@@ -186,6 +213,8 @@ int process::ylimits(std::vector<std::string> &sv, bool itive_com) {
     return 0;
   }
 
+  // If there are three arguments, presume they're stored in
+  // a specified file as named double-precision numbers
   string file=sv[1];
   string low_name=sv[2];
   string high_name=sv[3];
@@ -209,10 +238,18 @@ int process::ylimits(std::vector<std::string> &sv, bool itive_com) {
 }
   
 int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
-    
+
+  if (sv.size()<4) {
+    cerr << "Not enough arguments to 'mass-sel'." << endl;
+    return 1;
+  }
+  
   // mass value
   double m_val=o2scl::stod(sv[1]);
   string suffix=sv[2];
+  if (verbose>0) {
+    cout << "Mass value " << m_val << " and suffix " << suffix << endl;
+  }
   
   // Form list of data files
   vector<string> files;
@@ -228,6 +265,12 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
     // Open file with write access
     if (verbose>0) cout << "Opening file: " << files[i] << endl;
     hf.open(files[i],true);
+
+    int addl_quants;
+    hf.geti("addl_quants",addl_quants);
+    if (addl_quants>0 && verbose>0) {
+      cout << "Value 'addl_quants' is true." << endl;
+    }
 
     // Reading mass grid
 
@@ -270,12 +313,14 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
       tab.set_unit(((std::string)"R")+suffix,"km");
       tab.new_column(((std::string)"PM")+suffix);
       tab.set_unit(((std::string)"PM")+suffix,"1/fm^4");
-      tab.new_column(((std::string)"I")+suffix);
-      tab.set_unit(((std::string)"I")+suffix,"Msun*km^2");
-      tab.new_column(((std::string)"MB")+suffix);
-      tab.set_unit(((std::string)"MB")+suffix,"Msun");
-      tab.new_column(((std::string)"BE")+suffix);
-      tab.set_unit(((std::string)"BE")+suffix,"Msun");
+      if (addl_quants>0) {
+	tab.new_column(((std::string)"I")+suffix);
+	tab.set_unit(((std::string)"I")+suffix,"Msun*km^2");
+	tab.new_column(((std::string)"MB")+suffix);
+	tab.set_unit(((std::string)"MB")+suffix,"Msun");
+	tab.new_column(((std::string)"BE")+suffix);
+	tab.set_unit(((std::string)"BE")+suffix,"Msun");
+      }
       
       // Parse table into values and weights
       for(size_t k=0;k<tab.get_nlines();k++) {
@@ -284,9 +329,11 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
 	for(size_t hh=0;hh<m_grid.get_npoints();hh++) {
 	  R_y.push_back(tab.get(((std::string)"R_")+o2scl::szttos(hh),k));
 	  PM_y.push_back(tab.get(((std::string)"PM_")+o2scl::szttos(hh),k));
-	  I_y.push_back(tab.get(((std::string)"I_")+o2scl::szttos(hh),k));
-	  MB_y.push_back(tab.get(((std::string)"MB_")+o2scl::szttos(hh),k));
-	  BE_y.push_back(tab.get(((std::string)"BE_")+o2scl::szttos(hh),k));
+	  if (addl_quants>0) {
+	    I_y.push_back(tab.get(((std::string)"I_")+o2scl::szttos(hh),k));
+	    MB_y.push_back(tab.get(((std::string)"MB_")+o2scl::szttos(hh),k));
+	    BE_y.push_back(tab.get(((std::string)"BE_")+o2scl::szttos(hh),k));
+	  }
 	}
 
 	interp<vector<double> > oi;
@@ -295,12 +342,14 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
 		oi.eval(m_val,m_grid.get_npoints(),m_vec,R_y));
 	tab.set(((std::string)"PM")+suffix,k,
 		oi.eval(m_val,m_grid.get_npoints(),m_vec,PM_y));
-	tab.set(((std::string)"I")+suffix,k,
-		oi.eval(m_val,m_grid.get_npoints(),m_vec,I_y));
-	tab.set(((std::string)"MB")+suffix,k,
-		oi.eval(m_val,m_grid.get_npoints(),m_vec,MB_y));
-	tab.set(((std::string)"BE")+suffix,k,
-		oi.eval(m_val,m_grid.get_npoints(),m_vec,BE_y));
+	if (addl_quants>0) {
+	  tab.set(((std::string)"I")+suffix,k,
+		  oi.eval(m_val,m_grid.get_npoints(),m_vec,I_y));
+	  tab.set(((std::string)"MB")+suffix,k,
+		  oi.eval(m_val,m_grid.get_npoints(),m_vec,MB_y));
+	  tab.set(((std::string)"BE")+suffix,k,
+		  oi.eval(m_val,m_grid.get_npoints(),m_vec,BE_y));
+	}
       }
 
       if (verbose>0) {
@@ -639,9 +688,6 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Create a two-dimensional histogram from two
-    user-specified columns
-*/
 int process::hist2(std::vector<std::string> &sv, bool itive_com) {
     
   // Setup histogram size
@@ -871,9 +917,6 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Create a set of histograms from a set of columns in
-    the bamr MCMC output
-*/
 int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
     
   // Setup histogram size
@@ -1240,8 +1283,6 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Specify which contour levels to use
- */
 int process::contours(std::vector<std::string> &sv, bool itive_com) {
   cont_levels.clear();
   for(size_t i=1;i<sv.size();i++) {
@@ -1258,8 +1299,6 @@ int process::contours(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-/** \brief Combine several <tt>bamr</tt> output files
- */
 int process::combine(std::vector<std::string> &sv, bool itive_com) {
     
   // Thinning factor
@@ -1423,33 +1462,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
 
   return 0;
 }
-//@}
     
-process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
-		     two_sigma(gsl_sf_erf(2.0/sqrt(2.0))),
-		     three_sigma(gsl_sf_erf(3.0/sqrt(2.0))) {
-  verbose=1;
-  xscale=1.0;
-  yscale=1.0;
-  xset=false;
-  user_xlow=0.0;
-  user_xhigh=0.0;
-  yset=false;
-  user_ylow=0.0;
-  user_yhigh=0.0;
-  errors=true;
-  hist_size_int=100;
-  logx=false;
-  logy=false;
-  logz=false;
-  line_start=0;
-  ff.latex_mode();
-  ff.set_sig_figs(4);
-  ff.set_pad_zeros(true);
-  ff.set_exp_limits(-5,5);
-  n_blocks=0;
-}
-
 void process::setup_cli() {
 
     // ---------------------------------------
@@ -1502,7 +1515,9 @@ void process::setup_cli() {
      "sigma confidence limits, respectively.",
      new comm_option_mfptr<process>(this,&process::contours),
      cli::comm_option_both},
-    {0,"mass-sel","",3,-1,"","",
+    {0,"mass-sel","Create new columns from a specified mass.",3,-1,
+     "<mass> <suffix> <file 1> [file 2] ...",
+     ((string)"Long ")+"desc.",
      new comm_option_mfptr<process>(this,&process::mass_sel),
      cli::comm_option_both},
     {0,"hist2","Create a histogram from two columns of MCMC data.",4,-1,
