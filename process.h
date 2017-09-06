@@ -193,6 +193,9 @@ namespace bamr {
     int hist_set(std::vector<std::string> &sv, bool itive_com);
     
     /** \brief Combine several <tt>bamr</tt> output files
+
+	\todo Ensure this function applies the constraint
+	\todo Figure out what to do with HDF5 data not in table form
      */
     int combine(std::vector<std::string> &sv, bool itive_com);
 

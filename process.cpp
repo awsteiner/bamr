@@ -1559,15 +1559,15 @@ void process::setup_cli() {
   // Set parameters
     
   p_xscale.d=&xscale;
-  p_xscale.help="Scale parameter for first variable";
+  p_xscale.help="Scale parameter for first variable.";
   cl.par_list.insert(make_pair("xscale",&p_xscale));
     
   p_yscale.d=&yscale;
-  p_yscale.help="Scale parameter for second variable";
+  p_yscale.help="Scale parameter for second variable.";
   cl.par_list.insert(make_pair("yscale",&p_yscale));
 
   p_errors.b=&errors;
-  p_errors.help="If true, output more error information";
+  p_errors.help="If true, output more error information.";
   cl.par_list.insert(make_pair("errors",&p_errors));
 
   p_logx.b=&logx;
@@ -1596,11 +1596,11 @@ void process::setup_cli() {
   cl.par_list.insert(make_pair("line_start",&p_line_start));
 
   p_verbose.i=&verbose;
-  p_verbose.help="Verbosity (default 1).";
+  p_verbose.help="Verbosity parameter (default 1).";
   cl.par_list.insert(make_pair("verbose",&p_verbose));
 
   p_constraint.str=&constraint;
-  p_constraint.help="Constraint (default is an empty string).";
+  p_constraint.help="Constraint to apply (default is an empty string).";
   cl.par_list.insert(make_pair("constraint",&p_constraint));
 
   cl.prompt="process> ";
