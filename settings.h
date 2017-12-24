@@ -84,6 +84,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_min_mass;
     o2scl::cli::parameter_int p_grid_size;
     o2scl::cli::parameter_int p_mass_switch;
+    o2scl::cli::parameter_int p_verbose;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_load;
     o2scl::cli::parameter_bool p_debug_eos;
@@ -337,6 +338,10 @@ namespace bamr {
       p_mass_switch.i=&mass_switch;
       p_mass_switch.help="";
       cl.par_list.insert(std::make_pair("mass_switch",&p_mass_switch));
+
+      p_verbose.i=&verbose;
+      p_verbose.help="Bamr verbose parameter";
+      cl.par_list.insert(std::make_pair("verbose",&p_verbose));
 
       return;
     }

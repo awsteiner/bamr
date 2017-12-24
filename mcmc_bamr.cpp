@@ -40,16 +40,16 @@ mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
   set=std::shared_ptr<settings>(new settings);
   nsd=std::shared_ptr<ns_data>(new ns_data);
   for(size_t i=0;i<this->n_threads;i++) {
-    bc_arr[i].set=set;
-    bc_arr[i].nsd=nsd;
+    bc_arr[i]->set=set;
+    bc_arr[i]->nsd=nsd;
   }
 }
 
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
   mcmc_para_cli::file_header(hf);
-
-  model &m=*(bc_arr[0].mod);
+  
+  model &m=*(bc_arr[0]->mod);
   
   hf.sets_vec("source_names",nsd->source_names);
   hf.sets_vec("source_fnames",nsd->source_fnames);
@@ -90,7 +90,7 @@ int mcmc_bamr::mcmc_init() {
 	      << ") Start mcmc_bamr::mcmc_init()." << std::endl;
   }
   
-  model &m=*(bc_arr[0].mod);
+  model &m=*(bc_arr[0]->mod);
   
   // This ensures enough space for all the
   // default return values in models.h
@@ -98,7 +98,7 @@ int mcmc_bamr::mcmc_init() {
 
   // Copy parameter values to all of the model objects
   for(size_t i=1;i<bc_arr.size();i++) {
-    model &m2=*(bc_arr[i].mod);
+    model &m2=*(bc_arr[i]->mod);
     m.copy_params(m2);
   }
   
@@ -274,11 +274,11 @@ int mcmc_bamr::mcmc_init() {
   // Make grids
 
   for(size_t i=0;i<n_threads;i++) {
-    bc_arr[i].mod->nb_grid=uniform_grid_end<double>
+    bc_arr[i]->mod->nb_grid=uniform_grid_end<double>
       (set->nb_low,set->nb_high,set->grid_size-1);
-    bc_arr[i].mod->e_grid=uniform_grid_end<double>
+    bc_arr[i]->mod->e_grid=uniform_grid_end<double>
       (set->e_low,set->e_high,set->grid_size-1);
-    bc_arr[i].mod->m_grid=uniform_grid_end<double>
+    bc_arr[i]->mod->m_grid=uniform_grid_end<double>
       (set->m_low,set->m_high,set->grid_size-1);
   }
 
@@ -317,59 +317,59 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
     return 0;
   }
   if (model_type.length()>0) {
-    bc_arr[0].mod->remove_params(cl);
+    bc_arr[0]->mod->remove_params(cl);
   }
   if (sv[1]==((string)"twop")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new two_polytropes(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"altp")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new alt_polytropes(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"fixp")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new fixed_pressure(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"qstar")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new quark_star(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"genq")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new generic_quarks(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"qmc")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new qmc_neut(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_threep")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new qmc_threep(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_fixp")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new qmc_fixp(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else if (sv[1]==((string)"qmc_twolines")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new qmc_twolines(set,nsd));
-      bc_arr[i].mod=mnew;
+      bc_arr[i]->mod=mnew;
     }
   } else {
     cerr << "Model unknown." << endl;
     return exc_efailed;
   }
   model_type=sv[1];
-  bc_arr[0].mod->setup_params(cl);
+  bc_arr[0]->mod->setup_params(cl);
   return 0;
 }
 
@@ -390,12 +390,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // nuisance variables for the data points). The other columns and
   // units are specified in mcmc_init() function manually using a call
   // to table::new_column().
-  bc_arr[0].mod->get_param_info(names,units,low,high);
+  bc_arr[0]->mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
   // Get the parameter initial values for this model 
   ubvector init(names.size());
-  bc_arr[0].mod->initial_point(init);
+  bc_arr[0]->mod->initial_point(init);
   this->initial_points.clear();
   for(size_t i=0;i<n_threads;i++) {
     this->initial_points.push_back(init);
@@ -406,12 +406,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   for(size_t i=0;i<n_threads;i++) {
     pfa[i]=std::bind
       (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
-       (&bamr_class::compute_point),&bc_arr[i],std::placeholders::_2,
+       (&bamr_class::compute_point),bc_arr[i],std::placeholders::_2,
        std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
     ffa[i]=std::bind
       (std::mem_fn<int(const ubvector &,double,vector<double> &,
 		       model_data &)>
-       (&bamr_class::fill),&bc_arr[i],std::placeholders::_1,
+       (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
   

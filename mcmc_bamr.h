@@ -106,7 +106,7 @@ namespace bamr {
     std::string model_type;
     
     /// Vector of \ref bamr_class objects (one for each OpenMP thread)
-    std::vector<bamr_class> bc_arr;
+    std::vector<bamr_class *> bc_arr;
 
     /** \brief The \ref bamr::settings object 
 	(shared by instances of \ref bamr_class)
