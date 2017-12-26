@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2017, Andrew W. Steiner
+  Copyright (C) 2012-2018, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -55,12 +55,11 @@ namespace bamr {
 
   /** \brief Compute neutron star structure for each MCMC point
 
-      There will be a number of instances of this class
-      equal to the number of OpenMP threads, all of which
-      share the same neutron star data (in \ref nsd) and
-      settings (in \ref set). They will each have their
-      own model object, stored in \ref mod, which is set in
-      \ref mcmc_bamr::set_model() .
+      There will be a number of instances of this class equal to the
+      number of OpenMP threads, all of which share the same neutron
+      star data (in \ref nsd) and settings (in \ref set). They will
+      each have their own model object, stored in \ref mod, which is
+      set in \ref mcmc_bamr::set_model() .
   */
   class bamr_class {
     
