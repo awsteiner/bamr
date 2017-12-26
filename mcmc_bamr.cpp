@@ -37,9 +37,10 @@ mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
   model_type="";
   this->n_threads=n_omp_threads;
   bc_arr.resize(this->n_threads);
-  set=std::shared_ptr<settings>(new settings);
-  nsd=std::shared_ptr<ns_data>(new ns_data);
+  set=std::make_shared<settings>();
+  nsd=std::make_shared<ns_data>();
   for(size_t i=0;i<this->n_threads;i++) {
+    bc_arr[i]=new bamr_class;
     bc_arr[i]->set=set;
     bc_arr[i]->nsd=nsd;
   }

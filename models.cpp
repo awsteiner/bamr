@@ -410,41 +410,50 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // If necessary, output debug information (We want to make sure
     // this is after tov_eos::read_table() so that we can debug the
     // core-crust transition)
-    
+
     if (set->debug_eos) {
-      o2scl_hdf::hdf_file hfde;
 
-      hfde.open_or_create("debug_eos.o2");
-
-      // Output the core EOS
-      hdf_output(hfde,dat.eos,"eos");
-
-      // Output core and crust EOS as reported by the tov_interp_eos object
-      o2scl::table_units<> full_eos;
-      full_eos.line_of_names("ed pr nb");
-      full_eos.set_unit("ed","1/fm^4");
-      full_eos.set_unit("pr","1/fm^4");
-      full_eos.set_unit("nb","1/fm^3");
-      for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
+#pragma omp master
+      {
 	
-	double ed, nb;
-	teos.get_eden_user(pr,ed,nb);
-	double line[3]={ed,pr,nb};
-	full_eos.line_of_data(3,line);
-
-	// Choose a slightly more sparse grid at lower pressures
-	if (pr<1.0e-4) pr*=1.2;
+	  o2scl_hdf::hdf_file hfde;
+	  
+	  hfde.open_or_create("debug_eos.o2");
+	  
+	  // Output the core EOS
+	  hdf_output(hfde,dat.eos,"eos");
+	  
+	  // Output core and crust EOS as reported by the tov_interp_eos object
+	  o2scl::table_units<> full_eos;
+	  full_eos.line_of_names("ed pr nb");
+	  full_eos.set_unit("ed","1/fm^4");
+	  full_eos.set_unit("pr","1/fm^4");
+	  full_eos.set_unit("nb","1/fm^3");
+	  for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
+	    
+	    double ed, nb;
+	    teos.get_eden_user(pr,ed,nb);
+	    double line[3]={ed,pr,nb};
+	    full_eos.line_of_data(3,line);
+	    
+	    // Choose a slightly more sparse grid at lower pressures
+	    if (pr<1.0e-4) pr*=1.2;
+	  }
+	  hdf_output(hfde,full_eos,"full_eos");
+	  
+	  hfde.close();
+	  
       }
-      hdf_output(hfde,full_eos,"full_eos");
-
-      hfde.close();
-
+      
       // Exit only if debug_star is not also true
       if (!set->debug_star) {
-	scr_out << "Automatically exiting since 'debug_eos' is true."
-		<< std::endl;
+	
+	std::cout << "Automatically exiting since 'debug_eos' is true."
+		  << std::endl;
+	
 	exit(0);
       }
+      
     }
 
     // ---------------------------------------------------------------
@@ -593,14 +602,28 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   }
   
+  int mpi_rank=0;
+#ifdef BAMR_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+#endif
+  
   // Output M vs. R curve
   if (set->debug_star) {
-    o2scl_hdf::hdf_file hfds;
-    hfds.open_or_create("debug_star.o2");
-    hdf_output(hfds,dat.mvsr,"mvsr");
-    hfds.close();
-    scr_out << "Automatically exiting since 'debug_star' is true."
-	    << std::endl;
+
+    if (mpi_rank==0) {
+      o2scl_hdf::hdf_file hfds;
+      hfds.open_or_create("debug_star.o2");
+      hdf_output(hfds,dat.mvsr,"mvsr");
+      hfds.close();
+      scr_out << "Automatically exiting since 'debug_star' is true."
+	      << std::endl;
+    }
+
+#ifdef BAMR_MPI
+    // Finalize MPI
+    MPI_Finalize();
+#endif
+    
     exit(0);
   }
 

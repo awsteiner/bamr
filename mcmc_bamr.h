@@ -73,6 +73,11 @@ namespace bamr {
       fixed to ensure that pressures always increase. 
       \endcomment
 
+      \todo There's a problem with testing debug_eos and debug_star
+      because of the complications of calling exit(0) inside
+      an OpenMP/MPI parallel region. For this reason test1 and
+      test2 are temporarily disabled
+
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits
       after each mcmc() run. 
@@ -105,7 +110,14 @@ namespace bamr {
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
-    /// Vector of \ref bamr_class objects (one for each OpenMP thread)
+    /** \brief Vector of \ref bamr_class objects (one for each OpenMP
+	thread)
+
+	This is currently a pointer because it makes it a lot easier
+	to replace these pointers with children. A shared_ptr
+	might be better, but I've had problems implementing
+	vector<shared_ptr> correctly.
+     */
     std::vector<bamr_class *> bc_arr;
 
     /** \brief The \ref bamr::settings object 

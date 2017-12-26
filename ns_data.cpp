@@ -57,7 +57,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       source_tables_alt.resize(n_sources);
     }
     
-#ifdef BAMR_MPI_LOAD
+#ifdef BAMR_MPI
 
     bool mpi_load_debug=false;
     int buffer=0, tag=0;
@@ -73,7 +73,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     }
     
     // Loop through all files
-    for(int k=0;k<((int) n_sources);k++) {
+    for(int k=0;k<((int)n_sources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
@@ -90,7 +90,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Determine which file to read next
       int file=filestart+k;
-      if (file>=((int) n_sources)) file-= n_sources;
+      if (file>=((int)n_sources)) file-= n_sources;
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
@@ -161,7 +161,6 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 	    << "max          P(10,1.4)" << std::endl;
 
     for(size_t k=0;k<n_sources;k++) {
-      scr_out << "Here: " << k << endl;
       
       // Update input limits
       if (k==0) {

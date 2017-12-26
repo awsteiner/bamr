@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   o2scl::err_hnd_cpp error_handler;
   o2scl::err_hnd=&error_handler;
   
-#ifndef BAMR_NO_MPI
+#ifdef BAMR_MPI
   // Init MPI
   MPI_Init(&argc,&argv);
 #endif
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
   b.cl.prompt="bamr> ";
   b.cl.run_auto(argc,argv);
 
-#ifndef BAMR_NO_MPI
+#ifdef BAMR_MPI
   // Finalize MPI
   MPI_Finalize();
 #endif

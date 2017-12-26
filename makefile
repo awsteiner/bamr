@@ -38,10 +38,10 @@ THREAD_VAR = -DBAMR_OMP_THREADS=2
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	-DBAMR_MPI_LOAD -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
+	-DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
 	$(THREAD_VAR)
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) -DBAMR_NO_MPI \
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 	-DBAMR_OMP_THREADS=1
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
@@ -156,8 +156,9 @@ ecsn3:
 # Testing targets
 # ----------------------------------------------------------------------
 
-test-all: test-prep test1 test2 test3 test4 test5 test6 test7 test8 \
+test-all: test-prep test3 test4 test5 test6 test7 test8 \
 		test9 test10 test11 test12 test13 test14
+#test1 test2
 
 test-all-nompi: test-prep test1-nompi test2-nompi test3-nompi \
 		test4-nompi test5-nompi test6-nompi test7-nompi \
@@ -168,17 +169,17 @@ test-prep: empty
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 
-test1: empty
-	bamr -set prefix data_temp/debug_eos \
-		-set debug_eos 1 -run default.in -model twop -mcmc \
-		> data_temp/debug_eos.scr
-	-mv -i debug_eos.o2 data_temp
+# test1: empty
+# 	mpirun -np 1 bamr -set prefix data_temp/debug_eos \
+# 		-set debug_eos 1 -run default.in -model twop -mcmc \
+# 		> data_temp/debug_eos.scr
+# 	-mv -i debug_eos.o2 data_temp
 
-test2: empty
-	bamr -set prefix data_temp/debug_star \
-		-set debug_star 1 -run default.in -model twop -mcmc \
-		> data_temp/debug_star.scr
-	-mv -i debug_star.o2 data_temp
+# test2: empty
+# 	mpirun -np 1 bamr -set prefix data_temp/debug_star \
+# 		-set debug_star 1 -run default.in -model twop -mcmc \
+# 		> data_temp/debug_star.scr
+# 	-mv -i debug_star.o2 data_temp
 
 test3: empty
 	mpirun -np 2 \
