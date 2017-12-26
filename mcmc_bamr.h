@@ -30,7 +30,7 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
-#ifndef BAMR_NO_MPI
+#ifdef BAMR_MPI
 #include <mpi.h>
 #endif
 

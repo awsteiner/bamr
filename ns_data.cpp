@@ -24,7 +24,7 @@
 
 #include <o2scl/hdf_io.h>
 
-#ifndef BAMR_NO_MPI
+#ifdef BAMR_MPI
 #include <mpi.h>
 #endif
 

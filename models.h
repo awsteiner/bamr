@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#ifndef BAMR_NO_MPI
+#ifdef BAMR_MPI
 #include <mpi.h>
 #endif
 

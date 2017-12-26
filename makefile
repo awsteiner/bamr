@@ -157,85 +157,85 @@ ecsn3:
 # ----------------------------------------------------------------------
 
 test-all: test-prep test3 test4 test5 test6 test7 test8 \
-		test9 test10 test11 test12 test13 test14
+		test9 test10 test11 test12 test13 test14 bamr
 #test1 test2
 
 test-all-nompi: test-prep test1-nompi test2-nompi test3-nompi \
 		test4-nompi test5-nompi test6-nompi test7-nompi \
 		test8-nompi test9-nompi test10-nompi test11-nompi \
-		test12-nompi test13-nompi test14-nompi
+		test12-nompi test13-nompi test14-nompi bamr_nompi
 
-test-prep: empty
+test-prep: bamr
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 
-# test1: empty
+# test1: bamr
 # 	mpirun -np 1 bamr -set prefix data_temp/debug_eos \
 # 		-set debug_eos 1 -run default.in -model twop -mcmc \
 # 		> data_temp/debug_eos.scr
 # 	-mv -i debug_eos.o2 data_temp
 
-# test2: empty
+# test2: bamr
 # 	mpirun -np 1 bamr -set prefix data_temp/debug_star \
 # 		-set debug_star 1 -run default.in -model twop -mcmc \
 # 		> data_temp/debug_star.scr
 # 	-mv -i debug_star.o2 data_temp
 
-test3: empty
+test3: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 300 -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
-test4: empty
+test4: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/twop_nodata \
 		-model twop -mcmc \
 		> data_temp/twop_nodata.scr 2> data_temp/twop_nodata.err
 
-test5: empty
+test5: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set compute_cthick 1 \
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 
-test6: empty
+test6: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
 
-test7: empty
+test7: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 300 -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 
-test8: empty
+test8: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/qf_nodata \
 		-model qmc_fixp -mcmc \
 		> data_temp/qf_nodata.scr 2> data_temp/qf_nodata.err
 
-test9: empty
+test9: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set n_warm_up 100 \
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 
-test10: empty
+test10: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/twop_ai -set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
-test11: empty
+test11: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/twop_chain \
 		-set max_chain_size 10 -model twop -mcmc \
 		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
 
-test12: empty
+test12: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set prefix data_temp/twop_aic \
 		-set aff_inv 1 \
@@ -243,92 +243,92 @@ test12: empty
 		-set max_chain_size 10 -mcmc \
 		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
-test13: empty
+test13: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
-test14: empty
+test14: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 100 -set compute_cthick 1 -set crust_from_L 1 \
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
 
-test1-nompi: empty
+test1-nompi: bamr_nompi
 	bamr_nompi -set prefix data_temp/debug_eos \
 		-set debug_eos 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_eos.scr
 	-mv -i debug_eos.o2 data_temp
 
-test2-nompi: empty
+test2-nompi: bamr_nompi
 	bamr_nompi -set prefix data_temp/debug_star \
 		-set debug_star 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_star.scr
 	-mv -i debug_star.o2 data_temp
 
-test3-nompi: empty
+test3-nompi: bamr_nompi
 	bamr_nompi -set max_iters 300 -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
-test4-nompi: empty
+test4-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_nodata \
 		-model twop -mcmc \
 		> data_temp/twop_nodata.scr 2> data_temp/twop_nodata.err
 
-test5-nompi: empty
+test5-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 
-test6-nompi: empty
+test6-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
 
-test7-nompi: empty
+test7-nompi: bamr_nompi
 	bamr_nompi -set max_iters 300 -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 
-test8-nompi: empty
+test8-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/qf_nodata \
 		-model qmc_fixp -mcmc \
 		> data_temp/qf_nodata.scr 2> data_temp/qf_nodata.err
 
-test9-nompi: empty
+test9-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set n_warm_up 100 \
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 
-test10-nompi: empty
+test10-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_ai \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
-test11-nompi: empty
+test11-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_chain \
 		-set max_chain_size 10 -model twop -mcmc \
 		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
 
-test12-nompi: empty
+test12-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_aic \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 20 \
 		-set max_chain_size 10 -mcmc \
 		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
-test13-nompi: empty
+test13-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
-test14-nompi: empty
+test14-nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
