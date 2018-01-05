@@ -77,6 +77,9 @@ namespace bamr {
     /// Model object
     std::shared_ptr<model> mod;
 
+    /// Model type string
+    std::string model_type;
+    
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }
