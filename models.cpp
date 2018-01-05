@@ -412,38 +412,33 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // core-crust transition)
 
     if (set->debug_eos) {
-
-#pragma omp master
-      {
+      
+      o2scl_hdf::hdf_file hfde;
+      
+      hfde.open_or_create("debug_eos.o2");
+      
+      // Output the core EOS
+      hdf_output(hfde,dat.eos,"eos");
+      
+      // Output core and crust EOS as reported by the tov_interp_eos object
+      o2scl::table_units<> full_eos;
+      full_eos.line_of_names("ed pr nb");
+      full_eos.set_unit("ed","1/fm^4");
+      full_eos.set_unit("pr","1/fm^4");
+      full_eos.set_unit("nb","1/fm^3");
+      for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
 	
-	  o2scl_hdf::hdf_file hfde;
-	  
-	  hfde.open_or_create("debug_eos.o2");
-	  
-	  // Output the core EOS
-	  hdf_output(hfde,dat.eos,"eos");
-	  
-	  // Output core and crust EOS as reported by the tov_interp_eos object
-	  o2scl::table_units<> full_eos;
-	  full_eos.line_of_names("ed pr nb");
-	  full_eos.set_unit("ed","1/fm^4");
-	  full_eos.set_unit("pr","1/fm^4");
-	  full_eos.set_unit("nb","1/fm^3");
-	  for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
-	    
-	    double ed, nb;
-	    teos.get_eden_user(pr,ed,nb);
-	    double line[3]={ed,pr,nb};
-	    full_eos.line_of_data(3,line);
-	    
-	    // Choose a slightly more sparse grid at lower pressures
-	    if (pr<1.0e-4) pr*=1.2;
-	  }
-	  hdf_output(hfde,full_eos,"full_eos");
-	  
-	  hfde.close();
-	  
+	double ed, nb;
+	teos.get_eden_user(pr,ed,nb);
+	double line[3]={ed,pr,nb};
+	full_eos.line_of_data(3,line);
+	
+	// Choose a slightly more sparse grid at lower pressures
+	if (pr<1.0e-4) pr*=1.2;
       }
+      hdf_output(hfde,full_eos,"full_eos");
+      
+      hfde.close();
       
       // Exit only if debug_star is not also true
       if (!set->debug_star) {
@@ -455,7 +450,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
       
     }
-
+      
     // ---------------------------------------------------------------
     // Solve for M vs. R curve
     
