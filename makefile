@@ -5,8 +5,8 @@
 
 # This variable should include the directories for the O2scl, GSL, and
 # HDF5 libraries. In my configuration, I use the environment variables
-# O2SCL_LIB, but you can just replace this
-# entire line with whatever you need.
+# O2SCL_LIB, but you can just replace this entire line with whatever
+# you need.
 LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB)
 
 # This variable may need to be modified to specify the include
@@ -15,15 +15,15 @@ LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB)
 # directories may need to be here also.
 INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC)
 
-# C++ compiler
-# MPI_CXX = mpic++ 
+# C++ compiler (e.g. mpicxx)
+# MPI_CXX = 
 
-# Generic (no MPI necessary) C++ compiler
-# CXX = g++
+# Generic (no MPI necessary) C++ compiler (e.g. g++)
+# CXX = 
 
-# Comment out these two variables if you do not have GNU readline or
-# if O2scl was compiled without readline support
-READLINE_VAR = -DO2SCL_READLINE -DBAMR_READLINE
+# Set these two variables to be empty if you do not have GNU readline
+# readline support
+READLINE_VAR = -DBAMR_READLINE
 
 READLINE_LIBS = -lreadline -lncurses
 
@@ -83,6 +83,9 @@ help:
 	@echo "  bamr"
 	@echo "  process"
 	@echo "  bamr_nompi"
+	@echo "  test-all: runs test-prep, test3, test4, ... test14"
+	@echo "  test-all_nompi: runs test-prep, test1_nompi, test2_nompi,"
+	@echo "                  ..., test14_nompi"
 	@echo "Developer targets:"
 	@echo "  doc"
 	@echo "  update-tags"
@@ -160,14 +163,17 @@ test-all: test-prep test3 test4 test5 test6 test7 test8 \
 		test9 test10 test11 test12 test13 test14 bamr
 #test1 test2
 
-test-all-nompi: test-prep test1-nompi test2-nompi test3-nompi \
-		test4-nompi test5-nompi test6-nompi test7-nompi \
-		test8-nompi test9-nompi test10-nompi test11-nompi \
-		test12-nompi test13-nompi test14-nompi bamr_nompi
+test-all_nompi: test-prep test1_nompi test2_nompi test3_nompi \
+		test4_nompi test5_nompi test6_nompi test7_nompi \
+		test8_nompi test9_nompi test10_nompi test11_nompi \
+		test12_nompi test13_nompi test14_nompi bamr_nompi
 
 test-prep: bamr
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
+
+# These don't work right now because the code doesn't exit
+# MPI gracefully before the exit(-1) statement
 
 # test1: bamr
 # 	mpirun -np 1 bamr -set prefix data_temp/debug_eos \
@@ -256,79 +262,79 @@ test14: bamr
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
 
-test1-nompi: bamr_nompi
+test1_nompi: bamr_nompi
 	bamr_nompi -set prefix data_temp/debug_eos \
 		-set debug_eos 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_eos.scr
 	-mv -i debug_eos.o2 data_temp
 
-test2-nompi: bamr_nompi
+test2_nompi: bamr_nompi
 	bamr_nompi -set prefix data_temp/debug_star \
 		-set debug_star 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_star.scr
 	-mv -i debug_star.o2 data_temp
 
-test3-nompi: bamr_nompi
+test3_nompi: bamr_nompi
 	bamr_nompi -set max_iters 300 -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
-test4-nompi: bamr_nompi
+test4_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_nodata \
 		-model twop -mcmc \
 		> data_temp/twop_nodata.scr 2> data_temp/twop_nodata.err
 
-test5-nompi: bamr_nompi
+test5_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 
-test6-nompi: bamr_nompi
+test6_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
 
-test7-nompi: bamr_nompi
+test7_nompi: bamr_nompi
 	bamr_nompi -set max_iters 300 -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 
-test8-nompi: bamr_nompi
+test8_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/qf_nodata \
 		-model qmc_fixp -mcmc \
 		> data_temp/qf_nodata.scr 2> data_temp/qf_nodata.err
 
-test9-nompi: bamr_nompi
+test9_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set n_warm_up 100 \
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 
-test10-nompi: bamr_nompi
+test10_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_ai \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
 
-test11-nompi: bamr_nompi
+test11_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_chain \
 		-set max_chain_size 10 -model twop -mcmc \
 		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
 
-test12-nompi: bamr_nompi
+test12_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_aic \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 20 \
 		-set max_chain_size 10 -mcmc \
 		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
-test13-nompi: bamr_nompi
+test13_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
-test14-nompi: bamr_nompi
+test14_nompi: bamr_nompi
 	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
