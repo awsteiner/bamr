@@ -425,7 +425,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
   
-  set->verbose=this->verbose;
   this->mcmc(init.size(),low,high,pfa,ffa);
   
   return 0;

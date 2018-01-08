@@ -340,7 +340,11 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("mass_switch",&p_mass_switch));
 
       p_verbose.i=&verbose;
-      p_verbose.help="Bamr verbose parameter";
+      p_verbose.help=((std::string)"This controls verbose output ")+
+	"not already managed by 'mcmc_verbose'. Currently, no output "+
+	"is performed unless verbose>=2, in which case some progress "+
+	"on evaluating each point is written to cout. This value "+
+	"defaults to zero.";
       cl.par_list.insert(std::make_pair("verbose",&p_verbose));
 
       return;
