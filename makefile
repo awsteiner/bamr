@@ -273,19 +273,19 @@ test_crustL: bamr
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
 
-test_tableseq: bamr
-	mpirun -np 2 \
-	bamr -set max_iters 300 -set prefix data_temp/twop_tableseq \
-		-set store_rejects 1 \
-		-run default.in -model twop -mcmc \
-		> data_temp/twop_tableseq.scr 2> data_temp/twop_tableseq.err
-
 test_storej: bamr
 	mpirun -np 2 \
 	bamr -set max_iters 300 -set prefix data_temp/twop_storej \
-		-set table_sequence 0 \
+		-set store_rejects 1 \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_storej.scr 2> data_temp/twop_storej.err
+
+test_tableseq: bamr
+	mpirun -np 2 \
+	bamr -set max_iters 300 -set prefix data_temp/twop_tableseq \
+		-set table_sequence 0 \
+		-run default.in -model twop -mcmc \
+		> data_temp/twop_tableseq.scr 2> data_temp/twop_tableseq.err
 
 # ----------------------------------------------------------------------
 # Individual testing targets without MPI
