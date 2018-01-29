@@ -287,6 +287,13 @@ test_tableseq: bamr
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_tableseq.scr 2> data_temp/twop_tableseq.err
 
+test_rejtab: bamr
+	mpirun -np 2 \
+	bamr -set max_iters 300 -set prefix data_temp/twop_rejtab \
+		-set table_sequence 0 -set store_rejects 1 \
+		-run default.in -model twop -mcmc \
+		> data_temp/twop_rejtab.scr 2> data_temp/twop_rejtab.err
+
 # ----------------------------------------------------------------------
 # Individual testing targets without MPI
 # ----------------------------------------------------------------------
