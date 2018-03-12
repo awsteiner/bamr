@@ -232,6 +232,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
 	line.push_back(0.0);
 	line.push_back(0.0);
 	line.push_back(0.0);
+	line.push_back(0.0);
+	line.push_back(0.0);
       }
     }
   }
