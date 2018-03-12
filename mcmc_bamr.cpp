@@ -435,6 +435,11 @@ int mcmc_bamr::add_data(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int mcmc_bamr::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
+  nsd->add_data_alt(sv,itive_com);
+  return 0;
+}
+
 void mcmc_bamr::setup_cli() {
   
   mcmc_para_cli::setup_cli(cl);
@@ -478,7 +483,7 @@ void mcmc_bamr::setup_cli() {
      "<initial mass> is the initial mass for the first point, and "+
      "[obj name] is the optional name of table3d object in <file>. "+
      "If [obj name] is not specified, then the first table3d object "+
-     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data),
+     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data_alt),
      cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);

@@ -333,13 +333,17 @@ int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
 	      << "alternate data set." << std::endl;
     return o2scl::exc_efailed;
   }
-      
+
   source_names.push_back(sv[1]);
   source_fnames.push_back(sv[2]);
   source_fnames_alt.push_back(sv[3]);
   slice_names.push_back(sv[4]);
   init_mass_fracs.push_back(o2scl::stod(sv[5]));
-  table_names.push_back(sv[6]);
+  if (sv.size()>=7) {
+    table_names.push_back(sv[6]);
+  } else {
+    table_names.push_back("");
+  }
 
   n_sources++;
 

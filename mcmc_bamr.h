@@ -153,6 +153,10 @@ namespace bamr {
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
     
+    /** \brief Add a data distribution to the list
+     */
+    virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
+    
     /** \brief Perform the MCMC simulation
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
