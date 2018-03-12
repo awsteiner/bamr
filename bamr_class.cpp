@@ -203,7 +203,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
 	double I=dat.mvsr.interp("gm",mval,"rjw")/3.0/schwarz_km;
 	line.push_back(I);
 
-#ifdef NEVER_DEFINED
+	// To compute I_bar, divide by G^2*M^3
+	double I_bar=I/schwarz_km/schwarz_km/4.0/mval/mval/mval;
+	line.push_back(I_bar);
+	
 	// Relation for lambda given I from Kent Yagi based
 	// on Yagi and Yunes, Science, (2014)
 	double a0=-210.327;
@@ -221,11 +224,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
 	double li5=li*li4;
 	double li6=li*li5;
 	  
-	double lambda_bar=exp(a0+a1*li+a2*li2+a3*li3+a4*li4+a5*li5+a6*li6);
-	double lambda=lambda_bar*pow(mval,5.0);
-	cout << I_bar << " " << lambda_bar << endl;
-	exit(-1);
-#endif
+	double Lambda_bar=exp(a0+a1*li+a2*li2+a3*li3+a4*li4+a5*li5+a6*li6);
+
+	line.push_back(Lambda_bar);
 	
       } else {
 	line.push_back(0.0);

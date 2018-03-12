@@ -259,10 +259,13 @@ int mcmc_bamr::mcmc_init() {
       this->table->set_unit(((string)"MB_")+o2scl::itos(i),"Msun");
       this->table->new_column(((string)"BE_")+o2scl::itos(i));
       this->table->set_unit(((string)"BE_")+o2scl::itos(i),"Msun");
+
       this->table->new_column(((string)"I_")+o2scl::itos(i));
       this->table->set_unit(((string)"I_")+o2scl::itos(i),
 			    "Msun*km^2");
-      //this->table->new_column(((string)"lambda_")+o2scl::itos(i));
+      this->table->new_column(((string)"I_bar_")+o2scl::itos(i));
+      
+      this->table->new_column(((string)"Lambda_bar_")+o2scl::itos(i));
     }
   }
   if (nsd->source_fnames_alt.size()>0) {
