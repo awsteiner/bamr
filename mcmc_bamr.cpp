@@ -409,10 +409,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Get the parameter initial values for this model 
   ubvector init(names.size());
   bc_arr[0]->mod->initial_point(init);
+
+  // AWS: 3/20/18: I changed this part, because we want the MCMC class
+  // to be able to expect that different entries in the initial_points
+  // array
   this->initial_points.clear();
-  for(size_t i=0;i<n_threads;i++) {
-    this->initial_points.push_back(init);
-  }
+  this->initial_points.push_back(init);
 
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
