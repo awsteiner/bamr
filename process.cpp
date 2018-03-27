@@ -300,7 +300,7 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
 
       if (constraint.size()>0) {
 	size_t nlines_old=tab.get_nlines();
-	tab.delete_rows(constraint);
+	tab.delete_rows_func(constraint);
 	size_t nlines_new=tab.get_nlines();
 	if (verbose>0) {
 	  cout << "Applied constraint \"" << constraint
@@ -432,7 +432,7 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
 
       if (constraint.size()>0) {
 	size_t nlines_old=tab.get_nlines();
-	tab.delete_rows(constraint);
+	tab.delete_rows_func(constraint);
 	size_t nlines_new=tab.get_nlines();
 	if (verbose>0) {
 	  cout << "Applied constraint \"" << constraint
@@ -584,7 +584,8 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
   t.set("avgs",hist_size-1,0.0);
     
   // Compute total integral
-  double total=vector_integ_linear(hist_size,t["reps"],t["avgs"]);
+  double total=vector_integ_xy_interp(hist_size,t["reps"],t["avgs"],
+				      itp_linear);
   if (verbose>0) cout << "Total integral: " << total << endl;
   
   std::vector<double> locs;
@@ -733,7 +734,7 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
 
       if (constraint.size()>0) {
 	size_t nlines_old=tab.get_nlines();
-	tab.delete_rows(constraint);
+	tab.delete_rows_func(constraint);
 	size_t nlines_new=tab.get_nlines();
 	if (verbose>0) {
 	  cout << "Applied constraint \"" << constraint
@@ -1020,7 +1021,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
       // Apply constraint to this table
       if (constraint.size()>0) {
 	size_t nlines_old=tab.get_nlines();
-	tab.delete_rows(constraint);
+	tab.delete_rows_func(constraint);
 	size_t nlines_new=tab.get_nlines();
 	if (verbose>0) {
 	  cout << "Applied constraint \"" << constraint
@@ -1195,7 +1196,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	cont_wgt[0]=0.0;
 	cont_wgt[cont_wgt.size()-1]=0.0;
 	if (o2scl::vector_sum_double(cont_wgt)>0.0) {
-	  vector_region_parint(cont_wgt.size(),cont_grid,cont_wgt,
+	  vector_region_int(cont_wgt.size(),cont_grid,cont_wgt,
 			       cont_levels[j],locs);
 	  double lmin=vector_min_value<vector<double>,double>(locs);
 	  double lmax=vector_max_value<vector<double>,double>(locs);
