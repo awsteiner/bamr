@@ -992,8 +992,8 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
     }
 
     // Obtain the number of chains in this file
-    size_t n_chains;
-    hf.get_szt_def("n_chains",1,n_chains);
+    size_t n_chains=1;
+    //hf.get_szt_def("n_chains",1,n_chains);
     if (verbose>0) {
       if (n_chains==1) {
 	cout << n_chains << " separate chain." << endl;
@@ -1011,7 +1011,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  
       // Read chain from file
       table_units<> tab;
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       hdf_input(hf,tab,tab_name);
       if (verbose>0) {
 	cout << "Read table " << tab_name << " lines: " 
@@ -1196,7 +1196,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	cont_wgt[0]=0.0;
 	cont_wgt[cont_wgt.size()-1]=0.0;
 	if (o2scl::vector_sum_double(cont_wgt)>0.0) {
-	  vector_region_int(cont_wgt.size(),cont_grid,cont_wgt,
+	  vector_region_fracint(cont_wgt.size(),cont_grid,cont_wgt,
 			       cont_levels[j],locs);
 	  double lmin=vector_min_value<vector<double>,double>(locs);
 	  double lmax=vector_max_value<vector<double>,double>(locs);
