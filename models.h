@@ -176,7 +176,7 @@ namespace bamr {
       return;
     }
 
-    /** \brief Set parameter information [pure virtual]
+    /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
