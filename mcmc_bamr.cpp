@@ -56,7 +56,7 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
     bc_arr[i]->nsd=nsd;
   }
   
-  return;
+  return 0;
 }
 
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
