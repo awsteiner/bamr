@@ -33,7 +33,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
+mcmc_bamr::mcmc_bamr() {
   model_type="";
   set=std::make_shared<settings>();
   nsd=std::make_shared<ns_data>();
@@ -43,7 +43,7 @@ mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
   threads(args,false);
 }
 
-void mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
+int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   for(size_t i=0;i<this->n_threads;i++) {
     delete bc_arr[i];
   }
