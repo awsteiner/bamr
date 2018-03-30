@@ -161,6 +161,10 @@ namespace bamr {
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
+    /** \brief Set the number of OpenMP threads
+     */
+    virtual int threads(std::vector<std::string> &sv, bool itive_com);
+    
   public:
 
     /** \brief The command-line interface object
@@ -171,10 +175,9 @@ namespace bamr {
     o2scl::cli cl;
 #endif
     
-    /** \brief Create a \ref mcmc_bamr object with the specified
-	number of OpenMP threads (default 1)
+    /** \brief Create a \ref mcmc_bamr object 
     */
-    mcmc_bamr(size_t n_omp_threads=1);
+    mcmc_bamr();
     
     virtual ~mcmc_bamr() {
     }

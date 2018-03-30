@@ -30,19 +30,14 @@ READLINE_LIBS = -lreadline -lncurses
 # Basic compiler flags
 COMPILER_FLAGS = -std=c++0x -O3
 
-# Specify number of OpenMP threads
-THREAD_VAR = -DBAMR_OMP_THREADS=2
-
 # ----------------------------------------------------------------------
 # Secondary variables
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	-DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
-	$(THREAD_VAR)
+	-DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp 
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	-DBAMR_OMP_THREADS=1
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) 
 
 LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)

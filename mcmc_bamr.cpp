@@ -35,15 +35,28 @@ using namespace bamr;
 
 mcmc_bamr::mcmc_bamr(size_t n_omp_threads) {
   model_type="";
-  this->n_threads=n_omp_threads;
-  bc_arr.resize(this->n_threads);
   set=std::make_shared<settings>();
   nsd=std::make_shared<ns_data>();
+
+  n_threads=0;
+  vector<string> args={"threads","1"};
+  threads(args,false);
+}
+
+void mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   for(size_t i=0;i<this->n_threads;i++) {
+    delete bc_arr[i];
+  }
+
+  n_threads=o2scl::stoszt(sv[1]);
+  bc_arr.resize(n_threads);
+  for(size_t i=0;i<n_threads;i++) {
     bc_arr[i]=new bamr_class;
     bc_arr[i]->set=set;
     bc_arr[i]->nsd=nsd;
   }
+  
+  return;
 }
 
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
