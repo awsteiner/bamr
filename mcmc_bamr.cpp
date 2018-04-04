@@ -44,44 +44,45 @@ mcmc_bamr::mcmc_bamr() {
 }
 
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
-
+  
   if (sv.size()==1) {
     cerr << "Number of threads not specified in 'threads'." << endl;
-							       return 1;							       
+    return 1;							       
   }
-      size_t n_threads_old=n_threads;
-      n_threads=o2scl::stoszt(sv[1]);
-
-    if (model_type.length()>0) {
-      bc_arr[0]->mod->remove_params(cl);
-    }
-    
-    std::vector<bamr_class *> bc_arr2;
-    bc_arr2.resize(n_threads);
-    for(size_t i=0;i<n_threads;i++) {
-      bc_arr2[i]=new bamr_class;
+  
+  size_t n_threads_old=n_threads;
+  n_threads=o2scl::stoszt(sv[1]);
+  
+  if (model_type.length()>0) {
+    bc_arr[0]->mod->remove_params(cl);
+  }
+  
+  std::vector<bamr_class *> bc_arr2;
+  bc_arr2.resize(n_threads);
+  for(size_t i=0;i<n_threads;i++) {
+    bc_arr2[i]=new bamr_class;
       bc_arr2[i]->set=set;
       bc_arr2[i]->nsd=nsd;
-    }
-    
-    model &m=*(bc_arr[0]->mod);
-    for(size_t i=1;i<bc_arr2.size();i++) {
-      model &m2=*(bc_arr2[i]->mod);
-      m.copy_params(m2);
-    }
-
-    for(size_t i=0;i<n_threads_old;i++) {
-      delete bc_arr[i];
-    }
-    
-    bc_arr.resize(n_threads);
-    for(size_t i=0;i<n_threads;i++) {
-      bc_arr[i]=bc_arr2[i];
-    }
-    
-    bc_arr[0]->mod->setup_params(cl);
-    
-    return 0;
+  }
+  
+  model &m=*(bc_arr[0]->mod);
+  for(size_t i=1;i<bc_arr2.size();i++) {
+    model &m2=*(bc_arr2[i]->mod);
+    m.copy_params(m2);
+  }
+  
+  for(size_t i=0;i<n_threads_old;i++) {
+    delete bc_arr[i];
+  }
+  
+  bc_arr.resize(n_threads);
+  for(size_t i=0;i<n_threads;i++) {
+    bc_arr[i]=bc_arr2[i];
+  }
+  
+  bc_arr[0]->mod->setup_params(cl);
+  
+  return 0;
 }
   
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
