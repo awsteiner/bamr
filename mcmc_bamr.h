@@ -162,10 +162,8 @@ namespace bamr {
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
     
     /** \brief Set the number of OpenMP threads
-	
-	\note Not virtual since called by constructor
      */
-    int threads(std::vector<std::string> &sv, bool itive_com);
+    virtual int threads(std::vector<std::string> &sv, bool itive_com);
     
   public:
 

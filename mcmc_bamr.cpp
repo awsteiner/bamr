@@ -38,9 +38,10 @@ mcmc_bamr::mcmc_bamr() {
   set=std::make_shared<settings>();
   nsd=std::make_shared<ns_data>();
 
-  n_threads=0;
-  vector<string> args={"threads","1"};
-  threads(args,false);
+  bc_arr.resize(1);
+  bc_arr[0]=new bamr_class;
+  bc_arr[0]->set=set;
+  bc_arr[0]->nsd=nsd;
 }
 
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
@@ -49,38 +50,23 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
     cerr << "Number of threads not specified in 'threads'." << endl;
     return 1;							       
   }
+
+  if (model_type.length()>0) {
+    cerr << "Threads must be set before model." << endl;
+						   return 2;			  }
   
   size_t n_threads_old=n_threads;
-  n_threads=o2scl::stoszt(sv[1]);
-  
-  if (model_type.length()>0) {
-    bc_arr[0]->mod->remove_params(cl);
-  }
-  
-  std::vector<bamr_class *> bc_arr2;
-  bc_arr2.resize(n_threads);
-  for(size_t i=0;i<n_threads;i++) {
-    bc_arr2[i]=new bamr_class;
-      bc_arr2[i]->set=set;
-      bc_arr2[i]->nsd=nsd;
-  }
-  
-  model &m=*(bc_arr[0]->mod);
-  for(size_t i=1;i<bc_arr2.size();i++) {
-    model &m2=*(bc_arr2[i]->mod);
-    m.copy_params(m2);
-  }
-  
   for(size_t i=0;i<n_threads_old;i++) {
     delete bc_arr[i];
   }
+  n_threads=o2scl::stoszt(sv[1]);
   
   bc_arr.resize(n_threads);
   for(size_t i=0;i<n_threads;i++) {
-    bc_arr[i]=bc_arr2[i];
+    bc_arr[i]=new bamr_class;
+    bc_arr[i]->set=set;
+    bc_arr[i]->nsd=nsd;
   }
-  
-  bc_arr[0]->mod->setup_params(cl);
   
   return 0;
 }
@@ -493,7 +479,7 @@ void mcmc_bamr::setup_cli() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=4;
+  static const int nopt=5;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      0,0,"",((std::string)"This is the main part of ")+
@@ -507,6 +493,10 @@ void mcmc_bamr::setup_cli() {
      "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
      "model must be chosen before a MCMC run.",
      new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
+     cli::comm_option_both},
+    {0,"threads","Specify number of OpenMP threads",
+     1,1,"<number>","",
+     new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
      cli::comm_option_both},
     {'a',"add-data","Add data source to the list.",
      4,5,"<name> <file> <slice> <initial mass> [obj name]",
