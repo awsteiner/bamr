@@ -2093,9 +2093,12 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     review. In (S,L) space, the lower line is (29,0) to (35,55),
     and the upper line is (26.5,0) to (33.5,100)
   */
-  if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
-    scr_out << "L out of range: " << Stmp << " " << Ltmp << endl;
-    scr_out << 9.17*Stmp-266.0 << " " << 14.3*Stmp-379.0 << endl;
+  double Lmin=9.17*Stmp-266.0;
+  double Lmax=14.3*Stmp-379.0;
+  if (Ltmp<Lmin || Ltmp>Lmax) {
+    scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
+	    << "\n\tL_min: " << Lmin << " L_max: "
+	    << Lmax << endl;
     ret=ix_param_mismatch;
     return;
   }
@@ -2351,8 +2354,12 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   double Stmp=params[2];
   double Ltmp=params[3];
 
-  if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
-    scr_out << "L out of range." << endl;
+  double Lmin=9.17*Stmp-266.0;
+  double Lmax=14.3*Stmp-379.0;
+  if (Ltmp<Lmin || Ltmp>Lmax) {
+    scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
+	    << "\n\tL_min: " << Lmin << " L_max: "
+	    << Lmax << endl;
     ret=ix_param_mismatch;
     return;
   }
@@ -2579,8 +2586,12 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   double Stmp=params[2];
   double Ltmp=params[3];
 
-  if (Ltmp<9.17*Stmp-266.0 || Ltmp>14.3*Stmp-379.0) {
-    scr_out << "L out of range." << endl;
+  double Lmin=9.17*Stmp-266.0;
+  double Lmax=14.3*Stmp-379.0;
+  if (Ltmp<Lmin || Ltmp>Lmax) {
+    scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
+	    << "\n\tL_min: " << Lmin << " L_max: "
+	    << Lmax << endl;
     ret=ix_param_mismatch;
     return;
   }

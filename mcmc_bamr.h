@@ -164,6 +164,16 @@ namespace bamr {
     /** \brief Set the number of OpenMP threads
      */
     virtual int threads(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Desc
+     */
+    virtual int initial_point_last(std::vector<std::string> &sv,
+				   bool itive_com);
+    
+    /** \brief Desc
+     */
+    virtual int initial_point_best(std::vector<std::string> &sv,
+				   bool itive_com);
     
   public:
 

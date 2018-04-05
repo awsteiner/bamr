@@ -53,7 +53,8 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
 
   if (model_type.length()>0) {
     cerr << "Threads must be set before model." << endl;
-						   return 2;			  }
+    return 2;
+  }
   
   size_t n_threads_old=n_threads;
   for(size_t i=0;i<n_threads_old;i++) {
@@ -411,6 +412,42 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
+				  bool itive_com) {
+
+  if (model_type.length()<2) {
+    cerr << "Model not specified." << endl;
+    return 2;
+  }
+      
+  model &m=*(bc_arr[0]->mod);
+  size_t np=m.n_eos_params+nsd->n_sources;
+  
+  string prefix=sv[1];
+  string fname=prefix+"_"+o2scl::itos(this->mpi_rank)+"_out";
+  this->initial_points_file_last(fname,np);
+  
+  return 0;
+}
+
+int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
+				  bool itive_com) {
+  
+  if (model_type.length()<2) {
+    cerr << "Model not specified." << endl;
+    return 2;
+  }
+      
+  model &m=*(bc_arr[0]->mod);
+  size_t np=m.n_eos_params+nsd->n_sources;
+  
+  string prefix=sv[1];
+  string fname=prefix+"_"+o2scl::itos(this->mpi_rank)+"_out";
+  this->initial_points_file_best(fname,np);
+  
+  return 0;
+}
+
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (model_type.length()==0) {
@@ -479,7 +516,7 @@ void mcmc_bamr::setup_cli() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=5;
+  static const int nopt=7;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      0,0,"",((std::string)"This is the main part of ")+
@@ -518,7 +555,17 @@ void mcmc_bamr::setup_cli() {
      "[obj name] is the optional name of table3d object in <file>. "+
      "If [obj name] is not specified, then the first table3d object "+
      "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data_alt),
-     cli::comm_option_both}
+     cli::comm_option_both},
+    {0,"initial-point-last","Set initial point from file.",1,1,
+     "<filename>","Long. desc.",
+     new o2scl::comm_option_mfptr<mcmc_bamr>
+     (this,&mcmc_bamr::initial_point_last),
+     o2scl::cli::comm_option_both},
+    {0,"initial-point-best","Set initial point from file.",1,1,
+     "<filename>","Long. desc.",
+     new o2scl::comm_option_mfptr<mcmc_bamr>
+     (this,&mcmc_bamr::initial_point_best),
+     o2scl::cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
 
