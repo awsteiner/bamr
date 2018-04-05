@@ -72,6 +72,8 @@ namespace bamr {
       rad=md.rad;
       mass=md.mass;
       wgts=md.wgts;
+      mvsr=md.mvsr;
+      eos=md.eos;
     }
 
 #ifdef O2SCL_NEVER_DEFINED

@@ -24,6 +24,7 @@
 #include "models.h"
 #include "bamr_class.h"
 #include "mcmc_bamr.h"
+#include "o2scl/vector.h"
 
 using namespace std;
 using namespace o2scl;
@@ -739,6 +740,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   
   for(size_t i=0;i<nsd->n_sources;i++) {
 
+    double alt=0.0;
     // Double check that current M and R is in the range of
     // the provided input data
     if (dat.rad[i]<nsd->source_tables[i].get_x_data()[0] ||
@@ -748,14 +750,15 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	dat.mass[i]>nsd->source_tables[i].get_y_data()
 	[nsd->source_tables[i].get_ny()-1]) {
       dat.wgts[i]=0.0;
+      
     } else {
-      // If it is, compute the weight
-
+      // If M and R are in range, compute the weight
+      
       if (nsd->source_fnames_alt.size()>0) {
 	
 	// Compute alternate probability from an insignificant bit
 	// in the mass 
-	double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
+	alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
 	
 	if (alt<2.0/3.0) {
 	  dat.wgts[i]=nsd->source_tables[i].interp
@@ -777,10 +780,20 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
       
     }
+
+    // If the data gives a zero weight, just return a factor
+    // of 1e8 smaller than the peak value
+    if (dat.wgts[i]<=0.0) {
+      typedef boost::numeric::ublas::matrix<double> ubmatrix;
+      dat.wgts[i]=o2scl::matrix_max_value<ubmatrix,double>
+	(nsd->source_tables[i].get_slice(nsd->slice_names[i]))/1.0e8;
+    }
     
     // If the weight is zero, then return failure
     if (dat.wgts[i]<=0.0) {
-      scr_out << "Weight zero for source " << nsd->source_names[i] << endl;
+      scr_out << "Weight zero for source " << i << " " << nsd->source_names[i]
+	      << " with mass " << dat.mass[i] << " and radius "
+	      << dat.rad[i] << " with alt=" << alt << endl;
       return ix_mr_outside;
     }
 
@@ -828,6 +841,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     O2SCL_ERR("Sanity check for success flag in model::compute_point.",
 	      o2scl::exc_esanity);
   }
+
   return o2scl::success;
 }
 
