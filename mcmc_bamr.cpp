@@ -468,15 +468,19 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   bc_arr[0]->mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
-  // Get the parameter initial values for this model 
-  ubvector init(names.size());
-  bc_arr[0]->mod->initial_point(init);
-
-  // AWS: 3/20/18: I changed this part, because we want the MCMC class
-  // to be able to expect that different entries in the initial_points
-  // array
-  this->initial_points.clear();
-  this->initial_points.push_back(init);
+  // Set initial points if they have not already been set by the
+  // user
+  if (this->initial_points.size()==0) {
+    // Get the parameter initial values for this model 
+    ubvector init(names.size());
+    bc_arr[0]->mod->initial_point(init);
+    
+    // AWS: 3/20/18: I changed this part, because we want the MCMC class
+    // to be able to expect that different entries in the initial_points
+    // array
+    this->initial_points.clear();
+    this->initial_points.push_back(init);
+  }
 
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
@@ -492,7 +496,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
   
-  this->mcmc(init.size(),low,high,pfa,ffa);
+  this->mcmc(names.size(),low,high,pfa,ffa);
   
   return 0;
 }
