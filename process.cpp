@@ -97,7 +97,7 @@ int process::auto_corr(std::vector<std::string> &sv, bool itive_com) {
     for(size_t j=0;j<n_chains;j++) {
 
       // Read table
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       table_units<> tab;
       hdf_input(hf,tab,tab_name);
       cout << "Read table " << tab_name << endl;
@@ -294,7 +294,7 @@ int process::mass_sel(std::vector<std::string> &sv, bool itive_com) {
     for(size_t j=0;j<n_chains;j++) {
 
       // Read table
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       table_units<> tab;
       hdf_input(hf,tab,tab_name);
 
@@ -426,7 +426,7 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
     for(size_t j=0;j<n_chains;j++) {
 
       // Read table
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       table_units<> tab;
       hdf_input(hf,tab,tab_name);
 
@@ -728,7 +728,7 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
 
     for(size_t j=0;j<n_chains;j++) {
 
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       hdf_input(hf,tab,tab_name);
       cout << "Read table " << tab_name << endl;
 
@@ -1348,7 +1348,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
     for(size_t j=0;j<n_chains;j++) {
 
       // Read table
-      std::string tab_name="markov_chain"+szttos(j);
+      std::string tab_name="markov_chain_"+szttos(j);
       table_units<> tab;
       hdf_input(hf,tab,tab_name);
 	
