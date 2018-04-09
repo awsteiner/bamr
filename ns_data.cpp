@@ -61,7 +61,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
 #ifdef BAMR_MPI
 
-    bool mpi_load_debug=false;
+    bool mpi_load_debug=true;
     int buffer=0, tag=0;
     
     // Choose which file to read first for this rank
@@ -73,25 +73,18 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       scr_out << "Variable 'filestart' is " << filestart << " for rank "
 	      << mpi_rank << "." << std::endl;
     }
-    if (set->verbose>=2) {
-      cout << "Variable 'filestart' is " << filestart << " for rank "
-	      << mpi_rank << "." << std::endl;
-    }
-    
+
     // Loop through all files
     for(int k=0;k<((int)n_sources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)n_sources))) {
+      if (mpi_nprocs>1 && (k>0 || (mpi_rank>0 &&
+				   mpi_rank<=mpi_nprocs-((int)n_sources)))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
 	if (mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " waiting for " 
-		  << prev << "." << std::endl;
-	}
-	if (set->verbose>=2) {
-	  cout << "Rank " << mpi_rank << " waiting for " 
 		  << prev << "." << std::endl;
 	}
 	MPI_Recv(&buffer,1,MPI_INT,prev,tag,MPI_COMM_WORLD,
@@ -104,10 +97,6 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
-		<< file << "." << std::endl;
-      }
-      if (set->verbose>=2) {
-	cout << "Rank " << mpi_rank << " reading file " 
 		<< file << "." << std::endl;
       }
 
@@ -135,15 +124,12 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Send a message, unless the rank is the last one to read a
       // file.
-      if (k<((int)n_sources)-1 || mpi_rank<mpi_nprocs-((int)n_sources)) {
+      if (mpi_nprocs>1 && (k<((int)n_sources)-1 ||
+			   mpi_rank<mpi_nprocs-((int)n_sources))) {
 	int next=mpi_rank+1;
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
 	if (mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " sending to " 
-		  << next << "." << std::endl;
-	}
-	if (set->verbose>=2) {
-	  cout << "Rank " << mpi_rank << " sending to " 
 		  << next << "." << std::endl;
 	}
 	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
