@@ -49,7 +49,9 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
   if (n_sources>0) {
     
     if (set->verbose>=2) {
-      cout << "bamr: Loading " << n_sources << " data files." << endl;
+      cout << "bamr: Loading " << n_sources << " data files " 
+	   << "with rank " << mpi_rank << " and size " 
+	   << mpi_nprocs << endl;
     }
     
     source_tables.resize(n_sources);
@@ -64,11 +66,15 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
     // Choose which file to read first for this rank
     int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int) n_sources) && mpi_rank>0) {
+    if (mpi_rank>mpi_nprocs-((int)n_sources) && mpi_rank>0) {
       filestart=mpi_nprocs-mpi_rank;
     }
     if (mpi_load_debug) {
       scr_out << "Variable 'filestart' is " << filestart << " for rank "
+	      << mpi_rank << "." << std::endl;
+    }
+    if (set->verbose>=2) {
+      cout << "Variable 'filestart' is " << filestart << " for rank "
 	      << mpi_rank << "." << std::endl;
     }
     
@@ -77,11 +83,15 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int) n_sources))) {
+      if (k>0 || (mpi_rank>0 && mpi_rank<=mpi_nprocs-((int)n_sources))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
 	if (mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " waiting for " 
+		  << prev << "." << std::endl;
+	}
+	if (set->verbose>=2) {
+	  cout << "Rank " << mpi_rank << " waiting for " 
 		  << prev << "." << std::endl;
 	}
 	MPI_Recv(&buffer,1,MPI_INT,prev,tag,MPI_COMM_WORLD,
@@ -90,10 +100,14 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Determine which file to read next
       int file=filestart+k;
-      if (file>=((int)n_sources)) file-= n_sources;
+      if (file>=((int)n_sources)) file-=n_sources;
 
       if (mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
+		<< file << "." << std::endl;
+      }
+      if (set->verbose>=2) {
+	cout << "Rank " << mpi_rank << " reading file " 
 		<< file << "." << std::endl;
       }
 
@@ -126,6 +140,10 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
 	if (mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " sending to " 
+		  << next << "." << std::endl;
+	}
+	if (set->verbose>=2) {
+	  cout << "Rank " << mpi_rank << " sending to " 
 		  << next << "." << std::endl;
 	}
 	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
