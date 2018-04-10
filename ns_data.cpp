@@ -61,7 +61,6 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
 #ifdef BAMR_MPI
 
-    bool mpi_load_debug=true;
     int buffer=0, tag=0;
     
     // Choose which file to read first for this rank
@@ -69,7 +68,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     if (mpi_rank>mpi_nprocs-((int)n_sources) && mpi_rank>0) {
       filestart=mpi_nprocs-mpi_rank;
     }
-    if (mpi_load_debug) {
+    if (set->mpi_load_debug) {
       scr_out << "Variable 'filestart' is " << filestart << " for rank "
 	      << mpi_rank << "." << std::endl;
     }
@@ -83,7 +82,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 				   mpi_rank<=mpi_nprocs-((int)n_sources)))) {
 	int prev=mpi_rank-1;
 	if (prev<0) prev+=mpi_nprocs;
-	if (mpi_load_debug) {
+	if (set->mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " waiting for " 
 		  << prev << "." << std::endl;
 	}
@@ -95,31 +94,33 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       int file=filestart+k;
       if (file>=((int)n_sources)) file-=n_sources;
 
-      if (mpi_load_debug) {
+      if (set->mpi_load_debug) {
 	scr_out << "Rank " << mpi_rank << " reading file " 
 		<< file << "." << std::endl;
-      }
-
-      o2scl_hdf::hdf_file hf;
-      hf.open(source_fnames[file]);
-      if (table_names[file].length()>0) {
-	hdf_input(hf,source_tables[file],table_names[file]);
       } else {
-	hdf_input(hf,source_tables[file]);
-      }
-      source_tables[file].set_interp_type(o2scl::itp_linear);
-      hf.close();
-      
-      if (source_fnames_alt.size()>0) {
-	o2scl_hdf::hdf_file hf2;
-	hf2.open(source_fnames_alt[file]);
+
+	o2scl_hdf::hdf_file hf;
+	hf.open(source_fnames[file]);
 	if (table_names[file].length()>0) {
-	  hdf_input(hf2,source_tables_alt[file],table_names[file]);
+	  hdf_input(hf,source_tables[file],table_names[file]);
 	} else {
-	  hdf_input(hf2,source_tables_alt[file]);
+	  hdf_input(hf,source_tables[file]);
 	}
-	source_tables_alt[file].set_interp_type(o2scl::itp_linear);
-	hf2.close();
+	source_tables[file].set_interp_type(o2scl::itp_linear);
+	hf.close();
+      
+	if (source_fnames_alt.size()>0) {
+	  o2scl_hdf::hdf_file hf2;
+	  hf2.open(source_fnames_alt[file]);
+	  if (table_names[file].length()>0) {
+	    hdf_input(hf2,source_tables_alt[file],table_names[file]);
+	  } else {
+	    hdf_input(hf2,source_tables_alt[file]);
+	  }
+	  source_tables_alt[file].set_interp_type(o2scl::itp_linear);
+	  hf2.close();
+	}
+	
       }
       
       // Send a message, unless the rank is the last one to read a
@@ -128,13 +129,19 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
 			   mpi_rank<mpi_nprocs-((int)n_sources))) {
 	int next=mpi_rank+1;
 	if (next>=mpi_nprocs) next-=mpi_nprocs;
-	if (mpi_load_debug) {
+	if (set->mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " sending to " 
 		  << next << "." << std::endl;
 	}
 	MPI_Send(&buffer,1,MPI_INT,next,tag,MPI_COMM_WORLD);
       }
       
+    }
+
+    if (set->mpi_load_debug==true) {
+      scr_out << "Exiting since mpi_load_debug is true." << endl;
+      cout << "Exiting since mpi_load_debug is true." << endl;
+      exit(-1);
     }
     
 #else

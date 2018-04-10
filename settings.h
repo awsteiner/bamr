@@ -74,6 +74,7 @@ namespace bamr {
       mass_switch=0;
       compute_cthick=false;
       crust_from_L=false;
+      mpi_load_debug=false;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -95,6 +96,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_compute_cthick;
     o2scl::cli::parameter_bool p_addl_quants;
     o2scl::cli::parameter_bool p_crust_from_L;
+    o2scl::cli::parameter_bool p_mpi_load_debug;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
     o2scl::cli::parameter_double p_e_low;
@@ -157,6 +159,9 @@ namespace bamr {
     /// The upper mass threshold (default 10.0)
     double exit_mass;
 
+    /// If true, debug MPI file loading 
+    bool mpi_load_debug;
+    
     /** \brief Minimum mass allowed for any of the individual neutron
 	stars (default 1.0)
     */
@@ -334,6 +339,10 @@ namespace bamr {
 	"inertia, binding energy, and tidal deformability (default "+
 	"false). This requires that baryon_mass is true.";
       cl.par_list.insert(std::make_pair("addl_quants",&p_addl_quants));
+
+      p_mpi_load_debug.b=&mpi_load_debug;
+      p_mpi_load_debug.help="";
+      cl.par_list.insert(std::make_pair("mpi_load_debug",&p_mpi_load_debug));
 
       p_mass_switch.i=&mass_switch;
       p_mass_switch.help="";

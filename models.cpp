@@ -854,7 +854,7 @@ void two_polytropes::setup_params(o2scl::cli &cl) {
 }
 
 void two_polytropes::copy_params(model &m) {
-  // Dynamic casts throw exceptions when they fail
+  // Dynamic casts to references throw exceptions when they fail
   two_polytropes &tp=dynamic_cast<two_polytropes &>(m);
   se.a=tp.se.a;
   
