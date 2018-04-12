@@ -76,7 +76,9 @@ namespace bamr {
       \todo There's a problem with testing debug_eos and debug_star
       because of the complications of calling exit(0) inside
       an OpenMP/MPI parallel region. For this reason test1 and
-      test2 are temporarily disabled
+      test2 are temporarily disabled. I think MPI_Barrier() may
+      help this problem, but this fix hasn't been tested and
+      may not completely fix it.
 
       \todo It's not clear if successive calls of the mcmc command
       really work. For now, one may have ensure the program exits

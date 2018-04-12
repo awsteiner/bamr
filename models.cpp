@@ -774,15 +774,15 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
 	
 	if (alt<2.0/3.0) {
-	  dat.wgts[i]=nsd->source_tables[i].interp
+	  dat.wgts[i]=nsd->source_tables[i].interp_const
 	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
 	} else {
-	  dat.wgts[i]=nsd->source_tables_alt[i].interp
+	  dat.wgts[i]=nsd->source_tables_alt[i].interp_const
 	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
 	}
 	
       } else {
-	dat.wgts[i]=nsd->source_tables[i].interp
+	dat.wgts[i]=nsd->source_tables[i].interp_const
 	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
       }
       
