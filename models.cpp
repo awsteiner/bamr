@@ -446,6 +446,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	
 	std::cout << "Automatically exiting since 'debug_eos' is true."
 		  << std::endl;
+
+	// Ensure all the debug information is output before
+	// we call exit();
+	MPI_Barrier(MPI_COMM_WORLD);
+	
+#ifdef BAMR_MPI
+	// Finalize MPI
+	MPI_Finalize();
+#endif
 	
 	exit(0);
       }
@@ -614,6 +623,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       scr_out << "Automatically exiting since 'debug_star' is true."
 	      << std::endl;
     }
+
+    // Ensure all the debug information is output before
+    // we call exit();
+    MPI_Barrier(MPI_COMM_WORLD);
 
 #ifdef BAMR_MPI
     // Finalize MPI

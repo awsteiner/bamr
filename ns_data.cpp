@@ -34,7 +34,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
+void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
 		      std::shared_ptr<settings> set) {
       
   double tot, max;
@@ -51,7 +51,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     if (set->verbose>=2) {
       cout << "bamr: Loading " << n_sources << " data files " 
 	   << "with rank " << mpi_rank << " and size " 
-	   << mpi_nprocs << endl;
+	   << mpi_size << endl;
     }
     
     source_tables.resize(n_sources);
@@ -65,23 +65,22 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     
     // Choose which file to read first for this rank
     int filestart=0;
-    if (mpi_rank>mpi_nprocs-((int)n_sources) && mpi_rank>0) {
-      filestart=mpi_nprocs-mpi_rank;
+    if (mpi_rank>mpi_size-((int)n_sources) && mpi_rank>0) {
+      filestart=mpi_size-mpi_rank;
     }
     if (set->mpi_load_debug) {
       scr_out << "Variable 'filestart' is " << filestart << " for rank "
 	      << mpi_rank << "." << std::endl;
     }
 
-    // Loop through all files
     for(int k=0;k<((int)n_sources);k++) {
       
       // For k=0, we choose some ranks to begin reading, the others
       // have to wait. For k>=1, all ranks have to wait their turn.
-      if (mpi_nprocs>1 && (k>0 || (mpi_rank>0 &&
-				   mpi_rank<=mpi_nprocs-((int)n_sources)))) {
+      if (mpi_size>1 && (k>0 || (mpi_rank>0 &&
+				 mpi_rank<=mpi_size-((int)n_sources)))) {
 	int prev=mpi_rank-1;
-	if (prev<0) prev+=mpi_nprocs;
+	if (prev<0) prev+=mpi_size;
 	if (set->mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " waiting for " 
 		  << prev << "." << std::endl;
@@ -125,10 +124,10 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
       
       // Send a message, unless the rank is the last one to read a
       // file.
-      if (mpi_nprocs>1 && (k<((int)n_sources)-1 ||
-			   mpi_rank<mpi_nprocs-((int)n_sources))) {
+      if (mpi_size>1 && (k<((int)n_sources)-1 ||
+			   mpi_rank<mpi_size-((int)n_sources))) {
 	int next=mpi_rank+1;
-	if (next>=mpi_nprocs) next-=mpi_nprocs;
+	if (next>=mpi_size) next-=mpi_size;
 	if (set->mpi_load_debug) {
 	  scr_out << "Rank " << mpi_rank << " sending to " 
 		  << next << "." << std::endl;
@@ -141,6 +140,9 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_nprocs, int mpi_rank,
     if (set->mpi_load_debug==true) {
       scr_out << "Exiting since mpi_load_debug is true." << endl;
       cout << "Exiting since mpi_load_debug is true." << endl;
+      // Ensure all the debug information is output before
+      // we call exit();
+      MPI_Barrier(MPI_COMM_WORLD);
       exit(-1);
     }
     

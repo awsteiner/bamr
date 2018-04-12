@@ -90,7 +90,26 @@ namespace bamr {
     virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
 
     /** \brief Load input probability distributions
-     */
+	
+	Ensure all MPI ranks read all files while ensuring that
+	no two ranks simultaneously read the same file.
+	
+	Let MPI_Size be denoted n. If n is 1, no messages are sent and
+	the single rank always reads the files in order. When n is
+	larger than 1, rank 0 still reads the files in order. Rank n-1
+	begins by reading the second file, rank n-2 begins by reading
+	the third file, and so on, until there are no more ranks left
+	which are not reading files or there are no more files left.
+	After reading, all ranks which read files send a message to
+	the next rank (in sequence) prompting them to proceed with the
+	next file. Once each rank has read all of the files, it does
+	not send or receive any further messages (the number of
+	messages sent for n>1 is n times the number of files times).
+	If \ref settings::mpi_load_debug is set to 1, then the various
+	MPI messages are copied to scr_out, no files are actually
+	read, and exit() is called after all messages have been sent
+	and received by all ranks.
+    */
     virtual void load_mc(std::ofstream &scr_out, int mpi_nprocs,
 			 int mpi_rank, std::shared_ptr<settings> set);
     //@}
