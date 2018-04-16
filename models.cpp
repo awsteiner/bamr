@@ -320,7 +320,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	// the ngl13 EOS is in units of Msun/km^3, so we 
 	// convert prt to those units
 	teos.transition_mode=eos_tov_interp::match_line;
-	teos.set_transition(o2scl_settings.get_convert_units().convert
+	teos.set_transition(o2scl_settings.get_convert_units().convert_const
 			    ("1/fm^4","Msun/km^3",prt),1.4);
 
 	if (set->verbose>=2) {
@@ -1913,7 +1913,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
     double rho1a=pow(rho1,alpha);
     double rho1b=pow(rho1,beta);
     double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
             ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
       
@@ -2148,7 +2148,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     double rho1a=pow(rho1,alpha);
     double rho1b=pow(rho1,beta);
     double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
 
@@ -2404,7 +2404,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double nb1a=pow(nb1,alpha);
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
-    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
 	   ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
@@ -2643,7 +2643,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     double nb1a=pow(nb1,alpha);
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
-    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
 	   ("kg","1/fm",o2scl_mks::mass_neutron));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
