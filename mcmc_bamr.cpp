@@ -116,7 +116,10 @@ int mcmc_bamr::mcmc_init() {
     std::cout << "(rank " << this->mpi_rank
 	      << ") Start mcmc_bamr::mcmc_init()." << std::endl;
   }
-  
+
+  if (bc_arr.size()<1) {
+    O2SCL_ERR("Object bc_arr invalid.",o2scl::exc_esanity);
+  }
   model &m=*(bc_arr[0]->mod);
   
   // This ensures enough space for all the

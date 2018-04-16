@@ -76,16 +76,18 @@ namespace bamr {
       eos=md.eos;
     }
 
-#ifdef O2SCL_NEVER_DEFINED
-    
-  private:
-    
     /** \brief Make operator= copy constructor private
      */
-    model_data &operator=(const model_data &e);
+    model_data &operator=(const model_data &md) {
+      if (this!=&md) {
+	rad=md.rad;
+	mass=md.mass;
+	wgts=md.wgts;
+	mvsr=md.mvsr;
+	eos=md.eos;
+      }
+    }
 
-#endif
-    
   };
 
 }
