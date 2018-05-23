@@ -86,6 +86,7 @@ namespace bamr {
 	mvsr=md.mvsr;
 	eos=md.eos;
       }
+      return *this;
     }
 
   };
