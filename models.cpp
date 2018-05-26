@@ -447,11 +447,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	std::cout << "Automatically exiting since 'debug_eos' is true."
 		  << std::endl;
 
+#ifdef BAMR_MPI
 	// Ensure all the debug information is output before
 	// we call exit();
 	MPI_Barrier(MPI_COMM_WORLD);
 	
-#ifdef BAMR_MPI
 	// Finalize MPI
 	MPI_Finalize();
 #endif
@@ -552,13 +552,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // Check for multiple branches in M vs. R
     int max_count=0;
-    for(size_t i=0;i<dat.mvsr.get_nlines();i++) {
-      if (i==0 && dat.mvsr.get("gm",0) > dat.mvsr.get("gm",1)) max_count++;
-      else if (i==dat.mvsr.get_nlines()-1 &&
-	       dat.mvsr.get("gm",dat.mvsr.get_nlines()-1) >
-	       dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) max_count++;
-      else if (dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i-1) &&
-	       dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
+    if (dat.mvsr.get("gm",0) > dat.mvsr.get("gm",1)) {
+      max_count++;
+    }
+    if (dat.mvsr.get("gm",dat.mvsr.get_nlines()-1) >
+	dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) {
+      max_count++;
+    }
+    for(size_t i=1;i<dat.mvsr.get_nlines()-1;i++) {
+      if (dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i-1) &&
+	  dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
 	max_count++;
       }
     }
@@ -624,11 +627,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	      << std::endl;
     }
 
+#ifdef BAMR_MPI
     // Ensure all the debug information is output before
     // we call exit();
     MPI_Barrier(MPI_COMM_WORLD);
 
-#ifdef BAMR_MPI
     // Finalize MPI
     MPI_Finalize();
 #endif
