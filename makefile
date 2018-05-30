@@ -155,20 +155,17 @@ test_prep: bamr
 # Individual testing targets with MPI
 # ----------------------------------------------------------------------
 
-# These don't work right now because the code doesn't exit
-# MPI gracefully before the exit(-1) statement
+test_debug_eos: bamr
+	mpirun -np 1 bamr -threads 1 -set prefix data_temp/debug_eos \
+		-set debug_eos 1 -run default.in -model twop -mcmc \
+		> data_temp/debug_eos.scr
+	-mv -i debug_eos.o2 data_temp
 
-# test_debug_eos: bamr
-# 	mpirun -np 1 bamr -set prefix data_temp/debug_eos \
-# 		-set debug_eos 1 -run default.in -model twop -mcmc \
-# 		> data_temp/debug_eos.scr
-# 	-mv -i debug_eos.o2 data_temp
-
-# test_debug_star: bamr
-# 	mpirun -np 1 bamr -set prefix data_temp/debug_star \
-# 		-set debug_star 1 -run default.in -model twop -mcmc \
-# 		> data_temp/debug_star.scr
-# 	-mv -i debug_star.o2 data_temp
+test_debug_star: bamr
+	mpirun -np 1 bamr -threads 1 -set prefix data_temp/debug_star \
+		-set debug_star 1 -run default.in -model twop -mcmc \
+		> data_temp/debug_star.scr
+	-mv -i debug_star.o2 data_temp
 
 test_data: bamr
 	mpirun -np 2 \
