@@ -634,7 +634,7 @@ namespace bamr {
       At high density polytropes are used in a way similar to that in
       \ref bamr::two_polytropes. The transition between neutron matter
       and the first polytrope is at a baryon density specified in \ref
-      rho_trans. The remaining 3 parameters are <tt>index1</tt>,
+      nb_trans. The remaining 3 parameters are <tt>index1</tt>,
       <tt>trans1</tt>, and <tt>index2</tt>. 
 
       \verbatim embed:rst
@@ -666,10 +666,10 @@ namespace bamr {
     virtual ~qmc_neut();
     
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
-    double rho0;
+    double nb0;
 
     /// Transition density (default 0.48)
-    double rho_trans;
+    double nb_trans;
 
     /// Ratio interpolation object
     o2scl::interp_vec<> si;
@@ -740,7 +740,7 @@ namespace bamr {
       parameters <tt>index1</tt>, <tt>trans1</tt>, <tt>index2</tt>,
       <tt>trans2</tt>, and <tt>index3</tt>. The transition between
       neutron matter and the first polytrope is at a baryon density
-      specified in \ref rho_trans. The transition between the first
+      specified in \ref nb_trans. The transition between the first
       and second polytrope is specified in <tt>trans1</tt>, and the
       transition between the second and third polytrope is specified
       in <tt>trans2</tt>. The polytropic indices are allowed to be
@@ -767,10 +767,10 @@ namespace bamr {
     virtual ~qmc_threep();
     
     /// Saturation density in \f$ \mathrm{fm}^{-3} \f$
-    double rho0;
+    double nb0;
 
     /// Transition density (default 0.16, different than \ref bamr::qmc_neut)
-    double rho_trans;
+    double nb_trans;
 
     /** \brief Set parameter information [pure virtual]
      */

@@ -1738,7 +1738,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
   for(double mu=mu_0;mu<mu_max;mu+=(mu_max-mu_0)/100.0) {
       
     double mu2=mu*mu, mu3=mu2*mu, mu4=mu2*mu2;
-    double ms2=ms*ms, ms3=ms2*ms, ms4=ms2*ms2;
+    double ms2=ms*ms, ms4=ms2*ms2;
       
     double a2=-3.0*(ms2-4.0*Delta*Delta)/4.0/pi2;
     double a4=3.0*(1.0-c)/4.0/pi2;
@@ -1794,7 +1794,7 @@ qmc_neut::qmc_neut(std::shared_ptr<const settings> s,
 	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
   
-  rho0=0.16;
+  nb0=0.16;
 
   // Set sigma for Gaussian distribution
   pdg.set_sigma(1.0);
@@ -1827,7 +1827,7 @@ qmc_neut::qmc_neut(std::shared_ptr<const settings> s,
   si.set(11,ed_corr,pres_corr,itp_linear);
   si_err.set(11,ed_corr,pres_err,itp_linear);
   
-  rho_trans=0.48;
+  nb_trans=0.48;
 
   this->n_eos_params=7;
   this->has_esym=true;
@@ -1911,14 +1911,14 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
   double gauss=pdg();
   if (fabs(gauss)>3.0) gauss=0.0;
 
-  for(double rho=0.02;rho<rho_trans+0.001;rho+=0.01) {
-    double rho1=rho/rho0;
-    double rho1a=pow(rho1,alpha);
-    double rho1b=pow(rho1,beta);
-    double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
+  for(double nb=0.02;nb<nb_trans+0.001;nb+=0.01) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
             ("kg","1/fm",o2scl_mks::mass_neutron));
-    pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
+    pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     // Correct the pressure by a factor to correct for
     // neutron -> neutron star matter
@@ -1938,7 +1938,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
 
   // Set values for the computation of the baryon density
   // from the last point of the QMC parameterization
-  nb_n1=rho_trans;
+  nb_n1=nb_trans;
   nb_e1=ed;
 
   // Check that the last Monte Carlo energy density
@@ -1996,8 +1996,8 @@ qmc_threep::qmc_threep(std::shared_ptr<const settings> s,
 	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
   
-  rho0=0.16;
-  rho_trans=0.16;
+  nb0=0.16;
+  nb_trans=0.16;
 
   this->n_eos_params=9;
   this->has_esym=true;
@@ -2145,18 +2145,18 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
 
   double ed=0.0, pr=0.0, ed_last=0.0, pr_last=0.0, nb_last=0.0;
 
-  double rho;
-  for(rho=0.02;rho<rho_trans;rho+=0.01) {
-    double rho1=rho/rho0;
-    double rho1a=pow(rho1,alpha);
-    double rho1b=pow(rho1,beta);
-    double ene=a*rho1a+b*rho1b;
-    ed=rho*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
+  double nb;
+  for(nb=0.02;nb<nb_trans;nb+=0.01) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
 	    ("kg","1/fm",o2scl_mks::mass_neutron));
-    pr=rho*(a*alpha*rho1a+b*beta*rho1b)/hc_mev_fm;
+    pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
     if (new_nb) {
-      double line[3]={ed,pr,rho};
+      double line[3]={ed,pr,nb};
       dat.eos.line_of_data(3,line);
     } else {
       double line[2]={ed,pr};
@@ -2165,7 +2165,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     }
     ed_last=ed;
     pr_last=pr;
-    nb_last=rho;
+    nb_last=nb;
   }
 
   if (!new_nb) {

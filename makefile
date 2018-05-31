@@ -28,7 +28,7 @@ READLINE_VAR = -DBAMR_READLINE
 READLINE_LIBS = -lreadline -lncurses
 
 # Basic compiler flags
-COMPILER_FLAGS = -std=c++0x -O3
+COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
 
 # ----------------------------------------------------------------------
 # Secondary variables

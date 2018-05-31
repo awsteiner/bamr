@@ -84,6 +84,10 @@ namespace bamr {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }
 
+    // Empty destructor to make sure its virtual
+    virtual ~bamr_class() {
+    }
+
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
     */
