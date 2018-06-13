@@ -127,6 +127,10 @@ namespace bamr {
     double user_yhigh;
     //@}
 
+    std::vector<std::string> x_params;
+    ubvector x_low;
+    ubvector x_high;
+    
     /// \name Const confidence limits
     //@{
     /// The one-sigma limit of a normal distribution, 0.6827
@@ -212,6 +216,39 @@ namespace bamr {
      */
     virtual void setup_cli();
     
+    /// \name Other class member data
+    //@{
+    /// Scaling for each element in Bayes factor distance metric
+    ubvector scale;
+    /// Storage for Bayes factor computation
+    std::vector<std::vector<double> > bfactor_data;
+    //@}
+
+    /// \name Internal functions
+    //@{
+    /** \brief Swap w1 and w2, i1 and i2, and x1 and x2 
+	(for \ref bfactor())
+    */
+    void swap(double &w1, size_t &i1, ubvector &x1, 
+	      double &w2, size_t &i2, ubvector &x2);
+
+    /** \brief Squared distance (for bfactor())
+     */
+    double dist_sq(const ubvector &x, size_t row);
+
+    /** \brief Function to integrate for Bayes factor
+     */
+    double func(size_t n, const ubvector &x);
+    //@}
+    
+    /** \brief Compute the Bayes factor
+     */
+    int bfactor(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Set parameter names and upper and lower limits
+     */
+    int set_params_limits(std::vector<std::string> &sv, bool itive_com);
+
   public:
     
     /// Create the process object

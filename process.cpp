@@ -23,6 +23,9 @@
 
 #include "process.h"
 
+#include <o2scl/mcarlo_miser.h>
+#include <o2scl/multi_funct.h>
+
 using namespace std;
 using namespace o2scl;
 // For I/O with HDF files
@@ -56,6 +59,164 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
   n_blocks=0;
 }
 
+void process::swap(double &w1, size_t &i1, ubvector &x1, 
+		    double &w2, size_t &i2, ubvector &x2) {
+  double temp=w1; w1=w2; w2=temp;
+  size_t itemp=i1; i1=i2; i2=itemp;
+  o2scl::vector_swap<ubvector,ubvector,double>(x1,x2);
+  return;
+}
+
+double process::dist_sq(const ubvector &x, size_t row) {
+  double dist=0.0;
+  for(size_t i=0;i<x.size();i++) {
+    dist+=pow((x[i]-bfactor_data[i][row])/scale[i],2.0);
+  }
+  return dist;
+}
+
+double process::func(size_t n, const ubvector &x) {
+  
+  // Initialize from first three points
+  size_t i0=0, i1=1, i2=2;
+  double min0=dist_sq(x,0);
+  double min1=dist_sq(x,1);
+  double min2=dist_sq(x,2);
+  ubvector x0(n), x1(n), x2(n);
+  for(size_t i=0;i<n;i++) {
+    x0[i]=bfactor_data[i][0];
+    x1[i]=bfactor_data[i][1];
+    x2[i]=bfactor_data[i][2];
+  }
+  if (min2<min1) swap(min1,i1,x1,min2,i2,x2);
+  if (min1<min0) swap(min0,i0,x0,min1,i1,x1);
+  if (min2<min1) swap(min1,i1,x1,min2,i2,x2);
+
+  // Sort through the rest of the chain
+  for(size_t i=3;i<bfactor_data[0].size();i++) {
+    double thisd=dist_sq(x,i);
+    if (thisd<min2) {
+      min2=thisd;
+      i2=i;
+      for(size_t j=0;j<n;j++) {
+	x2[j]=bfactor_data[j][i];
+      }
+      if (min2<min1) swap(min1,i1,x1,min2,i2,x2);
+      if (min1<min0) swap(min0,i0,x0,min1,i1,x1);
+    }
+  }
+
+  // Return the final result
+  double norm=1.0/min0+1.0/min1+1.0/min2;
+  double ret=norm*(bfactor_data[bfactor_data.size()-1][i0]/min0+
+		   bfactor_data[bfactor_data.size()-1][i1]/min1+
+		   bfactor_data[bfactor_data.size()-1][i2]/min2);
+    
+  //cout << min0 << " " << min1 << " " << min2 << " " << norm << " " 
+  //<< ret << endl;
+  //char ch;
+  //cin >> ch;
+    
+  return ret;
+}
+
+int process::set_params_limits(std::vector<std::string> &sv, bool itive_com) {
+  size_t np=(sv.size()-1)/3;
+  if (np==0) {
+    cerr << "No parameters specified." << endl;
+  }
+  x_low.resize(np);
+  x_high.resize(np);
+  x_params.resize(np);
+  for(size_t j=0;j<np;j++) {
+    x_params[j]=sv[np*3+1];
+    x_low[j]=o2scl::stod(sv[np*3+2]);
+    x_high[j]=o2scl::stod(sv[np*3+3]);
+  }
+  return 0;
+}
+
+int process::bfactor(std::vector<std::string> &sv, bool itive_com) {
+
+  // file list
+  vector<string> files;
+
+  // Form list of data files
+  for(size_t i=1;i<sv.size();i++) files.push_back(sv[i]);
+  size_t nf=files.size();
+
+  // Number of parameters and scales
+  size_t n_params=x_params.size();
+  cout << n_params << " parameters." << endl;
+  ubvector scale(n_params);
+  for(size_t i=0;i<n_params;i++) {
+    scale[i]=fabs(x_high[i]-x_low[i]);
+    cout << "scale: " << i << " " << scale[i] << endl;
+  }
+  
+  // Setup bfactor_data with empty columns, adding one more column for
+  // the weights
+  vector<double> empty;
+  for(size_t i=0;i<n_params;i++) {
+    bfactor_data.push_back(empty);
+  }
+  bfactor_data.push_back(empty);
+  
+  // Read data
+  for(size_t i=0;i<nf;i++) {
+    hdf_file hf;
+
+    // Open file
+    cout << "Opening file: " << files[i] << endl;
+    hf.open(files[i]);
+
+    // Read table
+    std::string tab_name;
+    table_units<> tab;
+    hdf_input(hf,tab,tab_name);
+    cout << "Read table " << tab_name << endl;
+
+    // Parse parameters into bfactor_data
+    for(size_t ell=0;ell<n_params;ell++) {
+      for(size_t k=0;k<tab.get_nlines();k++) {
+	bfactor_data[ell].push_back(tab.get(x_params[ell],k));
+      }
+      cout << "Set up data: " << ell << " "
+	   << bfactor_data[ell].size() << endl;
+    }
+    
+    // Parse weights into bfactor_data
+    for(size_t k=0;k<tab.get_nlines();k++) {
+      bfactor_data[bfactor_data.size()-1].push_back
+	(exp(tab.get("log_wgt",k)));
+    }
+    cout << "Set up weights: " 
+	 << bfactor_data[bfactor_data.size()-1].size() << endl;
+    
+    // Go to next file
+  }
+
+  mcarlo_miser<> gm;
+  multi_funct mff=std::bind(std::mem_fn<double(size_t,const ubvector &)>
+			    (&process::func),this,std::placeholders::_1,
+			    std::placeholders::_2);
+  
+  gm.n_points=10000;
+  cout << "N: " << gm.n_points << endl;
+  double res, err;
+  gm.minteg_err(mff,n_params,x_low,x_high,res,err);
+
+  double hc_vol=1.0;
+  for(size_t k=0;k<n_params;k++) {
+    hc_vol*=fabs(x_high[k]-x_low[k]);
+  }
+  
+  cout << "Hypercube volume:" << hc_vol << endl;
+  cout << "Integral, error: " << res << " " << err << endl;
+
+  return 0;
+}
+	
 int process::auto_corr(std::vector<std::string> &sv, bool itive_com) {
 
   // Setup histogram size
@@ -1481,7 +1642,7 @@ void process::setup_cli() {
   // ---------------------------------------
   // Set options
   
-  static const int nopt=9;
+  static const int nopt=10;
   comm_option_s options[nopt]={
     {'x',"xlimits","Set histogram limits for first variable",0,3,
      "<low-value high-value> or <file> <low-name> <high-name> or <>",
@@ -1552,7 +1713,12 @@ void process::setup_cli() {
      "\'process -hist-set x e_low e_high P out.o2 x_0_out\', and "+
      "\'process -hist-set x nb_low nb_high P out.o2 x_0_out\'. ",
      new comm_option_mfptr<process>(this,&process::hist_set),
-     cli::comm_option_both}
+     cli::comm_option_both},
+    {'b',"bfactor","Compute the Bayes factor.",1,-1,
+     "<x name> <y name> <file1> [file2 file 3...]",
+     ((string)"Long ")+"desc.",
+     new comm_option_mfptr<process>(this,&process::bfactor),
+     cli::comm_option_both},
   };
   cl.set_comm_option_vec(nopt,options);
 
