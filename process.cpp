@@ -24,6 +24,7 @@
 #include "process.h"
 
 #include <o2scl/mcarlo_miser.h>
+#include <o2scl/mcarlo_vegas.h>
 #include <o2scl/multi_funct.h>
 
 using namespace std;
@@ -76,7 +77,7 @@ double process::dist_sq(const ubvector &x, size_t row) {
 }
 
 double process::func(size_t n, const ubvector &x) {
-  
+
   // Initialize from first three points
   size_t i0=0, i1=1, i2=2;
   double min0=dist_sq(x,0);
@@ -91,7 +92,7 @@ double process::func(size_t n, const ubvector &x) {
   if (min2<min1) swap(min1,i1,x1,min2,i2,x2);
   if (min1<min0) swap(min0,i0,x0,min1,i1,x1);
   if (min2<min1) swap(min1,i1,x1,min2,i2,x2);
-
+  
   // Sort through the rest of the chain
   for(size_t i=3;i<bfactor_data[0].size();i++) {
     double thisd=dist_sq(x,i);
@@ -108,20 +109,27 @@ double process::func(size_t n, const ubvector &x) {
 
   // Return the final result
   double norm=1.0/min0+1.0/min1+1.0/min2;
-  double ret=norm*(bfactor_data[bfactor_data.size()-1][i0]/min0+
-		   bfactor_data[bfactor_data.size()-1][i1]/min1+
-		   bfactor_data[bfactor_data.size()-1][i2]/min2);
-    
-  //cout << min0 << " " << min1 << " " << min2 << " " << norm << " " 
-  //<< ret << endl;
-  //char ch;
-  //cin >> ch;
+  double ret=(bfactor_data[bfactor_data.size()-1][i0]/min0+
+	      bfactor_data[bfactor_data.size()-1][i1]/min1+
+	      bfactor_data[bfactor_data.size()-1][i2]/min2)/norm;
+
+  if (false) {
+    cout << i0 << " " << i1 << " " << i2 << " "
+	 << bfactor_data[bfactor_data.size()-1][i0] << " "
+	 << bfactor_data[bfactor_data.size()-1][i1] << " "
+	 << bfactor_data[bfactor_data.size()-1][i2] << endl;
+    cout << min0 << " " << min1 << " " << min2 << " " << norm << " " 
+	 << ret << endl;
+    char ch;
+    cin >> ch;
+  }
     
   return ret;
 }
 
 int process::set_params_limits(std::vector<std::string> &sv, bool itive_com) {
   size_t np=(sv.size()-1)/3;
+  std::cout << np << std::endl;
   if (np==0) {
     cerr << "No parameters specified." << endl;
   }
@@ -129,15 +137,22 @@ int process::set_params_limits(std::vector<std::string> &sv, bool itive_com) {
   x_high.resize(np);
   x_params.resize(np);
   for(size_t j=0;j<np;j++) {
-    x_params[j]=sv[np*3+1];
-    x_low[j]=o2scl::stod(sv[np*3+2]);
-    x_high[j]=o2scl::stod(sv[np*3+3]);
+    x_params[j]=sv[j*3+1];
+    x_low[j]=function_to_double(sv[j*3+2]);
+    x_high[j]=function_to_double(sv[j*3+3]);
+    cout << "Added parameter: " << x_params[j] << " with lower limit "
+	 << x_low[j] << " and upper limit " << x_high[j] << endl;
   }
   return 0;
 }
 
 int process::bfactor(std::vector<std::string> &sv, bool itive_com) {
 
+  if (x_params.size()==0) {
+    cerr << "Parameters must be set first." << endl;
+    return 1;
+  }
+  
   // file list
   vector<string> files;
 
@@ -148,10 +163,11 @@ int process::bfactor(std::vector<std::string> &sv, bool itive_com) {
   // Number of parameters and scales
   size_t n_params=x_params.size();
   cout << n_params << " parameters." << endl;
-  ubvector scale(n_params);
+  scale.resize(n_params);
   for(size_t i=0;i<n_params;i++) {
     scale[i]=fabs(x_high[i]-x_low[i]);
-    cout << "scale: " << i << " " << scale[i] << endl;
+    cout << "Parameter " << i << " " << x_params[i] << " "
+	 << x_low[i] << " " << x_high[i] << " " << scale[i] << endl;
   }
   
   // Setup bfactor_data with empty columns, adding one more column for
@@ -174,15 +190,12 @@ int process::bfactor(std::vector<std::string> &sv, bool itive_com) {
     std::string tab_name;
     table_units<> tab;
     hdf_input(hf,tab,tab_name);
-    cout << "Read table " << tab_name << endl;
 
     // Parse parameters into bfactor_data
     for(size_t ell=0;ell<n_params;ell++) {
       for(size_t k=0;k<tab.get_nlines();k++) {
 	bfactor_data[ell].push_back(tab.get(x_params[ell],k));
       }
-      cout << "Set up data: " << ell << " "
-	   << bfactor_data[ell].size() << endl;
     }
     
     // Parse weights into bfactor_data
@@ -190,29 +203,48 @@ int process::bfactor(std::vector<std::string> &sv, bool itive_com) {
       bfactor_data[bfactor_data.size()-1].push_back
 	(exp(tab.get("log_wgt",k)));
     }
-    cout << "Set up weights: " 
-	 << bfactor_data[bfactor_data.size()-1].size() << endl;
-    
+
     // Go to next file
   }
 
-  mcarlo_miser<> gm;
-  multi_funct mff=std::bind(std::mem_fn<double(size_t,const ubvector &)>
-			    (&process::func),this,std::placeholders::_1,
-			    std::placeholders::_2);
-  
-  gm.n_points=10000;
-  cout << "N: " << gm.n_points << endl;
-  double res, err;
-  gm.minteg_err(mff,n_params,x_low,x_high,res,err);
-
-  double hc_vol=1.0;
-  for(size_t k=0;k<n_params;k++) {
-    hc_vol*=fabs(x_high[k]-x_low[k]);
+  {
+    mcarlo_miser<> gm;
+    multi_funct mff=std::bind(std::mem_fn<double(size_t,const ubvector &)>
+			      (&process::func),this,std::placeholders::_1,
+			      std::placeholders::_2);
+    
+    gm.n_points=100000;
+    double res, err;
+    cout << "Computing integral:" << endl;
+    gm.minteg_err(mff,n_params,x_low,x_high,res,err);
+    
+    double hc_vol=1.0;
+    for(size_t k=0;k<n_params;k++) {
+      hc_vol*=fabs(x_high[k]-x_low[k]);
+    }
+    
+    cout << "Hypercube volume: " << hc_vol << endl;
+    cout << "Integral, error: " << res << " " << err << endl;
   }
-  
-  cout << "Hypercube volume:" << hc_vol << endl;
-  cout << "Integral, error: " << res << " " << err << endl;
+  {
+    mcarlo_vegas<> gm;
+    multi_funct mff=std::bind(std::mem_fn<double(size_t,const ubvector &)>
+			      (&process::func),this,std::placeholders::_1,
+			      std::placeholders::_2);
+    
+    gm.n_points=100000;
+    double res, err;
+    cout << "Computing integral:" << endl;
+    gm.minteg_err(mff,n_params,x_low,x_high,res,err);
+    
+    double hc_vol=1.0;
+    for(size_t k=0;k<n_params;k++) {
+      hc_vol*=fabs(x_high[k]-x_low[k]);
+    }
+    
+    cout << "Hypercube volume: " << hc_vol << endl;
+    cout << "Integral, error: " << res << " " << err << endl;
+  }
 
   return 0;
 }
@@ -1642,7 +1674,7 @@ void process::setup_cli() {
   // ---------------------------------------
   // Set options
   
-  static const int nopt=10;
+  static const int nopt=11;
   comm_option_s options[nopt]={
     {'x',"xlimits","Set histogram limits for first variable",0,3,
      "<low-value high-value> or <file> <low-name> <high-name> or <>",
@@ -1719,6 +1751,11 @@ void process::setup_cli() {
      ((string)"Long ")+"desc.",
      new comm_option_mfptr<process>(this,&process::bfactor),
      cli::comm_option_both},
+    {0,"set-params-limits","Set parameters and limits",-1,-1,
+     "<1: name low high> <2: name low high> ... <n: name low high>",
+     ((string)"Long ")+"desc.",
+     new comm_option_mfptr<process>(this,&process::set_params_limits),
+     cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
 
@@ -1779,7 +1816,7 @@ void process::run(int argc, char *argv[]) {
   
   // ---------------------------------------
   // Process command-line arguments and run
-  
+
   setup_cli();
   
   cl.run_auto(argc,argv);
