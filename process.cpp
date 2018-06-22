@@ -1121,11 +1121,12 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   }
 
   string type=sv[1];
-  string low_name=sv[2];
-  string high_name=sv[3];
+  double index_low, index_high;
+  o2scl::stod_nothrow(sv[2],index_low);
+  o2scl::stod_nothrow(sv[3],index_high);
   string set_prefix=sv[4];
-
   // (output file is sv[5])
+  // (input files are sv[6] ... )
 
   // file list
   vector<string> files;
@@ -1135,7 +1136,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   size_t nf=files.size();
       
   // The value of 'grid_size' from the bamr output file
-  size_t grid_size=0;
+  size_t grid_size=100;
 
   // Storage for all of the data
   vector<double> weights;
@@ -1143,7 +1144,6 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 
   // The grid determined by the boundaries specified in low_name
   // and high_name by the user (unscaled)
-  double index_low, index_high;
   uniform_grid<double> index_grid;
 
   // Count the data over each grid
@@ -1153,6 +1153,15 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   // max values over all points in all chains
   double ser_min=0.0, ser_max=0.0;
 
+  if ((logx && type==((string)"x")) ||
+      (logy && type==((string)"y"))) {
+    index_grid=uniform_grid_log_end<double>
+      (index_low,index_high,grid_size-1);
+  } else {
+    index_grid=uniform_grid_end<double>
+      (index_low,index_high,grid_size-1);
+  }
+  
   // ------------------------------------------------------------
   // Read the data
       
@@ -1165,117 +1174,73 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 
     // If we're reading the first file, obtain the grid information
     if (i==0) {
-      hf.get_szt("grid_size",grid_size);
-      hf.getd(low_name,index_low);
-      hf.getd(high_name,index_high);
-      if (verbose>0) {
-	cout << "grid_size, index_low, index_high: " 
-	     << grid_size << " " << index_low << " " << index_high << endl;
-      }
-      if ((logx && type==((string)"x")) ||
-	  (logy && type==((string)"y"))) {
-	index_grid=uniform_grid_log_end<double>
-	  (index_low,index_high,grid_size-1);
-      } else {
-	index_grid=uniform_grid_end<double>
-	  (index_low,index_high,grid_size-1);
-      }
       values_ser.resize(grid_size);
       count.resize(index_grid.get_npoints());
-    }
-
-    // Obtain the number of chains in this file
-    size_t n_chains=1;
-    //hf.get_szt_def("n_chains",1,n_chains);
-    if (verbose>0) {
-      if (n_chains==1) {
-	cout << n_chains << " separate chain." << endl;
-      } else {
-	cout << n_chains << " separate chains." << endl;
-      }
     }
 
     // Count the total number of lines over all
     // the individual tables in the file
     size_t line_counter=0;
 
-    // Process each chain in turn
-    for(size_t j=0;j<n_chains;j++) {
-	  
-      // Read chain from file
-      table_units<> tab;
-      std::string tab_name="markov_chain_"+szttos(j);
-      hdf_input(hf,tab,tab_name);
-      if (verbose>0) {
-	cout << "Read table " << tab_name << " lines: " 
-	     << tab.get_nlines() << endl;
-      }
-
-      // Apply constraint to this table
-      if (constraint.size()>0) {
-	size_t nlines_old=tab.get_nlines();
-	tab.delete_rows_func(constraint);
-	size_t nlines_new=tab.get_nlines();
-	if (verbose>0) {
-	  cout << "Applied constraint \"" << constraint
-	       << "\" and went from " << nlines_old << " to "
-	       << nlines_new << " lines." << endl;
-	}
-      }
-
-      // Read each line in the current chain
-      for(size_t k=0;k<tab.get_nlines();k++) {
-	  
-	if (((int)line_counter)>=line_start) {
-
-	  double emax=100.0;
-	  if (low_name=="e_low" && high_name=="e_high" &&
-	      set_prefix=="P" && type=="x") {
-	    emax=tab.get("e_max",k);
-	  }
-
-	  // For each column in the series
-	  for(size_t ell=0;ell<grid_size;ell++) {
-
-	    // Column name and value
-	    string col=set_prefix+"_"+szttos(ell);
-	    double val=tab.get(col,k);
-
-	    // Add the value even if it's zero
-	    if (low_name=="e_low" && high_name=="e_high" &&
-		set_prefix=="P" && type=="x" && index_grid[ell]>emax) {
-	      val=0.0;
-	    }
-	    
-	    // Add the value even if it's zero (blank)
-	    values_ser[ell].push_back(val);
-
-	    // But if it's less than or equal to zero, don't count
-	    // it for min, max, or count. This is important
-	    // because we don't want to count past the M-R curve
-	    // or the end of the EOS.
-	    if (val>0.0) {
-	      count[ell]++;
-	      // The first time, initialize to the first non-zero point
-	      if (ser_min==0.0) {
-		ser_min=val;
-		ser_max=val;
-	      }
-	      if (val<ser_min) ser_min=val;
-	      if (val>ser_max) ser_max=val;
-	    }
-	    // Next column
-	  }
-	  weights.push_back(tab.get("mult",k));
-	}
-	line_counter++;
-
-	// Next table line (k)
-      }
-
-      // Next chain (j)
+    // Read chain from file
+    table_units<> tab;
+    std::string tab_name="";
+    hdf_input(hf,tab,tab_name);
+    if (verbose>0) {
+      cout << "Read table with "
+	   << tab.get_nlines() << " lines." << endl;
     }
-
+    
+    // Apply constraint to this table
+    if (constraint.size()>0) {
+      size_t nlines_old=tab.get_nlines();
+      tab.delete_rows_func(constraint);
+      size_t nlines_new=tab.get_nlines();
+      if (verbose>0) {
+	cout << "Applied constraint \"" << constraint
+	     << "\" and went from " << nlines_old << " to "
+	     << nlines_new << " lines." << endl;
+      }
+    }
+    
+    // Read each line in the current chain
+    for(size_t k=0;k<tab.get_nlines();k++) {
+      
+      if (((int)line_counter)>=line_start) {
+	
+	// For each column in the series
+	for(size_t ell=0;ell<grid_size;ell++) {
+	  
+	  // Column name and value
+	  string col=set_prefix+"_"+szttos(ell);
+	  double val=tab.get(col,k);
+	  
+	  // Add the value even if it's zero (blank)
+	  values_ser[ell].push_back(val);
+	  
+	  // But if it's less than or equal to zero, don't count
+	  // it for min, max, or count. This is important
+	  // because we don't want to count past the M-R curve
+	  // or the end of the EOS.
+	  if (val>0.0) {
+	    count[ell]++;
+	    // The first time, initialize to the first non-zero point
+	    if (ser_min==0.0) {
+	      ser_min=val;
+	      ser_max=val;
+	    }
+	    if (val<ser_min) ser_min=val;
+	    if (val>ser_max) ser_max=val;
+	  }
+	  // Next column
+	}
+	weights.push_back(tab.get("mult",k));
+      }
+      line_counter++;
+      
+      // Next table line (k)
+    }
+    
     // Next file (i)
   }
   if (verbose>0) {
@@ -1331,9 +1296,8 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   h.set_bin_edges(ser_grid);
   hsum.set_bin_edges(ser_grid);
 
-  // Vectors to store contour results. Each additional
-  // contour level requires two vectors: a low and high
-  // vector.
+  // Vectors to store contour results. Each additional contour level
+  // requires two vectors: a low and high vector.
   ubmatrix cont_res(cont_levels.size()*2,grid_size);
 
   // Fill expval_scalar objects using histogram
@@ -1359,14 +1323,8 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	if (type==((string)"x")) val*=yscale;
 	else val*=xscale;
 	if (val>ser_min && val<ser_max) {
-	  if (low_name=="e_low" && high_name=="e_high" &&
-	      set_prefix=="P" && type=="x") {
-	    h.update(val,weights[i*block_size+j]*count[k]);
-	    hsum.update(val,weights[i*block_size+j]*count[k]);
-	  } else {
-	    h.update(val,weights[i*block_size+j]);
-	    hsum.update(val,weights[i*block_size+j]);
-	  }
+	  h.update(val,weights[i*block_size+j]);
+	  hsum.update(val,weights[i*block_size+j]);
 	}
       }
       for(size_t j=0;j<hist_size;j++) {
