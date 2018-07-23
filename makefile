@@ -373,7 +373,9 @@ doc: empty
 	cd sphinx; cat bib_temp.rst >> bib.rst; rm -f bib_temp.rst
 	cd doc; doxygen doxyfile
 	cd sphinx; make html
-	cp -r sphinx/build/html/* $(HOME)/wcs/int4/web/utk/bamr
+
+sync-doc:
+	cp -r sphinx/build/html/* $(STATIC_DOC_DIR)/bamr
 
 # ----------------------------------------------------------------------
 # Misc

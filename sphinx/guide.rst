@@ -4,7 +4,7 @@ User's Guide
 Installation
 ------------
     
-The \bm executable requires the installation of `GSL
+The `bamr` executable requires the installation of `GSL
 <http://www.gnu.org/software/gsl>`_ (versions 1.16 and later), `HDF5
 <http://www.hdfgroup.org>`_ (versions 1.8.14 and later), the most
 current version of `O2scl <http://web.utk.edu/~asteine1/o2scl>`_ from
@@ -15,10 +15,8 @@ the ``makefile`` and then compile ``bamr`` before execution.
 Download
 --------
 
-The most recent release version can be obtained from either
-of the following::
+The most recent release version can be obtained from::
 
-  svn checkout svn://svn.code.sf.net/p/bamr/code/trunk bamr
   git clone https://github.com/awsteiner/bamr.git
 
 
