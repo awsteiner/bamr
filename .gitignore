@@ -1,6 +1,7 @@
 debug_star.o2
 debug_eos.o2
-test*
+test
+test.o
 data_temp
 mcmc_0_out
 err.out
