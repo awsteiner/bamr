@@ -145,9 +145,9 @@ test: test.o
 
 test_all: test_prep test_data test_nodata test_cthick test_fixp \
 		test_qt test_qf test_warmup test_ai \
-		test_addl test_crustL test_tableseq test_storej bamr
+		test_addl test_crustL test_tableseq test_storej bamr \
+		test_debug_eos test_debug_star test_rejtab
 
-# test_debug_eos test_debug_star
 # test11 test12 
 
 test_all_nompi: test_prep test_debug_eos_nompi test_debug_star_nompi \
