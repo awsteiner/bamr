@@ -1591,7 +1591,7 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
   hdf_file hf;
   hf.open_or_create(out_file);
   string type;
-  if (hf.find_group_by_name("markov_chain0",type)==0) {
+  if (hf.find_object_by_name("markov_chain0",type)==0) {
     O2SCL_ERR("Refusing to overwrite file with data in process 'combine'.",
 	      exc_efailed);
   }
