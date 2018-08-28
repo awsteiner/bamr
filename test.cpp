@@ -92,6 +92,8 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
     mcmc.delete_rows_func("mult<0.5");
     t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
   }
@@ -115,7 +117,10 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
@@ -138,6 +143,8 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
     mcmc.delete_rows_func("mult<0.5");
     t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
@@ -162,6 +169,8 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
     mcmc.delete_rows_func("mult<0.5");
     t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
@@ -186,6 +195,8 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
     mcmc.delete_rows_func("mult<0.5");
     t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
@@ -210,6 +221,8 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
     mcmc.delete_rows_func("mult<0.5");
     t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
@@ -232,10 +245,10 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    mcmc.delete_rows_func("mult<0.5");
-    cout << mcmc.get_nlines() << " " << n_accept[0] << " "
-	 << n_accept[1] << endl;
-    //t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
+    
+    // Here there is no guarantee that the number of lines matches
+    // the number of acceptances because the warm up iterations
+    // are not stored in the table
     
   }
   cout << endl;
@@ -256,7 +269,10 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    // Table lines has number of acceptances plus 20 for the
+    // initial point for each walker for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+20,"iters table");
     
   }
   cout << endl;
@@ -279,7 +295,10 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
@@ -302,7 +321,10 @@ int main(int argc, char *argv[]) {
     // Check total iterations
     t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
     t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
@@ -321,9 +343,12 @@ int main(int argc, char *argv[]) {
     hf.close();
 
     // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
+    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
@@ -342,9 +367,12 @@ int main(int argc, char *argv[]) {
     hf.close();
 
     // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
+    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
@@ -363,9 +391,12 @@ int main(int argc, char *argv[]) {
     hf.close();
 
     // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+1,"iters table");
+    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
+    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
+    // Table lines has number of acceptances plus two for the
+    // initial point for each thread
+    mcmc.delete_rows_func("mult<0.5");
+    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
     
   }
   cout << endl;
