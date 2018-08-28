@@ -882,6 +882,79 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+#ifdef O2SCL_NEVER_DEFINED
+int process::trans_series(std::vector<std::string> &sv, bool itive_com) {
+
+  string infile=sv[1];
+
+  string grid_name=sv[2];
+  
+  double low=o2scl::stod(sv[3]);
+  double high=o2scl::stod(sv[4]);
+  
+  // prefix name
+  string prefix=sv[5];
+
+  string outfile=sv[6];
+
+  // ------------------------------------------------------------
+  // Read all of the data files in order
+  
+  hdf_file hf;
+  
+  // Open file
+  if (verbose>0) cout << "Opening file: " << infile << endl;
+  hf.open(infile);
+  
+  // Read table
+  std::string tab_name="markov_chain_0";
+  table_units<> tab;
+  hdf_input(hf,tab,tab_name);
+  hf.close();
+  
+  if (constraint.size()>0) {
+    size_t nlines_old=tab.get_nlines();
+    tab.delete_rows_func(constraint);
+    size_t nlines_new=tab.get_nlines();
+    if (verbose>0) {
+      cout << "Applied constraint \"" << constraint
+	   << "\" and went from " << nlines_old << " to "
+	   << nlines_new << " lines." << endl;
+    }
+  }
+  
+  if (verbose>0) {
+    cout << "Table " << tab_name << " lines: " 
+	 << tab.get_nlines();
+  }
+  
+  if (verbose>0) {
+    cout << "Done with reading files.\n" << endl;
+  }
+
+  // ------------------------------------------------------------
+
+  size_t n_rows_old=tab.get_nlines();
+  table_units<> t_new;
+  t_new.new_column(grid_name);
+  for(size_t i=0;i<n_rows_old;i++) {
+    t_new.new_column(prefix+"_"+o2scl::szttos(i));
+  }
+  uniform_grid_end<double> ug(low,high,99);
+
+  for(size_t j=0;j<100;j++) {
+    vector<double> line;
+    line.push_back(ug[j]);
+    for(size_t k=0;k<n_rows_old;k++) {
+      line.push_back(tab.get(prefix+"_"+o2scl::szttos(j),k));
+    }
+    t_new.line_of_data(line.size(),line);
+  }
+
+  return 0;
+}
+#endif
+
 int process::hist2(std::vector<std::string> &sv, bool itive_com) {
     
   // Setup histogram size
