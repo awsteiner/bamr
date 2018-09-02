@@ -195,6 +195,10 @@ namespace bamr {
 	the bamr MCMC output
     */
     int hist_set(std::vector<std::string> &sv, bool itive_com);
+
+    /** \brief Desc
+     */
+    int curve_set(std::vector<std::string> &sv, bool itive_com);
     
     /** \brief Combine several <tt>bamr</tt> output files
 

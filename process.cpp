@@ -882,8 +882,7 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-#ifdef O2SCL_NEVER_DEFINED
-int process::trans_series(std::vector<std::string> &sv, bool itive_com) {
+int process::curve_set(std::vector<std::string> &sv, bool itive_com) {
 
   string infile=sv[1];
 
@@ -951,9 +950,13 @@ int process::trans_series(std::vector<std::string> &sv, bool itive_com) {
     t_new.line_of_data(line.size(),line);
   }
 
+  hf.open(infile);
+  tab_name="markov_chain_0";
+  hdf_output(hf,t_new,tab_name);
+  hf.close();
+  
   return 0;
 }
-#endif
 
 int process::hist2(std::vector<std::string> &sv, bool itive_com) {
     
@@ -1705,7 +1708,7 @@ void process::setup_cli() {
   // ---------------------------------------
   // Set options
   
-  static const int nopt=11;
+  static const int nopt=12;
   comm_option_s options[nopt]={
     {'x',"xlimits","Set histogram limits for first variable",0,3,
      "<low-value high-value> or <file> <low-name> <high-name> or <>",
@@ -1767,7 +1770,7 @@ void process::setup_cli() {
      "store the table in 'out_file'.",
      new comm_option_mfptr<process>(this,&process::auto_corr),
      cli::comm_option_both},
-    {0,"hist-set","Create an ensemble of of 1-d histograms.",3,-1,
+    {0,"hist-set","Create an ensemble of of 1-d histograms.",6,-1,
      "<direction> <low> <high> <set> <out_file> <file1> [file2...]",
      ((string)"Using the 'markov_chain' objects in a bamr output ")+
      "file, create an ensemble of 1-d histograms from a set "+
@@ -1776,6 +1779,10 @@ void process::setup_cli() {
      "\'process -hist-set x e_low e_high P out.o2 x_0_out\', and "+
      "\'process -hist-set x nb_low nb_high P out.o2 x_0_out\'. ",
      new comm_option_mfptr<process>(this,&process::hist_set),
+     cli::comm_option_both},
+    {0,"curve-set","",6,-1,
+     "<in file> <grid name> <low> <high> <prefix> <out file>","",
+     new comm_option_mfptr<process>(this,&process::curve_set),
      cli::comm_option_both},
     {'b',"bfactor","Compute the Bayes factor.",1,-1,
      "<x name> <y name> <file1> [file2 file 3...]",
@@ -1822,7 +1829,7 @@ void process::setup_cli() {
   cl.par_list.insert(make_pair("hist_size",&p_hist_size));
 
   p_n_blocks.i=&n_blocks;
-  p_n_blocks.help="Number of blocks (default 20).";
+  p_n_blocks.help="Number of blocks (default 0).";
   cl.par_list.insert(make_pair("n_blocks",&p_n_blocks));
 
   p_line_start.i=&line_start;
