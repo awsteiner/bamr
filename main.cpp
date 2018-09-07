@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   bamr::mcmc_bamr b;
 
   // Set starting time
-#ifdef O2SCL_MPI
+#ifdef BAMR_MPI
   b.mpi_start_time=MPI_Wtime();
 #else
   b.mpi_start_time=time(0);

@@ -418,16 +418,24 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
 int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
 				  bool itive_com) {
 
+  if (sv.size()<2) {
+    cerr << "Need a filename for initial_point_last()." << endl;
+    return 1;
+  }
+
   if (model_type.length()<2) {
-    cerr << "Model not specified." << endl;
+    cerr << "Model not specified in initial_point_last()." << endl;
     return 2;
   }
       
   model &m=*(bc_arr[0]->mod);
   size_t np=m.n_eos_params+nsd->n_sources;
   
-  string prefix=sv[1];
-  string fname=prefix+"_"+o2scl::itos(this->mpi_rank)+"_out";
+  string fname=sv[1];
+  size_t pos=fname.find("<rank>");
+  if (pos!=std::string::npos) {
+    fname.replace(pos,6,o2scl::itos(mpi_rank));
+  }
   this->initial_points_file_last(fname,np);
   
   return 0;
@@ -436,17 +444,73 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
 int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
 				  bool itive_com) {
   
-  if (model_type.length()<2) {
-    cerr << "Model not specified." << endl;
-    return 2;
+  if (sv.size()<2) {
+    cerr << "Need a filename for initial_point_best()." << endl;
+    return 1;
   }
       
+  if (model_type.length()<2) {
+    cerr << "Model not specified in initial_point_best()." << endl;
+    return 2;
+  }
+  
   model &m=*(bc_arr[0]->mod);
   size_t np=m.n_eos_params+nsd->n_sources;
   
-  string prefix=sv[1];
-  string fname=prefix+"_"+o2scl::itos(this->mpi_rank)+"_out";
+  string fname=sv[1];
+  size_t pos=fname.find("<rank>");
+  if (pos!=std::string::npos) {
+    fname.replace(pos,6,o2scl::itos(mpi_rank));
+  }
   this->initial_points_file_best(fname,np);
+  
+  return 0;
+}
+
+int mcmc_bamr::read_prev_results(std::vector<std::string> &sv,
+				 bool itive_com) {
+  
+  if (sv.size()<2) {
+    cerr << "Need a filename for read_prev_results()." << endl;
+    return 1;
+  }
+
+  if (model_type.length()<2) {
+    cerr << "Model not specified in read_prev_results()." << endl;
+    return 2;
+  }
+  
+  model &m=*(bc_arr[0]->mod);
+  size_t np=m.n_eos_params+nsd->n_sources;
+  
+  // Ensure that multiple threads aren't reading from the 
+  // filesystem at the same time
+#ifdef BAMR_MPI
+  int tag=0, buffer=0;
+  if (mpi_size>1 && mpi_rank>=1) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  }
+#endif
+  
+  string fname=sv[1];
+  size_t pos=fname.find("<rank>");
+  if (pos!=std::string::npos) {
+    fname.replace(pos,6,o2scl::itos(mpi_rank));
+  }
+  cout << "Rank " << mpi_rank
+       << " is reading previous results from " << fname << " ." << endl;
+  hdf_file hf;
+  hf.open(fname);
+  mcmc_para_table::read_prev_results(hf,np);
+  hf.close();
+  
+#ifdef BAMR_MPI
+  if (mpi_size>1 && mpi_rank<mpi_size-1) {
+    MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+	     tag,MPI_COMM_WORLD);
+  }
+#endif
   
   return 0;
 }
@@ -523,7 +587,7 @@ void mcmc_bamr::setup_cli() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=7;
+  static const int nopt=8;
   comm_option_s options[nopt]={
     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
      0,0,"",((std::string)"This is the main part of ")+
@@ -572,6 +636,11 @@ void mcmc_bamr::setup_cli() {
      "<filename>","Long. desc.",
      new o2scl::comm_option_mfptr<mcmc_bamr>
      (this,&mcmc_bamr::initial_point_best),
+     o2scl::cli::comm_option_both},
+    {0,"read-prev-results","Read previous results from file.",1,1,
+     "<filename>","Long. desc.",
+     new o2scl::comm_option_mfptr<mcmc_bamr>
+     (this,&mcmc_bamr::read_prev_results),
      o2scl::cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);

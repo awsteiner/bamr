@@ -167,14 +167,21 @@ namespace bamr {
      */
     virtual int threads(std::vector<std::string> &sv, bool itive_com);
 
-    /** \brief Desc
+    /** \brief Use the last point in a specifed file for the 
+	initial point
      */
     virtual int initial_point_last(std::vector<std::string> &sv,
 				   bool itive_com);
     
-    /** \brief Desc
+    /** \brief Use the highest likelihood point in the specified file
+	for the initial point
      */
     virtual int initial_point_best(std::vector<std::string> &sv,
+				   bool itive_com);
+
+    /** \brief Read previous results from a file
+     */
+    virtual int read_prev_results(std::vector<std::string> &sv,
 				   bool itive_com);
     
   public:
