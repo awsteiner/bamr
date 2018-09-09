@@ -469,6 +469,8 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
 
 int mcmc_bamr::read_prev_results(std::vector<std::string> &sv,
 				 bool itive_com) {
+
+  O2SCL_ERR("Not implemented yet.",o2scl::exc_eunimpl);
   
   if (sv.size()<2) {
     cerr << "Need a filename for read_prev_results()." << endl;
@@ -511,7 +513,7 @@ int mcmc_bamr::read_prev_results(std::vector<std::string> &sv,
 	     tag,MPI_COMM_WORLD);
   }
 #endif
-  
+
   return 0;
 }
 
@@ -637,8 +639,8 @@ void mcmc_bamr::setup_cli() {
      new o2scl::comm_option_mfptr<mcmc_bamr>
      (this,&mcmc_bamr::initial_point_best),
      o2scl::cli::comm_option_both},
-    {0,"read-prev-results","Read previous results from file.",1,1,
-     "<filename>","Long. desc.",
+    {0,"read-prev-results","Read previous results from file (unfinished).",
+     1,1,"<filename>","Long. desc.",
      new o2scl::comm_option_mfptr<mcmc_bamr>
      (this,&mcmc_bamr::read_prev_results),
      o2scl::cli::comm_option_both}

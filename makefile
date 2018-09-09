@@ -184,6 +184,13 @@ test_data: bamr
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
+test_data_rp: bamr
+	mpirun -np 2 \
+	bamr -threads 2 -set max_iters 300 -set prefix data_temp/twop_data_rp \
+		-run default.in -model twop \
+		-read_prev_results "data_temp/twop_data_<rank>_out" -mcmc \
+		> data_temp/twop_data_rp.scr 2> data_temp/twop_data_rp.err
+
 test_nodata: bamr
 	mpirun -np 2 \
 	bamr -threads 2 -set max_iters 100 -set prefix data_temp/twop_nodata \
