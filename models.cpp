@@ -124,6 +124,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // If requested, compute the baryon density automatically
 
   if (has_eos && set->baryon_density && !dat.eos.is_column("nb")) {
+
+    cout << "Phasing out automatic baryon density calculation."
+	 << endl;
+    scr_out << "Phasing out automatic baryon density calculation."
+	    << endl;
+    exit(-1);
     
     // Obtain the baryon density calibration point from the model
     if (nb_n1<=0.0 && nb_e1<=0.0) {
