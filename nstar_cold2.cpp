@@ -68,7 +68,7 @@ int nstar_cold2::calc_eos(double np_0) {
 
     ret=rp->solve(x,sf);
     y=solve_fun(x);
-    
+
     if (ret!=0 || fabs(y)>solver_tol) {
       success=false;
     }
@@ -88,7 +88,7 @@ int nstar_cold2::calc_eos(double np_0) {
     if (success==false) {
       O2SCL_ERR("Solving for EOS failed in calc_eos().",exc_efailed);
     }
-  } else {
+  } else if (success==false) {
     return exc_efailed;
   }
 
