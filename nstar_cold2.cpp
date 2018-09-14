@@ -84,8 +84,12 @@ int nstar_cold2::calc_eos(double np_0) {
 
   }
 
-  if (success==false) {
-    O2SCL_ERR("Solving for EOS failed in calc_eos().",exc_efailed);
+  if (err_nonconv==true) {
+    if (success==false) {
+      O2SCL_ERR("Solving for EOS failed in calc_eos().",exc_efailed);
+    }
+  } else {
+    return exc_efailed;
   }
 
   return 0;
