@@ -123,13 +123,13 @@ namespace bamr {
       return;
     }
 
+  public:
+
     /** \brief Tabulate EOS and then use in cold_nstar
      */
     virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			      int &success, model_data &dat);
     
-  public:
-
     /// True if the model has an EOS
     bool has_eos;
 

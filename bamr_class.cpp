@@ -255,6 +255,15 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &weight, model_data &dat) {
+
+  // Compute the M vs R curve and return if it failed
+  int iret;
+  mod->compute_star(pars,scr_out,iret,dat);
+  if (iret!=0) {
+    weight=0.0;
+    return iret;
+  }
+  
   return mod->compute_point(pars,scr_out,weight,dat);
 }
 

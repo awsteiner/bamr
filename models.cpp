@@ -713,13 +713,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			 double &log_weight, model_data &dat) {
 
-  // Compute the M vs R curve and return if it failed
-  int iret;
-  compute_star(pars,scr_out,iret,dat);
-  if (iret!=ix_success) {
-    log_weight=0.0;
-    return iret;
-  }
+  int iret=ix_success;
   
   for(size_t i=0;i<nsd->n_sources;i++) {
     if (dat.mass[i]<set->in_m_min || dat.mass[i]>set->in_m_max || 
@@ -758,7 +752,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
   // -----------------------------------------------
   // Compute the weights for each source
       
-  if (set->debug_star) scr_out << "Name M R Weight" << std::endl;
+  if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
   
   for(size_t i=0;i<nsd->n_sources;i++) {
 
@@ -822,12 +816,15 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // Include the weight for this source
     log_weight+=log(dat.wgts[i]);
 	
-    if (set->debug_star) {
+    if (set->verbose>=2) {
+      scr_out.width(10);
       scr_out << nsd->source_names[i] << " "
 	      << dat.mass[i] << " " 
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
-    if (set->verbose>=2) {
+    if (false) {
+      cout << alt << endl;
+      cout.width(10);
       cout << nsd->source_names[i] << " "
 	   << dat.mass[i] << " " 
 	   << dat.rad[i] << " " << dat.wgts[i] << std::endl;
@@ -835,7 +832,7 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
     // Go to the next source
   }
-      
+  
   if (set->debug_star) scr_out << std::endl;
       
   // -----------------------------------------------
