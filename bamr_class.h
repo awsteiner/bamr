@@ -69,7 +69,7 @@ namespace bamr {
     double schwarz_km;
     
     /// Pointer to neutron star data
-    std::shared_ptr<const ns_data> nsd;
+    std::shared_ptr<ns_data> nsd;
     
     /// Pointer to settings object
     std::shared_ptr<const settings> set;
