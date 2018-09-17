@@ -823,9 +823,9 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
     if (false) {
-      cout << alt << endl;
       cout.width(10);
-      cout << nsd->source_names[i] << " "
+      cout << nsd->source_names[i] << " ";
+      cout << alt << " "
 	   << dat.mass[i] << " " 
 	   << dat.rad[i] << " " << dat.wgts[i] << std::endl;
     }
