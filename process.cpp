@@ -1176,7 +1176,7 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
   cout << "Writing to file " << sv[3] << endl;
   hdf_file hf;
   hf.open_or_create(sv[3]);
-  hdf_output(hf,t3d,"hist2_table");
+  hdf_output(hf,(const table3d &)t3d,"hist2_table");
   hf.setd_vec_copy("levels",levels);
   hf.set_szt("n_contours",nc);
   if (nc>0) {
@@ -1502,7 +1502,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   cout << "Writing table to file " << sv[5] << endl;
   hdf_file hf;
   hf.open_or_create(sv[5]);
-  hdf_output(hf,t3d,"hist_set");
+  hdf_output(hf,(const table3d &)t3d,"hist_set");
   hdf_output(hf,index_grid,"index_grid");
   hf.setd_mat_copy("cont_res",cont_res);
       
