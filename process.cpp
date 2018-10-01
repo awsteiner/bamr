@@ -1294,10 +1294,10 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  // Add the value even if it's zero (blank)
 	  values_ser[ell].push_back(val);
 	  
-	  // But if it's less than or equal to zero, don't count
-	  // it for min, max, or count. This is important
-	  // because we don't want to count past the M-R curve
-	  // or the end of the EOS.
+	  // But if it's less than or equal to zero, don't count it
+	  // for min, max, or count. This is important because we
+	  // don't want to count past the M-R curve or the end of the
+	  // EOS.
 	  if (val>0.0) {
 	    count[ell]++;
 	    // The first time, initialize to the first non-zero point
@@ -1316,6 +1316,11 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
       
       // Next table line (k)
     }
+
+    if (verbose>0) {
+      cout << "Read file " << files[i] << "\n  and found min, max: "
+	   << ser_min << " " << ser_max << " (not yet rescaled) " << endl;
+    }
     
     // Next file (i)
   }
@@ -1328,19 +1333,27 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   if (type==((string)"x")) {
     ser_min*=yscale;
     ser_max*=yscale;
+    if (verbose>0 && fabs(yscale-1.0)<1.0e-6) {
+      cout << "Rescaling y by " << yscale << endl;
+    }
   } else {
     ser_min*=xscale;
     ser_max*=xscale;
+    if (verbose>0 && fabs(xscale-1.0)<1.0e-6) {
+      cout << "Rescaling x by " << xscale << endl;
+    }
   }
   if (type==((string)"x")) {
     if (yset) {
       ser_min=user_ylow;
       ser_max=user_yhigh;
+      cout << "Set y limits to " << ser_min << " and " << ser_max << endl;
     }
   } else {
     if (xset) {
       ser_min=user_xlow;
       ser_max=user_xhigh;
+      cout << "Set x limits to " << ser_min << " and " << ser_max << endl;
     }
   }
 
@@ -1424,7 +1437,16 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	cont_wgt[cont_wgt.size()-1]=0.0;
 	if (o2scl::vector_sum_double(cont_wgt)>0.0) {
 	  vector_region_fracint(cont_wgt.size(),cont_grid,cont_wgt,
-			       cont_levels[j],locs);
+				cont_levels[j],locs);
+	  if (locs.size()==0) {
+	    cout << endl;
+	    cout << "Failed to find region." << endl;
+	    cout << cont_levels[j] << endl;
+	    for(size_t i=0;i<cont_wgt.size();i++) {
+	      cout << i << " " << cont_grid[i] << " "
+		   << cont_wgt[i] << endl;
+	    }
+	  }
 	  double lmin=vector_min_value<vector<double>,double>(locs);
 	  double lmax=vector_max_value<vector<double>,double>(locs);
 	  cout << lmin << " " << lmax << " ";
