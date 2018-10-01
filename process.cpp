@@ -58,6 +58,7 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
   ff.set_pad_zeros(true);
   ff.set_exp_limits(-5,5);
   n_blocks=0;
+  weights_col="";
 }
 
 void process::swap(double &w1, size_t &i1, ubvector &x1, 
@@ -1310,7 +1311,11 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  }
 	  // Next column
 	}
-	weights.push_back(tab.get("mult",k));
+	if (weights.size()>0) {
+	  weights.push_back(tab.get(weights_col,k));
+	} else {
+	  weights.push_back(1.0);
+	}
       }
       line_counter++;
       
@@ -1866,6 +1871,10 @@ void process::setup_cli() {
   p_constraint.str=&constraint;
   p_constraint.help="Constraint to apply (default is an empty string).";
   cl.par_list.insert(make_pair("constraint",&p_constraint));
+
+  p_weights.str=&weights_col;
+  p_weights.help="Column with weights.";
+  cl.par_list.insert(make_pair("weights",&p_weights));
 
   cl.prompt="process> ";
 

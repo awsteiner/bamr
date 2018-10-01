@@ -77,6 +77,7 @@ namespace bamr {
     o2scl::cli::parameter_int p_line_start;
     o2scl::cli::parameter_int p_verbose;
     o2scl::cli::parameter_string p_constraint;
+    o2scl::cli::parameter_string p_weights;
     //@}
     
     /// \name Command-line parameters
@@ -101,6 +102,8 @@ namespace bamr {
     int hist_size_int;
     /// Number of blocks
     int n_blocks;
+    /// Column representing weights
+    std::string weights_col;
     //@}
 
     /** \brief Command-line interface object
