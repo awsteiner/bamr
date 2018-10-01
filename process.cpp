@@ -639,7 +639,13 @@ int process::hist(std::vector<std::string> &sv, bool itive_com) {
       for(size_t k=0;k<tab.get_nlines();k++) {
 	if (((int)line_counter)>=line_start) {
 	  values.push_back(tab.get(name,k));
-	  weights.push_back(tab.get("mult",k));
+
+	  if (weights_col.size()>0) {
+	    weights.push_back(tab.get(weights_col,k));
+	  } else {
+	    weights.push_back(1.0);
+	  }
+
 	}
 	line_counter++;
       }
@@ -1017,7 +1023,13 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
 	if (((int)line_counter)>=line_start) {
 	  valuesx.push_back(tab.get(xname,k));
 	  valuesy.push_back(tab.get(yname,k));
-	  weights.push_back(tab.get("mult",k));
+
+	  if (weights_col.size()>0) {
+	    weights.push_back(tab.get(weights_col,k));
+	  } else {
+	    weights.push_back(1.0);
+	  }
+	  
 	}
 	line_counter++;
       }
@@ -1202,14 +1214,15 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   o2scl::stod_nothrow(sv[2],index_low);
   o2scl::stod_nothrow(sv[3],index_high);
   string set_prefix=sv[4];
-  // (output file is sv[5])
-  // (input files are sv[6] ... )
+  int renorm=o2scl::stoi(sv[5]);
+  // (output file is sv[6])
+  // (input files are sv[7] ... )
 
   // file list
   vector<string> files;
 
   // Form list of data files
-  for(size_t i=6;i<sv.size();i++) files.push_back(sv[i]);
+  for(size_t i=7;i<sv.size();i++) files.push_back(sv[i]);
   size_t nf=files.size();
       
   // The value of 'grid_size' from the bamr output file
@@ -1311,7 +1324,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  }
 	  // Next column
 	}
-	if (weights.size()>0) {
+	if (weights_col.size()>0) {
 	  weights.push_back(tab.get(weights_col,k));
 	} else {
 	  weights.push_back(1.0);
@@ -1392,7 +1405,12 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 
   // Vectors to store contour results. Each additional contour level
   // requires two vectors: a low and high vector.
-  ubmatrix cont_res(cont_levels.size()*2,grid_size);
+  table<> cont_res;
+  cont_res.new_column("grid");
+  for(size_t j=0;j<cont_levels.size()*2;j++) {
+    cont_res.new_column(((std::string)"c")+o2scl::szttos(j));
+  }
+  cont_res.set_nlines(grid_size);
 
   // Fill expval_scalar objects using histogram
   size_t block_size=weights.size()/20;
@@ -1405,8 +1423,10 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
     cout << col << " ix: ";
     if (type==((string)"x")) {
       cout << index_grid[k]*xscale << " cnt: ";
+      cont_res.set("grid",k,index_grid[k]*xscale);
     } else {
       cout << index_grid[k]*yscale << " cnt: ";
+      cont_res.set("grid",k,index_grid[k]*yscale);
     }
     cout << count[k] << " ";
 
@@ -1419,6 +1439,14 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	if (val>ser_min && val<ser_max) {
 	  h.update(val,weights[i*block_size+j]);
 	  hsum.update(val,weights[i*block_size+j]);
+	}
+      }
+      // If requested, renormalize the histogram so that the maximum
+      // value is 1
+      if (renorm>=1) {
+	double max=h.get_max_wgt();
+	for(size_t j=0;j<hist_size;j++) {
+	  h.set_wgt_i(j,h.get_wgt_i(j)/max);
 	}
       }
       for(size_t j=0;j<hist_size;j++) {
@@ -1455,17 +1483,17 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  double lmin=vector_min_value<vector<double>,double>(locs);
 	  double lmax=vector_max_value<vector<double>,double>(locs);
 	  cout << lmin << " " << lmax << " ";
-	  cont_res(2*j,k)=lmin;
-	  cont_res(2*j+1,k)=lmax;
+	  cont_res.set(2*j+1,k,lmin);
+	  cont_res.set(2*j+2,k,lmax);
 	} else {
 	  // If there's not enough data, just report zero
-	  cont_res(2*j,k)=0.0;
-	  cont_res(2*j+1,k)=0.0;
+	  cont_res.set(2*j+1,k,0.0);
+	  cont_res.set(2*j+2,k,0.0);
 	}
       } else {
 	// If there's not enough data, just report zero
-	cont_res(2*j,k)=0.0;
-	cont_res(2*j+1,k)=0.0;
+	cont_res.set(2*j+1,k,0.0);
+	cont_res.set(2*j+2,k,0.0);
       }
     }
     hsum.clear_wgts();
@@ -1526,13 +1554,12 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Perform file output
-  cout << "Writing table to file " << sv[5] << endl;
+  cout << "Writing table to file " << sv[6] << endl;
   hdf_file hf;
-  hf.open_or_create(sv[5]);
+  hf.open_or_create(sv[6]);
   hdf_output(hf,(const table3d &)t3d,"hist_set");
   hdf_output(hf,index_grid,"index_grid");
-  hf.setd_mat_copy("cont_res",cont_res);
-      
+  hdf_output(hf,cont_res,"cont_res");
   hf.close();
 
   return 0;
@@ -1798,13 +1825,13 @@ void process::setup_cli() {
      new comm_option_mfptr<process>(this,&process::auto_corr),
      cli::comm_option_both},
     {0,"hist-set","Create an ensemble of of 1-d histograms.",6,-1,
-     "<direction> <low> <high> <set> <out_file> <file1> [file2...]",
+     "<direction> <low> <high> <set> <renorm> <out_file> <file1> [file2...]",
      ((string)"Using the 'markov_chain' objects in a bamr output ")+
      "file, create an ensemble of 1-d histograms from a set "+
      "of columns in each chain. Typical uses are: "+
-     "\'process -hist-set y m_low m_high R out.o2 x_0_out\', "+
-     "\'process -hist-set x e_low e_high P out.o2 x_0_out\', and "+
-     "\'process -hist-set x nb_low nb_high P out.o2 x_0_out\'. ",
+     "\'process -hist-set y m_low m_high R 0 out.o2 x_0_out\', "+
+     "\'process -hist-set x e_low e_high P 0 out.o2 x_0_out\', and "+
+     "\'process -hist-set x nb_low nb_high P 0 out.o2 x_0_out\'. ",
      new comm_option_mfptr<process>(this,&process::hist_set),
      cli::comm_option_both},
     {0,"curve-set","",6,-1,
