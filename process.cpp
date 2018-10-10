@@ -1382,7 +1382,10 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Create expval_scalar objects
-  if (n_blocks<=0) n_blocks=20;
+  if (n_blocks<=0) {
+    n_blocks=20;
+  }
+  cout << "Using " << n_blocks << " blocks." << endl;
   vector<expval_scalar> sev(hist_size*grid_size);
   for(size_t i=0;i<hist_size*grid_size;i++) {
     sev[i].set_blocks(n_blocks,1);
