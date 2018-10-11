@@ -57,7 +57,7 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
   ff.set_sig_figs(4);
   ff.set_pad_zeros(true);
   ff.set_exp_limits(-5,5);
-  n_blocks=0;
+  n_blocks=1;
   weights_col="";
 }
 
@@ -1448,6 +1448,10 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
       // value is 1
       if (renorm>=1) {
 	double max=h.get_max_wgt();
+	if (max==0.0) {
+	  std::cout << std::endl;
+	  std::cout << "Histogram has no entries." << std::endl;
+	}
 	for(size_t j=0;j<hist_size;j++) {
 	  h.set_wgt_i(j,h.get_wgt_i(j)/max);
 	}
@@ -1886,7 +1890,7 @@ void process::setup_cli() {
   cl.par_list.insert(make_pair("hist_size",&p_hist_size));
 
   p_n_blocks.i=&n_blocks;
-  p_n_blocks.help="Number of blocks (default 0).";
+  p_n_blocks.help="Number of blocks (default 1).";
   cl.par_list.insert(make_pair("n_blocks",&p_n_blocks));
 
   p_line_start.i=&line_start;
