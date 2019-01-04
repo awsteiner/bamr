@@ -7,10 +7,11 @@ Installation
 The `bamr` executable requires the installation of `GSL
 <http://www.gnu.org/software/gsl>`_ (versions 1.16 and later), `HDF5
 <http://www.hdfgroup.org>`_ (versions 1.8.14 and later), the most
-current version of `O2scl <http://web.utk.edu/~asteine1/o2scl>`_ from
-the github repository, and MPI (tested with ``openmpi-1.8.6``). After
-these four packages are successfully installed, you will need to edit
-the ``makefile`` and then compile ``bamr`` before execution.
+current version of `O2scl
+<https://isospin.roam.utk.edu/static/code/o2scl>`_ from the github
+repository, and MPI (tested with ``openmpi-1.8.6``). After these four
+packages are successfully installed, you will need to edit the
+``makefile`` and then compile ``bamr`` before execution.
 
 Download
 --------
