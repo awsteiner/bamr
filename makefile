@@ -393,7 +393,10 @@ doc: empty
 	cd sphinx; make html
 
 sync-doc:
-	cp -r sphinx/build/html/* $(STATIC_DOC_DIR)/bamr
+	rsync -Cavzu sphinx/build/html/* $(STATIC_DOC_DIR)/bamr
+
+test-sync:
+	rsync -Cavzun sphinx/build/html/* $(STATIC_DOC_DIR)/bamr
 
 # ----------------------------------------------------------------------
 # Misc
