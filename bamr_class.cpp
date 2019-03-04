@@ -204,9 +204,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
 	line.push_back(I);
 
 	// To compute I_bar, divide by G^2*M^3
-	double I_bar=I/schwarz_km/schwarz_km/4.0/mval/mval/mval;
+	double I_bar=I*4.0/schwarz_km/schwarz_km/mval/mval/mval;
 	line.push_back(I_bar);
-	
+
+	/*
 	// Relation for lambda given I from Kent Yagi based
 	// on Yagi and Yunes, Science, (2014)
 	double a0=-210.327;
@@ -216,15 +217,21 @@ int bamr_class::fill(const ubvector &pars, double weight,
 	double a4=-70.6449;
 	double a5=10.9775;
 	double a6=-0.707066;
-
+	*/
+	
+	// Jim's fit from Steiner, Lattimer, and Brown (2016)
+	double b0=-30.5395;
+	double b1=38.3931;
+	double b2=-16.3071;
+	double b3=3.36972;
+	double b4=-0.26105;
+    
 	double li=log(I_bar);
 	double li2=li*li;
 	double li3=li*li2;
 	double li4=li*li3;
-	double li5=li*li4;
-	double li6=li*li5;
-	  
-	double Lambda_bar=exp(a0+a1*li+a2*li2+a3*li3+a4*li4+a5*li5+a6*li6);
+	
+	double Lambda_bar=exp(b0+b1*li+b2*li2+b3*li3+b4*li4);
 
 	line.push_back(Lambda_bar);
 	
