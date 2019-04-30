@@ -56,10 +56,11 @@ int nstar_cold2::calc_eos(double np_0) {
   // Initial guess for proton number density
   if (fabs(np_0)<1.0e-12) x=nb_start/3.0;
   else x=np_0;
-  
-  funct sf=std::bind(std::mem_fn<double(double)>
-		       (&nstar_cold2::solve_fun),
-		       this,std::placeholders::_1);
+
+  thermo hb, h, l;
+  funct sf=std::bind(std::mem_fn<double(double, thermo &)>
+		     (&nstar_cold2::solve_fun),
+		     this,std::placeholders::_1,std::ref(hb));
 
   bool success=true, n1_set=false;
   double y;
@@ -67,7 +68,7 @@ int nstar_cold2::calc_eos(double np_0) {
   for(barn=nb_start;barn<=nb_end+dnb/10.0;barn+=dnb) {
 
     ret=rp->solve(x,sf);
-    y=solve_fun(x);
+    y=solve_fun(x,hb);
 
     if (ret!=0 || fabs(y)>solver_tol) {
       success=false;
