@@ -1603,135 +1603,151 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
   // Form list of data files
   for(size_t i=3;i<sv.size();i++) files.push_back(sv[i]);
   size_t nf=files.size();
-
+  
   table_units<> full;
-
-  double e_low, e_high, m_low, m_high, nb_low, nb_high;
-  ubvector low, high;
-  size_t nparams, nsources, lgrid_size, file_row_start;
-  vector<string> param_names, source_names;
-
+  
+  /*
+    double e_low, e_high, m_low, m_high, nb_low, nb_high;
+    ubvector low, high;
+    size_t nparams, nsources, lgrid_size, file_row_start;
+    vector<string> param_names, source_names;
+  */
+  //size_t file_row_start;
+  
+  if (line_start>0) {
+    cout << "Skipping " << line_start
+	 << " lines at the beginning of every file." << endl;
+  }
+  
   // data
   for(size_t i=0;i<nf;i++) {
     hdf_file hf;
-
-    // Open file
-    cout << "Opening file: " << files[i] << endl;
-    hf.open(files[i]);
-
+    
+    /*
     // Get number of chains
     size_t n_chains;
     hf.get_szt_def("n_chains",1,n_chains);
     if (n_chains>1) {
-      cout << n_chains << " separate chains." << endl;
+    cout << n_chains << " separate chains." << endl;
     } else {
-      cout << "1 chain." << endl;
+    cout << "1 chain." << endl;
     }
-
+    */
+    
     size_t line_counter=0;
-
-    file_row_start=full.get_nlines();
-
+    
+    //file_row_start=full.get_nlines();
+    
     // Read each chain
-    for(size_t j=0;j<n_chains;j++) {
-
-      // Read table
-      std::string tab_name="markov_chain_"+szttos(j);
-      table_units<> tab;
-      hdf_input(hf,tab,tab_name);
-	
-      // Set up columns in fill table over all files
-      if (i==0 && j==0) {
-	for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
-	  full.new_column(tab.get_column_name(ell));
-	}
+    //for(size_t j=0;j<n_chains;j++) {
+    
+    // Read table
+    cout << "Opening file: " << files[i] << endl;
+    hf.open(files[i]);
+    std::string tab_name="markov_chain_0";
+    table_units<> tab;
+    hdf_input(hf,tab,tab_name);
+    hf.close();
+    
+    // Set up columns in fill table over all files
+    if (i==0) {
+      for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
+	full.new_column(tab.get_column_name(ell));
       }
-
-      // Get misc parameters
-      if (i==0 && j==0) {
-	hf.getd("e_low",e_low);
-	hf.getd("e_high",e_high);
-	hf.getd("nb_low",nb_low);
-	hf.getd("nb_high",nb_high);
-	hf.getd("m_low",m_low);
-	hf.getd("m_high",m_high);
-	hf.getd_vec_copy("low",low);
-	hf.getd_vec_copy("high",high);
-	hf.get_szt("grid_size",lgrid_size);
-	hf.get_szt("n_params",nparams);
-	hf.get_szt("n_sources",nsources);
-	hf.gets_vec("param_names",param_names);
-	hf.gets_vec("source_names",source_names);
-      }
-	  
-      // Add data to table for this file
-      
-      if (j==0) {
-
-	// For the first chain, we want to skip according to line_start
-	for(size_t k=((size_t)line_start);k<tab.get_nlines();k+=thin_factor) {
-	  vector<double> line;
-	  for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
-	    line.push_back(tab.get(tab.get_column_name(ell),k));
-	  }
-	  full.line_of_data(line.size(),line);
-	}
-	
-	cout << "Added table " << tab_name << " lines: " 
-	     << tab.get_nlines();
-	if (line_start>0) {
-	  cout << " skipped: " << line_start;
-	}
-	cout << endl;
-
-      } else {
-
-	// For the remaining chains we don't skip any, we just
-	// start at the first row
-	for(size_t k=0;k<tab.get_nlines();k+=thin_factor) {
-	  vector<double> line;
-	  for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
-	    line.push_back(tab.get(tab.get_column_name(ell),k));
-	  }
-	  full.line_of_data(line.size(),line);
-	}
-	
-	cout << "Added table " << tab_name << " lines: " 
-	     << tab.get_nlines() << endl;
-      }
-
-      // Go to next chain
     }
-	
-	
+    
+    // Get misc parameters
+    /*
+      if (i==0 && j==0) {
+      hf.getd("e_low",e_low);
+      hf.getd("e_high",e_high);
+      hf.getd("nb_low",nb_low);
+      hf.getd("nb_high",nb_high);
+      hf.getd("m_low",m_low);
+      hf.getd("m_high",m_high);
+      hf.getd_vec_copy("low",low);
+      hf.getd_vec_copy("high",high);
+      hf.get_szt("grid_size",lgrid_size);
+      hf.get_szt("n_params",nparams);
+      hf.get_szt("n_sources",nsources);
+      //hf.gets_vec("param_names",param_names);
+      hf.gets_vec("source_names",source_names);
+      }
+    */
+    
+    // Add data to table for this file
+    
+    /*
+      if (j==0) {
+      
+      // For the first chain, we want to skip according to line_start
+      for(size_t k=((size_t)line_start);k<tab.get_nlines();k+=thin_factor) {
+      vector<double> line;
+      for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
+      line.push_back(tab.get(tab.get_column_name(ell),k));
+      }
+      full.line_of_data(line.size(),line);
+      }
+      
+      cout << "Added table " << tab_name << " lines: " 
+      << tab.get_nlines();
+      if (line_start>0) {
+      cout << " skipped: " << line_start;
+      }
+      cout << endl;
+      
+      } else {
+    */
+    
+    // For the remaining chains we don't skip any, we just
+    // start at the first row
+    for(size_t k=line_start;k<tab.get_nlines();k+=thin_factor) {
+      vector<double> line;
+      for(size_t ell=0;ell<tab.get_ncolumns();ell++) {
+	line.push_back(tab.get(tab.get_column_name(ell),k));
+      }
+      full.line_of_data(line.size(),line);
+    }
+    
+    cout << "Added table " << tab_name << " lines: " 
+	 << tab.get_nlines() << endl;
+    //}
+    
+    // Go to next chain
+    //}
+    
+    /*	
     // Load weight column for this file from full table
     vector<double> subweights;
     for(size_t k=file_row_start;k<full.get_nlines();k++) {
-      subweights.push_back(exp(full.get("log_wgt",k)));
+    subweights.push_back(exp(full.get("log_wgt",k)));
     }
-	
+    
     // Compute autocorrelation
     size_t kmax=subweights.size()/3;
     ubvector kvec(kmax-1), acvec(kmax-1), acerr(kmax-1);
     for(size_t k=1;k<kmax;k++) {
-      kvec[k-1]=((double)k);
-      acvec[k-1]=vector_lagk_autocorr(subweights.size(),subweights,k);
-      acerr[k-1]=fabs(acvec[k-1])/10.0;
+    kvec[k-1]=((double)k);
+    acvec[k-1]=vector_lagk_autocorr(subweights.size(),subweights,k);
+    acerr[k-1]=fabs(acvec[k-1])/10.0;
     }
-	
-    cout << "full.nlines=" << full.get_nlines() << endl;
-
+    */
+    
+    cout << "Current total number of lines: "
+	 << full.get_nlines() << endl;
+    
     // Go to next file
   }
-
+  
   cout << "Writing table to file " << out_file << endl;
   hdf_file hf;
   hf.open_or_create(out_file);
   string type;
-  if (hf.find_object_by_name("markov_chain0",type)==0) {
+  if (hf.find_object_by_name("markov_chain_0",type)==0) {
     O2SCL_ERR("Refusing to overwrite file with data in process 'combine'.",
 	      exc_efailed);
   }
+  /*
   hf.setd("e_low",e_low);
   hf.setd("e_high",e_high);
   hf.setd("nb_low",nb_low);
@@ -1742,11 +1758,12 @@ int process::combine(std::vector<std::string> &sv, bool itive_com) {
   hf.set_szt("n_chains",1);
   hf.setd_vec_copy("low",low);
   hf.setd_vec_copy("high",high);
-  hf.set_szt("nparams",nparams);
-  hf.set_szt("nsources",nsources);
-  hf.sets_vec("param_names",param_names);
+  hf.set_szt("n_params",nparams);
+  hf.set_szt("n_sources",nsources);
+  //hf.sets_vec("param_names",param_names);
   hf.sets_vec("source_names",source_names);
-  hdf_output(hf,full,"markov_chain0");
+  */
+  hdf_output(hf,full,"markov_chain_0");
   hf.close();
 
   return 0;
