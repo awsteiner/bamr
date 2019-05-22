@@ -184,7 +184,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
   }
   if (set->addl_quants) {
-    double mmax=dat.mvsr.get_constant("m_max");
+    cout << "1: " << mmax << " " << dat.mvsr.get_constant("m_max") << endl;
+    exit(-1);
+    mmax=dat.mvsr.get_constant("m_max");
     for(int i=0;i<set->grid_size;i++) {
       double mval=m.m_grid[i];
 

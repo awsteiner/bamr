@@ -274,8 +274,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
 
       scr_out.setf(std::ios::left);
       scr_out.width(29);
-      std::string stempx=source_fnames[k].substr(0,29);
-      scr_out << stempx << " ";
+      scr_out << source_fnames[k].substr(0,29) << " ";
       scr_out.width(6);
       scr_out << source_names[k] << " " << tot << " " << max << " ";
       scr_out.unsetf(std::ios::left);
@@ -284,8 +283,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
       if (source_fnames_alt.size()>0) {
 	scr_out.setf(std::ios::left);
 	scr_out.width(29);
-	std::string stempx=source_fnames_alt[k].substr(0,29);
-	scr_out << stempx << " ";
+	scr_out << source_fnames_alt[k].substr(0,29) << " ";
 	scr_out.width(6);
 	scr_out << source_names[k] << " " << tot << " " << max << " ";
 	scr_out.unsetf(std::ios::left);

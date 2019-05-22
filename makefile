@@ -4,16 +4,12 @@
 # ----------------------------------------------------------------------
 
 # This variable should include the directories for the O2scl, GSL, and
-# HDF5 libraries. In my configuration, I use the environment variables
-# O2SCL_LIB, but you can just replace this entire line with whatever
-# you need.
-LIB_DIRS = -L$(O2SCL_LIB) -L$(HDF5_LIB)
+# HDF5 libraries.
+LIB_DIRS = 
 
 # This variable may need to be modified to specify the include
-# directories for the GSL, boost, HDF5, and O2scl header files. If
-# O2scl was installed with Eigen or armadillo support, those header
-# directories may need to be here also.
-INC_DIRS = -I$(O2SCL_INC) -I$(HDF5_INC)
+# directories for the GSL, Boost, HDF5, and O2scl header files. 
+INC_DIRS = 
 
 # C++ compiler (e.g. mpicxx)
 # MPI_CXX = 
@@ -27,14 +23,35 @@ READLINE_VAR = -DBAMR_READLINE
 
 READLINE_LIBS = -lreadline -lncurses
 
-# Basic compiler flags
+# Basic compiler flags with and without MPI
+
 COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
+COMPILER_FLAGS_MPI = -std=c++0x -O3 -Wall -Wno-unused
+
+# ----------------------------------------------------------------------
+# UTK makefile
+# ----------------------------------------------------------------------
+
+ifdef UTKNA_MAKEFILE
+
+include $(UTKNA_MAKEFILE)
+
+# UTK configuration
+LIB_DIRS = $(UTKNA_O2SCL_LIBS)
+INC_DIRS = $(UTKNA_O2SCL_INCS)
+CXX = $(UTKNA_CXX) 
+MPI_CXX = $(UTKNA_MPI_CXX)
+BAMR_DIR = $(UTKNA_BAMR_DIR)
+COMPILER_FLAGS = $(UTKNA_CFLAGS)
+COMPILER_FLAGS_MPI = $(UTKNA_MPI_CFLAGS)
+
+endif
 
 # ----------------------------------------------------------------------
 # Secondary variables
 # ----------------------------------------------------------------------
 
-ALL_FLAGS_MPI = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
+ALL_FLAGS_MPI = $(COMPILER_MPI_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 	-DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp 
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) 
