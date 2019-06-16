@@ -12,6 +12,8 @@ This code was originally supported by Chandra grant
 <http://cxc.harvard.edu/target_lists/cycle12/theory12.html#12400566>`_
 and is now supported by NSF grant `PHY 15-54876
 <http://www.nsf.gov/awardsearch/showAward?AWD_ID=1554876>`_.
+The code is licensed under the GPLv3 and this documentation
+is licensed under the GNU FDL (see :ref:`Licensing`).
 
 Currently, bamr is hosted as a `git repository
 <http://www.github.com/awsteiner/bamr>`_ . It is also listed at the

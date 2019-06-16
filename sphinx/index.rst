@@ -7,6 +7,7 @@ Bayesian analysis of neutron star masses and radii
    :maxdepth: 2
 
    intro
+   licensing
    guide
    classdoc
    models	      
