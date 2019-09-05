@@ -1127,73 +1127,87 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
     }
   }
 
-  // ------------------------------------------
-  // Compute contour lines
-    
-  vector<contour_line> conts;
-  size_t nc=0;
-    
-  // Construct x and y values for interpolating the double integral
-  ubvector integx(101), integy(101);
-  for(size_t i=0;i<101;i++) {
-    integx[i]=((double)i)/100.0;
-  }
-  for(size_t k=0;k<101;k++) {
-    integy[k]=0.0;
-    for(size_t i=0;i<hist_size;i++) {
-      for(size_t j=0;j<hist_size;j++) {
-	if (t3d.get(i,j,"avgs")>integx[k]) integy[k]+=t3d.get(i,j,"avgs");
-      }
-    }
-  }
-    
-  // Get the total 
-  double total=integy[0];
-  ubvector levels(cont_levels.size());
-
-  // Compute the function values associated with the contour levels
-  for(size_t k=0;k<cont_levels.size();k++) {
-    levels[k]=0.0;
-    for(size_t i=0;i<100;i++) {
-      if (integy[i]>cont_levels[k]*total && 
-	  integy[i+1]<cont_levels[k]*total) {
-	levels[k]=(integx[i]+integx[i+1])/2.0;
-	i=100;
-      }
-    }
-    if (levels[k]==0.0) {
-      cout << "Failed to find contour level for level " 
-	   << levels[k] << endl;
-    }
-  }
-
-  // If those levels were found, plot the associated contours
-  contour co;
-      
-  // Set the contour object data
-  ubvector xg(hist_size), yg(hist_size);
-  for(size_t i=0;i<hist_size;i++) {
-    xg[i]=t3d.get_grid_x(i);
-    yg[i]=t3d.get_grid_y(i);
-  }
-  co.set_data(hist_size,hist_size,xg,yg,t3d.get_slice("avgs"));
-      
-  // Set the levels
-  co.set_levels(levels.size(),levels);
-      
-  // Compute the contours
-  co.calc_contours(conts);
-  nc=conts.size();
-  cout << "Number of contours: " << nc << endl;
-
   cout << "Writing to file " << sv[3] << endl;
   hdf_file hf;
   hf.open_or_create(sv[3]);
   hdf_output(hf,(const table3d &)t3d,"hist2_table");
-  hf.setd_vec_copy("levels",levels);
-  hf.set_szt("n_contours",nc);
-  if (nc>0) {
-    hdf_output(hf,conts,"contours");
+
+  // ------------------------------------------
+  // Compute contour lines
+  for(size_t n=0;n<cont_levels.size();n++){
+    string sig_level;
+
+    if(cont_levels[n] == one_sigma){
+      sig_level = "1s";
+    }else if(cont_levels[n] == two_sigma ){
+      sig_level = "2s";
+    }else if(cont_levels[n] == three_sigma ){
+      sig_level = "3s";
+    }else{
+      cout << "contour levels are not set." << endl;
+    }
+
+    vector<contour_line> conts;
+    size_t nc=0;
+      
+    // Construct x and y values for interpolating the double integral
+    ubvector integx(101), integy(101);
+    for(size_t i=0;i<101;i++) {
+      integx[i]=((double)i)/100.0;
+    }
+    for(size_t k=0;k<101;k++) {
+      integy[k]=0.0;
+      for(size_t i=0;i<hist_size;i++) {
+        for(size_t j=0;j<hist_size;j++) {
+  	if (t3d.get(i,j,"avgs")>integx[k]) integy[k]+=t3d.get(i,j,"avgs");
+        }
+      }
+    }
+      
+    // Get the total 
+    double total=integy[0];
+    ubvector levels(1);
+
+
+    // Compute the function values associated with the contour levels
+      levels[0]=0.0;
+      for(size_t i=0;i<100;i++) {
+        if (integy[i]>cont_levels[n]*total &&
+         integy[i+1]<cont_levels[n]*total) {
+  	       levels[0]=(integx[i]+integx[i+1])/2.0;
+  	       i=100;
+        }
+      }
+      if (levels[0]==0.0) {
+        cout << "Failed to find contour level for level " 
+  	   << levels[0] << endl;
+      }
+    
+
+    // If those levels were found, plot the associated contours
+    contour co;
+
+    // Set the contour object data
+    ubvector xg(hist_size), yg(hist_size);
+    for(size_t i=0;i<hist_size;i++) {
+      xg[i]=t3d.get_grid_x(i);
+      yg[i]=t3d.get_grid_y(i);
+    }
+    co.set_data(hist_size,hist_size,xg,yg,t3d.get_slice("avgs"));
+    // Set the levels
+    co.set_levels(levels.size(),levels);
+        
+    // Compute the contours
+    co.calc_contours(conts);
+    nc=conts.size();
+    cout << "Number of contours: " << nc << endl;
+
+
+    hf.setd_vec_copy("levels_"+sig_level,levels);
+    hf.set_szt("n_contours_"+sig_level,nc);
+    if (nc>0) {
+      hdf_output(hf,conts,"contours_"+sig_level);
+    }
   }
   hf.close();
 
