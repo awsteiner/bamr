@@ -1133,80 +1133,88 @@ int process::hist2(std::vector<std::string> &sv, bool itive_com) {
   hdf_output(hf,(const table3d &)t3d,"hist2_table");
 
   // ------------------------------------------
-  // Compute contour lines
-  for(size_t n=0;n<cont_levels.size();n++){
+  // Construct x and y values for interpolating the double integral
+  
+  ubvector integx(101), integy(101);
+  for(size_t i=0;i<101;i++) {
+    integx[i]=((double)i)/100.0;
+  }
+  for(size_t k=0;k<101;k++) {
+    integy[k]=0.0;
+    for(size_t i=0;i<hist_size;i++) {
+      for(size_t j=0;j<hist_size;j++) {
+	if (t3d.get(i,j,"avgs")>integx[k]) integy[k]+=t3d.get(i,j,"avgs");
+      }
+    }
+  }
+
+  // Get the total 
+  double total=integy[0];
+
+  // Create contour object
+  contour co;
+  
+  // Set the contour object data
+  ubvector xg(hist_size), yg(hist_size);
+  for(size_t i=0;i<hist_size;i++) {
+    xg[i]=t3d.get_grid_x(i);
+    yg[i]=t3d.get_grid_y(i);
+  }
+  co.set_data(hist_size,hist_size,xg,yg,t3d.get_slice("avgs"));
+    
+  // ------------------------------------------------------------------
+  // Compute contour lines for all of the requested levels. We could
+  // compute all the levels at once with the contour class, but here
+  // we separate the calculation so that it is easy to separate the
+  // contour lines for each requested level.
+  
+  for(size_t ic=0;ic<cont_levels.size();ic++) {
+    
     string sig_level;
 
-    if(cont_levels[n] == one_sigma){
-      sig_level = "1s";
-    }else if(cont_levels[n] == two_sigma ){
-      sig_level = "2s";
-    }else if(cont_levels[n] == three_sigma ){
-      sig_level = "3s";
-    }else{
-      cout << "contour levels are not set." << endl;
+    if (cont_levels[ic]==one_sigma) {
+      sig_level="1s";
+    } else if(cont_levels[ic]==two_sigma) {
+      sig_level="2s";
+    } else if(cont_levels[ic]==three_sigma) {
+      sig_level="3s";
+    } else {
+      sig_level=o2scl::szttos(ic);
     }
 
     vector<contour_line> conts;
     size_t nc=0;
       
-    // Construct x and y values for interpolating the double integral
-    ubvector integx(101), integy(101);
-    for(size_t i=0;i<101;i++) {
-      integx[i]=((double)i)/100.0;
-    }
-    for(size_t k=0;k<101;k++) {
-      integy[k]=0.0;
-      for(size_t i=0;i<hist_size;i++) {
-        for(size_t j=0;j<hist_size;j++) {
-  	if (t3d.get(i,j,"avgs")>integx[k]) integy[k]+=t3d.get(i,j,"avgs");
-        }
-      }
-    }
-      
-    // Get the total 
-    double total=integy[0];
     ubvector levels(1);
-
-
-    // Compute the function values associated with the contour levels
-      levels[0]=0.0;
-      for(size_t i=0;i<100;i++) {
-        if (integy[i]>cont_levels[n]*total &&
-         integy[i+1]<cont_levels[n]*total) {
-  	       levels[0]=(integx[i]+integx[i+1])/2.0;
-  	       i=100;
-        }
-      }
-      if (levels[0]==0.0) {
-        cout << "Failed to find contour level for level " 
-  	   << levels[0] << endl;
-      }
     
-
-    // If those levels were found, plot the associated contours
-    contour co;
-
-    // Set the contour object data
-    ubvector xg(hist_size), yg(hist_size);
-    for(size_t i=0;i<hist_size;i++) {
-      xg[i]=t3d.get_grid_x(i);
-      yg[i]=t3d.get_grid_y(i);
+    // Compute the function value associated with the contour levels
+    levels[0]=0.0;
+    for(size_t i=0;i<100;i++) {
+      if (integy[i]>cont_levels[ic]*total &&
+	  integy[i+1]<cont_levels[ic]*total) {
+	levels[0]=(integx[i]+integx[i+1])/2.0;
+	i=100;
+      }
     }
-    co.set_data(hist_size,hist_size,xg,yg,t3d.get_slice("avgs"));
+    if (levels[0]==0.0) {
+      cout << "Failed to find any contour levels for level " 
+  	   << cont_levels[ic] << " and function value " << levels[0] << endl;
+    }
+
     // Set the levels
     co.set_levels(levels.size(),levels);
-        
+    
     // Compute the contours
     co.calc_contours(conts);
     nc=conts.size();
     cout << "Number of contours: " << nc << endl;
-
-
-    hf.setd_vec_copy("levels_"+sig_level,levels);
-    hf.set_szt("n_contours_"+sig_level,nc);
+    
+    // If those levels were found, write the associated contours
+    // to the HDF5 file
+    hf.setd(((string)"level_")+sig_level,levels[0]);
+    hf.set_szt(((string)"n_contours_")+sig_level,nc);
     if (nc>0) {
-      hdf_output(hf,conts,"contours_"+sig_level);
+      hdf_output(hf,conts,((string)"contours_")+sig_level);
     }
   }
   hf.close();
