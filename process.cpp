@@ -58,6 +58,7 @@ process::process() : one_sigma(gsl_sf_erf(1.0/sqrt(2.0))),
   ff.set_pad_zeros(true);
   ff.set_exp_limits(-5,5);
   n_blocks=1;
+  grid_init=0;
   weights_col="";
 }
 
@@ -1321,7 +1322,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
       if (((int)line_counter)>=line_start) {
 	
 	// For each column in the series
-	for(size_t ell=0;ell<grid_size;ell++) {
+	for(size_t ell=grid_init;ell<grid_size;ell++) {
 	  
 	  // Column name and value
 	  string col=set_prefix+"_"+szttos(ell);
@@ -1439,7 +1440,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 
   // Fill expval_scalar objects using histogram
   size_t block_size=weights.size()/20;
-  for(size_t k=0;k<grid_size;k++) {
+  for(size_t k=grid_init;k<grid_size;k++) {
 
     string col=set_prefix+"_"+szttos(k);
     cout.precision(3);
@@ -1564,7 +1565,7 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   // Collect averages into the table3d slice
   double std_dev, avg_err, avg, smax=0.0;
   for(size_t j=0;j<hist_size;j++) {
-    for(size_t k=0;k<grid_size;k++) {
+    for(size_t k=grid_init;k<grid_size;k++) {
       sev[j*grid_size+k].current_avg(avg,std_dev,avg_err);
       if (avg>smax) smax=avg;
       if (type==((string)"x")) {
@@ -1931,6 +1932,10 @@ void process::setup_cli() {
   p_n_blocks.i=&n_blocks;
   p_n_blocks.help="Number of blocks (default 1).";
   cl.par_list.insert(make_pair("n_blocks",&p_n_blocks));
+
+  p_grid_init.i=&grid_init;
+  p_grid_init.help="Initial column number for grid (default 0).";
+  cl.par_list.insert(make_pair("grid_init",&p_grid_init));
 
   p_line_start.i=&line_start;
   p_line_start.help=((string)"Number of initial rows to skip over ")+

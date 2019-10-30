@@ -74,6 +74,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_logz;
     o2scl::cli::parameter_int p_hist_size;
     o2scl::cli::parameter_int p_n_blocks;
+    o2scl::cli::parameter_int p_grid_init;
     o2scl::cli::parameter_int p_line_start;
     o2scl::cli::parameter_int p_verbose;
     o2scl::cli::parameter_string p_constraint;
@@ -102,6 +103,8 @@ namespace bamr {
     int hist_size_int;
     /// Number of blocks
     int n_blocks;
+    /// Initial column number for grid
+    int grid_init;
     /// Column representing weights
     std::string weights_col;
     //@}
