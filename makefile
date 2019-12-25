@@ -319,54 +319,54 @@ test_rejtab: bamr
 # ----------------------------------------------------------------------
 
 test_debug_eos_nompi: bamr_nompi
-	bamr_nompi -set prefix data_temp/debug_eos \
+	./bamr_nompi -set prefix data_temp/debug_eos \
 		-set debug_eos 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_eos.scr
 	-mv -i debug_eos.o2 data_temp
 
 test_debug_star_nompi: bamr_nompi
-	bamr_nompi -set prefix data_temp/debug_star \
+	./bamr_nompi -set prefix data_temp/debug_star \
 		-set debug_star 1 -run default.in -model twop -mcmc \
 		> data_temp/debug_star.scr
 	-mv -i debug_star.o2 data_temp
 
 test_data_nompi: bamr_nompi
-	bamr_nompi -set max_iters 300 -set prefix data_temp/twop_data \
+	./bamr_nompi -set max_iters 300 -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
 test_nodata_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_nodata \
+	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_nodata \
 		-model twop -mcmc \
 		> data_temp/twop_nodata.scr 2> data_temp/twop_nodata.err
 
 test_cthick_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 
 test_fixp_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set prefix data_temp/fixp_nodata \
+	./bamr_nompi -set max_iters 100 -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
 
 test_qt_nompi: bamr_nompi
-	bamr_nompi -set max_iters 300 -set prefix data_temp/qt_nodata \
+	./bamr_nompi -set max_iters 300 -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 
 test_qf_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set prefix data_temp/qf_nodata \
+	./bamr_nompi -set max_iters 100 -set prefix data_temp/qf_nodata \
 		-model qmc_fixp -mcmc \
 		> data_temp/qf_nodata.scr 2> data_temp/qf_nodata.err
 
 test_warmup_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set n_warm_up 100 \
+	./bamr_nompi -set max_iters 100 -set n_warm_up 100 \
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 
 test_ai_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_ai \
+	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_ai \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
@@ -374,26 +374,26 @@ test_ai_nompi: bamr_nompi
 # These are unnecessary now because there is no max_chain_size setting
 
 # test11_nompi: bamr_nompi
-# 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_chain \
+# 	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_chain \
 # 		-set max_chain_size 10 -model twop -mcmc \
 # 		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
 
 # test12_nompi: bamr_nompi
-# 	bamr_nompi -set max_iters 100 -set prefix data_temp/twop_aic \
+# 	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_aic \
 # 		-set aff_inv 1 \
 # 		-set step_fac 2.0 -model twop -set n_walk 20 \
 # 		-set max_chain_size 10 -mcmc \
 # 		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
 test_addl_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
 test_crustL_nompi: bamr_nompi
-	bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
