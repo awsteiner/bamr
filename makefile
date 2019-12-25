@@ -4,17 +4,24 @@
 # ----------------------------------------------------------------------
 
 # This variable should include the directories for the O2scl, GSL, and
-# HDF5 libraries.
-LIB_DIRS = 
+# HDF5 libraries. By default, this is taken from the enviroment
+# variable LDFLAGS.
+
+LIB_DIRS = $(LDFLAGS)
 
 # This variable may need to be modified to specify the include
-# directories for the GSL, Boost, HDF5, and O2scl header files. 
-INC_DIRS = 
+# directories for the GSL, Boost, HDF5, and O2scl header files. By
+# default this is taken from the environment variable CXXFLAGS.
 
-# C++ compiler (e.g. mpicxx)
-# MPI_CXX = 
+INC_DIRS = $(CXXFLAGS)
+
+# C++ compiler (e.g. mpicxx). By default this is taken from the
+# environment variable CXX.
+
+MPI_CXX = $(CXX)
 
 # Generic (no MPI necessary) C++ compiler (e.g. g++)
+
 # CXX = 
 
 # Set these two variables to be empty if you do not have GNU readline

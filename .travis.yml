@@ -15,7 +15,7 @@ sudo: required
 # o2scl on linux
 
 env:
-  - LD_LIBRARY_PATH="/snap/o2scl/current/usr/lib/x86_64-linux-gnu:/snap/o2scl/current/lib/x86_64-linux-gnu" PATH="/usr/local/bin:/usr/bin:/bin:/snap/o2scl/current/bin" CXX="g++"
+  - LD_LIBRARY_PATH="/snap/o2scl/current/usr/lib/x86_64-linux-gnu:/snap/o2scl/current/lib/x86_64-linux-gnu" PATH="/usr/local/bin:/usr/bin:/bin:/snap/o2scl/current/bin" CXX="g++" LDFLAGS="/snap/o2scl/current/usr/lib/x86_64-linux-gnu:/snap/o2scl/current/lib/x86_64-linux-gnu" CXXFLAGS="/snap/o2scl/current/usr/include"
 
 # Install o2scl
 
