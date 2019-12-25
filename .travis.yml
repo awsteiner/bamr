@@ -1,0 +1,54 @@
+language: cpp
+
+os:
+  - linux
+
+# For now, ignore OSX compilation since its too time consuming
+#  - osx
+
+# 12/23/19: xenial is the default which should be fine
+# dist: trusty
+
+sudo: required
+
+# Set up the environment variables for the snap installation of
+# o2scl on linux
+
+env:
+  - LD_LIBRARY_PATH="/snap/o2scl/current/usr/lib/x86_64-linux-gnu:/snap/o2scl/current/lib/x86_64-linux-gnu" PATH="/usr/local/bin:/usr/bin:/bin:/snap/o2scl/current/bin"
+
+# Install o2scl
+
+addons:
+  snaps:
+    - name: o2scl
+      confinement: devmode
+      channel: latest/edge
+
+# We use 'acol --version' to verify the o2scl installation and
+# then install o2graph and verify that installation with o2graph -help
+
+#
+# Install bamr
+#
+
+install:
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+       acol --version && make bamr ;
+    fi
+
+#
+# Test
+#
+script:
+  # 
+  # Perform the installation on linux. 
+  # 
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+      make test_all ;
+    fi
+
+notifications:
+  email:
+    on_success: never
+    on_failure: never
