@@ -12,7 +12,7 @@ os:
 sudo: required
 
 # Set up the environment variables for the snap installation of
-# o2scl on linux
+# o2scl on linux.
 
 env:
   - LD_LIBRARY_PATH="/snap/o2scl/current/usr/lib/x86_64-linux-gnu:/snap/o2scl/current/lib/x86_64-linux-gnu" PATH="/usr/local/bin:/usr/bin:/bin:/snap/o2scl/current/bin" CXX="g++" LDFLAGS="-L/snap/o2scl/current/usr/lib/x86_64-linux-gnu -L/snap/o2scl/current/lib/x86_64-linux-gnu -L/snap/o2scl/current/lib -L/snap/o2scl/current/usr/lib/x86_64-linux-gnu/hdf5/serial" CXXFLAGS="-I/snap/o2scl/current/include -I/snap/o2scl/current/usr/include -I/snap/o2scl/current/usr/include/hdf5/serial"

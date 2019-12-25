@@ -174,7 +174,7 @@ test_all: test_prep test_data test_nodata test_cthick test_fixp \
 
 # test11 test12 
 
-test_all_nompi: test_prep test_debug_eos_nompi test_debug_star_nompi \
+test_all_nompi: test_prep_nompi test_debug_eos_nompi test_debug_star_nompi \
 		test_data_nompi test_nodata_nompi test_cthick_nompi \
 		test_fixp_nompi test_qt_nompi test_qf_nompi \
 		test_warmup_nompi test_ai_nompi \
@@ -183,6 +183,10 @@ test_all_nompi: test_prep test_debug_eos_nompi test_debug_star_nompi \
 #test11_nompi test12_nompi 
 
 test_prep: bamr
+	-mkdir -p data_temp
+	-rm -rf data_temp/*
+
+test_prep_nompi: bamr_nompi
 	-mkdir -p data_temp
 	-rm -rf data_temp/*
 
