@@ -176,10 +176,12 @@ test_all: test_prep test_data test_nodata test_cthick test_fixp \
 
 test_all_nompi: test_prep_nompi test_debug_eos_nompi test_debug_star_nompi \
 		test_data_nompi test_nodata_nompi test_cthick_nompi \
-		test_fixp_nompi test_qt_nompi test_qf_nompi \
-		test_warmup_nompi test_ai_nompi \
+		test_fixp_nompi test_warmup_nompi test_ai_nompi \
 		test_addl_nompi test_crustL_nompi bamr_nompi
 
+# We can't do qt or qf tests until we finish baryon density updates
+#
+#test_qt_nompi test_qf_nompi 
 #test11_nompi test12_nompi 
 
 test_prep: bamr
@@ -318,6 +320,8 @@ test_rejtab: bamr
 # Individual testing targets without MPI
 # ----------------------------------------------------------------------
 
+NTEST = 10
+
 test_debug_eos_nompi: bamr_nompi
 	./bamr_nompi -set prefix data_temp/debug_eos \
 		-set debug_eos 1 -run default.in -model twop -mcmc \
@@ -331,42 +335,42 @@ test_debug_star_nompi: bamr_nompi
 	-mv -i debug_star.o2 data_temp
 
 test_data_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 300 -set prefix data_temp/twop_data \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/twop_data \
 		-run default.in -model twop -mcmc \
 		> data_temp/twop_data.scr 2> data_temp/twop_data.err
 
 test_nodata_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_nodata \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/twop_nodata \
 		-model twop -mcmc \
 		> data_temp/twop_nodata.scr 2> data_temp/twop_nodata.err
 
 test_cthick_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters $(NTEST) -set compute_cthick 1 \
 		-set prefix data_temp/twop_cthick -model twop -mcmc \
 		> data_temp/twop_cthick.scr 2> data_temp/twop_cthick.err
 
 test_fixp_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set prefix data_temp/fixp_nodata \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/fixp_nodata \
 		-model fixp -mcmc \
 		> data_temp/fixp_nodata.scr 2> data_temp/fixp_nodata.err
 
 test_qt_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 300 -set prefix data_temp/qt_nodata \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/qt_nodata \
 		-model qmc_threep -mcmc \
 		> data_temp/qt_nodata.scr 2> data_temp/qt_nodata.err
 
 test_qf_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set prefix data_temp/qf_nodata \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/qf_nodata \
 		-model qmc_fixp -mcmc \
 		> data_temp/qf_nodata.scr 2> data_temp/qf_nodata.err
 
 test_warmup_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set n_warm_up 100 \
+	./bamr_nompi -set max_iters $(NTEST) -set n_warm_up $(NTEST) \
 		-set prefix data_temp/twop_warmup -model twop -mcmc \
 		> data_temp/twop_warmup.scr 2> data_temp/twop_warmup.err
 
 test_ai_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_ai \
+	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/twop_ai \
 		-set aff_inv 1 \
 		-set step_fac 2.0 -model twop -set n_walk 10 -mcmc \
 		> data_temp/twop_ai.scr 2> data_temp/twop_ai.err
@@ -379,21 +383,21 @@ test_ai_nompi: bamr_nompi
 # 		> data_temp/twop_chain.scr 2> data_temp/twop_chain.err
 
 # test12_nompi: bamr_nompi
-# 	./bamr_nompi -set max_iters 100 -set prefix data_temp/twop_aic \
+# 	./bamr_nompi -set max_iters $(NTEST) -set prefix data_temp/twop_aic \
 # 		-set aff_inv 1 \
 # 		-set step_fac 2.0 -model twop -set n_walk 20 \
 # 		-set max_chain_size 10 -mcmc \
 # 		> data_temp/twop_aic.scr 2> data_temp/twop_aic.err
 
 test_addl_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters $(NTEST) -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set prefix data_temp/twop_addl -model twop -mcmc \
 		> data_temp/twop_addl.scr 2> data_temp/twop_addl.err
 
 test_crustL_nompi: bamr_nompi
-	./bamr_nompi -set max_iters 100 -set compute_cthick 1 \
+	./bamr_nompi -set max_iters $(NTEST) -set compute_cthick 1 \
 		-set crust_from_L 1 \
 		-set prefix data_temp/twop_crustL -model twop -mcmc \
 		> data_temp/twop_crustL.scr 2> data_temp/twop_crustL.err
