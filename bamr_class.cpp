@@ -273,13 +273,52 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   return mod->compute_point(pars,scr_out,weight,dat);
 }
 
-bamr::bamr_class *create_bamr_class() {
-  bamr::bamr_class *bcp=new bamr::bamr_class;
-  return bcp;
+void create_pointers(bamr::bamr_class *&bcp,
+		     bamr::model_data *&mdp) {
+  bcp=new bamr::bamr_class;
+  cout << "Creating settings object." << endl;
+  bcp->set=std::make_shared<settings>();
+  cout << "Creating ns_data object." << endl;
+  bcp->nsd=std::make_shared<ns_data>();
+  cout << "Creating model." << endl;
+  std::shared_ptr<model> mnew(new qmc_threep(bcp->set,bcp->nsd));
+  cout << "Setting model." << endl;
+  bcp->mod=mnew;
+  bcp->model_type="qmc_threep";
+  cout << "Creating model_data object." << endl;
+  mdp=new bamr::model_data;
+
+  cout << "Calling get_param_info()." << endl;
+  std::vector<std::string> names;
+  std::vector<std::string> units;
+
+  ubvector low;
+  ubvector high;
+  bcp->mod->get_param_info(names,units,low,high);
+
+  cout << "Getting initial point." << endl;
+  ubvector init(names.size());
+  bcp->mod->initial_point(init);
+
+  cout.setf(ios::scientific);
+  o2scl::vector_out(cout,init,true);
+
+  ofstream fout("t");
+  
+  cout << "Calling compute_point()." << endl;
+  double weight;
+  bcp->compute_point(init,fout,weight,*mdp);
+  cout << "Weight: " << weight << endl;
+
+  fout.close();
+  
+  return;
 }
 
-void destroy_bamr_class(void *vp) {
-  bamr::bamr_class *bcp=(bamr::bamr_class *)vp;
+void destroy_pointers(void *vp1, void *vp2) {
+  bamr::bamr_class *bcp=(bamr::bamr_class *)vp1;
+  bamr::model_data *mdp=(bamr::model_data *)vp2;
   delete bcp;
+  delete mdp;
   return;
 }

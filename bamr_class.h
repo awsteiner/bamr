@@ -106,9 +106,10 @@ namespace bamr {
 
 extern "C" {
 
-  bamr::bamr_class *create_bamr_class();
+  void create_pointers(bamr::bamr_class *&bcp,
+		       bamr::model_data *&mdp);
   
-  void destroy_bamr_class(void *vp);
+  void destroy_pointers(void *vp1, void *vp2);
   
 }
 
