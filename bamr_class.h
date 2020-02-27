@@ -104,4 +104,12 @@ namespace bamr {
 
 }
 
+extern "C" {
+
+  bamr::bamr_class *create_bamr_class();
+  
+  void destroy_bamr_class(void *vp);
+  
+}
+
 #endif

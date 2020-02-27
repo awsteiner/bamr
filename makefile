@@ -139,6 +139,40 @@ bamr_class_nompi.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
 
 # ----------------------------------------------------------------------
+# Targets for shared library creation for python interface
+# ----------------------------------------------------------------------
+
+nstar_cold2_shared.o: nstar_cold2.cpp nstar_cold2.h
+	$(CXX) $(ALL_FLAGS) -fPIC -o nstar_cold2_shared.o -c nstar_cold2.cpp
+
+models_shared.o: models.cpp models.h
+	$(CXX) $(ALL_FLAGS) -fPIC -o models_shared.o -c models.cpp
+
+ns_data_shared.o: ns_data.cpp ns_data.h
+	$(CXX) $(ALL_FLAGS) -fPIC -o ns_data_shared.o -c ns_data.cpp
+
+mcmc_bamr_shared.o: mcmc_bamr.cpp mcmc_bamr.h
+	$(CXX) $(ALL_FLAGS) -fPIC -o mcmc_bamr_shared.o -c mcmc_bamr.cpp
+
+bamr_class_shared.o: bamr_class.cpp bamr_class.h
+	$(CXX) $(ALL_FLAGS) -fPIC -o bamr_class_shared.o -c bamr_class.cpp
+
+SHARED_FLAG = 
+UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        SHARED_FLAG += -shared -fPIC -o libbamr.so
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        SHARED_FLAG += -dynamiclib -o libbamr.dylib
+    endif
+
+libbamr: bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
+	models_shared.o mcmc_bamr_shared.o
+	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) \
+		bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
+		models_shared.o mcmc_bamr_shared.o $(LIB)
+
+# ----------------------------------------------------------------------
 # Targets for process
 # ----------------------------------------------------------------------
 

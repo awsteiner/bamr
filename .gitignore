@@ -1,3 +1,5 @@
+libbamr.so
+libbamr.dylib
 debug_star.o2
 debug_eos.o2
 test

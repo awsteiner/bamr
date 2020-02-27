@@ -273,3 +273,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   return mod->compute_point(pars,scr_out,weight,dat);
 }
 
+bamr::bamr_class *create_bamr_class() {
+  bamr::bamr_class *bcp=new bamr::bamr_class;
+  return bcp;
+}
+
+void destroy_bamr_class(void *vp) {
+  bamr::bamr_class *bcp=(bamr::bamr_class *)vp;
+  delete bcp;
+  return;
+}
