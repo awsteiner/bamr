@@ -800,7 +800,6 @@ int model::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // If the data gives a zero weight, just return a factor
     // of 1e8 smaller than the peak value
     if (dat.wgts[i]<=0.0) {
-      typedef boost::numeric::ublas::matrix<double> ubmatrix;
       dat.wgts[i]=o2scl::matrix_max_value<ubmatrix,double>
 	(nsd->source_tables[i].get_slice(nsd->slice_names[i]))/1.0e8;
     }
@@ -1729,7 +1728,6 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
 
   double ed_last=0.0;
   double mu_max=mu_0*2.0;
-  double pi2=o2scl_const::pi2;
 
   for(double mu=mu_0;mu<mu_max;mu+=(mu_max-mu_0)/100.0) {
       

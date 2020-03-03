@@ -50,6 +50,9 @@ namespace bamr {
     ns_data() {
       n_sources=0;
     }      
+
+    virtual ~ns_data() {
+    }
     
     /// \name Input neutron star data
     //@{

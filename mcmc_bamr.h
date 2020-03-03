@@ -178,11 +178,11 @@ namespace bamr {
      */
     virtual int initial_point_best(std::vector<std::string> &sv,
 				   bool itive_com);
-
+    
     /** \brief Read previous results from a file
      */
-    virtual int read_prev_results(std::vector<std::string> &sv,
-				   bool itive_com);
+    virtual int read_prev_results_mb(std::vector<std::string> &sv,
+				     bool itive_com);
     
   public:
 
@@ -206,7 +206,7 @@ namespace bamr {
 	This function adds three commands (mcmc, model, add-data) and
 	the 'set' parameters.
     */
-    virtual void setup_cli();
+    virtual void setup_cli_mb();
     
   };
 

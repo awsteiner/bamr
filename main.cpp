@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   b.mpi_start_time=time(0);
 #endif
 
-  b.setup_cli();
+  b.setup_cli_mb();
   
   // Set command-line args
   b.cl_args.clear();

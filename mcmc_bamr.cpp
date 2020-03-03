@@ -470,18 +470,18 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   return 0;
 }
 
-int mcmc_bamr::read_prev_results(std::vector<std::string> &sv,
+int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
 				 bool itive_com) {
 
   O2SCL_ERR("Not implemented yet.",o2scl::exc_eunimpl);
   
   if (sv.size()<2) {
-    cerr << "Need a filename for read_prev_results()." << endl;
+    cerr << "Need a filename for read_prev_results_mb()." << endl;
     return 1;
   }
 
   if (model_type.length()<2) {
-    cerr << "Model not specified in read_prev_results()." << endl;
+    cerr << "Model not specified in read_prev_results_mb()." << endl;
     return 2;
   }
   
@@ -583,7 +583,7 @@ int mcmc_bamr::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-void mcmc_bamr::setup_cli() {
+void mcmc_bamr::setup_cli_mb() {
   
   mcmc_para_cli::setup_cli(cl);
 
@@ -645,7 +645,7 @@ void mcmc_bamr::setup_cli() {
     {0,"read-prev-results","Read previous results from file (unfinished).",
      1,1,"<filename>","Long. desc.",
      new o2scl::comm_option_mfptr<mcmc_bamr>
-     (this,&mcmc_bamr::read_prev_results),
+     (this,&mcmc_bamr::read_prev_results_mb),
      o2scl::cli::comm_option_both}
   };
   cl.set_comm_option_vec(nopt,options);
