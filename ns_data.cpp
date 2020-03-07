@@ -157,7 +157,21 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
       } else {
 	hdf_input(hf,source_tables[k]);
       }
+      source_tables[k].set_interp_type(o2scl::itp_linear);
       hf.close();
+
+      if (source_fnames_alt.size()>0) {
+	o2scl_hdf::hdf_file hf2;
+	hf2.open(source_fnames_alt[k]);
+	if (table_names[k].length()>0) {
+	  hdf_input(hf2,source_tables_alt[k],table_names[k]);
+	} else {
+	  hdf_input(hf2,source_tables_alt[k]);
+	}
+	source_tables_alt[k].set_interp_type(o2scl::itp_linear);
+	hf2.close();
+      }
+      
     }
     
 #endif
@@ -213,6 +227,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
 	  }
 	}
       }
+
       for(size_t i=0;i<source_tables[k].get_nx();i++) {
 	for(size_t j=0;j<source_tables[k].get_ny();j++) {
 	  if (set->norm_max) {
@@ -280,6 +295,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
       scr_out.unsetf(std::ios::left);
       scr_out << source_tables[k].interp(10.0,1.4,slice_names[k])
 	      << std::endl;
+      
       if (source_fnames_alt.size()>0) {
 	scr_out.setf(std::ios::left);
 	scr_out.width(29);
