@@ -111,6 +111,8 @@ extern "C" {
   
   void py_compute_point(void *bcp2, void *mdp2,
 			int nv, double *vals);
+
+  int get_mvsr_column(void *mdp2, char *col_name, int &n, double *&ptr);
   
   void destroy_pointers(void *bcp2, void *mdp2);
   

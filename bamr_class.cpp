@@ -343,6 +343,19 @@ void py_compute_point(void *bcp2, void *mdp2,
   return;
 }
 
+int get_mvsr_column(void *mdp2, char *col_name, int &n, double *&ptr) {
+  
+  bamr::model_data *mdp=(bamr::model_data *)mdp2;
+  n=mdp->mvsr.get_nlines();
+  std::string stmp=col_name;
+  if (mdp->mvsr.is_column(stmp)==false) {
+    return 2;
+  }
+  const std::vector<double> &col=mdp->mvsr.get_column(stmp);
+  ptr=(double *)&col[0];
+  return 0;
+}
+
 void destroy_pointers(void *bcp2, void *mdp2) {
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   bamr::model_data *mdp=(bamr::model_data *)mdp2;
