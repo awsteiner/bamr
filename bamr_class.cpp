@@ -273,20 +273,23 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   return mod->compute_point(pars,scr_out,weight,dat);
 }
 
-void create_pointers(bamr::bamr_class *&bcp,
-		     bamr::model_data *&mdp) {
-  bcp=new bamr::bamr_class;
+void create_pointers(void *&bcp2,
+		     void *&mdp2) {
+
+  bamr::bamr_class *bcp=new bamr::bamr_class;
+  bcp2=(void *)bcp;
   cout << "Creating settings object." << endl;
   bcp->set=std::make_shared<settings>();
   cout << "Creating ns_data object." << endl;
   bcp->nsd=std::make_shared<ns_data>();
   cout << "Creating model." << endl;
-  std::shared_ptr<model> mnew(new qmc_threep(bcp->set,bcp->nsd));
+  std::shared_ptr<model> mnew(new two_polytropes(bcp->set,bcp->nsd));
   cout << "Setting model." << endl;
   bcp->mod=mnew;
-  bcp->model_type="qmc_threep";
+  bcp->model_type="twop";
   cout << "Creating model_data object." << endl;
-  mdp=new bamr::model_data;
+  bamr::model_data *mdp=new bamr::model_data;
+  mdp2=(void *)mdp;
 
   cout << "Calling get_param_info()." << endl;
   std::vector<std::string> names;
@@ -303,21 +306,47 @@ void create_pointers(bamr::bamr_class *&bcp,
   cout.setf(ios::scientific);
   o2scl::vector_out(cout,init,true);
 
-  ofstream fout("t");
+  ofstream fout;//("bamr.py.out");
   
   cout << "Calling compute_point()." << endl;
   double weight;
-  bcp->compute_point(init,fout,weight,*mdp);
-  cout << "Weight: " << weight << endl;
+  int ret=bcp->compute_point(init,fout,weight,*mdp);
+  cout << "ret,weight: " << ret << " " << weight << endl;
 
-  fout.close();
+  if (ret==0) {
+    table_units<> &mvsr=mdp->mvsr;
+    table_units<> &eos=mdp->eos;
+    cout << "M_max: " << mvsr.max("gm") << endl;
+  }
+
+  //fout.close();
   
   return;
 }
 
-void destroy_pointers(void *vp1, void *vp2) {
-  bamr::bamr_class *bcp=(bamr::bamr_class *)vp1;
-  bamr::model_data *mdp=(bamr::model_data *)vp2;
+void python_compute_point(bamr::bamr_class *bcp2,
+			  bamr::model_data *mdp2,
+			  int nv, double *vals) {
+  
+  bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
+  bamr::model_data *mdp=(bamr::model_data *)mdp2;
+  
+  ofstream fout;
+  ubvector point(nv);
+  for(int j=0;j<nv;j++) {
+    point[j]=vals[j];
+    cout << j << " " << point[j] << endl;
+  }
+  double weight;
+  int ret=bcp->compute_point(point,fout,weight,*mdp);
+  cout << "ret,weight: " << ret << " " << weight << endl;
+  
+  return;
+}
+
+void destroy_pointers(void *bcp2, void *mdp2) {
+  bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
+  bamr::model_data *mdp=(bamr::model_data *)mdp2;
   delete bcp;
   delete mdp;
   return;

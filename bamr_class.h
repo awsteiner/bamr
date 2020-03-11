@@ -106,10 +106,13 @@ namespace bamr {
 
 extern "C" {
 
-  void create_pointers(bamr::bamr_class *&bcp,
-		       bamr::model_data *&mdp);
+  void create_pointers(void *&bcp2,
+		       void *&mdp2);
   
-  void destroy_pointers(void *vp1, void *vp2);
+  void python_compute_point(void *bcp2, void *mdp2,
+			    int nv, double *vals);
+
+  void destroy_pointers(void *bcp2, void *mdp2);
   
 }
 

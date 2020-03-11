@@ -471,5 +471,5 @@ test-sync:
 empty: 
 
 clean:
-	rm -f *.o bamr bamr_nompi process
+	rm -f *.o bamr bamr_nompi process libbamr.so
 
