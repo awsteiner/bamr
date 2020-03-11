@@ -324,9 +324,8 @@ void create_pointers(void *&bcp2,
   return;
 }
 
-void python_compute_point(bamr::bamr_class *bcp2,
-			  bamr::model_data *mdp2,
-			  int nv, double *vals) {
+void py_compute_point(void *bcp2, void *mdp2,
+		      int nv, double *vals) {
   
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   bamr::model_data *mdp=(bamr::model_data *)mdp2;

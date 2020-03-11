@@ -109,9 +109,9 @@ extern "C" {
   void create_pointers(void *&bcp2,
 		       void *&mdp2);
   
-  void python_compute_point(void *bcp2, void *mdp2,
-			    int nv, double *vals);
-
+  void py_compute_point(void *bcp2, void *mdp2,
+			int nv, double *vals);
+  
   void destroy_pointers(void *bcp2, void *mdp2);
   
 }
