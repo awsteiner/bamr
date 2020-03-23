@@ -1436,7 +1436,6 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
   for(size_t j=0;j<cont_levels.size()*2;j++) {
     cont_res.new_column(((std::string)"c")+o2scl::szttos(j));
   }
-  cont_res.set_nlines(grid_size);
 
   // Fill expval_scalar objects using histogram
   size_t block_size=weights.size()/20;
@@ -1449,10 +1448,8 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
     cout << col << " ix: ";
     if (type==((string)"x")) {
       cout << index_grid[k]*xscale << " cnt: ";
-      cont_res.set("grid",k,index_grid[k]*xscale);
     } else {
       cout << index_grid[k]*yscale << " cnt: ";
-      cont_res.set("grid",k,index_grid[k]*yscale);
     }
     cout << count[k] << " ";
 
@@ -1502,30 +1499,33 @@ int process::hist_set(std::vector<std::string> &sv, bool itive_com) {
 	  vector_region_fracint(cont_wgt.size(),cont_grid,cont_wgt,
 				cont_levels[j],locs);
 	  if (locs.size()==0) {
-	    cout << endl;
-	    cout << "Failed to find region." << endl;
-	    cout << cont_levels[j] << endl;
-	    for(size_t i=0;i<cont_wgt.size();i++) {
-	      cout << i << " " << cont_grid[i] << " "
-		   << cont_wgt[i] << endl;
+	    cout << "<failed> ";
+	    if (false) {
+	      cout << cont_levels[j] << endl;
+	      for(size_t i=0;i<cont_wgt.size();i++) {
+		cout << i << " " << cont_grid[i] << " "
+		     << cont_wgt[i] << endl;
+	      }
 	    }
+	  } else {
+	    double lmin=vector_min_value<vector<double>,double>(locs);
+	    double lmax=vector_max_value<vector<double>,double>(locs);
+	    cout << lmin << " " << lmax << " ";
+	    if (cont_res.get_nlines()<=k) {
+	      cont_res.set_nlines(k+1);
+	      if (type==((string)"x")) {
+		cont_res.set("grid",k,index_grid[k]*xscale);
+	      } else {
+		cont_res.set("grid",k,index_grid[k]*yscale);
+	      }
+	    }
+	    cont_res.set(2*j+1,k,lmin);
+	    cont_res.set(2*j+2,k,lmax);
 	  }
-	  double lmin=vector_min_value<vector<double>,double>(locs);
-	  double lmax=vector_max_value<vector<double>,double>(locs);
-	  cout << lmin << " " << lmax << " ";
-	  cont_res.set(2*j+1,k,lmin);
-	  cont_res.set(2*j+2,k,lmax);
-	} else {
-	  // If there's not enough data, just report zero
-	  cont_res.set(2*j+1,k,0.0);
-	  cont_res.set(2*j+2,k,0.0);
 	}
-      } else {
-	// If there's not enough data, just report zero
-	cont_res.set(2*j+1,k,0.0);
-	cont_res.set(2*j+2,k,0.0);
       }
     }
+    
     hsum.clear_wgts();
     cout << endl;
     cout.precision(6);
