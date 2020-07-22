@@ -585,12 +585,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out.precision(2);
           scr_out.setf(ios::showpos);
           scr_out << "M ";
-          for(size_t j=0;i<nsd->n_sources;i++) {
+          for(size_t j=0;j<nsd->n_sources;j++) {
             scr_out << dat.sourcet.get("M",j) << " ";
           }
           scr_out << std::endl;
           scr_out << "R ";
-          for(size_t j=0;i<nsd->n_sources;i++) {
+          for(size_t j=0;j<nsd->n_sources;j++) {
             scr_out << dat.sourcet.get("R",j) << " ";
           }
           scr_out << std::endl;

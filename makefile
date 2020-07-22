@@ -15,20 +15,25 @@ LIB_DIRS = $(LDFLAGS)
 
 INC_DIRS = $(CXXFLAGS)
 
+# Generic (no MPI necessary) C++ compiler (e.g. g++)
+
+# CXX = 
+
 # C++ compiler (e.g. mpicxx). By default this is taken from the
 # environment variable CXX.
 
 MPI_CXX = $(CXX)
 
-# Generic (no MPI necessary) C++ compiler (e.g. g++)
-
-# CXX = 
-
 # Set these two variables to be empty if you do not have GNU readline
 # readline support
 READLINE_VAR = -DBAMR_READLINE
 
-READLINE_LIBS = -lreadline -lncurses
+READLINE_LIB = -lreadline -lncurses
+
+# Set these two variables to be empty if you do not have FFTW3
+FFTW_VAR = -DBAMR_FFTW3
+
+FFTW_LIB = -lfftw3
 
 # Basic compiler flags with and without MPI
 
@@ -63,8 +68,9 @@ ALL_FLAGS_MPI = $(COMPILER_MPI_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) 
 
-LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
-	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIBS)
+LIBS = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
+	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
+	$(FFTW_LIB)
 
 # ----------------------------------------------------------------------
 # Targets for bamr
@@ -73,7 +79,7 @@ LIB = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o \
 		nstar_cold2.o ns_data.o models.o mcmc_bamr.o \
-		bamr_class.o $(LIB) 
+		bamr_class.o $(LIBS) 
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -118,7 +124,7 @@ bamr_nompi: bamr_class_nompi.o models_nompi.o \
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
 		bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o $(LIB) 
+		ns_data_nompi.o $(LIBS) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
@@ -170,7 +176,7 @@ libbamr: bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
 	models_shared.o mcmc_bamr_shared.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) \
 		bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
-		models_shared.o mcmc_bamr_shared.o $(LIB)
+		models_shared.o mcmc_bamr_shared.o $(LIBS)
 
 # ----------------------------------------------------------------------
 # Targets for process
@@ -184,7 +190,7 @@ process_main.o: process_main.cpp
 
 process: process.o process_main.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o process process_main.o \
-		process.o $(LIB) 
+		process.o $(LIBS) 
 
 # ----------------------------------------------------------------------
 # Targets for test
@@ -195,7 +201,7 @@ test.o: test.cpp
 
 test: test.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o test \
-		test.o $(LIB) 
+		test.o $(LIBS) 
 
 # ----------------------------------------------------------------------
 # Testing targets
