@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -48,43 +48,38 @@ namespace bamr {
     
   public:
 
-    /// Radii
-    ubvector rad;
-
-    /// Masses
-    ubvector mass;
-    
-    /// Weights
-    ubvector wgts;
-
     /// M vs. R data
     o2scl::table_units<> mvsr;
 
     /// EOS data
     o2scl::table_units<> eos;
-    
+
+    /// M vs. R data
+    o2scl::table_units<> sourcet;
+
+    /// Grid quantities
+    o2scl::table_units<> gridt;
+
     model_data() {
     }
     
     /** \brief Copy constructor
      */
     model_data(const model_data &md) {
-      rad=md.rad;
-      mass=md.mass;
-      wgts=md.wgts;
       mvsr=md.mvsr;
       eos=md.eos;
+      gridt=md.gridt;
+      sourcet=md.sourcet;
     }
 
     /** \brief Make operator= copy constructor private
      */
     model_data &operator=(const model_data &md) {
       if (this!=&md) {
-	rad=md.rad;
-	mass=md.mass;
-	wgts=md.wgts;
 	mvsr=md.mvsr;
 	eos=md.eos;
+	gridt=md.gridt;
+	sourcet=md.sourcet;
       }
       return *this;
     }

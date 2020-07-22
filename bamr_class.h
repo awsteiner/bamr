@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -36,6 +36,7 @@
 
 #include "nstar_cold2.h"
 #include "models.h"
+#include "filters.h"
 
 /** \brief Main namespace
     
@@ -65,14 +66,52 @@ namespace bamr {
     
   public:
 
+    void setup_filters();
+    
+    // -------------------------------------------------------
+    // New bint variables
+
+    /** \brief A counter of intrinsic scatter calculations
+        for debugging
+     */
+    int intsc_counter;
+
+    /** \brief The number of OpenMP threads (set where?)
+     */
+    int n_threads;
+   
+    /** \brief The filter objects (one for each thread)
+     */
+    std::vector<filters::Filter *> flt;
+    
+    /** \brief The LIGO data
+     */
+    o2scl::tensor_grid<> ligo_data_table;
+
+    /** \brief Desc
+     */
+    o2scl::tensor_grid<> fft_data[22];
+    
+    /// Copy of the original NS measurement data
+    std::vector<o2scl::table3d> source_tables_is;
+
+    /// Copy of the original NS measurement data
+    std::vector<o2scl::table3d> source_tables_alt_is;
+
+    // -------------------------------------------------------
+
     /// The Schwarzchild radius in km
     double schwarz_km;
     
     /// Pointer to neutron star data
     std::shared_ptr<ns_data> nsd;
     
-    /// Pointer to settings object
-    std::shared_ptr<const settings> set;
+    /** \brief Pointer to settings object
+	
+	AWS: 4/5/2020 changed from "const settings" to "settings"
+	to enable the python interface
+    */
+    std::shared_ptr<settings> set;
     
     /// Model object
     std::shared_ptr<model> mod;
@@ -92,13 +131,13 @@ namespace bamr {
 	\c e and put output in \c tab_eos
     */
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			      double &weight, model_data &dat);
+			      double &log_wgt, model_data &dat);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
     virtual int fill(const ubvector &pars, double weight, 
-		      std::vector<double> &line, model_data &dat);
+		     std::vector<double> &line, model_data &dat);
     
   };
 
@@ -106,15 +145,68 @@ namespace bamr {
 
 extern "C" {
 
-  void create_pointers(void *&bcp2,
-		       void *&mdp2);
-  
-  void py_compute_point(void *bcp2, void *mdp2,
-			int nv, double *vals);
+  /** \brief Create a \ref bamr_class and \ref model_data object and
+      return the associated pointers
+  */
+  void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
+		       void *&nsd2, void *&setp2, int verbose);
 
-  int get_mvsr_column(void *mdp2, char *col_name, int &n, double *&ptr);
+  /** \brief Set a parameter
+   */
+  void set_parameter(void *bcp2, void *setp2, char *param_name, double val);
+
+  /** \brief Desc
+   */
+  int init(void *bcp2, void *mdp2, void *nsd2, void *setp2);
   
+  /** \brief Compute a point using the parameters given in \c vals
+   */
+  int compute_point(void *bcp2, void *mdp2, int nv, double *vals,
+		    double *log_wgt);
+
+  /** \brief Summarize tables
+   */
+  void summarize_tables(void *mdp2);
+  
+  /** \brief Get a column from the M-R table
+   */
+  int get_mvsr_column(void *mdp2, char *col_name, int &n, double *&ptr);
+
+  /** \brief Get a column from the source table
+   */
+  int get_source_column(void *mdp2, char *col_name, int &n, double *&ptr);
+  
+  /** \brief Get a column from the reinterpolated table
+   */
+  int get_grid_column(void *mdp2, char *col_name, int &n, double *&ptr);
+
+  /** \brief Get a column from the EOS table
+   */
+  int get_eos_column(void *mdp2, char *col_name, int &n, double *&ptr);
+
+  /** \brief Get a constant from the M-R table
+   */
+  double get_mvsr_constant(void *mdp2, char *con_name);
+
+  /** \brief Get a constant from the EOS table
+   */
+  double get_eos_constant(void *mdp2, char *con_name);
+
+  /** \brief Free the memory associated with the \ref bamr_class
+      and \ref model_data objects
+   */
   void destroy_pointers(void *bcp2, void *mdp2);
+
+  /** \brief Add a M-R data set
+   */
+  void add_data(void *nsd2, char *name, char *fname, char *slice,
+		double mass_frac, char *table);
+
+  /** \brief Add a M-R data set
+   */
+  void add_data_alt(void *nsd2, char *name, char *fname,
+		    char *fname_alt, char *slice,
+		    double mass_frac, char *table);
   
 }
 

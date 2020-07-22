@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -35,6 +35,7 @@
 #include <o2scl/eos_had_schematic.h>
 #include <o2scl/root_brent_gsl.h>
 #include <o2scl/prob_dens_func.h>
+#include <o2scl/eos_had_skyrme.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -160,12 +161,6 @@ namespace bamr {
 			    std::ofstream &scr_out, model_data &dat) {
       return;
     }
-
-    /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
-    */
-    virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			      double &weight, model_data &dat);
 
     /** \brief Specify the initial point
      */
@@ -927,7 +922,146 @@ namespace bamr {
   
   };
 
+  /** \brief Desc
+   */
+  class eos_had_tews_nuclei : public o2scl::eos_had_eden_base {
+    
+  public:
 
+    /// \name
+    //@{
+    double a, alpha, b, beta;
+    //@}
+    
+    /** \brief Desc
+     */
+    o2scl::eos_had_skyrme sk;
+    
+    /** \brief Desc
+     */
+    virtual int calc_e(o2scl::fermion &n, o2scl::fermion &p,
+		       o2scl::thermo &th);
+    
+  };
+
+  /** \brief Desc
+   */
+  class tews_threep_ligo : public qmc_threep {
+
+  public:
+
+    /** \brief Typedef for uBlas vectors
+     */
+    typedef boost::numeric::ublas::vector<double> ubvector;
+    
+    /** \brief Typedef for uBlas matrices
+     */
+    typedef boost::numeric::ublas::matrix<double> ubmatrix;
+    
+    /** \brief Probability distribution for neutron matter
+	parameters
+    */
+    o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
+
+    /** \brief Desc
+     */
+    o2scl::table_units<> UNEDF_tab;
+    
+    /** \brief Desc
+     */
+    eos_had_tews_nuclei ehtn;
+    
+    tews_threep_ligo(std::shared_ptr<const settings> s,
+		     std::shared_ptr<const ns_data> n);
+    
+    /// Parameter for transition density
+    o2scl::cli::parameter_double p_nb_trans;
+
+    /** \brief Set parameter information
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
+
+    /** \brief Specify the initial point
+     */
+    virtual void initial_point(ubvector &params);
+
+    /** \brief Setup model parameters */
+    virtual void setup_params(o2scl::cli &cl);
+
+    /** \brief Remove model parameters */
+    virtual void remove_params(o2scl::cli &cl);
+    
+    /** \brief Copy model parameters */
+    virtual void copy_params(model &m);
+
+    /** \brief Desc
+     */
+    void compute_eos(const ubvector &params, int &ret,
+		     std::ofstream &scr_out, model_data &dat);
+    
+  };
+  
+  /** \brief Desc
+   */
+  class tews_fixp_ligo : public qmc_fixp {
+
+  public:
+
+    /** \brief Typedef for uBlas vectors
+     */
+    typedef boost::numeric::ublas::vector<double> ubvector;
+    
+    /** \brief Typedef for uBlas matrices
+     */
+    typedef boost::numeric::ublas::matrix<double> ubmatrix;
+    
+    /** \brief Probability distribution for neutron matter
+	parameters
+    */
+    o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
+
+    /** \brief Desc
+     */
+    o2scl::table_units<> UNEDF_tab;
+    
+    /** \brief Desc
+     */
+    eos_had_tews_nuclei ehtn;
+    
+    tews_fixp_ligo(std::shared_ptr<const settings> s,
+		     std::shared_ptr<const ns_data> n);
+    
+    /// Parameter for transition density
+    o2scl::cli::parameter_double p_nb_trans;
+
+    /** \brief Set parameter information
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				ubvector &low, ubvector &high);
+
+    /** \brief Specify the initial point
+     */
+    virtual void initial_point(ubvector &params);
+
+    /** \brief Setup model parameters */
+    virtual void setup_params(o2scl::cli &cl);
+
+    /** \brief Remove model parameters */
+    virtual void remove_params(o2scl::cli &cl);
+    
+    /** \brief Copy model parameters */
+    virtual void copy_params(model &m);
+
+    /** \brief Desc
+     */
+    void compute_eos(const ubvector &params, int &ret,
+		     std::ofstream &scr_out, model_data &dat);
+    
+  };
+  
 }
 
 #endif

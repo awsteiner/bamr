@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -300,9 +300,57 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column(((string)"Lambda_bar_")+o2scl::itos(i));
     }
   }
+
   if (nsd->source_fnames_alt.size()>0) {
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((std::string)"alt_")+o2scl::szttos(i));
+    }
+  }
+
+  if (model_type==((string)"qmc_threep_ligo") ||
+      model_type==((string)"tews_threep_ligo") ||
+      model_type==((string)"tews_fixp_ligo") ||
+      model_type==((string)"qmc_fixp_ligo")) {
+    this->table->new_column("M_chirp");
+    this->table->set_unit("M_chirp","Msun");
+    this->table->new_column("m1");
+    this->table->set_unit("m1","Msun");
+    this->table->new_column("m2");
+    this->table->set_unit("m2","Msun");
+    this->table->new_column("R1");
+    this->table->set_unit("R1","km");
+    this->table->new_column("R2");
+    this->table->set_unit("R2","km");
+    this->table->new_column("I1");
+    this->table->set_unit("I1","Msun*km^2");
+    this->table->new_column("I2");
+    this->table->set_unit("I2","Msun*km^2");
+    this->table->new_column("I_bar1");
+    this->table->new_column("I_bar2");
+    this->table->new_column("Lambda1");
+    this->table->new_column("Lambda2");
+    this->table->new_column("Lambdat");
+    this->table->new_column("del_Lambdat");    
+    this->table->new_column("Lambda_rat");
+    this->table->new_column("q6");
+    this->table->new_column("Lambda_s");
+    this->table->new_column("Lambda_a");
+    this->table->new_column("Lambda_a_YY");
+    this->table->new_column("C1");
+    this->table->new_column("C2");
+    this->table->new_column("tews_prob");
+    this->table->new_column("ligo_prob");
+    if (set->prior_q) {
+      this->table->new_column("eta");
+      this->table->new_column("delta_m");
+    }
+    if (set->prior_delm) {
+      this->table->new_column("q");
+      this->table->new_column("eta");
+    }
+    if (set->prior_eta) {
+      this->table->new_column("q");
+      this->table->new_column("delta_m");
     }
   }
 
@@ -326,11 +374,16 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
   // Prepare data objects
 
+  /*
   for(size_t i=0;i<data_arr.size();i++) {
     data_arr[i].rad.resize(nsd->n_sources);
     data_arr[i].mass.resize(nsd->n_sources);
     data_arr[i].wgts.resize(nsd->n_sources);
+    data_arr[i].atms.resize(nsd->n_sources);
+    data_arr[i].ces.resize(nsd->n_sources);
+    data_arr[i].cnbs.resize(nsd->n_sources);
   }
+  */
 
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank

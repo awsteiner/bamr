@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -104,6 +104,9 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_low;
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
+    o2scl::cli::parameter_bool p_prior_q;
+    o2scl::cli::parameter_bool p_prior_eta;
+    o2scl::cli::parameter_bool p_prior_delm;
     //@}
 
     /// Verbosity parameter
@@ -194,6 +197,18 @@ namespace bamr {
     int mass_switch;
     //@}
 
+    /** \brief If true, use the eta prior
+     */
+    bool prior_eta;
+
+    /** \brief If true, use the q prior
+     */
+    bool prior_q;
+
+    /** \brief If true, use the delta_m prior
+     */
+    bool prior_delm;
+
     /** \name Histogram limits
      */
     //@{
@@ -205,6 +220,14 @@ namespace bamr {
     double m_high;
     //@}
 
+    /** \brief If true, apply an intrinic scattering correction
+     */
+    bool apply_intsc;
+
+    /** \brief
+     */
+    bool cached_intsc;
+    
     /** \brief Add parameters to the \ref o2scl::cli object
      */
     void setup_cli(o2scl::cli &cl) {
@@ -355,6 +378,18 @@ namespace bamr {
 	"on evaluating each point is written to cout. This value "+
 	"defaults to zero.";
       cl.par_list.insert(std::make_pair("verbose",&p_verbose));
+
+      p_prior_q.b=&prior_q;
+      p_prior_q.help="";
+      cl.par_list.insert(std::make_pair("prior_q",&p_prior_q));
+
+      p_prior_eta.b=&prior_eta;
+      p_prior_eta.help="";
+      cl.par_list.insert(std::make_pair("prior_eta",&p_prior_eta));
+
+      p_prior_delm.b=&prior_delm;
+      p_prior_delm.help="";
+      cl.par_list.insert(std::make_pair("prior_delm",&p_prior_delm));
 
       return;
     }

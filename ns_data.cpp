@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -34,7 +34,7 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
+void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 		      std::shared_ptr<settings> set) {
       
   double tot, max;
@@ -47,7 +47,7 @@ void ns_data::load_mc(std::ofstream &scr_out, int mpi_size, int mpi_rank,
   }
   
   if (n_sources>0) {
-    
+
     if (set->verbose>=2) {
       cout << "bamr: Loading " << n_sources << " data files " 
 	   << "with rank " << mpi_rank << " and size " 

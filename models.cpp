@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -24,7 +24,8 @@
 #include "models.h"
 #include "bamr_class.h"
 #include "mcmc_bamr.h"
-#include "o2scl/vector.h"
+
+#include <o2scl/vector.h>
 
 using namespace std;
 using namespace o2scl;
@@ -486,8 +487,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     dat.mvsr=*(ts.get_results());
     if (set->verbose>=2) {
-      cout << "Done with TOV." << endl;
+      scr_out << "Done with TOV." << endl;
     }
+    
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
       ret=ix_mvsr_failed;
@@ -510,7 +512,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // set->mvsr_pr_inc smaller.
     
     m_max=dat.mvsr.max("gm");
-    dat.mvsr.add_constant("m_max",m_max);
+    dat.mvsr.add_constant("M_max",m_max);
     if (m_max<set->min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
 	      << set->min_max_mass << "." << std::endl;
@@ -538,7 +540,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     size_t ix_max=dat.mvsr.lookup("gm",m_max);
     double r_max=dat.mvsr.get("r",ix_max);
-    dat.mvsr.add_constant("r_max",r_max);
+    dat.mvsr.add_constant("R_max",r_max);
     if (r_max>1.0e4) {
       scr_out << "TOV convergence problem: " << std::endl;
       ret=ix_tov_conv;
@@ -587,16 +589,27 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
+    if (nsd->n_sources>0) {
+      if (dat.sourcet.get_ncolumns()==0) {
+	dat.sourcet.line_of_names("R M wgt alt ce");
+	if (set->baryon_density) {
+	  dat.sourcet.new_column("cnb");
+	}
+	dat.sourcet.set_nlines(nsd->n_sources);
+      }
+    }
+    
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd->n_sources;i++) {
       if (set->mass_switch==0) {
-	dat.mass[i]=m_max*pars[this->n_eos_params+i];
+	dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i]);
       } else if (set->mass_switch==1) {
-	dat.mass[i]=0.4*pars[this->n_eos_params+i]+1.3;
+	dat.sourcet.set("M",i,0.4*pars[this->n_eos_params+i]+1.3);
       } else {
-	dat.mass[i]=0.2*pars[this->n_eos_params+i]+1.3;
+	dat.sourcet.set("M",i,0.2*pars[this->n_eos_params+i]+1.3);
       }
-      dat.rad[i]=dat.mvsr.interp("gm",dat.mass[i],"r");
+      dat.sourcet.set("R",i,
+		      dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
     }
 
     // End of loop 'if (has_eos)'
@@ -610,10 +623,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd->n_sources;i++) {
-      dat.mass[i]=pars[this->n_eos_params+i];
-      dat.rad[i]=dat.mvsr.interp("gm",dat.mass[i],"r");
+      dat.sourcet.set("M",i,pars[this->n_eos_params+i]);
+      dat.sourcet.set("R",i,
+		      dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
     }
-
+    
   }
   
   int mpi_rank=0;
@@ -672,7 +686,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   } else {
 
     for(size_t i=0;i<nsd->n_sources;i++) {
-      if (dat.rad[i]<2.94*schwarz_km/2.0*dat.mass[i]) {
+      if (dat.sourcet.get("R",i)<2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
 	scr_out << "Source " << nsd->source_names[i] << " acausal."
 		<< std::endl;
 	ret=ix_acausal_mr;
@@ -708,152 +722,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   }
 
   return;
-}
-
-int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			 double &log_weight, model_data &dat) {
-
-  int iret=ix_success;
-  
-  for(size_t i=0;i<nsd->n_sources;i++) {
-    if (dat.mass[i]<set->in_m_min || dat.mass[i]>set->in_m_max || 
-	dat.rad[i]<set->in_r_min || dat.rad[i]>set->in_r_max) {
-      scr_out << "Rejected: Mass or radius outside range." << std::endl;
-      scr_out << "M limits: " << set->in_m_min << " "
-	      << set->in_m_max << std::endl;
-      scr_out << "R limits: " << set->in_r_min << " "
-	      << set->in_r_max << std::endl;
-      if (nsd->n_sources>0) {
-	scr_out.precision(2);
-	scr_out.setf(ios::showpos);
-	scr_out << "M ";
-	for(size_t j=0;j<nsd->n_sources;j++) {
-	  scr_out << dat.mass[j] << " ";
-	}
-	scr_out << std::endl;
-	scr_out << "R ";
-	for(size_t j=0;j<nsd->n_sources;j++) {
-	  scr_out << dat.rad[j] << " ";
-	}
-	scr_out << std::endl;
-	scr_out.precision(6);
-	scr_out.unsetf(ios::showpos);
-      }
-      log_weight=0.0;
-      return ix_mr_outside;
-    }
-  }
-
-  log_weight=0.0;
-      
-  dat.mvsr.set_interp_type(o2scl::itp_linear);
-  double m_max_current=dat.mvsr.max("gm");
-
-  // -----------------------------------------------
-  // Compute the weights for each source
-      
-  if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
-  
-  for(size_t i=0;i<nsd->n_sources;i++) {
-
-    double alt=0.0;
-    // Double check that current M and R is in the range of
-    // the provided input data
-    if (dat.rad[i]<nsd->source_tables[i].get_x_data()[0] ||
-	dat.rad[i]>nsd->source_tables[i].get_x_data()
-	[nsd->source_tables[i].get_nx()-1] ||
-	dat.mass[i]<nsd->source_tables[i].get_y_data()[0] ||
-	dat.mass[i]>nsd->source_tables[i].get_y_data()
-	[nsd->source_tables[i].get_ny()-1]) {
-      dat.wgts[i]=0.0;
-      
-    } else {
-      // If M and R are in range, compute the weight
-      
-      if (nsd->source_fnames_alt.size()>0) {
-	
-	// Compute alternate probability from an insignificant bit
-	// in the mass 
-	alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
-	
-	if (alt<2.0/3.0) {
-	  dat.wgts[i]=nsd->source_tables[i].interp
-	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
-	} else {
-	  dat.wgts[i]=nsd->source_tables_alt[i].interp
-	    (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
-	}
-	
-      } else {
-	dat.wgts[i]=nsd->source_tables[i].interp
-	  (dat.rad[i],dat.mass[i],nsd->slice_names[i]);
-      }
-      
-      // If the weight is lower than the threshold, set it equal
-      // to the threshold
-      if (dat.wgts[i]<set->input_dist_thresh) {
-	dat.wgts[i]=set->input_dist_thresh;
-      }
-      
-    }
-
-    // If the data gives a zero weight, just return a factor
-    // of 1e8 smaller than the peak value
-    if (dat.wgts[i]<=0.0) {
-      dat.wgts[i]=o2scl::matrix_max_value<ubmatrix,double>
-	(nsd->source_tables[i].get_slice(nsd->slice_names[i]))/1.0e8;
-    }
-    
-    // If the weight is zero, then return failure
-    if (dat.wgts[i]<=0.0) {
-      scr_out << "Weight zero for source " << i << " " << nsd->source_names[i]
-	      << " with mass " << dat.mass[i] << " and radius "
-	      << dat.rad[i] << " with alt=" << alt << endl;
-      return ix_mr_outside;
-    }
-
-    // Include the weight for this source
-    log_weight+=log(dat.wgts[i]);
-	
-    if (set->verbose>=2) {
-      scr_out.width(10);
-      scr_out << nsd->source_names[i] << " "
-	      << dat.mass[i] << " " 
-	      << dat.rad[i] << " " << dat.wgts[i] << std::endl;
-    }
-    
-    // Go to the next source
-  }
-  
-  if (set->debug_star) scr_out << std::endl;
-      
-  // -----------------------------------------------
-  // Exit if the current maximum mass is too large
-      
-  if (m_max_current>set->exit_mass) {
-    scr_out.setf(ios::scientific);
-    scr_out << "Exiting because maximum mass (" << m_max_current 
-	    << ") larger than exit_mass (" << set->exit_mass << ")." 
-	    << std::endl;
-    scr_out.precision(12);
-    vector_out(scr_out,pars);
-    scr_out << " " << log_weight << std::endl;
-    scr_out.precision(6);
-    exit(0);
-  }
-
-  if (set->verbose>=2) {
-    cout << "End model::compute_point()." << endl;
-  }
-
-  if (iret!=ix_success) {
-    // We shouldn't be returning a non-zero value if success is
-    // non-zero, so we double check this here
-    O2SCL_ERR("Sanity check for success flag in model::compute_point.",
-	      o2scl::exc_esanity);
-  }
-
-  return o2scl::success;
 }
 
 void two_polytropes::setup_params(o2scl::cli &cl) {
@@ -1989,7 +1857,7 @@ static const bool new_nb=false;
 qmc_threep::qmc_threep(std::shared_ptr<const settings> s,
 	     std::shared_ptr<const ns_data> n) :
   model(s,n) {
-  
+
   nb0=0.16;
   nb_trans=0.16;
 
@@ -2707,6 +2575,880 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   }
   if (debug) {
     cout << "Stopping because debug is true in qmc_twolines." << endl;
+    cout << endl;
+    exit(0);
+  }
+
+  return;
+}
+
+int eos_had_tews_nuclei::calc_e(o2scl::fermion &n, o2scl::fermion &p,
+				o2scl::thermo &th) {
+  
+  n0=0.16;
+  double nB=n.n+p.n, xp=p.n/nB, u=nB/n0, delta=1.0-2.0*xp;
+  double del2=delta*delta;
+  double nn_temp=n.n, np_temp=p.n;
+  
+  if (nB<=0.0) {
+    xp=0.0;
+    th.ed=0.0;
+    n.mu=p.m;
+    p.mu=p.m;
+    th.pr=0.0;
+    return 0;
+  }
+
+  // Nuclear matter part
+  n.n=nB/2.0;
+  p.n=nB/2.0;
+  sk.calc_e(n,p,th);
+  double ed_nuc=th.ed-n.n*n.m-p.n*p.m;
+  double d_nuc_nB=(n.mu+p.mu-n.m-p.m)/2.0;
+  n.n=nn_temp;
+  p.n=np_temp;
+
+  // Neutron matter part 
+  double ed_neut=nB*(a*pow(u,alpha)+b*pow(u,beta));
+  double d_neut_nB=ed_neut/nB+
+    u*(a*alpha*pow(u,alpha-1.0)+b*beta*pow(u,beta-1.0));
+
+  // Combine for energy density
+  th.ed=ed_nuc+del2*(ed_neut-ed_nuc)+n.n*n.m+p.n*p.m;
+
+  // Chemical potentials
+  n.mu=n.m+4.0*p.n*delta*(ed_neut-ed_nuc)/nB/nB+
+    del2*(d_neut_nB-d_nuc_nB)+d_nuc_nB;
+  p.mu=p.m-4.0*n.n*delta*(ed_neut-ed_nuc)/nB/nB+
+    del2*(d_neut_nB-d_nuc_nB)+d_nuc_nB;
+      
+  // Pressure
+  th.pr=-th.ed+n.mu*n.n+p.mu*p.n;
+
+  // Set entropy to zero since we're at T=0
+  th.en=0.0;
+
+  /*
+    std::cout << "------------" << std::endl;
+    std::cout << "inside EOS:" << std::endl;
+    std::cout << ed_neut << " " << ed_nuc << " " << th.ed << std::endl;
+    std::cout << xp << " " << delta << " " << del2 << std::endl;
+    std::cout << n.n << " " << p.n << " "
+    << (th.ed-n.n*n.m-p.n*p.m)/nB*o2scl_const::hc_mev_fm << " "
+    << th.pr*o2scl_const::hc_mev_fm << std::endl;
+    std::cout << (a*pow(u,alpha)+b*pow(u,beta))*
+    o2scl_const::hc_mev_fm << std::endl;
+    std::cout << d_nuc_nB*o2scl_const::hc_mev_fm << std::endl;
+    std::cout << (n.mu-n.m)*o2scl_const::hc_mev_fm << " "
+    << (p.mu-p.m)*o2scl_const::hc_mev_fm << std::endl;
+    std::cout << "------------" << std::endl;
+    exit(-1);
+  */
+      
+  return 0;
+}
+
+tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
+				   std::shared_ptr<const ns_data> n) :
+  qmc_threep(s,n) {
+  this->n_eos_params=12;
+
+  cns.err_nonconv=false;
+  cns.def_root.err_nonconv=false;
+
+  int mpi_rank=0, mpi_size=0;
+
+#ifdef BAMR_MPI
+  // Get MPI rank, etc.
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  
+  // Ensure that multiple MPI ranks aren't reading from the
+  // filesystem at the same time
+  int tag=0, buffer=0;
+  if (mpi_size>1 && mpi_rank>=1) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  }
+#endif
+  
+  // Load the Gaussian for the neutron matter parameters
+  {
+    ubmatrix chol(4,4), covar_inv(4,4);
+    ubvector peak(4);
+    double norm;
+	
+    o2scl_hdf::hdf_file hf;
+    hf.open("data/Psat_gaussian.o2");
+    hf.getd_mat_copy("chol",chol);
+    hf.getd_mat_copy("covar_inv",covar_inv);
+    hf.getd_vec_copy("peak",peak);
+    hf.getd("norm",norm);
+    hf.close();
+
+    pdmg.set_alt(4,peak,chol,covar_inv,norm);
+  }
+
+  // Load the Skyrme parameterizations
+  {
+    std::string name;
+	
+    o2scl_hdf::hdf_file hf;
+    hf.open("data/thetaANL-1002x12.o2");
+    hdf_input(hf,UNEDF_tab,name);
+    hf.close();
+  }
+
+#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+	       tag,MPI_COMM_WORLD);
+    }
+#endif
+    
+  ehtn.sk.a=0.0;
+  ehtn.sk.b=1.0;
+  ehtn.sk.W0=1.0;
+  ehtn.sk.b4=1.0;
+  ehtn.sk.b4p=1.0;
+
+  nb_trans=0.32;
+}
+    
+void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
+				      std::vector<std::string> &units,
+				      ubvector &low, ubvector &high) {
+
+  names={"a","alpha","param_S","param_L","index1","trans1",
+	 "index2","trans2","index3","M_chirp_det","eta","z_cdf"};
+
+  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4","","Msun","",""};
+  
+  low.resize(n_eos_params+nsd->n_sources);
+  // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
+  // this should allow S values as small as 28.5
+  low[0]=12.5;
+  // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
+  
+  low[4]=0.2;
+  low[5]=0.75;
+  low[6]=0.2;
+  low[7]=0.75;
+  low[8]=0.2;
+
+  low[9]=1.1971;
+  low[10]=0.2;
+  low[11]=0.0;
+    
+  high.resize(n_eos_params+nsd->n_sources);
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
+
+  high[4]=8.0;
+  high[5]=8.0;
+  high[6]=8.0;
+  high[7]=8.0;
+  high[8]=8.0;
+  high[9]=1.1979;
+  high[10]=0.25;
+  high[11]=1.0;
+    
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
+
+}
+    
+void tews_threep_ligo::initial_point(ubvector &params) {
+      
+  params[0]=12.7;
+  params[1]=0.4894965;
+  params[2]=32.0;
+  params[3]=55.0;
+  params[4]=0.202468;
+  params[5]=1.658677;
+  params[6]=1.941257;
+  params[7]=4.906005;
+  params[8]=0.687587;
+
+  params[9]=1.1975;
+  params[10]=0.245;
+  params[11]=0.5;
+      
+  model::initial_point(params);
+  return;
+}
+
+void tews_threep_ligo::setup_params(o2scl::cli &cl) {
+  p_nb_trans.d=&nb_trans;
+  p_nb_trans.help="Transition from neutron matter to polytropes.";
+  cl.par_list.insert(std::make_pair("nb_trans",&p_nb_trans));
+  
+  return;
+}
+
+void tews_threep_ligo::remove_params(o2scl::cli &cl) {
+  size_t i=cl.par_list.erase("nb_trans");
+  if (i!=1) {
+    O2SCL_ERR("Failed to erase parameter 'nb_trans'.",o2scl::exc_esanity);
+  }
+  return;
+}
+    
+void tews_threep_ligo::copy_params(model &m) {
+  // Dynamic casts to references throw exceptions when they fail
+  // while dynamic casts to pointers return null pointers when
+  // they fail.
+  tews_threep_ligo &tp=dynamic_cast<tews_threep_ligo &>(m);
+  nb_trans=tp.nb_trans;
+  return;
+}
+
+void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
+				   std::ofstream &scr_out, model_data &dat) {
+  
+  bool debug=false;
+      
+  ret=ix_success;
+
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
+
+  // Pick a random model from the NUCLEI Markov chain
+  size_t i_nuclei=((size_t)(fabs(params[0])*1.0e9))%1000;
+
+  double rho0=UNEDF_tab.get(((std::string)"rho0"),i_nuclei);
+  double Crdr0=UNEDF_tab.get(((std::string)"Crdr0"),i_nuclei);
+  double Vp=UNEDF_tab.get(((std::string)"Vp"),i_nuclei);
+  double EoA=UNEDF_tab.get(((std::string)"EoA"),i_nuclei); 
+  double Crdr1=UNEDF_tab.get(((std::string)"Crdr1"),i_nuclei);
+  double CrdJ0=UNEDF_tab.get(((std::string)"CrdJ0"),i_nuclei);
+  double K=UNEDF_tab.get(((std::string)"K"),i_nuclei);
+  double Ms_inv=UNEDF_tab.get(((std::string)"Ms_inv"),i_nuclei);
+  double Vn=UNEDF_tab.get(((std::string)"Vn"),i_nuclei);
+  double CrdJ1=UNEDF_tab.get(((std::string)"CrdJ1"),i_nuclei);
+      
+  double Ms_star=1/Ms_inv;
+
+  double b=Stmp-16.0-a;
+  double beta=(Ltmp/3.0-a*alpha)/b;
+
+  
+  if (b<0.0 || beta<0.0) {
+    scr_out << "parameter values for b and beta are negative" << std::endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+  
+  ehtn.sk.alt_params_saturation(rho0,EoA/o2scl_const::hc_mev_fm,
+				K/o2scl_const::hc_mev_fm,Ms_star,
+				Stmp/o2scl_const::hc_mev_fm,
+				Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
+				Crdr0/o2scl_const::hc_mev_fm,
+				Crdr1/o2scl_const::hc_mev_fm,
+				CrdJ0/o2scl_const::hc_mev_fm,
+				CrdJ1/o2scl_const::hc_mev_fm);
+      
+  ehtn.a=a/o2scl_const::hc_mev_fm;
+  ehtn.alpha=alpha;
+  ehtn.b=b/o2scl_const::hc_mev_fm;
+  ehtn.beta=beta;
+  
+  double index1=params[4];
+  double exp1=1.0+1.0/index1;
+  double trans1=params[5];
+  double index2=params[6];
+  double exp2=1.0+1.0/index2;
+  double trans2=params[7];
+  double index3=params[8];
+  double exp3=1.0+1.0/index3;
+
+#ifdef EOS_TEST      
+  o2scl::thermo th;
+  cns.np.n=rho0/2.0;
+  cns.pp.n=rho0/2.0;
+  ehtn.calc_e(cns.np,cns.pp,th);
+  std::cout << EoA << " "
+	    << (th.ed-cns.np.n*cns.np.m-
+		cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
+	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
+  
+  cns.np.n=0.16;
+  cns.pp.n=0.0;
+  ehtn.calc_e(cns.np,cns.pp,th);
+  std::cout << a+b << " "
+	    << (th.ed-cns.np.n*cns.np.m-
+		cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
+	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
+
+  exit(-1);
+#endif      
+      
+  // Compute low-density eos
+  cns.nb_end=0.36;
+  cns.set_eos(ehtn);
+  int eret=cns.calc_eos();
+  if (eret!=0) {
+    scr_out << "Low-density EOS failed." << endl;
+    ret=ix_eos_solve_failed;
+    return;
+  }
+  dat.eos=*(cns.get_eos_results()); 
+  dat.eos.set_interp_type(o2scl::itp_linear);
+
+  dat.eos.add_constant("S",Stmp/o2scl_const::hc_mev_fm);
+  dat.eos.add_constant("L",Ltmp/o2scl_const::hc_mev_fm);
+  ubvector tmp(4);
+  tmp[0]=params[0];
+  tmp[1]=params[1];
+  tmp[2]=b;
+  tmp[3]=beta;
+  dat.eos.add_constant("tews",pdmg.log_pdf(tmp));
+
+  size_t row=dat.eos.lookup("nb",nb_trans);
+  while (dat.eos.get("nb",row)>nb_trans-1.0e-6 && row>4) row--;
+  if (row<4) {
+    O2SCL_ERR("Low-density table disappeared in tews_threep_ligo.",
+	      o2scl::exc_esanity);
+  }
+  dat.eos.set_nlines(row+1);
+  
+  double nb_last=nb_trans;
+  double ed_last=dat.eos.interp("nb",nb_trans,"ed");
+  double pr_last=dat.eos.interp("nb",nb_trans,"pr");
+  double line2[3]={ed_last,pr_last,nb_last};
+  dat.eos.line_of_data(3,line2);
+
+  if (debug) {
+    for(size_t j=0;j<dat.eos.get_nlines();j++) {
+      cout << dat.eos.get("ed",j) << " ";
+      cout << dat.eos.get("pr",j) << " ";
+      cout << dat.eos.get("nb",j) << endl;
+    }
+  }
+
+  // Check that the transition densities are ordered
+  if (ed_last>trans1 || trans1>trans2) {
+    scr_out << "Transition densities misordered." << std::endl;
+    scr_out << ed_last << " " << trans1 << " " << trans2 << std::endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+
+  if (debug) cout << endl;
+
+  // Compute coefficient given index
+  double coeff1=pr_last/pow(ed_last,exp1);
+
+  // Compute stepsize in energy density
+  double delta_ed=(trans1-ed_last)/30.01;
+
+  double ed1=ed_last;
+  double pr1=pr_last;
+  double nb1=nb_last;
+
+  // Add first polytrope to table
+  for(double ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
+    double pr=coeff1*pow(ed,exp1);
+    double nb=nb1*pow(ed/ed1,1.0+params[4])/
+      pow((ed+pr)/(ed1+pr1),params[4]);
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // Compute second coefficient given index
+  double coeff2=pr_last/pow(ed_last,exp2);
+
+  double ed2=ed_last;
+  double pr2=pr_last;
+  double nb2=nb_last;
+  
+  // Add second polytrope to table
+  delta_ed=(trans2-trans1)/20.01;
+  for(double ed=trans1;ed<trans2;ed+=delta_ed) {
+    double pr=coeff2*pow(ed,exp2);
+
+    double nb=nb2*pow(ed/ed2,1.0+params[6])/
+      pow((ed+pr)/(ed2+pr2),params[6]);
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+    
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // Compute third coefficient given index
+  double coeff3=pr_last/pow(ed_last,exp3);
+
+  double ed3=ed_last;
+  double pr3=pr_last;
+  double nb3=nb_last;
+
+  // Add third polytrope to table
+  delta_ed=(10.0-trans2)/20.01;
+  for(double ed=trans2;ed<10.0;ed+=delta_ed) {
+    double pr=coeff3*pow(ed,exp3);
+    double nb=nb3*pow(ed/ed3,1.0+params[8])/
+      pow((ed+pr)/(ed3+pr3),params[8]);
+    double line[3]={ed,pr,nb};
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    dat.eos.line_of_data(3,line);
+    
+  }
+
+  if (debug) exit(-1);
+
+  return;
+}
+
+tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
+				   std::shared_ptr<const ns_data> n) :
+  qmc_fixp(s,n) {
+  this->n_eos_params=11;
+
+  cns.err_nonconv=false;
+  cns.def_root.err_nonconv=false;
+  
+  int mpi_rank=0, mpi_size=0;
+  
+#ifdef BAMR_MPI
+  // Get MPI rank, etc.
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  
+  // Ensure that multiple MPI ranks aren't reading from the
+  // filesystem at the same time
+  int tag=0, buffer=0;
+  if (mpi_size>1 && mpi_rank>=1) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  }
+#endif
+  
+  // Load the Gaussian for the neutron matter parameters
+  {
+    ubmatrix chol(4,4), covar_inv(4,4);
+    ubvector peak(4);
+    double norm;
+	
+    o2scl_hdf::hdf_file hf;
+    hf.open("Psat_gaussian.o2");
+    hf.getd_mat_copy("chol",chol);
+    hf.getd_mat_copy("covar_inv",covar_inv);
+    hf.getd_vec_copy("peak",peak);
+    hf.getd("norm",norm);
+    hf.close();
+
+    pdmg.set_alt(4,peak,chol,covar_inv,norm);
+  }
+
+  // Load the Skyrme parameterizations
+  {
+    std::string name;
+	
+    o2scl_hdf::hdf_file hf;
+    hf.open("thetaANL-1002x12.o2");
+    hdf_input(hf,UNEDF_tab,name);
+    hf.close();
+  }
+
+#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+	       tag,MPI_COMM_WORLD);
+    }
+#endif
+    
+  ehtn.sk.a=0.0;
+  ehtn.sk.b=1.0;
+  ehtn.sk.W0=1.0;
+  ehtn.sk.b4=1.0;
+  ehtn.sk.b4p=1.0;
+
+  nb_trans=0.32;
+}
+    
+void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
+				      std::vector<std::string> &units,
+				      ubvector &low, ubvector &high) {
+
+  names={"a","alpha","param_S","param_L","pres1","pres2",
+	 "pres3","pres4","M_chirp_det","eta","z_cdf"};
+
+  units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4",
+	 "Msun","",""};
+  
+  low.resize(n_eos_params+nsd->n_sources);
+  // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
+  // this should allow S values as small as 28.5
+  low[0]=12.5;
+  // The paper gives 0.475 to 0.514, we enlarge this to 0.47 to 0.53
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
+  
+  low[4]=0.0;
+  low[5]=0.0;
+  low[6]=0.0;
+  low[7]=0.0;
+    
+  low[8]=1.1971;
+  low[9]=0.2;
+  low[10]=0.0;
+
+  high.resize(n_eos_params+nsd->n_sources);
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
+
+  // These parameters are limited by causality, but if the user
+  // changes the values of ed1, ed2, ed3, and ed4, then the upper
+  // limits change accordingly. To make things easier, we just choose
+  // relatively large values for these upper limits for now.
+  high[4]=0.3;
+  high[5]=1.5;
+  high[6]=2.5;
+  high[7]=2.5;
+
+  high[8]=1.1979;
+  high[9]=0.25;
+  high[10]=1.0;    
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
+
+}
+    
+void tews_fixp_ligo::initial_point(ubvector &params) {
+      
+  params[0]=13.229;
+  params[1]=0.4894965;
+  params[2]=32.0;
+  params[3]=51.0;
+  params[4]=0.014;
+  params[5]=0.74;
+  params[6]=0.60;
+  params[7]=1.84;
+  
+  params[8]=1.1975;
+  params[9]=0.245;
+  params[10]=0.5;
+      
+  model::initial_point(params);
+  return;
+}
+
+void tews_fixp_ligo::setup_params(o2scl::cli &cl) {
+  p_nb_trans.d=&nb_trans;
+  p_nb_trans.help="Transition from neutron matter to polytropes.";
+  cl.par_list.insert(std::make_pair("nb_trans",&p_nb_trans));
+  return;
+}
+
+void tews_fixp_ligo::remove_params(o2scl::cli &cl) {
+  size_t i=cl.par_list.erase("nb_trans");
+  if (i!=1) {
+    O2SCL_ERR("Failed to erase parameter 'nb_trans'.",o2scl::exc_esanity);
+  }
+  return;
+}
+    
+void tews_fixp_ligo::copy_params(model &m) {
+  // Dynamic casts to references throw exceptions when they fail
+  // while dynamic casts to pointers return null pointers when
+  // they fail.
+  tews_fixp_ligo &tp=dynamic_cast<tews_fixp_ligo &>(m);
+  nb_trans=tp.nb_trans;
+  return;
+}
+
+void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
+				   std::ofstream &scr_out, model_data &dat) {
+  
+  bool debug=false;
+      
+  ret=ix_success;
+
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
+
+  // Pick a random model from the NUCLEI Markov chain
+  size_t i_nuclei=((size_t)(fabs(params[0])*1.0e9))%1000;
+
+  double rho0=UNEDF_tab.get(((std::string)"rho0"),i_nuclei);
+  double Crdr0=UNEDF_tab.get(((std::string)"Crdr0"),i_nuclei);
+  double Vp=UNEDF_tab.get(((std::string)"Vp"),i_nuclei);
+  double EoA=UNEDF_tab.get(((std::string)"EoA"),i_nuclei); 
+  double Crdr1=UNEDF_tab.get(((std::string)"Crdr1"),i_nuclei);
+  double CrdJ0=UNEDF_tab.get(((std::string)"CrdJ0"),i_nuclei);
+  double K=UNEDF_tab.get(((std::string)"K"),i_nuclei);
+  double Ms_inv=UNEDF_tab.get(((std::string)"Ms_inv"),i_nuclei);
+  double Vn=UNEDF_tab.get(((std::string)"Vn"),i_nuclei);
+  double CrdJ1=UNEDF_tab.get(((std::string)"CrdJ1"),i_nuclei);
+      
+  double Ms_star=1/Ms_inv;
+
+  double b=Stmp-16.0-a;
+  double beta=(Ltmp/3.0-a*alpha)/b;
+
+  if (b<0.0 || beta<0.0) {
+    scr_out << "Value of b or beta negative." << endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+  
+  ehtn.sk.alt_params_saturation(rho0,EoA/o2scl_const::hc_mev_fm,
+				K/o2scl_const::hc_mev_fm,Ms_star,
+				Stmp/o2scl_const::hc_mev_fm,
+				Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
+				Crdr0/o2scl_const::hc_mev_fm,
+				Crdr1/o2scl_const::hc_mev_fm,
+				CrdJ0/o2scl_const::hc_mev_fm,
+				CrdJ1/o2scl_const::hc_mev_fm);
+      
+  ehtn.a=a/o2scl_const::hc_mev_fm;
+  ehtn.alpha=alpha;
+  ehtn.b=b/o2scl_const::hc_mev_fm;
+  ehtn.beta=beta;
+
+#ifdef EOS_TEST      
+  o2scl::thermo th;
+  cns.np.n=rho0/2.0;
+  cns.pp.n=rho0/2.0;
+  ehtn.calc_e(cns.np,cns.pp,th);
+  std::cout << EoA << " "
+	    << (th.ed-cns.np.n*cns.np.m-
+		cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
+	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
+  
+  cns.np.n=0.16;
+  cns.pp.n=0.0;
+  ehtn.calc_e(cns.np,cns.pp,th);
+  std::cout << a+b << " "
+	    << (th.ed-cns.np.n*cns.np.m-
+		cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
+	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+  std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
+
+  exit(-1);
+#endif      
+      
+  // Compute low-density eos
+  cns.nb_end=0.36;
+  cns.set_eos(ehtn);
+  int eret=cns.calc_eos();
+  if (eret!=0) {
+    scr_out << "Low-density EOS failed." << endl;
+    ret=ix_eos_solve_failed;
+    return;
+  }
+  dat.eos=*(cns.get_eos_results());
+  dat.eos.set_interp_type(o2scl::itp_linear);
+
+  dat.eos.add_constant("S",Stmp/o2scl_const::hc_mev_fm);
+  dat.eos.add_constant("L",Ltmp/o2scl_const::hc_mev_fm);
+  ubvector tmp(4);
+  tmp[0]=params[0];
+  tmp[1]=params[1];
+  tmp[2]=b;
+  tmp[3]=beta;
+  dat.eos.add_constant("tews",pdmg.log_pdf(tmp));
+
+  size_t row=dat.eos.lookup("nb",nb_trans);
+  while (dat.eos.get("nb",row)>nb_trans-1.0e-6 && row>4) row--;
+  if (row<4) {
+    O2SCL_ERR("Low-density table disappeared in tews_fixp_ligo.",
+	      o2scl::exc_esanity);
+  }
+  dat.eos.set_nlines(row+1);
+  
+  double ed_trans=dat.eos.interp("nb",nb_trans,"ed");
+  double pr_trans=dat.eos.interp("nb",nb_trans,"pr");
+  double line2[3]={ed_trans,pr_trans,nb_trans};
+  dat.eos.line_of_data(3,line2);
+
+  if (debug) {
+    for(size_t j=0;j<dat.eos.get_nlines();j++) {
+      cout << dat.eos.get("ed",j) << " ";
+      cout << dat.eos.get("pr",j) << " ";
+      cout << dat.eos.get("nb",j) << endl;
+    }
+    cout << endl;
+  }
+
+  if (ed_trans>ed1) {
+    scr_out << "Transition densities misordered." << endl;
+    scr_out << ed_trans << " " << ed1 << endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+
+  // Compute pressures on grid, p1 is the pressure at ed1
+  double pr1=pr_trans+params[4];
+  // Variable p2 is the pressure at ed2
+  double pr2=pr1+params[5];
+  // Variable p3 is the pressure at ed3
+  double pr3=pr2+params[6];
+
+  double cs2;
+  
+  // Add 1st high-density EOS
+  if (debug) {
+    cout << "First line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  
+  double npoints=10.0;
+
+  double delta_ed=(ed1-ed_trans)/npoints/2.0;
+  cs2=params[4]/(ed1-ed_trans);
+  
+  for(double ed=ed_trans+delta_ed;ed<ed1-1.0e-4;ed+=delta_ed) {
+    
+    double pr=pr_trans+cs2*(ed-ed_trans);
+    double line[3]={ed,pr,nb_trans*pow((ed+pr)/(ed_trans+pr_trans),
+				       1.0/(1.0+cs2))};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])
+	|| !gsl_finite(line[2])) {
+      cerr << "Problem in qmc_fixp (5): " << line[0] << " "
+	   << line[1] << " " << line[2] << endl;
+      O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
+    }
+    dat.eos.line_of_data(3,line);
+    if (debug) cout << line[0] << " " << line[1] << " " << line[2] << endl;
+    
+  }
+  if (debug) cout << endl;
+
+  double nb1=nb_trans*pow((ed1+pr1)/(ed_trans+pr_trans),
+			  1.0/(1.0+cs2));
+  
+  // Add 2nd high-density EOS
+  if (debug) {
+    cout << "Second line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  
+  cs2=params[5]/(ed2-ed1);
+  
+  for(double ed=ed1;ed<ed2-1.0e-4;ed+=(ed2-ed1)/npoints) {
+
+    double pr=pr1+cs2*(ed-ed1);
+    double line[3]={ed,pr,nb1*pow((ed+pr)/(ed1+pr1),1.0/(1.0+cs2))};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])
+	|| !gsl_finite(line[2])) {
+      cerr << "Problem in qmc_fixp (6): " << line[0] << " "
+	   << line[1] << " " << line[2] << endl;
+      O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
+    }
+    dat.eos.line_of_data(3,line);
+    if (debug) cout << line[0] << " " << line[1] << " " << line[2] << endl;
+
+  }
+  if (debug) cout << endl;
+
+  double nb2=nb1*pow((ed2+pr2)/(ed1+pr1),1.0/(1.0+cs2));
+  
+  // Add 3rd high-density EOS
+  if (debug) {
+    cout << "Third line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+
+  cs2=params[6]/(ed3-ed2);
+
+  for(double ed=ed2;ed<ed3-1.0e-4;ed+=(ed3-ed2)/npoints) {
+    
+    double pr=pr2+(ed-ed2)*cs2;
+    double line[3]={ed,pr,nb2*pow((ed+pr)/(ed2+pr2),1.0/(1.0+cs2))};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])
+	|| !gsl_finite(line[2])) {
+      cerr << "Problem in qmc_fixp (7): " << line[0] << " "
+	   << line[1] << " " << line[2] << endl;
+      O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
+    }
+    dat.eos.line_of_data(3,line);
+    if (debug) cout << line[0] << " " << line[1] << " " << line[2] << endl;
+
+  }
+  if (debug) cout << endl;
+
+  double nb3=nb2*pow((ed3+pr3)/(ed2+pr2),1.0/(1.0+cs2));
+
+  // Add 4th high-density EOS
+  if (debug) {
+    cout << "Fourth line segment: " << endl;
+    cout << "ed           pr" << endl;
+  }
+  
+  cs2=params[7]/(ed4-ed3);
+
+  for(double ed=ed3;ed<10.0-1.0e-4;ed+=(ed4-ed3)/npoints) {
+
+    double pr=pr3+(ed-ed3)*cs2;
+    double line[3]={ed,pr,nb3*pow((ed+pr)/(ed3+pr3),
+				       1.0/(1.0+cs2))};
+    if (!gsl_finite(line[0]) || !gsl_finite(line[1])
+	|| !gsl_finite(line[2])) {
+      cerr << "Problem in qmc_fixp (5): " << line[0] << " "
+	   << line[1] << " " << line[2] << endl;
+      O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
+    }
+    dat.eos.line_of_data(3,line);
+    if (debug) cout << line[0] << " " << line[1] << " " << line[2] << endl;
+
+  }
+
+  if (debug) {
+    dat.eos.set_interp_type(itp_linear);
+    dat.eos.deriv("nb","ed","mu");
+    dat.eos.deriv("ed","pr","cs2");
+    dat.eos.function_column("(ed+pr)/mu","nb2");
+    hdf_file hf;
+    hf.open_or_create("temp.o2");
+    hdf_output(hf,dat.eos,"eos");
+    hf.close();
+
+    cout << "Exiting since debug in tews_fixp_ligo::compute_eos() is true."
+	 << endl;
     cout << endl;
     exit(0);
   }

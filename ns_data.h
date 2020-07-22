@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2019, Andrew W. Steiner
+  Copyright (C) 2012-2020, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -113,7 +113,7 @@ namespace bamr {
 	read, and exit() is called after all messages have been sent
 	and received by all ranks.
     */
-    virtual void load_mc(std::ofstream &scr_out, int mpi_nprocs,
+    virtual void load_mc(std::ostream &scr_out, int mpi_nprocs,
 			 int mpi_rank, std::shared_ptr<settings> set);
     //@}
 
