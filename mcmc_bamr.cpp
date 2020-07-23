@@ -67,6 +67,7 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
     bc_arr[i]=new bamr_class;
     bc_arr[i]->set=set;
     bc_arr[i]->nsd=nsd;
+    bc_arr[i]->n_threads=n_threads;
   }
   
   return 0;
@@ -354,6 +355,11 @@ int mcmc_bamr::mcmc_init() {
     }
   }
 
+  for(size_t i=0;i<n_threads;i++) {
+    bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+    bc.setup_filters();
+  }
+
   // -----------------------------------------------------------
   // Make grids
 
@@ -605,12 +611,41 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   bc_arr[0]->mod->get_param_info(names,units,low,high);
   set_names_units(names,units);
 
+  if (set->apply_intsc) {
+
+    // Ugly hack to increase the size of the 'low' and 'high' vectors
+    ubvector low2(low.size()+nsd->n_sources);
+    ubvector high2(low.size()+nsd->n_sources);
+    vector_copy(low.size(),low,low2);
+    vector_copy(high.size(),high,high2);
+    
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      names.push_back(((string)"log10_is_")+nsd->source_names[i]);
+      units.push_back("");
+      low2[i+low.size()]=-2.0;
+      high2[i+high.size()]=2.0;
+    }
+
+    // Ugly hack, part 2
+    low.resize(low2.size());
+    high.resize(high2.size());
+    vector_copy(low.size(),low2,low);
+    vector_copy(high.size(),high2,high);
+    
+  }
+  
   // Set initial points if they have not already been set by the
   // user
   if (this->initial_points.size()==0) {
     // Get the parameter initial values for this model 
     ubvector init(names.size());
     bc_arr[0]->mod->initial_point(init);
+
+    if (set->apply_intsc) {
+      for(size_t i=0;i<nsd->n_sources;i++) {
+	init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
+      }
+    }
     
     // AWS: 3/20/18: I changed this part, because we want the MCMC class
     // to be able to expect that different entries in the initial_points
@@ -618,7 +653,31 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->initial_points.clear();
     this->initial_points.push_back(init);
   }
-
+  
+  if (model_type==((string)"tews_threep_ligo")) {
+    if (set->prior_eta) {
+      names[10]="eta";
+    }
+    if (set->prior_q) {
+      names[10]="q";
+    }
+    if (set->prior_delm) {
+      names[10]="delta_m";
+    }
+  }
+  
+  if (model_type==((string)"tews_fixp_ligo")) {
+    if (set->prior_eta) {
+      names[9]="eta";
+    }
+    if (set->prior_q) {
+      names[9]="q";
+    }
+    if (set->prior_delm) {
+      names[9]="delta_m";
+    }
+  }
+  
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
@@ -632,7 +691,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
-  
+
+  // Perform the MCMC simulation
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
   
   return 0;

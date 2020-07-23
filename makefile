@@ -64,9 +64,9 @@ endif
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_MPI_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	-DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp 
+	$(FFTW_VAR) -DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp 
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) 
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR)
 
 LIBS = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
@@ -485,7 +485,7 @@ compare:
 		-set n_walk 120 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 1800 -set verbose 1 \
+		-set file_update_time 1800 -set verbose 3 \
 		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
@@ -526,6 +526,10 @@ compare:
 		data/nat17/1702_D_X_int.o2 \
 		data/nat17/1702_D_X_int.o2 \
 		avgs 0.7 hist2_table \
+		-add-data-alt 0030 \
+		data/nicer/0030_st_pst.o2 \
+		data/nicer/0030_st_pst.o2 \
+		prob 0.7 table3d \
 		-set apply_intsc 1 \
 		-set cached_intsc 1 \
 		-model tews_threep_ligo \

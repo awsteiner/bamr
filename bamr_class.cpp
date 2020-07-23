@@ -35,6 +35,10 @@ using namespace bamr;
 
 void bamr_class::setup_filters() {
 
+#ifdef BAMR_FFTW3
+
+  std::cout << "XXXa " << n_threads << " " << nsd->n_sources << std::endl;
+  
   flt.resize(n_threads*nsd->n_sources);
   
   // Input and output table references for convenience
@@ -83,6 +87,11 @@ void bamr_class::setup_filters() {
   }
 #endif
 
+#endif
+
+  std::cout << "XXX" << out.size() << std::endl;
+  exit(-1);
+  
   return;
 }
 
@@ -195,6 +204,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     return iret;
   }
 
+  std::cout << "H0" << std::endl;
+  
   // Reference to model object for convenience
   model &m=*this->mod;
 
@@ -233,6 +244,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  std::cout << "H0a" << std::endl;
+  
   // -----------------------------------------------
   // Determine the alt parameter
   
@@ -248,6 +261,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  std::cout << "H0b" << std::endl;
+  
   if (set->apply_intsc==false) {
 
     // -----------------------------------------------
@@ -343,6 +358,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // Go to the next source
     }
 
+    std::cout << "H0c" << std::endl;
+  
     if (set->debug_star) scr_out << std::endl;
     
     // -----------------------------------------------
@@ -374,6 +391,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
   } else {
 
+    std::cout << "H0d" << std::endl;
+    
     // Apply intrinsic scatter
 
     // Input and output table references for convenience
@@ -419,6 +438,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           
           size_t iiz=0;
           
+#ifdef BAMR_FFTW3
           for (double iix=-2.0;iix<2.01;iix+=0.2) {
             
             double intrsc=pow(10.0,iix);
@@ -481,7 +501,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
             iiz++;
           }
-          
+#endif
+	  
+	  std::cout << "H0e" << std::endl;
+	  
           hdf_file hfx;
           string fnamex=((string)"data/cache/tg_")+o2scl::szttos(i)+
             "_"+o2scl::szttos(iik);
@@ -491,11 +514,16 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
         
         if (i==nsd->n_sources-1) {
+	  std::cout << "H0f" << std::endl;
           exit(-1);
         }
         // End of 'if (make_tensor_files)'
       }
      
+      std::cout << "H0g " << i << " " << mod->n_eos_params << " "
+		<< nsd->n_sources << " " << in.size() << " "
+		<< pars.size() << std::endl;
+      
       // Calculate 2D intrinsic scatter
       // value is normalized with (12km / 1.5Msun)
       // NOTE: implicitly assumes uniform grid
@@ -516,6 +544,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 << "\n  sigx: " << sigx << " sigy: " << sigy << std::endl;
       }
 
+      std::cout << "H0g1" << set->cached_intsc << std::endl;
+      
+#ifdef BAMR_FFTW3
       if (set->cached_intsc==false) {
         // Set kernel
         flt[fix]->init_gaussian_kernel(sigx,sigy);
@@ -564,10 +595,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
         // End of 'if (cached_intsc==false)'
       }
+#endif
 
       // End of loop over sources
     }
 
+    std::cout << "H0h" << std::endl;
+    
     for(size_t i=0;i<nsd->n_sources;i++) {
       
       double mass=dat.sourcet.get("M",i);
@@ -601,6 +635,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_mr_outside;
       }
     }
+
+    cout << "H1." << endl;
     
     if (iret==0) {
       
@@ -614,8 +650,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
       
+      cout << "H2." << endl;
+      
       for(size_t i=0;i<nsd->n_sources;i++) {
 
+	cout << "H3." << i << endl;
+	
 	double mass=dat.sourcet.get("M",i);
 	double rad=dat.sourcet.get("R",i);
 	bool alt=false;
@@ -630,6 +670,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 #endif
         int fix=ithread*nsd->n_sources+i;
         
+	cout << "H4 " << i << " " << out.size() << endl;
         // Double check that current M and R is in the range of
         // the provided input data
         if (rad<out[fix].get_x_data()[0] ||
@@ -641,9 +682,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           
         } else {
 
+	  cout << "H5." << i << endl;
+	  
 	  if (alt==false) {
 	    if (set->cached_intsc) {
 
+	      cout << "H6." << i << endl;
+	      
 	      ubvector iu(3);
 	      iu[0]=rad;
 	      iu[1]=mass;
@@ -657,6 +702,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	  } else {
 	    if (set->cached_intsc) {
 	      ubvector iu(3);
+	      
+	      cout << "H7." << i << endl;
 	      
 	      iu[0]=rad;
 	      iu[1]=mass;
@@ -721,6 +768,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // End of 'if (apply_intsc)'
   }
+
+  cout << "H2." << endl;
 
   // Add Tews et al. probability to the log likelihood
   if (iret==0 && (model_type==((string)"tews_threep_ligo") ||
@@ -1483,7 +1532,7 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2) {
   
   if (setp->cached_intsc) {
     hdf_file hfx;
-    for(size_t ii=0;ii<11;ii++) {
+    for(size_t ii=0;ii<nsd->n_sources;ii++) {
       string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
       hfx.open(fname);
       hdf_input(hfx,bcp->fft_data[ii*2],"tg");

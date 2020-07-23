@@ -79,10 +79,12 @@ namespace bamr {
     /** \brief The number of OpenMP threads (set where?)
      */
     int n_threads;
-   
+
+#ifdef BAMR_FFTW3    
     /** \brief The filter objects (one for each thread)
      */
     std::vector<filters::Filter *> flt;
+#endif
     
     /** \brief The LIGO data
      */
