@@ -383,7 +383,6 @@ namespace filters {
 	  sum += val;
 	}
       }
-      //std::cout << "H: " << sum << std::endl;
 
       // Normalize
       
@@ -607,7 +606,9 @@ namespace filters {
     /// \name Utility functions for debugging
     //@{
     void set_kernel(std::vector<double>& in) {
-      if(in.size() != (size_t)Nx*Ny*Nz) std::cout << "error in size!\n";
+      if(in.size() != (size_t)Nx*Ny*Nz) {
+	std::cout << "error in size!\n";
+      }
 
       int q = 0;
       for(int j = 0 ; j < Ny ; ++j) {
@@ -622,7 +623,9 @@ namespace filters {
      */
     void set_image(std::vector<double>& in) {
 
-      if(in.size() != (size_t)Nx*Ny*Nz) std::cout << "error in size!\n";
+      if(in.size() != (size_t)Nx*Ny*Nz) {
+	std::cout << "error in size!\n";
+      }
 
       int q = 0;
       for(int j = 0 ; j < Ny ; ++j) {

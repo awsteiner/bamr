@@ -403,28 +403,16 @@ int mcmc_bamr::mcmc_init() {
       model_type==((string)"tews_threep_ligo") ||
       model_type==((string)"tews_fixp_ligo") ||
       model_type==((string)"qmc_fixp_ligo")) {
+    hdf_file hfx;
     for(size_t i=0;i<n_threads;i++) {
       bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
       hfx.open("data/ligo/ligo_tg3_v4.o2");
       std::string name;
       hdf_input(hfx,bc.ligo_data_table,name);
+      hfx.close();
     }
   }
   
-  // -----------------------------------------------------------
-  // Prepare data objects
-
-  /*
-  for(size_t i=0;i<data_arr.size();i++) {
-    data_arr[i].rad.resize(nsd->n_sources);
-    data_arr[i].mass.resize(nsd->n_sources);
-    data_arr[i].wgts.resize(nsd->n_sources);
-    data_arr[i].atms.resize(nsd->n_sources);
-    data_arr[i].ces.resize(nsd->n_sources);
-    data_arr[i].cnbs.resize(nsd->n_sources);
-  }
-  */
-
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank
 	      << ") End mcmc_bamr::mcmc_init()." << std::endl;
@@ -643,7 +631,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // units are specified in mcmc_init() function manually using a call
   // to table::new_column().
   bc_arr[0]->mod->get_param_info(names,units,low,high);
-  set_names_units(names,units);
 
   if (set->apply_intsc) {
 
@@ -652,7 +639,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     ubvector high2(low.size()+nsd->n_sources);
     vector_copy(low.size(),low,low2);
     vector_copy(high.size(),high,high2);
-    
+
     for(size_t i=0;i<nsd->n_sources;i++) {
       names.push_back(((string)"log10_is_")+nsd->source_names[i]);
       units.push_back("");
@@ -667,6 +654,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     vector_copy(high.size(),high2,high);
     
   }
+
+  set_names_units(names,units);
   
   // Set initial points if they have not already been set by the
   // user
@@ -727,6 +716,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Perform the MCMC simulation
+  cout << "Lere: " << names.size() << 
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
   
   return 0;
