@@ -355,11 +355,6 @@ int mcmc_bamr::mcmc_init() {
     }
   }
 
-  for(size_t i=0;i<n_threads;i++) {
-    bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-    bc.setup_filters();
-  }
-
   // -----------------------------------------------------------
   // Make grids
 
@@ -377,6 +372,45 @@ int mcmc_bamr::mcmc_init() {
 
   nsd->load_mc(this->scr_out,mpi_size,mpi_rank,set);
 
+  // -----------------------------------------------------------
+  // Setup filters
+  
+  for(size_t i=0;i<n_threads;i++) {
+    bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+    bc.setup_filters();
+  }
+
+  // Read FFT cache
+  
+  if (set->cached_intsc) {
+    for(size_t i=0;i<n_threads;i++) {
+      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+      hdf_file hfx;
+      for(size_t ii=0;ii<nsd->n_sources;ii++) {
+	string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
+	hfx.open(fname);
+	hdf_input(hfx,bc.fft_data[ii*2],"tg");
+	hfx.close();
+	fname=((string)"data/cache/tg_")+szttos(ii)+"_1";
+	hfx.open(fname);
+	hdf_input(hfx,bc.fft_data[ii*2+1],"tg");
+	hfx.close();
+      }
+    }
+  }
+
+  if (model_type==((string)"qmc_threep_ligo") ||
+      model_type==((string)"tews_threep_ligo") ||
+      model_type==((string)"tews_fixp_ligo") ||
+      model_type==((string)"qmc_fixp_ligo")) {
+    for(size_t i=0;i<n_threads;i++) {
+      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+      hfx.open("data/ligo/ligo_tg3_v4.o2");
+      std::string name;
+      hdf_input(hfx,bc.ligo_data_table,name);
+    }
+  }
+  
   // -----------------------------------------------------------
   // Prepare data objects
 

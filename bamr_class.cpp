@@ -46,6 +46,8 @@ void bamr_class::setup_filters() {
   std::vector<o2scl::table3d> &in_alt=nsd->source_tables_alt;
   std::vector<o2scl::table3d> &out=source_tables_is;
   std::vector<o2scl::table3d> &out_alt=source_tables_alt_is;
+  std::cout << in.size() << " " << out.size() << " "
+	    << in_alt.size() << " " << out_alt.size() << std::endl;
   
   // Copy the original tables over if we're running this
   // code for the first time
@@ -73,6 +75,7 @@ void bamr_class::setup_filters() {
 
   for(int k=0;k<n_threads;k++) {
     for(size_t j=0;j<nsd->n_sources;j++) {
+      std::cout << "I1: " << j << " " << k << std::endl;
       size_t Nx = in[j].get_nx();
       size_t Ny = in[j].get_ny();
       flt[k*nsd->n_sources+j]=new filters::Filter(Nx,Ny);
@@ -90,7 +93,6 @@ void bamr_class::setup_filters() {
 #endif
 
   std::cout << "XXX" << out.size() << std::endl;
-  exit(-1);
   
   return;
 }
@@ -769,7 +771,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // End of 'if (apply_intsc)'
   }
 
-  cout << "H2." << endl;
+  cout << "H7." << endl;
 
   // Add Tews et al. probability to the log likelihood
   if (iret==0 && (model_type==((string)"tews_threep_ligo") ||
@@ -1091,7 +1093,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         lin_v[1]=delta_m;
         lin_v[2]=Lambdat;
         
+	cout << "H8." << endl;
         double prob=ligo_data_table.interp_linear(lin_v);
+	cout << "H9." << endl;
         // If the point is outside of the range specified
         // in the data file, give it a very small probability
         for(size_t jj=0;jj<3;jj++) {
