@@ -46,8 +46,6 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
     O2SCL_ERR("Incorrect input data sizes.",o2scl::exc_esanity);
   }
 
-  std::cout << "H: " << n_sources << " " << set->verbose << std::endl;
-  
   if (n_sources>0) {
 
     if (set->verbose>=2) {

@@ -1,3 +1,5 @@
+__pycache__
+compare*
 libbamr.so
 libbamr.dylib
 debug_star.o2
