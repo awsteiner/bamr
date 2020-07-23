@@ -97,6 +97,8 @@ namespace bamr {
     o2scl::cli::parameter_bool p_addl_quants;
     o2scl::cli::parameter_bool p_crust_from_L;
     o2scl::cli::parameter_bool p_mpi_load_debug;
+    o2scl::cli::parameter_bool p_apply_intsc;
+    o2scl::cli::parameter_bool p_cached_intsc;
     o2scl::cli::parameter_double p_nb_low;
     o2scl::cli::parameter_double p_nb_high;
     o2scl::cli::parameter_double p_e_low;
@@ -391,6 +393,14 @@ namespace bamr {
       p_prior_delm.help="";
       cl.par_list.insert(std::make_pair("prior_delm",&p_prior_delm));
 
+      p_apply_intsc.b=&apply_intsc;
+      p_apply_intsc.help="help";
+      cl.par_list.insert(std::make_pair("apply_intsc",&p_apply_intsc));
+      
+      p_cached_intsc.b=&cached_intsc;
+      p_cached_intsc.help="help";
+      cl.par_list.insert(std::make_pair("cached_intsc",&p_cached_intsc));
+      
       return;
     }
     

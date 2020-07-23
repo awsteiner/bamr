@@ -482,7 +482,7 @@ clean:
 compare:
 	bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set prefix compare -set max_iters 1 \
-		-set ligo_data_tg3 1 -set n_walk 120 -set step_fac 2.0 \
+		-set n_walk 120 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
 		-set file_update_time 1800 -set verbose 1 \
@@ -515,16 +515,16 @@ compare:
 		data/shb18/X7_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt 1810b \
-		nks15/1810.o2 \
-		nks15/1810.o2 \
+		data/nks15/1810.o2 \
+		data/nks15/1810.o2 \
 		weights 0.7 mcarlo \
 		-add-data-alt 1724b \
-		nks15/1724.o2 \
-		nks15/1724.o2 \
+		data/nks15/1724.o2 \
+		data/nks15/1724.o2 \
 		weights 0.7 mcarlo \
 		-add-data-alt 1702 \
-		nat17/1702_D_X_int.o2 \
-		nat17/1702_D_X_int.o2 \
+		data/nat17/1702_D_X_int.o2 \
+		data/nat17/1702_D_X_int.o2 \
 		avgs 0.7 hist2_table \
 		-set apply_intsc 1 \
 		-set cached_intsc 1 \
