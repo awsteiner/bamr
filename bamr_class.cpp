@@ -1064,7 +1064,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         dat.eos.add_constant("C2",C2);
       }
     
-    
       if (!std::isfinite(Lambda1) || !std::isfinite(Lambda2)) {
         cout << iret << endl;
         cout << "M_chirp, q: " << M_chirp << " " << q << endl;
@@ -1089,7 +1088,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         lin_v[0]=M_chirp_det;
         lin_v[1]=delta_m;
         lin_v[2]=Lambdat;
-        
+
         double prob=ligo_data_table.interp_linear(lin_v);
         // If the point is outside of the range specified
         // in the data file, give it a very small probability
@@ -1117,7 +1116,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // End of section for additional LIGO constraints
   }
-  
+
   // If the gridt table has not yet been initialized perform that
   // initialization
 
@@ -1173,9 +1172,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       // The highest baryon density in the EOS table
       nbmax2=dat.eos.max("nb");
-      dat.mvsr.add_constant("nb_max",nbmax2);
+      
       // The central baryon density in the maximum mass configuration
       nbmax=dat.mvsr.get_constant("nb_max");
+      
+      dat.mvsr.add_constant("nb_max",nbmax);
       
     }
 
@@ -1318,7 +1319,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  
   return 0;
 }
 
@@ -1543,6 +1543,17 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2) {
     }
   }
 
+  if (bcp->model_type==((string)"qmc_threep_ligo") ||
+      bcp->model_type==((string)"tews_threep_ligo") ||
+      bcp->model_type==((string)"tews_fixp_ligo") ||
+      bcp->model_type==((string)"qmc_fixp_ligo")) {
+    hdf_file hfx;
+    hfx.open("data/ligo/ligo_tg3_v4.o2");
+    std::string name;
+    hdf_input(hfx,bcp->ligo_data_table,name);
+    hfx.close();
+  }
+  
   return 0;
 }
 

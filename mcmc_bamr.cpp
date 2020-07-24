@@ -716,7 +716,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Perform the MCMC simulation
-  cout << "Lere: " << names.size() << 
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
   
   return 0;
