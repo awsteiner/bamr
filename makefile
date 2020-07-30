@@ -101,6 +101,9 @@ models.o: models.cpp models.h
 bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr_class.o -c bamr_class.cpp
 
+#bc_wrap.o: bc_wrap.cpp bc_wrap.h models.o main.o nstar_cold2.o
+#	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bc_wrap.o -c bc_wrap.cpp
+
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
 
@@ -149,6 +152,9 @@ mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 bamr_class_nompi.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
 
+#bc_wrap_nompi.o: bc_wrap.cpp bc_wrap.h
+#	$(CXX) $(ALL_FLAGS) -o bc_wrap_nompi.o -c bc_wrap.cpp
+
 # ----------------------------------------------------------------------
 # Targets for shared library creation for python interface
 # ----------------------------------------------------------------------
@@ -168,6 +174,9 @@ mcmc_bamr_shared.o: mcmc_bamr.cpp mcmc_bamr.h
 bamr_class_shared.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -fPIC -o bamr_class_shared.o -c bamr_class.cpp
 
+#bc_wrap_shared.o: bc_wrap.cpp bc_wrap.h
+#	$(CXX) $(ALL_FLAGS) -fPIC -o bc_wrap_shared.o -c bc_wrap.cpp
+
 SHARED_FLAG = 
 UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
@@ -178,10 +187,11 @@ UNAME_S := $(shell uname -s)
     endif
 
 libbamr: bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
-	models_shared.o mcmc_bamr_shared.o
+	models_shared.o mcmc_bamr_shared.o 
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) $(LIBBAMR_EXTRA) \
 		bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
-		models_shared.o mcmc_bamr_shared.o $(LIBS)
+		models_shared.o mcmc_bamr_shared.o \
+		$(LIBS)
 
 # ----------------------------------------------------------------------
 # Targets for process
@@ -482,7 +492,7 @@ test-sync:
 empty: 
 
 clean:
-	rm -f *.o bamr bamr_nompi process libbamr.so
+	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib
 
 compare:
 	bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \

@@ -1357,27 +1357,6 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   bamr::model_data *mdp=new bamr::model_data;
   mdp2=(void *)mdp;
 
-  //cout << "Getting initial point." << endl;
-  //ubvector init(names.size());
-  //bcp->mod->initial_point(init);
-
-  //cout.setf(ios::scientific);
-  //o2scl::vector_out(cout,init,true);
-
-  //ofstream fout;//("bamr.py.out");
-  
-  //cout << "Calling compute_point()." << endl;
-  //double weight;
-  //int ret=bcp->compute_point(init,fout,weight,*mdp);
-  //cout << "ret,weight: " << ret << " " << weight << endl;
-
-  //if (true) {
-  //table_units<> &mvsr=mdp->mvsr;
-  //table_units<> &eos=mdp->eos;
-  //}
-
-  //fout.close();
-
   return;
 }
 
@@ -1466,6 +1445,9 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   settings *setp=(settings *)setp2;
   bamr::model_data *mdp=(bamr::model_data *)mdp2;
   ns_data *nsd=(ns_data *)nsd2;
+
+  // ----------------------------------------------------------------
+  // Check that the settings are correct
   
   if (setp->inc_baryon_mass && !setp->baryon_density) {
     std::cout << "Cannot use inc_baryon_mass=true with "
@@ -1494,7 +1476,7 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
     return exc_efailed;
   }
 
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------
   // Make grids
 
   for(size_t i=0;i<1;i++) {
@@ -1506,12 +1488,17 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
       (setp->m_low,setp->m_high,setp->grid_size-1);
   }
 
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------
   // Load data
 
   ofstream fout;
   nsd->load_mc(std::cout,0,1,bcp->set);
 
+  // ----------------------------------------------------------------
+  // Get parameter information and store in the py_param_info
+  // object
+
+  // verbose isn't defined here yet
   //if (verbose>1) cout << "Calling get_param_info()." << endl;
 
   ubvector low2, high2;
@@ -1525,14 +1512,25 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   o2scl::vector_copy(low2,bcp->ppi.low);
   o2scl::vector_copy(high2,bcp->ppi.high);
 
+  // ----------------------------------------------------------------
   // Set n_threads
+  
   bcp->n_threads=1;
 
-  // If necessary, set up FFT filters
+  // ----------------------------------------------------------------
+  // If necessary, set up the intrinsic scattering parameters FFT
+  // filters and/or read the FFT cache
 
   if (setp->apply_intsc) {
     for(int i=0;i<bcp->n_threads;i++) {
       bcp->setup_filters();
+    }
+    bcp->ppi.np+=nsd->n_sources;
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      bcp->ppi.names.push_back(((string)"log10_is_")+nsd->source_names[i]);
+      bcp->ppi.units.push_back("");
+      bcp->ppi.low.push_back(-2.0);
+      bcp->ppi.high.push_back(2.0);
     }
   }
   
@@ -1550,6 +1548,9 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
     }
   }
 
+  // -----------------------------------------------------------
+  // Handle additional model-specific inits
+  
   if (bcp->model_type==((string)"qmc_threep_ligo") ||
       bcp->model_type==((string)"tews_threep_ligo") ||
       bcp->model_type==((string)"tews_fixp_ligo") ||
@@ -1561,15 +1562,9 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
     hfx.close();
   }
 
-  if (setp->apply_intsc) {
-    bcp->ppi.np+=nsd->n_sources;
-    for(size_t i=0;i<nsd->n_sources;i++) {
-      bcp->ppi.names.push_back(((string)"log10_is_")+nsd->source_names[i]);
-      bcp->ppi.units.push_back("");
-      bcp->ppi.low.push_back(-2.0);
-      bcp->ppi.high.push_back(2.0);
-    }
-  }
+  // -----------------------------------------------------------
+  // Reparse the names and units from py_param_info into the
+  // name_counts, name_c, unit_counts, unit_c objects
 
   npar=bcp->ppi.np;
   bcp->ppi.name_counts.resize(npar);
@@ -1625,7 +1620,7 @@ int compute_point(void *bcp2, void *mdp2, int nv, double *vals,
 
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   bamr::model_data *mdp=(bamr::model_data *)mdp2;
-  
+
   ofstream fout;
   ubvector point(nv);
   for(int j=0;j<nv;j++) {
