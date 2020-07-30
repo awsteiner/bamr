@@ -1357,55 +1357,6 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   bamr::model_data *mdp=new bamr::model_data;
   mdp2=(void *)mdp;
 
-  if (verbose>1) cout << "Calling get_param_info()." << endl;
-  ubvector low, high;
-  bcp->mod->get_param_info(bcp->ppi.names,bcp->ppi.units,low,high);
-
-  // Process ppi object
-  bcp->ppi.np=low.size();
-  int np=low.size();
-  bcp->ppi.low.resize(np);
-  bcp->ppi.high.resize(np);
-  o2scl::vector_copy(low,bcp->ppi.low);
-  o2scl::vector_copy(high,bcp->ppi.high);
-
-  bcp->ppi.name_counts.resize(np);
-  bcp->ppi.unit_counts.resize(np);
-
-  int sum, ix;
-  
-  sum=0;
-  for(int i=0;i<np;i++) {
-    size_t nn=bcp->ppi.names[i].length();
-    bcp->ppi.name_counts[i]=nn;
-    sum+=nn;
-  }
-  bcp->ppi.name_c.resize(sum);
-  ix=0;
-  for(int i=0;i<np;i++) {
-    size_t nn=bcp->ppi.names[i].length();
-    for(size_t j=0;j<nn;j++) {
-      bcp->ppi.name_c[ix]=bcp->ppi.names[i][j];
-      ix++;
-    }
-  }
-  
-  sum=0;
-  for(int i=0;i<np;i++) {
-    size_t nn=bcp->ppi.units[i].length();
-    bcp->ppi.unit_counts[i]=nn;
-    sum+=nn;
-  }
-  bcp->ppi.unit_c.resize(sum);
-  ix=0;
-  for(int i=0;i<np;i++) {
-    size_t nn=bcp->ppi.units[i].length();
-    for(size_t j=0;j<nn;j++) {
-      bcp->ppi.unit_c[ix]=bcp->ppi.units[i][j];
-      ix++;
-    }
-  }
-  
   //cout << "Getting initial point." << endl;
   //ubvector init(names.size());
   //bcp->mod->initial_point(init);
@@ -1420,10 +1371,10 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   //int ret=bcp->compute_point(init,fout,weight,*mdp);
   //cout << "ret,weight: " << ret << " " << weight << endl;
 
-  if (true) {
-    table_units<> &mvsr=mdp->mvsr;
-    table_units<> &eos=mdp->eos;
-  }
+  //if (true) {
+  //table_units<> &mvsr=mdp->mvsr;
+  //table_units<> &eos=mdp->eos;
+  //}
 
   //fout.close();
 
@@ -1561,6 +1512,19 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   ofstream fout;
   nsd->load_mc(std::cout,0,1,bcp->set);
 
+  //if (verbose>1) cout << "Calling get_param_info()." << endl;
+
+  ubvector low2, high2;
+  bcp->mod->get_param_info(bcp->ppi.names,bcp->ppi.units,low2,high2);
+
+  // Process ppi object
+  bcp->ppi.np=low2.size();
+  int npar=low2.size();
+  bcp->ppi.low.resize(npar);
+  bcp->ppi.high.resize(npar);
+  o2scl::vector_copy(low2,bcp->ppi.low);
+  o2scl::vector_copy(high2,bcp->ppi.high);
+
   // Set n_threads
   bcp->n_threads=1;
 
@@ -1597,6 +1561,54 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
     hfx.close();
   }
 
+  if (setp->apply_intsc) {
+    bcp->ppi.np+=nsd->n_sources;
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      bcp->ppi.names.push_back(((string)"log10_is_")+nsd->source_names[i]);
+      bcp->ppi.units.push_back("");
+      bcp->ppi.low.push_back(-2.0);
+      bcp->ppi.high.push_back(2.0);
+    }
+  }
+
+  npar=bcp->ppi.np;
+  bcp->ppi.name_counts.resize(npar);
+  bcp->ppi.unit_counts.resize(npar);
+
+  int sum, ix;
+  
+  sum=0;
+  for(int i=0;i<npar;i++) {
+    size_t nn=bcp->ppi.names[i].length();
+    bcp->ppi.name_counts[i]=nn;
+    sum+=nn;
+  }
+  bcp->ppi.name_c.resize(sum);
+  ix=0;
+  for(int i=0;i<npar;i++) {
+    size_t nn=bcp->ppi.names[i].length();
+    for(size_t j=0;j<nn;j++) {
+      bcp->ppi.name_c[ix]=bcp->ppi.names[i][j];
+      ix++;
+    }
+  }
+  
+  sum=0;
+  for(int i=0;i<npar;i++) {
+    size_t nn=bcp->ppi.units[i].length();
+    bcp->ppi.unit_counts[i]=nn;
+    sum+=nn;
+  }
+  bcp->ppi.unit_c.resize(sum);
+  ix=0;
+  for(int i=0;i<npar;i++) {
+    size_t nn=bcp->ppi.units[i].length();
+    for(size_t j=0;j<nn;j++) {
+      bcp->ppi.unit_c[ix]=bcp->ppi.units[i][j];
+      ix++;
+    }
+  }
+  
   *np=bcp->ppi.np;
   name_counts=&(bcp->ppi.name_counts[0]);
   names=&(bcp->ppi.name_c[0]);

@@ -72,7 +72,15 @@ bp.add_data_alt("0030",
                 "data/nicer/0030_st_pst.o2",
                 "data/nicer/0030_st_pst.o2",
                 "prob",0.7,"table3d")
-bp.bamr_init()
+
+(iret,npar,names,units,low,high)=bp.bamr_init()
+print('init return value (0 is success):',iret)
+print('number of parameters:',npar)
+print('parameter names:',names)
+print('parameter units:',units)
+print('parameter lower limits:',low)
+print('parameter upper limits:',high)
+
 bp.compute_point([1.322748e+01,4.884697e-01,3.257073e+01,
                   4.455746e+01,4.381964e-01,3.203634e+00,
                   5.517590e+00,6.987111e+00,1.182554e+00,
@@ -85,4 +93,5 @@ bp.compute_point([1.322748e+01,4.884697e-01,3.257073e+01,
                   -1.178018e+00,-1.149620e+00,-1.801794e-01,
                   -4.783507e-01,-8.689520e-01,-8.779179e-01,
                   -1.635335e+00])
+
 bp.summarize_tables()
