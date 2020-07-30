@@ -120,6 +120,26 @@ namespace bamr {
 
     /// Model type string
     std::string model_type;
+
+    /** \brief Desc
+     */
+    class py_param_info {
+      
+    public:
+
+      int np;
+      std::vector<double> low;
+      std::vector<double> high;
+      std::vector<std::string> names;
+      std::vector<std::string> units;
+      std::vector<int> name_counts;
+      std::vector<int> unit_counts;
+      std::vector<char> name_c;
+      std::vector<char> unit_c;
+    };
+
+    /// Desc
+    py_param_info ppi;
     
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
@@ -159,7 +179,10 @@ extern "C" {
 
   /** \brief Desc
    */
-  int init(void *bcp2, void *mdp2, void *nsd2, void *setp2);
+  int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
+	   int *np, int *&name_counts, char *&names,
+	   int *&unit_counts, char *&units,
+	   double *&low, double *&high);
   
   /** \brief Compute a point using the parameters given in \c vals
    */

@@ -181,6 +181,7 @@ class bamr_py:
                                                self.ns_data_ptr,
                                                self.settings_ptr,
                                                verbose)
+
         if verbose>2:
             print('Done with create_pointers() function.')
 
@@ -227,18 +228,66 @@ class bamr_py:
             print('The settings() function has not been called.')
             quit()
         
+        double_ptr=ctypes.POINTER(ctypes.c_double)
+        double_ptr_ptr=ctypes.POINTER(double_ptr)
+        int_ptr=ctypes.POINTER(ctypes.c_int)
+        int_ptr_ptr=ctypes.POINTER(int_ptr)
+        char_ptr=ctypes.POINTER(ctypes.c_char)
+        char_ptr_ptr=ctypes.POINTER(char_ptr)
+        
         self.bamr_lib.init.argtypes=[ctypes.c_void_p,ctypes.c_void_p,
-                                ctypes.c_void_p,ctypes.c_void_p]
+                                     ctypes.c_void_p,ctypes.c_void_p,
+                                     int_ptr,int_ptr_ptr,char_ptr_ptr,
+                                     int_ptr_ptr,char_ptr_ptr,
+                                     double_ptr_ptr,double_ptr_ptr]
+        npar=ctypes.c_int(0)
+        name_counts=int_ptr()
+        name_c=char_ptr()
+        unit_counts=int_ptr()
+        unit_c=char_ptr()
+        low=double_ptr()
+        high=double_ptr()
+        
         self.bamr_lib.init.restype=ctypes.c_int
         iret=self.bamr_lib.init(self.bamr_class_ptr,
                                 self.model_data_ptr,
                                 self.ns_data_ptr,
-                                self.settings_ptr)
+                                self.settings_ptr,
+                                ctypes.byref(npar),
+                                ctypes.byref(name_counts),
+                                ctypes.byref(name_c),
+                                ctypes.byref(unit_counts),
+                                ctypes.byref(unit_c),
+                                ctypes.byref(low),
+                                ctypes.byref(high))
+
+        npar=npar.value
+        nix=0
+        uix=0
+        names=[]
+        units=[]
+        for i in range(0,npar):
+            tname=b''
+            for j in range(0,name_counts[i]):
+                tname=tname+name_c[nix]
+                nix=nix+1
+            tname=tname.decode('utf-8')
+            names.append(tname)
+            tunit=b''
+            for j in range(0,unit_counts[i]):
+                tunit=tunit+unit_c[uix]
+                uix=uix+1
+            tunit=tunit.decode('utf-8')
+            units.append(tunit)
+
+        low=[low[i] for i in range(0,npar)]
+        high=[high[i] for i in range(0,npar)]
+            
         if iret!=0:
             print('Function bamr_init() failed.')
             quit()
         self.init_called=True
-        return iret
+        return iret,npar,names,units,low,high
 
     def settings(self,inc_baryon_mass=False,addl_quants=False,verbose=0,
                  norm_max=False,crust_from_L=False,

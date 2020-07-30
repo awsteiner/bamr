@@ -1358,14 +1358,54 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   mdp2=(void *)mdp;
 
   if (verbose>1) cout << "Calling get_param_info()." << endl;
-  std::vector<std::string> names;
-  std::vector<std::string> units;
+  ubvector low, high;
+  bcp->mod->get_param_info(bcp->ppi.names,bcp->ppi.units,low,high);
 
-  ubvector low;
-  ubvector high;
-  bcp->mod->get_param_info(names,units,low,high);
-  //cout << "unit: " << units	
+  // Process ppi object
+  bcp->ppi.np=low.size();
+  int np=low.size();
+  bcp->ppi.low.resize(np);
+  bcp->ppi.high.resize(np);
+  o2scl::vector_copy(low,bcp->ppi.low);
+  o2scl::vector_copy(high,bcp->ppi.high);
 
+  bcp->ppi.name_counts.resize(np);
+  bcp->ppi.unit_counts.resize(np);
+
+  int sum, ix;
+  
+  sum=0;
+  for(int i=0;i<np;i++) {
+    size_t nn=bcp->ppi.names[i].length();
+    bcp->ppi.name_counts[i]=nn;
+    sum+=nn;
+  }
+  bcp->ppi.name_c.resize(sum);
+  ix=0;
+  for(int i=0;i<np;i++) {
+    size_t nn=bcp->ppi.names[i].length();
+    for(size_t j=0;j<nn;j++) {
+      bcp->ppi.name_c[ix]=bcp->ppi.names[i][j];
+      ix++;
+    }
+  }
+  
+  sum=0;
+  for(int i=0;i<np;i++) {
+    size_t nn=bcp->ppi.units[i].length();
+    bcp->ppi.unit_counts[i]=nn;
+    sum+=nn;
+  }
+  bcp->ppi.unit_c.resize(sum);
+  ix=0;
+  for(int i=0;i<np;i++) {
+    size_t nn=bcp->ppi.units[i].length();
+    for(size_t j=0;j<nn;j++) {
+      bcp->ppi.unit_c[ix]=bcp->ppi.units[i][j];
+      ix++;
+    }
+  }
+  
   //cout << "Getting initial point." << endl;
   //ubvector init(names.size());
   //bcp->mod->initial_point(init);
@@ -1466,7 +1506,10 @@ void set_parameter(void *bcp2, void *setp2, char *param_name, double val) {
   return;
 }
 
-int init(void *bcp2, void *mdp2, void *nsd2, void *setp2) {
+int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
+	 int *np, int *&name_counts, char *&names,
+	 int *&unit_counts, char *&units,
+	 double *&low, double *&high) {
 
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   settings *setp=(settings *)setp2;
@@ -1553,6 +1596,14 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2) {
     hdf_input(hfx,bcp->ligo_data_table,name);
     hfx.close();
   }
+
+  *np=bcp->ppi.np;
+  name_counts=&(bcp->ppi.name_counts[0]);
+  names=&(bcp->ppi.name_c[0]);
+  unit_counts=&(bcp->ppi.unit_counts[0]);
+  units=&(bcp->ppi.unit_c[0]);
+  low=&(bcp->ppi.low[0]);
+  high=&(bcp->ppi.high[0]);
   
   return 0;
 }

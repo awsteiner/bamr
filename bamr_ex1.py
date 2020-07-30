@@ -26,7 +26,13 @@ import time
 
 bp=bamr.bamr_py(b'twop',1,True)
 bp.settings(inc_baryon_mass=True,addl_quants=True,verbose=3)
-bp.bamr_init()
+(iret,npar,names,units,low,high)=bp.bamr_init()
+print('init return value (0 is success):',iret)
+print('number of parameters:',npar)
+print('parameter names:',names)
+print('parameter units:',units)
+print('parameter lower limits:',low)
+print('parameter upper limits:',high)
 
 start = time.time()
 lw=bp.compute_point([1.0,-3.0,0.165,0.644,

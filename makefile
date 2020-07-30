@@ -40,6 +40,11 @@ FFTW_LIB = -lfftw3
 COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
 COMPILER_FLAGS_MPI = -std=c++0x -O3 -Wall -Wno-unused
 
+# In some cases, if o2scl is compiled with OpenMP, then we need
+# to add this flag to libbamr
+
+LIBBAMR_EXTRA = -fopenmp
+
 # ----------------------------------------------------------------------
 # UTK makefile
 # ----------------------------------------------------------------------
@@ -174,7 +179,7 @@ UNAME_S := $(shell uname -s)
 
 libbamr: bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
 	models_shared.o mcmc_bamr_shared.o
-	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) \
+	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) $(LIBBAMR_EXTRA) \
 		bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
 		models_shared.o mcmc_bamr_shared.o $(LIBS)
 
