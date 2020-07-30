@@ -36,7 +36,7 @@ print('parameter upper limits:',high)
 
 start = time.time()
 lw=bp.compute_point([1.0,-3.0,0.165,0.644,
-                     1.51,0.576,4.6,1.21])
+                     1.51,0.576,4.6,1.21],verbose=3)
 end = time.time()
 print('log weight',lw,'time for one point',end-start)
 

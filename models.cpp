@@ -2734,11 +2734,11 @@ void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
   low[2]=29.5;
   low[3]=30.0;
   
-  low[4]=0.2;
+  low[4]=-1.0;
   low[5]=0.75;
-  low[6]=0.2;
+  low[6]=-1.0;
   low[7]=0.75;
-  low[8]=0.2;
+  low[8]=-1.0;
 
   low[9]=1.1971;
   low[10]=0.2;

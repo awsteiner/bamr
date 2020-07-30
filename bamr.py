@@ -413,12 +413,17 @@ class bamr_py:
         if verbose>2:
             print('Going to compute_point().')
         iret=cp_fun(self.bamr_class_ptr,self.model_data_ptr,
-                       self.n_params,point,ctypes.byref(log_wgt))
+                    self.n_params,point,ctypes.byref(log_wgt))
+        if verbose>2:
+            print('iret,log_wgt',iret,log_wgt.value)
+        log_wgt=log_wgt.value
+        if iret!=0:
+            low_wgt=-800
         if verbose>2:
             print('Done in compute_point().')
 
         # End of compute_point()
-        return (iret,log_wgt.value)
+        return log_wgt
 
     def summarize_tables(self):
         self.bamr_lib.summarize_tables.argtypes=[ctypes.c_void_p]
