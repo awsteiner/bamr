@@ -204,7 +204,7 @@ class bamr_py:
                 self.openmp_lib=ctypes.CDLL('/usr/lib/gcc/x86_64-'+
                                             'linux-gnu/9/libgomp.so',
                                             mode=ctypes.RTLD_GLOBAL)
-            self.bamr_lib=ctypes.CDLL('./libbamr.so',mode=ctypes.RTLD_GLOBAL)
+            self.bamr_lib=ctypes.CDLL('libbamr.so',mode=ctypes.RTLD_GLOBAL)
 
         if verbose>2:
             print('Loaded libbamr.')
