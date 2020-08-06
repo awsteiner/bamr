@@ -2679,7 +2679,6 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
     double norm;
 	
     o2scl_hdf::hdf_file hf;
-    std::cout << "Here: " << s->data_dir << std::endl;
     string fname=s->data_dir+"/Psat_gaussian.o2";
     hf.open(fname);
     hf.getd_mat_copy("chol",chol);
@@ -3066,7 +3065,6 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
     double norm;
 	
     o2scl_hdf::hdf_file hf;
-    std::cout << "Here: " << s->data_dir << std::endl;
     string fname=s->data_dir+"/Psat_gaussian.o2";
     hf.open(fname);
     hf.getd_mat_copy("chol",chol);
