@@ -529,8 +529,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 #endif
 	  
           hdf_file hfx;
-          string fnamex=((string)"data/cache/tg_")+o2scl::szttos(i)+
+	  string fnamex=set->data_dir+"/cache/tg_"+o2scl::szttos(i)+
             "_"+o2scl::szttos(iik);
+	  cout << "Here1: " << fnamex << endl;
           hfx.open_or_create(fnamex);
           hdf_output(hfx,tg3,"tg");
           hfx.close();
@@ -1554,11 +1555,13 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   if (setp->cached_intsc) {
     hdf_file hfx;
     for(size_t ii=0;ii<nsd->n_sources;ii++) {
-      string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
+      string fname=setp->data_dir+"/cache/tg_"+o2scl::szttos(ii)+"_0";
+      cout << "Here2: " << fname << endl;
       hfx.open(fname);
       hdf_input(hfx,bcp->fft_data[ii*2],"tg");
       hfx.close();
-      fname=((string)"data/cache/tg_")+szttos(ii)+"_1";
+      fname=setp->data_dir+"/cache/tg_"+o2scl::szttos(ii)+"_1";
+      cout << "Here3: " << fname << endl;
       hfx.open(fname);
       hdf_input(hfx,bcp->fft_data[ii*2+1],"tg");
       hfx.close();
@@ -1573,7 +1576,8 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
       bcp->model_type==((string)"tews_fixp_ligo") ||
       bcp->model_type==((string)"qmc_fixp_ligo")) {
     hdf_file hfx;
-    string fname=setp->data_dir+"/ligo_tg3_v4.o2";
+    string fname=setp->data_dir+"/ligo/ligo_tg3_v4.o2";
+    cout << "Here5: " << fname << endl;
     hfx.open(fname);
     std::string name;
     hdf_input(hfx,bcp->ligo_data_table,name);
