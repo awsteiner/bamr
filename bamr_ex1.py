@@ -24,7 +24,7 @@
 import bamr
 import time
 
-bp=bamr.bamr_py(b'twop',1,True)
+bp=bamr.bamr_py(b'twop',b'data',1,True)
 bp.settings(inc_baryon_mass=True,addl_quants=True,verbose=3)
 (iret,npar,names,units,low,high)=bp.bamr_init()
 print('init return value (0 is success):',iret)

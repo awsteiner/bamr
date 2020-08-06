@@ -1323,7 +1323,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 }
 
 void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
-		     void *&nsd2, void *&setp2, int verbose) {
+		     void *&nsd2, void *&setp2, char *data_dir,
+		     int verbose) {
 
   cout.setf(ios::scientific);
 
@@ -1335,6 +1336,9 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   if (verbose>1) cout << "Creating ns_data object." << endl;
   bcp->nsd=std::make_shared<ns_data>();
   nsd2=(void *)&(*(bcp->nsd));
+
+  cout << "Using data_dir = " << data_dir << endl;
+  bcp->set->data_dir=((string)data_dir);
 
   std::string model_name_str=model_name;
   if (verbose>1) cout << "Creating model " << model_name_str << endl;
@@ -1364,6 +1368,7 @@ void set_parameter_string(void *bcp2, void *setp2, char *param_name,
 			  char *val) {
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   settings *setp=(settings *)setp2;
+  std::cout << "Setting: " << param_name << " to " << val << std::endl;
   if ((string)param_name==(string)"data_dir") {
     setp->data_dir=(string)val;
   } else {

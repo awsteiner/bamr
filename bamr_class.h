@@ -171,7 +171,8 @@ extern "C" {
       return the associated pointers
   */
   void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
-		       void *&nsd2, void *&setp2, int verbose);
+		       void *&nsd2, void *&setp2, char *data_dir,
+		       int verbose);
 
   /** \brief Set a parameter
    */

@@ -120,7 +120,7 @@ class bamr_py:
         # End of __free_pointers()
         return
 
-    def __make_pointers(self,model=b'twop',verbose=1):
+    def __make_pointers(self,model=b'twop',data_dir=b'data',verbose=1):
         """
         Desc
         """
@@ -167,12 +167,14 @@ class bamr_py:
         # Create the bamr pointers
         self.bamr_lib.create_pointers.argtypes=[ctypes.c_char_p,void_pp,
                                                 void_pp,void_pp,void_pp,
+                                                ctypes.c_char_p,
                                                 ctypes.c_int]
         self.bamr_class_ptr=ctypes.c_void_p()
         self.model_data_ptr=ctypes.c_void_p()
         self.ns_data_ptr=ctypes.c_void_p()
         self.settings_ptr=ctypes.c_void_p()
         model_c=ctypes.c_char_p(force_bytes(model))
+        data_dir_c=ctypes.c_char_p(force_bytes(data_dir))
         if verbose>2:
             print('Going to create_pointers() function.')
         bamr_ptr=self.bamr_lib.create_pointers(model_c,
@@ -180,6 +182,7 @@ class bamr_py:
                                                self.model_data_ptr,
                                                self.ns_data_ptr,
                                                self.settings_ptr,
+                                               data_dir_c,
                                                verbose)
 
         if verbose>2:
@@ -188,7 +191,7 @@ class bamr_py:
         # End of __make_pointers()
         return
         
-    def __init__(self,model=b'twop',verbose=1,openmp=False):
+    def __init__(self,model=b'twop',data_dir=b'data',verbose=1,openmp=False):
         """ 
         Load bamr_lib using ctypes and create the associated bamr
         pointers given the specified model
@@ -209,7 +212,7 @@ class bamr_py:
         if verbose>2:
             print('Loaded libbamr.')
             
-        self.__make_pointers(model,verbose)
+        self.__make_pointers(model,data_dir,verbose)
 
         if verbose>2:
             print('Done in __init__().')
@@ -386,17 +389,17 @@ class bamr_py:
             fun(self.bamr_class_ptr,
                 self.settings_ptr,
                 ctypes.c_char_p(b'data_dir'),
-                ctypes.c_char_p(force_bytes(data_dir))
+                ctypes.c_char_p(force_bytes(data_dir)))
             print('Done setting data_dir to ',data_dir)
         self.settings_called=True
         return
     
-    def change_model(self,model=b'twop',verbose=1):
+    def change_model(self,model=b'twop',data_dir=b'data',verbose=1):
         """
         Change to a different model 
         """
         self.__free_pointers()
-        self.__make_pointers(model,verbose)
+        self.__make_pointers(model,data_dir,verbose)
         return
 
     def compute_point(self,params,verbose=1):
