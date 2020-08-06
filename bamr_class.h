@@ -177,6 +177,11 @@ extern "C" {
    */
   void set_parameter(void *bcp2, void *setp2, char *param_name, double val);
 
+  /** \brief Set a string parameter
+   */
+  void set_parameter_string(void *bcp2, void *setp2, char *param_name,
+			    char *val);
+
   /** \brief Desc
    */
   int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,

@@ -75,6 +75,7 @@ namespace bamr {
       compute_cthick=false;
       crust_from_L=false;
       mpi_load_debug=false;
+      data_dir="data";
     }
     
     /// \name Parameter objects for the 'set' command
@@ -109,6 +110,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_prior_q;
     o2scl::cli::parameter_bool p_prior_eta;
     o2scl::cli::parameter_bool p_prior_delm;
+    o2scl::cli::parameter_string p_data_dir;
     //@}
 
     /// Verbosity parameter
@@ -226,9 +228,13 @@ namespace bamr {
      */
     bool apply_intsc;
 
-    /** \brief
+    /** \brief Desc
      */
     bool cached_intsc;
+
+    /** \brief Desc
+     */
+    std::string data_dir;
     
     /** \brief Add parameters to the \ref o2scl::cli object
      */
@@ -400,6 +406,10 @@ namespace bamr {
       p_cached_intsc.b=&cached_intsc;
       p_cached_intsc.help="help";
       cl.par_list.insert(std::make_pair("cached_intsc",&p_cached_intsc));
+      
+      p_data_dir.str=&data_dir;
+      p_data_dir.help="help";
+      cl.par_list.insert(std::make_pair("data_dir",&p_data_dir));
       
       return;
     }

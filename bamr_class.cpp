@@ -1360,6 +1360,18 @@ void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
   return;
 }
 
+void set_parameter_string(void *bcp2, void *setp2, char *param_name,
+			  char *val) {
+  bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
+  settings *setp=(settings *)setp2;
+  if ((string)param_name==(string)"data_dir") {
+    setp->data_dir=(string)val;
+  } else {
+    cout << "Don't know parameter " << param_name << endl;
+  }
+  return;
+}
+
 void set_parameter(void *bcp2, void *setp2, char *param_name, double val) {
   bamr::bamr_class *bcp=(bamr::bamr_class *)bcp2;
   settings *setp=(settings *)setp2;
@@ -1556,7 +1568,8 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
       bcp->model_type==((string)"tews_fixp_ligo") ||
       bcp->model_type==((string)"qmc_fixp_ligo")) {
     hdf_file hfx;
-    hfx.open("data/ligo/ligo_tg3_v4.o2");
+    string fname=setp->data_dir+"/ligo_tg3_v4.o2";
+    hfx.open(fname);
     std::string name;
     hdf_input(hfx,bcp->ligo_data_table,name);
     hfx.close();

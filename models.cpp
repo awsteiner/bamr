@@ -2679,7 +2679,8 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
     double norm;
 	
     o2scl_hdf::hdf_file hf;
-    hf.open("data/Psat_gaussian.o2");
+    string fname=s->data_dir+"/Psat_gaussian.o2";
+    hf.open(fname);
     hf.getd_mat_copy("chol",chol);
     hf.getd_mat_copy("covar_inv",covar_inv);
     hf.getd_vec_copy("peak",peak);
@@ -2694,7 +2695,8 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
     std::string name;
 	
     o2scl_hdf::hdf_file hf;
-    hf.open("data/thetaANL-1002x12.o2");
+    string fname=s->data_dir+"/thetaANL-1002x12.o2";
+    hf.open(fname);
     hdf_input(hf,UNEDF_tab,name);
     hf.close();
   }
@@ -3063,7 +3065,7 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
     double norm;
 	
     o2scl_hdf::hdf_file hf;
-    hf.open("Psat_gaussian.o2");
+    hf.open("data/Psat_gaussian.o2");
     hf.getd_mat_copy("chol",chol);
     hf.getd_mat_copy("covar_inv",covar_inv);
     hf.getd_vec_copy("peak",peak);

@@ -292,7 +292,7 @@ class bamr_py:
     def settings(self,inc_baryon_mass=False,addl_quants=False,verbose=0,
                  norm_max=False,crust_from_L=False,
                  compute_cthick=False,apply_intsc=True,
-                 cached_intsc=True,prior_eta=True):
+                 cached_intsc=True,prior_eta=True,data_dir='data'):
                  
         """
         Apply various settings (must be called before init())
@@ -309,6 +309,10 @@ class bamr_py:
                                               ctypes.c_void_p,
                                               ctypes.c_char_p,
                                               ctypes.c_double]
+        self.bamr_lib.set_parameter_string.argtypes=[ctypes.c_void_p,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_char_p,
+                                                     ctypes.c_char_p]
         if inc_baryon_mass:
             self.bamr_lib.set_parameter(self.bamr_class_ptr,self.settings_ptr,
                                         ctypes.c_char_p(b'inc_baryon_mass'),
@@ -376,6 +380,14 @@ class bamr_py:
         self.bamr_lib.set_parameter(self.bamr_class_ptr,self.settings_ptr,
                                     ctypes.c_char_p(b'verbose'),
                                     float(verbose))
+        if data_dir:
+            fun=self.bamr_lib.set_parameter_string
+            print('Setting data_dir to ',data_dir)
+            fun(self.bamr_class_ptr,
+                self.settings_ptr,
+                ctypes.c_char_p(b'data_dir'),
+                ctypes.c_char_p(force_bytes(data_dir))
+            print('Done setting data_dir to ',data_dir)
         self.settings_called=True
         return
     
