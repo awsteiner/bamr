@@ -433,7 +433,7 @@ class bamr_py:
             print('iret,log_wgt',iret,log_wgt.value)
         log_wgt=log_wgt.value
         if iret!=0:
-            log_wgt=-800
+            log_wgt=-1.0e200
         if verbose>2:
             print('Done in compute_point().')
 
