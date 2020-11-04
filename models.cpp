@@ -88,6 +88,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
+  bool new_derivative=false
 
   if (has_eos) {
     
@@ -96,6 +97,31 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
+
+    // Sarah's section
+    if (new_derivative) {
+
+      // Call read_table()
+      
+      // First TOV solve here
+
+      // Check the maximum mass
+
+      // Check the speed of sound
+      
+      pars[x]*=1.001;
+      compute_eos(pars,ret,scr_out,dat);
+      if (ret!=ix_success) return;
+
+      // Call read_table()
+      
+      // Second TOV solve here
+
+      // Check the maximum mass
+      
+      // Check the speed of sound
+      
+    }
     
     // Ensure we're using linear interpolation
     dat.eos.set_interp_type(o2scl::itp_linear);
@@ -131,108 +157,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     scr_out << "Phasing out automatic baryon density calculation."
 	    << endl;
     exit(-1);
-    
-    // Obtain the baryon density calibration point from the model
-    if (nb_n1<=0.0 && nb_e1<=0.0) {
-      O2SCL_ERR2("Computing the baryon density requires one ",
-		 "calibration point in compute_star().",
-		 o2scl::exc_einval);
-    }
-
-    // Compute inverse of gibbs energy density, 'igb'
-
-    dat.eos.new_column("igb");
-    dat.eos.set_unit("igb","fm^4");
-
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {
-
-      if (dat.eos.get("ed",i)+dat.eos.get("pr",i)<=0.0 ||
-	  !std::isfinite(dat.eos.get("ed",i)) ||
-	  !std::isfinite(dat.eos.get("pr",i))) {
-	scr_out << "Inverse Gibbs not finite." << std::endl;
-	scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
-	scr_out << "ed pr" << std::endl;
-	for(size_t j=0;j<dat.eos.get_nlines();j++) {
-	  scr_out << j << " "
-		  << dat.eos.get("ed",j) << " "
-		  << dat.eos.get("pr",j) << std::endl;
-	}
-	O2SCL_ERR("Inverse Gibbs not finite.",o2scl::exc_efailed);
-      }
-      dat.eos.set("igb",i,1.0/(dat.eos.get("ed",i)+dat.eos.get("pr",i)));
-    }
-
-    // Compute integral of 'igb' relative to ed='e1', called 'iigb'
-
-    dat.eos.new_column("iigb");
-    
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {
-      if (nb_e1<=dat.eos.get("ed",i)) {
-	double val=dat.eos.integ("ed",nb_e1,dat.eos.get("ed",i),"igb");
-	if (!std::isfinite(val)) {
-	  scr_out << "Baryon integral not finite." << std::endl;
-	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
-	  scr_out << "ed pr" << std::endl;
-	  for(size_t j=0;j<dat.eos.get_nlines();j++) {
-	    scr_out << j << " "
-		    << dat.eos.get("ed",j) << " "
-		    << dat.eos.get("pr",j) << std::endl;
-	  }
-	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
-	}
-	dat.eos.set("iigb",i,val);
-      } else {
-	double val=-dat.eos.integ("ed",dat.eos.get("ed",i),nb_e1,"igb");
-	if (!std::isfinite(val)) {
-	  scr_out << "Baryon integral not finite (2)." << std::endl;
-	  scr_out << "n1=" << nb_n1 << " e1=" << nb_e1 << std::endl;
-	  scr_out << "ed pr" << std::endl;
-	  for(size_t j=0;j<dat.eos.get_nlines();j++) {
-	    scr_out << j << " "
-		    << dat.eos.get("ed",j) << " "
-		    << dat.eos.get("pr",j) << std::endl;
-	  }
-	  O2SCL_ERR("Baryon integral not finite.",o2scl::exc_efailed);
-	}
-	dat.eos.set("iigb",i,val);
-      }
-    }
-
-    // Compute normalization constant
-    double Anb=nb_n1/exp(dat.eos.interp("ed",nb_e1,"iigb"));
-    if (!std::isfinite(Anb) || Anb<0.0) {
-      scr_out << "Baryon density normalization problem." << std::endl;
-      ret=ix_nb_problem;
-      return;
-    }
-
-    // Now compute baryon density
-
-    dat.eos.new_column("nb");
-    dat.eos.set_unit("nb","1/fm^3");
-
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {      
-
-      // If the density is too low, then just use zero baryon density.
-      // This pressure (10^{-5} fm^{-4}) corresponds to a baryon 
-      // density of about 3e-3 fm^{-3}.
-
-      if (set->use_crust==false && dat.eos.get("pr",i)<1.0e-5) {
-
-	dat.eos.set("nb",i,0.0);
-
-      } else {
-	
-	double nbt=Anb*exp(dat.eos.get("iigb",i));
-	if (!std::isfinite(nbt)) {
-	  scr_out << "Baryon density normalization problem (2)."
-		  << std::endl;
-	  ret=ix_nb_problem2;
-	  return;
-	} 
-	dat.eos.set("nb",i,nbt);
-      }
-    }
     
     // End of loop 'if (has_eos && baryon_density && 
     // !dat.eos.is_column("nb")) {' 
