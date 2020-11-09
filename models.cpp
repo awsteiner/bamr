@@ -88,7 +88,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
-  bool new_derivative=false
+  bool new_derivative=false;
 
   if (has_eos) {
     
