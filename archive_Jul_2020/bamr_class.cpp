@@ -33,6 +33,12 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
+int bamr_class::fill_emu(const ubvector &pars, double weight, 
+         std::vector<double> &line, model_data &dat) {
+
+  return o2scl::success;
+}
+
 int bamr_class::fill(const ubvector &pars, double weight, 
 		     std::vector<double> &line, model_data &dat) {
 
@@ -271,6 +277,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   }
   
   return mod->compute_point(pars,scr_out,weight,dat);
+}
+
+int bamr_class::compute_point_emu(const ubvector &pars, std::ofstream &scr_out, 
+            double &weight, model_data &dat) {
+  
+  return mod->compute_point_emu(pars,scr_out,weight,dat);
 }
 
 void create_pointers(void *&bcp2,

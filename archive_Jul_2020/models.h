@@ -188,6 +188,9 @@ namespace bamr {
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &weight, model_data &dat);
 
+    virtual int compute_point_emu(const ubvector &pars, std::ofstream &scr_out, 
+            double &weight, model_data &dat);
+
     /** \brief Specify the initial point
      */
     virtual void initial_point(ubvector &pars) {

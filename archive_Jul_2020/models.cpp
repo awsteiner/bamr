@@ -797,6 +797,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   return;
 }
 
+int model::compute_point_emu(const ubvector &pars, std::ofstream &scr_out, 
+       double &log_weight, model_data &dat) {
+
+  int iret=ix_success;
+  
+  return o2scl::success;
+}
+
 int model::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			 double &log_weight, model_data &dat) {
 

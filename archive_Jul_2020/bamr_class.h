@@ -93,12 +93,18 @@ namespace bamr {
     */
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &weight, model_data &dat);
+
+    virtual int compute_point_emu(const ubvector &pars, std::ofstream &scr_out, 
+            double &weight, model_data &dat);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
 	current Monte Carlo point
     */
     virtual int fill(const ubvector &pars, double weight, 
 		      std::vector<double> &line, model_data &dat);
+
+    virtual int fill_emu(const ubvector &pars, double weight, 
+          std::vector<double> &line, model_data &dat);
     
   };
 

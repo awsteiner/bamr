@@ -110,6 +110,99 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   return;
 }
 
+int mcmc_bamr::mcmc_init_emu() {
+
+  if (this->verbose>=2) {
+    std::cout << "(rank " << this->mpi_rank
+        << ") Start mcmc_bamr::mcmc_init()." << std::endl;
+  }
+
+  if (bc_arr.size()<1) {
+    O2SCL_ERR("Object bc_arr invalid.",o2scl::exc_esanity);
+  }
+  model &m=*(bc_arr[0]->mod);
+  
+  // This ensures enough space for all the
+  // default return values in models.h
+  this->ret_value_counts.resize(this->n_threads);
+  for(size_t it=0;it<this->n_threads;it++) {
+    this->ret_value_counts[it].resize(21);
+  }
+
+  // Copy parameter values to all of the model objects
+  for(size_t i=1;i<bc_arr.size();i++) {
+    model &m2=*(bc_arr[i]->mod);
+    m.copy_params(m2);
+  }
+  
+  mcmc_para_cli::mcmc_init();
+
+  // -----------------------------------------------------------
+  // Make sure the settings are consistent
+
+  // Does inc_baryon_mass also need baryon_density?
+  if (set->inc_baryon_mass && !set->baryon_density) {
+    scr_out << "Cannot use inc_baryon_mass=true with "
+      << "baryon_density=false." << endl;
+    return exc_efailed;
+  }
+  if (set->compute_cthick && (!set->baryon_density || !set->use_crust)) {
+    scr_out << "Cannot use compute_cthick=true with "
+      << "baryon_density=false or use_crust=false." << endl;
+    return exc_efailed;
+  }
+  if (set->crust_from_L && (!m.has_esym || !set->use_crust ||
+         !set->baryon_density)) {
+    scr_out << "crust_from_L: " << set->crust_from_L << std::endl;
+    scr_out << "has_esym: " << m.has_esym << std::endl;
+    scr_out << "use_crust: " << set->use_crust << std::endl;
+    scr_out << "baryon_density: " << set->baryon_density << std::endl;
+    scr_out << "Cannot use crust_from_L=true with a model which does not "
+      << "provide S and L\nor with use_crust=false or with "
+      << "baryon_density=false." << endl;
+    return exc_efailed;
+  }
+  if (set->addl_quants && !set->inc_baryon_mass) {
+    scr_out << "Cannot do additional quantities without including "
+      << "baryon mass." << endl;
+    return exc_efailed;
+  }
+
+  // -----------------------------------------------------------
+  // Make grids
+
+  for(size_t i=0;i<n_threads;i++) {
+    bc_arr[i]->mod->nb_grid=uniform_grid_end<double>
+      (set->nb_low,set->nb_high,set->grid_size-1);
+    bc_arr[i]->mod->e_grid=uniform_grid_end<double>
+      (set->e_low,set->e_high,set->grid_size-1);
+    bc_arr[i]->mod->m_grid=uniform_grid_end<double>
+      (set->m_low,set->m_high,set->grid_size-1);
+  }
+
+  // -----------------------------------------------------------
+  // Load data
+
+  nsd->load_mc(this->scr_out,mpi_size,mpi_rank,set);
+
+  // -----------------------------------------------------------
+  // Prepare data objects
+
+  for(size_t i=0;i<data_arr.size();i++) {
+    data_arr[i].rad.resize(nsd->n_sources);
+    data_arr[i].mass.resize(nsd->n_sources);
+    data_arr[i].wgts.resize(nsd->n_sources);
+  }
+
+  if (this->verbose>=2) {
+    std::cout << "(rank " << this->mpi_rank
+        << ") End mcmc_bamr::mcmc_init()." << std::endl;
+  }
+
+  return 0;
+}
+
+
 int mcmc_bamr::mcmc_init() {
 
   if (this->verbose>=2) {

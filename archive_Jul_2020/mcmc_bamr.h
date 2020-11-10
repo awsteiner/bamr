@@ -151,6 +151,8 @@ namespace bamr {
     */
     virtual int mcmc_init();
 
+    virtual int mcmc_init_emu();
+
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
