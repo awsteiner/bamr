@@ -100,6 +100,22 @@ namespace bamr {
     /// TOV solver
     o2scl::tov_solve ts;
     
+    /// TOV solver for M_max derivative;
+    o2scl::tov_solve ts_a;
+    o2scl::tov_solve ts_b;
+
+    /// model data for M_max derivative
+    model_data dat_a;
+    model_data dat_b;
+
+    /// teos for M_max derivative
+    o2scl::eos_tov_interp teos_a;
+    o2scl::eos_tov_interp teos_b;
+
+    double h;
+    double prt_a;
+    double prt_b;
+
     /// Schwarzchild radius (set in constructor)
     double schwarz_km;
 
@@ -120,6 +136,11 @@ namespace bamr {
     */
     virtual void compute_eos(const ubvector &pars, int &success,
 			     std::ofstream &scr_out, model_data &dat) {
+      return;
+    }
+
+    virtual void compute_eos2(const ubvector &pars, int &success,
+           std::ofstream &scr_out, model_data &dat_a, model_data &dat_b, double &h) {
       return;
     }
 

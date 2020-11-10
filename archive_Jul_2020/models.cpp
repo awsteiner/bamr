@@ -92,7 +92,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // ---------------------------------------------------------------
     // Compute the EOS
-
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
@@ -298,6 +297,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	  ts.pr_list.clear();
 	}
 	ts.pr_list.push_back(prt);
+	prt_a = prt;
+	prt_b=prt;
 
 	// Set the crust and it's transition pressure
       
@@ -347,6 +348,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	  ts.pr_list.clear();
 	}
 	ts.pr_list.push_back(prt);
+	prt_a=prt;
+	prt_b=prt;
 	
       }
     
@@ -518,6 +521,88 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
+    // Compute the M_max derivative
+    if(set->verbose>=2){
+    	cout << "bamr::models : compute dat_a and dat_b." << endl;
+    }
+    compute_eos2(pars,ret,scr_out,dat_a, dat_b, h);
+
+    double m_max_a=0.0;
+    double m_max_b=0.0;
+
+    table_units<> &teos_temp_a=dat_a.eos;
+    if (set->baryon_density && set->inc_baryon_mass) {
+      dat_a.eos.set_unit("ed","1/fm^4");
+      dat_a.eos.set_unit("pr","1/fm^4");
+      dat_a.eos.set_unit("nb","1/fm^3");
+      teos_a.read_table(teos_temp_a,"ed","pr","nb");
+    } else {
+      dat_a.eos.set_unit("ed","1/fm^4");
+      dat_a.eos.set_unit("pr","1/fm^4");
+      teos_a.read_table(teos_temp_a,"ed","pr");
+    }
+
+    table_units<> &teos_temp_b=dat_b.eos;
+    if (set->baryon_density && set->inc_baryon_mass) {
+      dat_b.eos.set_unit("ed","1/fm^4");
+      dat_b.eos.set_unit("pr","1/fm^4");
+      dat_b.eos.set_unit("nb","1/fm^3");
+      teos_b.read_table(teos_temp_b,"ed","pr","nb");
+    } else {
+      dat_b.eos.set_unit("ed","1/fm^4");
+      dat_b.eos.set_unit("pr","1/fm^4");
+      teos_b.read_table(teos_temp_b,"ed","pr");
+    }
+
+    ts_a.verbose=0;
+    ts_a.set_units("1/fm^4","1/fm^4","1/fm^3");
+    ts_a.err_nonconv=false;
+    ts_a.set_eos(teos_a);
+
+    ts_b.verbose=0;
+    ts_b.set_units("1/fm^4","1/fm^4","1/fm^3");
+    ts_b.err_nonconv=false;
+    ts_b.set_eos(teos_b);
+
+    ts_a.pr_list.push_back(prt_a);
+    ts_b.pr_list.push_back(prt_b);
+
+    ts_a.princ=set->mvsr_pr_inc;
+    ts_b.princ=set->mvsr_pr_inc;
+
+    // Clear old M-R table (new for MCMC para)
+
+    if (set->addl_quants) {
+      ts_a.ang_vel=false;
+      ts_a.calc_gpot=false;
+      ts_b.ang_vel=false;
+      ts_b.calc_gpot=false;
+    } else {
+      ts_a.ang_vel=false;
+      ts_a.calc_gpot=false;
+      ts_b.ang_vel=false;
+      ts_b.calc_gpot=false;
+    }
+    int info_a=ts_a.mvsr();
+    int info_b=ts_b.mvsr();
+    
+    dat_a.mvsr=*(ts_a.get_results());
+    dat_b.mvsr=*(ts_b.get_results());
+
+    dat_a.mvsr.set_interp_type(o2scl::itp_linear);
+    dat_b.mvsr.set_interp_type(o2scl::itp_linear);
+
+    m_max_a=dat_a.mvsr.max("gm");
+    m_max_b=dat_b.mvsr.max("gm");
+
+    double dm_max =(m_max_b - m_max_a)/(2*h);
+
+    if (set->verbose>=2){
+    	std::cout << "M_max derivative : " << dm_max << std::endl;
+    }
+	dat.eos.add_constant("dm_max", dm_max);
+
+
     // ---------------------------------------------------------------
     // If the EOS is sufficiently stiff, the TOV solver will output
     // gibberish, i.e. masses and radii equal to zero, especially at
@@ -648,6 +733,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // -----------------------------------------------------------------
   // Check causality. Note that we have to do this after the rows for
   // the unstable branch have been removed from the mass-radius table.
+
+  //new column for speed of sound
   
   if (has_eos) {
     
