@@ -281,7 +281,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
 int bamr_class::compute_point_emu(const ubvector &pars, std::ofstream &scr_out, 
             double &weight, model_data &dat) {
-  
+
   return mod->compute_point_emu(pars,scr_out,weight,dat);
 }
 
