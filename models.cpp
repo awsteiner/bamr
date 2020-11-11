@@ -108,9 +108,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the maximum mass
 
       // Check the speed of sound
-      
-      pars[x]*=1.001;
-      compute_eos(pars,ret,scr_out,dat);
+
+      ubvector pars2=pars;
+      pars2[0]*=1.001;
+      compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
       // Call read_table()
