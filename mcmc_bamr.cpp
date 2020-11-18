@@ -792,7 +792,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
     // Copy trained method to bint classes
     for(size_t i=0;i<n_threads;i++){
-      bint_class &bc=dynamic_cast<bint_class &>(*(bc_arr[i]));
+      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
 
       // copy pyobject to bint class
       bc.emu_train=emu_train;
