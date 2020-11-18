@@ -593,8 +593,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat_b.mvsr.set_interp_type(o2scl::itp_linear);
 
     m_max_a=dat_a.mvsr.max("gm");
+    if(m_max_a<set->min_max_mass){
+      ret=ix_small_max;
+      return;
+    }
     m_max_b=dat_b.mvsr.max("gm");
-
+    if(m_max_b<set->min_max_mass){
+      ret=ix_small_max;
+      return;
+    }
     double dm_max =(m_max_b - m_max_a)/(2*h);
 
     if (set->verbose>=2){
