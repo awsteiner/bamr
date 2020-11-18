@@ -44,6 +44,71 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]->nsd=nsd;
 }
 
+int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
+  
+  Py_Initialize();
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString("sys.path.append('./')");
+
+  // Todo: check to see if threading really works
+  PyEval_InitThreads();
+  Py_DECREF(PyImport_ImportModule("threading"));
+
+  // train and test file names
+  string train_file = file_name;
+  string test_file = "test_data";
+
+  // Import python module
+  train_modFile = PyImport_ImportModule("emu");
+  if (train_modFile == NULL) {
+    PyErr_Print();
+    std::exit(1);
+  }
+
+  // Copy parameter names to python module
+  train_tParam_Names =PyList_New(names.size());
+  for(size_t i=0; i<names.size(); i++){
+    PyList_SetItem(train_tParam_Names, i, 
+    	PyUnicode_FromString(names[i].c_str()));
+  }
+
+  // Python class object
+  train_trainClass = PyObject_GetAttrString(train_modFile, "modGpr");
+  assert(train_trainClass != NULL);
+
+  // Pyhton function to execute
+  // train_trainMthd = PyObject_GetAttrString(train_trainClass, "modTrain");
+
+  if(PyCallable_Check(train_trainClass)){
+    train_instance = PyObject_CallObject(train_trainClass, NULL);
+  }
+  assert(train_instance != NULL);
+
+  if(nsd->n_sources == 0 && !apply_intsc){
+  	addtl_sources = PyLong_FromSize_t(0);
+  }
+  if(nsd->n_sources>0 && !apply_intsc){
+  	addtl_sources = PyLong_FromSize_t(nsd->n_sources);
+  }
+  if(nsd->n_sources>0 && apply_intsc){
+  	addtl_sources = PyLong_FromSize_t(nsd->n_sources);
+  } 
+
+  // Python arguments for the callable function
+  train_pArgs = PyTuple_Pack(4, 
+			     PyUnicode_FromString(train_file.c_str()),
+			     train_tParam_Names, train_tParam_Names,
+			     addtl_sources);
+
+  train_trainMthd = PyObject_GetAttrString(train_instance, "modTrain");
+  // Call Python function and copy predicted list
+  if (PyCallable_Check(train_trainMthd)) {
+    PyObject_CallObject(train_trainMthd, train_pArgs);
+  }
+
+  return 0;
+}
+
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
   if (sv.size()==1) {
@@ -714,9 +779,43 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
+  
+  if (apply_emu) {
+  	cout << "Applying train function." << endl;
+
+    // train the module
+    int pinfo = train(emu_train, names);
+    if(pinfo != 0){
+      cout << "Training Failed. " << endl;
+      exit(-1);
+    }
+
+    // Copy trained method to bint classes
+    for(size_t i=0;i<n_threads;i++){
+      bint_class &bc=dynamic_cast<bint_class &>(*(bc_arr[i]));
+
+      // copy pyobject to bint class
+      bc.emu_train=emu_train;
+      bc.train_modFile=train_modFile;
+      bc.train_trainClass=train_trainClass;
+      bc.train_instance=train_instance;
+      bc.train_trainMthd=train_trainMthd;
+      bc.train_tParam_Names=train_tParam_Names;
+      bc.addtl_sources=addtl_sources;
+    }
+
+    // Delete unnecessary PyObjects
+    Py_DECREF(train_modFile);
+    Py_DECREF(train_instance);
+    Py_DECREF(train_trainClass);
+  }
 
   // Perform the MCMC simulation
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
+  
+  if(apply_emu){
+  	Py_Finalize();
+  }
   
   return 0;
 }

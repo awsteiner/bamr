@@ -30,6 +30,8 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
+#include <Python.h>
+
 #ifdef BAMR_MPI
 #include <mpi.h>
 #endif
@@ -65,6 +67,35 @@ namespace bamr {
   class bamr_class {
     
   public:
+
+    PyObject *train_modFile;
+    PyObject *train_tParam_Names;
+    PyObject *train_trainClass;
+    PyObject *train_instance;
+    PyObject *train_trainMthd;
+    PyObject *train_pArgs;
+    PyObject *addtl_sources;
+    PyObject *train_res;
+    PyObject *train_pTemp;
+    PyObject *train_temp;
+    PyObject *test_show;
+    PyObject *test_vals;
+    PyObject *target_cols;
+    PyObject *target_pred;
+
+    /** \brief If true, include emulator from sklearn
+     */
+    bool apply_emu;
+
+    /** \brief If true, use index2 to take derivative of M_max
+     */
+    bool dv_index2;
+
+    /** \brief Train file name for python emulator
+     */
+    std::string emu_train;    
+
+    bool py_train;
 
     void setup_filters();
     
