@@ -106,19 +106,36 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // First TOV solve here
       ts.mvsr()
       // Check the maximum mass
-      //
+      // double m_max = 0.0;
+      // dat.mvsr=*(ts.get_results());
+      m_max=dat.mvsr.max("gm");
+      dat.mvsr.add_constant("M_max",m_max);
+      if (m_max<set->min_max_mass) {
+        scr_out << "Maximum mass too small: " << m_max << " < "
+	      << set->min_max_mass << "." << std::endl;
+        ret=ix_small_max;
+        return;
+      }
       // Check the speed of sound
-      
-      pars[x]*=1.001;
-      compute_eos(pars,ret,scr_out,dat);
+     
+      ubvector pars2 = pars;   
+      pars2[0]*=1.001;
+      compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
       // Call read_table()
-      
+      teos.read_table(teos_temp, "ed", "pr", "nb")        
       // Second TOV solve here
-
+      ts.mvsr()
       // Check the maximum mass
-      
+      m_max=dat.mvsr.max("gm");
+      dat.mvsr.add_constant("M_max",m_max);
+      if (m_max<set->min_max_mass) {
+        scr_out << "Maximum mass too small: " << m_max << " < "
+	      << set->min_max_mass << "." << std::endl;
+        ret=ix_small_max;
+        return;
+    }
       // Check the speed of sound
       
     }
