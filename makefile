@@ -67,6 +67,17 @@ PYTHON_LDFLAGS = $(UTKNA_PYTHON_LDFLAGS)
 endif
 
 # ----------------------------------------------------------------------
+# If not using UTK makefile
+# ----------------------------------------------------------------------
+
+# configure the makefile.inc file to include proper FLAGS
+
+ifndef UTKNA_MAKEFILE
+include ./makefile.inc
+endif
+
+
+# ----------------------------------------------------------------------
 # Secondary variables
 # ----------------------------------------------------------------------
 
