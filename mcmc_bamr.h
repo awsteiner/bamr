@@ -111,10 +111,6 @@ namespace bamr {
 
   protected:
 
-     /** \brief If true, include emulator from sklearn
-     */
-    bool apply_emu;
-
     /** \brief If true, use index2 to take derivative of M_max
      */
     bool dv_index2;
@@ -136,8 +132,6 @@ namespace bamr {
 
     bool py_train;
 
-    bool apply_intsc;
-    
     int train(std::string file_name, std::vector<std::string> &names);
 
   /// A string indicating which model is used, set in \ref set_model().

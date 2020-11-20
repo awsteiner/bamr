@@ -111,6 +111,8 @@ namespace bamr {
     o2scl::cli::parameter_bool p_prior_eta;
     o2scl::cli::parameter_bool p_prior_delm;
     o2scl::cli::parameter_string p_data_dir;
+    o2scl::cli::parameter_bool p_apply_emu;
+    o2scl::cli::parameter_bool p_couple_threads;
     //@}
 
     /// Verbosity parameter
@@ -199,6 +201,12 @@ namespace bamr {
     */
     bool crust_from_L;
     int mass_switch;
+
+    /** \brief If true, include emulator from sklearn
+     */
+    bool apply_emu;
+    
+    bool couple_threads;
     //@}
 
     /** \brief If true, use the eta prior
@@ -411,6 +419,14 @@ namespace bamr {
       p_data_dir.help="help";
       cl.par_list.insert(std::make_pair("data_dir",&p_data_dir));
       
+      p_couple_threads.b=&couple_threads;
+      p_couple_threads.help="help";
+      cl.par_list.insert(std::make_pair("couple_threads",&p_couple_threads));
+      
+      p_apply_emu.b=&apply_emu;
+      p_apply_emu.help="Activate emulator";
+      cl.par_list.insert(std::make_pair("apply_emu",&p_apply_emu));
+
       return;
     }
     
