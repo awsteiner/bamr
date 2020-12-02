@@ -61,6 +61,8 @@ MPI_CXX = $(UTKNA_MPI_CXX)
 BAMR_DIR = $(UTKNA_BAMR_DIR)
 COMPILER_FLAGS = $(UTKNA_CFLAGS)
 COMPILER_FLAGS_MPI = $(UTKNA_MPI_CFLAGS)
+PYTHON_INC_DIR = $(UTKNA_PYTHON_INC_DIR)
+PYTHON_LDFLAGS = $(UTKNA_PYTHON_LDFLAGS)
 
 endif
 
@@ -69,11 +71,14 @@ endif
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_MPI_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	$(FFTW_VAR) -DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp 
+	$(FFTW_VAR) -DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
+	-I$(PYTHON_INC_DIR)
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR)
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
+	-I$(PYTHON_INC_DIR)
 
-LIBS = -lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
+LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
+	-lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
 	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
 	$(FFTW_LIB)
 

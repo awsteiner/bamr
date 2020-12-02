@@ -34,6 +34,8 @@
 #include <mpi.h>
 #endif
 
+#include <Python.h>
+
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
 
@@ -109,7 +111,30 @@ namespace bamr {
 
   protected:
 
-    /// A string indicating which model is used, set in \ref set_model().
+    /** \brief If true, use index2 to take derivative of M_max
+     */
+    bool dv_index2;
+
+    /** \brief Train file name for python emulator
+     */
+    std::string emu_train;
+
+    PyObject *train_modFile;
+    PyObject *train_tParam_Names;
+    PyObject *train_trainClass;
+    PyObject *train_instance;
+    PyObject *train_trainMthd;
+    PyObject *train_pArgs;
+    PyObject *addtl_sources;
+    PyObject *train_res;
+    PyObject *train_pTemp;
+    PyObject *train_temp;
+
+    bool py_train;
+
+    int train(std::string file_name, std::vector<std::string> &names);
+
+  /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP

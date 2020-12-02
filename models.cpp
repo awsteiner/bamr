@@ -103,11 +103,18 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       table_units<> &teos_temp=dat.eos;
       
       // Call read_table()
+<<<<<<< HEAD
       teos.read_table(teos_temp, "ed", "pr", "nb");
       
       // First TOV solve here
       ts.mvsr();
       
+=======
+      table_units<> &teos_temp=dat.eos;
+      teos.read_table(teos_temp, "ed", "pr", "nb");
+      // First TOV solve here
+      ts.mvsr();
+>>>>>>> c632f80c04310f161fd9f2318f81888b90b25908
       // Check the maximum mass
       double m_max = 0.0;
       dat.mvsr=*(ts.get_results());
@@ -134,9 +141,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       if (ret!=ix_success) return;
 
       // Call read_table()
-      teos.read_table(teos_temp, "ed", "pr", "nb")        
+      teos.read_table(teos_temp, "ed", "pr", "nb");
       // Second TOV solve here
-      ts.mvsr()
+      ts.mvsr();
       // Check the maximum mass
       m_max=dat.mvsr.max("gm");
     }

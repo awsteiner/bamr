@@ -44,6 +44,71 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]->nsd=nsd;
 }
 
+int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
+  
+  Py_Initialize();
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString("sys.path.append('./')");
+
+  // Todo: check to see if threading really works
+  PyEval_InitThreads();
+  Py_DECREF(PyImport_ImportModule("threading"));
+
+  // train and test file names
+  string train_file = file_name;
+  string test_file = "test_data";
+
+  // Import python module
+  train_modFile = PyImport_ImportModule("emu");
+  if (train_modFile == NULL) {
+    PyErr_Print();
+    std::exit(1);
+  }
+
+  // Copy parameter names to python module
+  train_tParam_Names =PyList_New(names.size());
+  for(size_t i=0; i<names.size(); i++){
+    PyList_SetItem(train_tParam_Names, i, 
+		   PyUnicode_FromString(names[i].c_str()));
+  }
+
+  // Python class object
+  train_trainClass = PyObject_GetAttrString(train_modFile, "modGpr");
+  assert(train_trainClass != NULL);
+
+  // Pyhton function to execute
+  // train_trainMthd = PyObject_GetAttrString(train_trainClass, "modTrain");
+
+  if(PyCallable_Check(train_trainClass)){
+    train_instance = PyObject_CallObject(train_trainClass, NULL);
+  }
+  assert(train_instance != NULL);
+
+  if(nsd->n_sources == 0 && !set->apply_intsc){
+    addtl_sources = PyLong_FromSize_t(0);
+  }
+  if(nsd->n_sources>0 && !set->apply_intsc){
+    addtl_sources = PyLong_FromSize_t(nsd->n_sources);
+  }
+  if(nsd->n_sources>0 && set->apply_intsc){
+    addtl_sources = PyLong_FromSize_t(nsd->n_sources);
+  } 
+
+  // Python arguments for the callable function
+  train_pArgs = PyTuple_Pack(4, 
+			     PyUnicode_FromString(train_file.c_str()),
+			     train_tParam_Names, train_tParam_Names,
+			     addtl_sources);
+
+  train_trainMthd = PyObject_GetAttrString(train_instance, "modTrain");
+  // Call Python function and copy predicted list
+  if (PyCallable_Check(train_trainMthd)) {
+    PyObject_CallObject(train_trainMthd, train_pArgs);
+  }
+
+  return 0;
+}
+
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
   if (sv.size()==1) {
@@ -153,7 +218,7 @@ int mcmc_bamr::mcmc_init() {
     return exc_efailed;
   }
   if (set->crust_from_L && (!m.has_esym || !set->use_crust ||
-			   !set->baryon_density)) {
+			    !set->baryon_density)) {
     scr_out << "crust_from_L: " << set->crust_from_L << std::endl;
     scr_out << "has_esym: " << m.has_esym << std::endl;
     scr_out << "use_crust: " << set->use_crust << std::endl;
@@ -176,7 +241,7 @@ int mcmc_bamr::mcmc_init() {
     this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
     if (!set->norm_max) {
       this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
-			  "1/km/Msun");
+			    "1/km/Msun");
     }
   }
   
@@ -187,31 +252,31 @@ int mcmc_bamr::mcmc_init() {
   for(size_t i=0;i<nsd->n_sources;i++) {
     this->table->new_column(((std::string)"Rns_")+nsd->source_names[i]);
     this->table->set_unit(((std::string)"Rns_")+nsd->source_names[i],
-			"km");
+			  "km");
   }
   
   for(size_t i=0;i<nsd->n_sources;i++) {
     this->table->new_column(((std::string)"Mns_")+nsd->source_names[i]);
     this->table->set_unit(((std::string)"Mns_")+nsd->source_names[i],
-			"Msun");
+			  "Msun");
   }
   
   if (m.has_eos) {
     for(int i=0;i<set->grid_size;i++) {
       this->table->new_column(((string)"P_")+o2scl::itos(i));
       this->table->set_unit(((string)"P_")+o2scl::itos(i),
-			  "1/fm^4");
+			    "1/fm^4");
     }
   }
   
   for(int i=0;i<set->grid_size;i++) {
     this->table->new_column(((string)"R_")+o2scl::itos(i));
     this->table->set_unit(((string)"R_")+o2scl::itos(i),
-			"km");
+			  "km");
     if (m.has_eos) {
       this->table->new_column(((string)"PM_")+o2scl::itos(i));
       this->table->set_unit(((string)"PM_")+o2scl::itos(i),
-			  "1/fm^4");
+			    "1/fm^4");
     }
   }
   if (m.has_eos) {
@@ -219,10 +284,10 @@ int mcmc_bamr::mcmc_init() {
       for(int i=0;i<set->grid_size;i++) {
 	this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
 	this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
-			    "1/fm^4");
+			      "1/fm^4");
 	this->table->new_column(((string)"EoA_")+o2scl::itos(i));
 	this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
-			    "MeV");
+			      "MeV");
       }
     }
     if (m.has_esym) {
@@ -246,7 +311,7 @@ int mcmc_bamr::mcmc_init() {
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((string)"ce_")+nsd->source_names[i]);
       this->table->set_unit(((string)"ce_")+nsd->source_names[i],
-			  "1/fm^4");
+			    "1/fm^4");
     }
     if (set->baryon_density) {
       for(size_t i=0;i<nsd->n_sources;i++) {
@@ -564,7 +629,7 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
 }
 
 int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
-				 bool itive_com) {
+				    bool itive_com) {
 
   O2SCL_ERR("Not implemented yet.",o2scl::exc_eunimpl);
   
@@ -714,9 +779,43 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
+  
+  if (set->apply_emu) {
+    cout << "Applying train function." << endl;
+
+    // train the module
+    int pinfo = train(emu_train, names);
+    if(pinfo != 0){
+      cout << "Training Failed. " << endl;
+      exit(-1);
+    }
+
+    // Copy trained method to bint classes
+    for(size_t i=0;i<n_threads;i++){
+      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+
+      // copy pyobject to bint class
+      bc.emu_train=emu_train;
+      bc.train_modFile=train_modFile;
+      bc.train_trainClass=train_trainClass;
+      bc.train_instance=train_instance;
+      bc.train_trainMthd=train_trainMthd;
+      bc.train_tParam_Names=train_tParam_Names;
+      bc.addtl_sources=addtl_sources;
+    }
+
+    // Delete unnecessary PyObjects
+    Py_DECREF(train_modFile);
+    Py_DECREF(train_instance);
+    Py_DECREF(train_trainClass);
+  }
 
   // Perform the MCMC simulation
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
+  
+  if (set->apply_emu) {
+    Py_Finalize();
+  }
   
   return 0;
 }
@@ -741,61 +840,64 @@ void mcmc_bamr::setup_cli_mb() {
   // Set options
     
   static const int nopt=8;
-  comm_option_s options[nopt]={
-    {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-     0,0,"",((std::string)"This is the main part of ")+
-     "the code which performs the simulation. Make sure to set the "+
-     "model first using the 'model' command first.",
-     new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc_func),
-     o2scl::cli::comm_option_both},
-    {'o',"model","Choose model.",
-     1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
-     "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
-     "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
-     "model must be chosen before a MCMC run.",
-     new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
-     cli::comm_option_both},
-    {0,"threads","Specify number of OpenMP threads",
-     1,1,"<number>","",
-     new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
-     cli::comm_option_both},
-    {'a',"add-data","Add data source to the list.",
-     4,5,"<name> <file> <slice> <initial mass> [obj name]",
-     ((string)"Specify data as a table3d object in a HDF5 file. ")+
-     "The string <name> is the name used, <file> is the filename, "+
-     "<slice> is the name of the slice in the table3d object, "+
-     "<initial mass> is the initial mass for the first point, and "+
-     "[obj name] is the optional name of table3d object in <file>. "+
-     "If [obj name] is not specified, then the first table3d object "+
-     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data),
-     cli::comm_option_both},
-    {0,"add-data-alt","Add data source to the list.",
-     5,6,"<name> <file> <alt file> <slice> <initial mass> [obj name]",
-     ((string)"Specify data as a table3d object in two HDF5 files. ")+
-     "The string <name> is the name used, <file> and <alt file> are "+
-     "the filenames, "+
-     "<slice> is the name of the slice in the table3d object, "+
-     "<initial mass> is the initial mass for the first point, and "+
-     "[obj name] is the optional name of table3d object in <file>. "+
-     "If [obj name] is not specified, then the first table3d object "+
-     "is used.",new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::add_data_alt),
-     cli::comm_option_both},
-    {0,"initial-point-last","Set initial point from file.",1,1,
-     "<filename>","Long. desc.",
-     new o2scl::comm_option_mfptr<mcmc_bamr>
-     (this,&mcmc_bamr::initial_point_last),
-     o2scl::cli::comm_option_both},
-    {0,"initial-point-best","Set initial point from file.",1,1,
-     "<filename>","Long. desc.",
-     new o2scl::comm_option_mfptr<mcmc_bamr>
-     (this,&mcmc_bamr::initial_point_best),
-     o2scl::cli::comm_option_both},
-    {0,"read-prev-results","Read previous results from file (unfinished).",
-     1,1,"<filename>","Long. desc.",
-     new o2scl::comm_option_mfptr<mcmc_bamr>
-     (this,&mcmc_bamr::read_prev_results_mb),
-     o2scl::cli::comm_option_both}
-  };
+  comm_option_s options[nopt]=
+    {
+     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
+      0,0,"",((std::string)"This is the main part of ")+
+      "the code which performs the simulation. Make sure to set the "+
+      "model first using the 'model' command first.",
+      new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc_func),
+      o2scl::cli::comm_option_both},
+     {'o',"model","Choose model.",
+      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
+      "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
+      "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
+      "model must be chosen before a MCMC run.",
+      new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
+      cli::comm_option_both},
+     {0,"threads","Specify number of OpenMP threads",
+      1,1,"<number>","",
+      new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
+      cli::comm_option_both},
+     {'a',"add-data","Add data source to the list.",
+      4,5,"<name> <file> <slice> <initial mass> [obj name]",
+      ((string)"Specify data as a table3d object in a HDF5 file. ")+
+      "The string <name> is the name used, <file> is the filename, "+
+      "<slice> is the name of the slice in the table3d object, "+
+      "<initial mass> is the initial mass for the first point, and "+
+      "[obj name] is the optional name of table3d object in <file>. "+
+      "If [obj name] is not specified, then the first table3d object "+
+      "is used.",new comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::add_data),
+      cli::comm_option_both},
+     {0,"add-data-alt","Add data source to the list.",
+      5,6,"<name> <file> <alt file> <slice> <initial mass> [obj name]",
+      ((string)"Specify data as a table3d object in two HDF5 files. ")+
+      "The string <name> is the name used, <file> and <alt file> are "+
+      "the filenames, "+
+      "<slice> is the name of the slice in the table3d object, "+
+      "<initial mass> is the initial mass for the first point, and "+
+      "[obj name] is the optional name of table3d object in <file>. "+
+      "If [obj name] is not specified, then the first table3d object "+
+      "is used.",new comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::add_data_alt),
+      cli::comm_option_both},
+     {0,"initial-point-last","Set initial point from file.",1,1,
+      "<filename>","Long. desc.",
+      new o2scl::comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::initial_point_last),
+      o2scl::cli::comm_option_both},
+     {0,"initial-point-best","Set initial point from file.",1,1,
+      "<filename>","Long. desc.",
+      new o2scl::comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::initial_point_best),
+      o2scl::cli::comm_option_both},
+     {0,"read-prev-results","Read previous results from file (unfinished).",
+      1,1,"<filename>","Long. desc.",
+      new o2scl::comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::read_prev_results_mb),
+      o2scl::cli::comm_option_both}
+    };
   cl.set_comm_option_vec(nopt,options);
 
   // --------------------------------------------------------
