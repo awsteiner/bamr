@@ -100,21 +100,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Sarah's section
     if (new_derivative) {
-      table_units<> &teos_temp=dat.eos;
       
       // Call read_table()
-<<<<<<< HEAD
-      teos.read_table(teos_temp, "ed", "pr", "nb");
-      
-      // First TOV solve here
-      ts.mvsr();
-      
-=======
       table_units<> &teos_temp=dat.eos;
       teos.read_table(teos_temp, "ed", "pr", "nb");
       // First TOV solve here
       ts.mvsr();
->>>>>>> c632f80c04310f161fd9f2318f81888b90b25908
       // Check the maximum mass
       double m_max = 0.0;
       dat.mvsr=*(ts.get_results());
