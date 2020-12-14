@@ -555,4 +555,5 @@ compare:
 		-model tews_threep_ligo \
 		-set prior_eta 1 \
 		-mcmc
-		acol -read compare_0_out -get-row 0 > compare.txt
+
+#		acol -read compare_0_out -get-row 0 > compare.txt
