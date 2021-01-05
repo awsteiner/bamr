@@ -123,7 +123,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the speed of sound, cs2 > one - if so reject that point
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	//for i in range(0, len("cs2")){
 	if (dat.eos.get("cs2",i)>1.0) {
 	  ret=ix_acausal;
 	  return;
@@ -137,9 +136,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.mvsr=*(ts.get_results());
       //c_ed = dat.mvsr(ed[col = col[m_max]])
      
-      // Try using dat.mvsr.summary() to output the properties
-      // of the dat.mvsr table.
-      //dat.mvsr.summary(out)
+      dat.eos.summary(&cout);
+      dat.mvsr.summary(&cout);
 
       ubvector pars2 = pars;   
       pars2[0]*=1.001;
