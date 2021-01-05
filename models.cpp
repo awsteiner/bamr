@@ -88,7 +88,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
-  bool new_derivative=false;
+  bool new_derivative=true;
 
   if (has_eos) {
     
@@ -109,9 +109,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.mvsr();
       
       // Check the maximum mass
-      double m_max = 0.0;
       dat.mvsr=*(ts.get_results());
-      m_max=dat.mvsr.max("gm");
+      double m_max=dat.mvsr.max("gm");
       
       if (m_max<set->min_max_mass) {
 	scr_out << "Maximum mass too small: " << m_max << " < "
@@ -120,30 +119,41 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	return;
       }
       
-      // Check the speed of sound, cs2 > one - if so reject that point
-      dat.eos.deriv("ed","pr","cs2");
-      for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	if (dat.eos.get("cs2",i)>1.0) {
-	  ret=ix_acausal;
-	  return;
-	}
-	
-      }	
-      
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed = 0.0;
       dat.mvsr=*(ts.get_results());
-      //c_ed = dat.mvsr(ed[col = col[m_max]])
-     
+      
       dat.eos.summary(&cout);
       dat.mvsr.summary(&cout);
+
+      size_t row=dat.mvsr.lookup("gm", m_max);
+      dat.mvsr.get("ed",row);
+      
+      // Check the speed of sound, cs2 > one - if so reject that point
+      dat.eos.deriv("ed","pr","cs2");
+      for (size_t i=0;i<dat.eos.get_nlines();i++) {
+	if(dat.eos.get("ed",i) > dat.mvsr.get("ed", row)){
+	   return;
+	}
+	else{
+	   if (dat.eos.get("cs2",i)>1.0) {
+	     cout << "Here4" << endl;
+	     ret=ix_acausal;
+	     return;
+	}
+	}
+      }	
+      
+      exit(-1);
+      //c_ed = dat.mvsr(ed[col = col[m_max]])
+      
 
       ubvector pars2 = pars;   
       pars2[0]*=1.001;
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
-
+      
       // Call read_table()
       teos.read_table(teos_temp, "ed", "pr", "nb");
       // Second TOV solve here
@@ -151,7 +161,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
       m_max=dat.mvsr.max("gm");
-
+      
       if (m_max<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max << " < "
                 << set->min_max_mass << "." << std::endl;
@@ -167,7 +177,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           ret=ix_acausal;
           return;
         }
+      }
 
+      // End of Sarah's section
     }
     
     // Ensure we're using linear interpolation
