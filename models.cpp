@@ -133,7 +133,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the speed of sound, cs2 > one - if so reject that point
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	if(dat.eos.get("ed",i) > dat.mvsr.get("ed", row)){
+	if(dat.mvsr.get("ed",i) > dat.mvsr.get("ed", row)){
 	   return;
 	}
 	else{
