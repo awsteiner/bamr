@@ -112,6 +112,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.mvsr=*(ts.get_results());
       double m_max=dat.mvsr.max("gm");
       
+      cout << "Here1" << endl;
+      
       if (m_max<set->min_max_mass) {
 	scr_out << "Maximum mass too small: " << m_max << " < "
 		<< set->min_max_mass << "." << std::endl;
@@ -124,8 +126,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       double c_ed = 0.0;
       dat.mvsr=*(ts.get_results());
       
+      cout << "here2" << endl;
+
       dat.eos.summary(&cout);
       dat.mvsr.summary(&cout);
+      
+      cout << "here3" << endl;
 
       size_t row=dat.mvsr.lookup("gm", m_max);
       dat.mvsr.get("ed",row);
@@ -141,11 +147,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	     cout << "Here4" << endl;
 	     ret=ix_acausal;
 	     return;
-	}
+	   }
 	}
       }	
       
-      exit(-1);
+      
       //c_ed = dat.mvsr(ed[col = col[m_max]])
       
 
@@ -168,16 +174,38 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-      
+	
+      // Here: Find the central energy density of the maximum
+      // mass star, it's in dat.mvsr
+      double c_ed = 0.0;
+      dat.mvsr=*(ts.get_results());
+
+      cout << "here2" << endl;
+
+      dat.eos.summary(&cout);
+      dat.mvsr.summary(&cout);
+
+      cout << "here3" << endl;
+
+      size_t row=dat.mvsr.lookup("gm", m_max);
+      dat.mvsr.get("ed",row); 
+
+
       // Check the speed of sound
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-        //for i in range(0, len("cs2")){
-        if (dat.eos.get("cs2",i)>1.0) {
-          ret=ix_acausal;
-          return;
+        if(dat.mvsr.get("ed",i) > dat.mvsr.get("ed", row)){
+           return;
+        }
+        else{
+           if (dat.eos.get("cs2",i)>1.0) {
+             cout << "Here4" << endl;
+             ret=ix_acausal;
+             return;
+           }
         }
       }
+
 
       // End of Sarah's section
     }
