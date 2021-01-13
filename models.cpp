@@ -124,7 +124,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed = 0.0;
-      dat.mvsr=*(ts.get_results());
+
+      // unnecessary
+      //dat.mvsr=*(ts.get_results());
       
       cout << "here2" << endl;
 
@@ -134,20 +136,18 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       cout << "here3" << endl;
 
       size_t row=dat.mvsr.lookup("gm", m_max);
-      dat.mvsr.get("ed",row);
+      c_ed=dat.mvsr.get("ed",row);
+      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
       
       // Check the speed of sound, cs2 > one - if so reject that point
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	if(dat.mvsr.get("ed",i) > dat.mvsr.get("ed", row)){
-	   return;
-	}
-	else{
-	   if (dat.eos.get("cs2",i)>1.0) {
-	     cout << "Here4" << endl;
-	     ret=ix_acausal;
-	     return;
-	   }
+	if (dat.mvsr.get("ed",i) < c_ed) {
+          if (dat.eos.get("cs2",i)>1.0) {
+            cout << "Here4" << endl;
+            ret=ix_acausal;
+            return;
+          }
 	}
       }	
       
@@ -174,6 +174,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
+<<<<<<< HEAD
 	
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
@@ -188,6 +189,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       dat.mvsr.get("ed",row); 
 
+=======
+
+      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
+      
+>>>>>>> 60949e44227c121a0313898dab0e72c1d42be900
       // Check the speed of sound
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {

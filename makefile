@@ -500,7 +500,7 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib
 
 compare:
-	bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
+	bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set prefix compare -set max_iters 1 \
 		-set n_walk 120 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
