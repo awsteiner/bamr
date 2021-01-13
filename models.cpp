@@ -177,7 +177,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
-      double c_ed = 0.0;
       dat.mvsr=*(ts.get_results());
 
       cout << "here2" << endl;
@@ -187,9 +186,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       cout << "here3" << endl;
 
-      size_t row=dat.mvsr.lookup("gm", m_max);
       dat.mvsr.get("ed",row); 
-
 
       // Check the speed of sound
       dat.eos.deriv("ed","pr","cs2");
