@@ -139,7 +139,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the speed of sound, cs2 > one - if so reject that point
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	if (dat.mvsr.get("ed",i) < c_ed) {
+	if (dat.eos.get("ed",i) < c_ed) {
           if (dat.eos.get("cs2",i)>1.0) {
             cout << "Here4" << endl;
             ret=ix_acausal;
@@ -147,7 +147,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
 	}
       }	
-              
+      cout << "Check" << endl;        
       ubvector pars2 = pars;   
       pars2[0]*=1.001;
       compute_eos(pars2,ret,scr_out,dat);
@@ -175,7 +175,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-        if(dat.mvsr.get("ed",i) < c_ed){
+        if(dat.eos.get("ed",i) < c_ed){
            if (dat.eos.get("cs2",i)>1.0) {
              cout << "Here4" << endl;
              ret=ix_acausal;
