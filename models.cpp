@@ -169,12 +169,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       // Check the speed of sound
+      row=dat.mvsr.lookup("gm", m_max);
+      c_ed=dat.mvsr.get("ed",row);
+      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
+
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-        if(dat.mvsr.get("ed",i) > dat.mvsr.get("ed", row)){
-           return;
-        }
-        else{
+        if(dat.mvsr.get("ed",i) < c_ed){
            if (dat.eos.get("cs2",i)>1.0) {
              cout << "Here4" << endl;
              ret=ix_acausal;
