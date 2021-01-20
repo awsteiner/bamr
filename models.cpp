@@ -124,10 +124,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed = 0.0;
-
-      // unnecessary
-      //dat.mvsr=*(ts.get_results());
-      
+   
       cout << "here2" << endl;
 
       dat.eos.summary(&cout);
@@ -162,6 +159,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Call read_table()
       teos.read_table(teos_temp, "ed", "pr", "nb");
+      
       // Second TOV solve here
       ts.mvsr();
       // Check the maximum mass
@@ -174,26 +172,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-<<<<<<< HEAD
-	
-      // Here: Find the central energy density of the maximum
-      // mass star, it's in dat.mvsr
-      dat.mvsr=*(ts.get_results());
-
-      cout << "here2" << endl;
-
-      dat.eos.summary(&cout);
-      dat.mvsr.summary(&cout);
-
-      cout << "here3" << endl;
-
-      dat.mvsr.get("ed",row); 
-
-=======
-
-      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
-      
->>>>>>> 60949e44227c121a0313898dab0e72c1d42be900
       // Check the speed of sound
       dat.eos.deriv("ed","pr","cs2");
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
