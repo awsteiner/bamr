@@ -147,11 +147,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
 	}
       }	
-      
-      
-      //c_ed = dat.mvsr(ed[col = col[m_max]])
-      
-
+              
       ubvector pars2 = pars;   
       pars2[0]*=1.001;
       compute_eos(pars2,ret,scr_out,dat);
