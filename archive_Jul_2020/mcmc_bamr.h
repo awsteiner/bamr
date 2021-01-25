@@ -180,6 +180,11 @@ namespace bamr {
      */
     virtual int initial_point_best(std::vector<std::string> &sv,
 				   bool itive_com);
+
+        /** \brief Test initial point from emulated file
+     */
+    virtual int emu_init(std::vector<std::string> &sv,
+           bool itive_com);
     
     /** \brief Read previous results from a file
      */
