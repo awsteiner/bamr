@@ -234,6 +234,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 			      double &log_wgt, model_data &dat) {
 
   if (set->apply_emu) {
+
+    cout << "Applying emulator." << endl;
     
     // create vector for emulator prediction
     ubvector test_pars;
@@ -242,42 +244,40 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     test_pars = pars;
     
     // update emulator parameter vector with H or He alt values
-    if(nsd->n_sources>0){
+    if(nsd->n_sources>0) {
+      
       test_pars.resize(pars.size()+nsd->n_sources);
       
       for(size_t i=0; i<pars.size(); i++){
-        test_pars[i]=pars[i];
+        test_pars[i] = pars[i];
       }
       
       for(size_t i=0; i<nsd->n_sources; i++){
-	double mass=dat.sourcet.get("M",i);
-        double alt=mass*1.0e8-((double)((int)(mass*1.0e8)));
-        if (alt<2/3){
+        double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
+        if(alt<2/3){
           test_pars[pars.size()+i] = 0;
         } else {
           test_pars[pars.size()+i] = 1;
         }
       }
     }
-    
+
     // Create new pylist from param_vals
     test_vals = PyList_New(test_pars.size());
     for(size_t i=0; i<test_pars.size(); i++){
       PyList_SetItem(test_vals, i, PyFloat_FromDouble(test_pars[i]));
     }
-    
+
     /* 
        As a test, call emu.py:modGpr:show().
     */
-    
+
     if (PyCallable_Check(train_trainMthd)) {
-      target_pred = PyObject_CallObject
-	(train_trainMthd,
-	 PyTuple_Pack(4,
-		      PyUnicode_FromString(set->emu_train.c_str()),
-		      train_tParam_Names, test_vals, addtl_sources));
+      target_pred = PyObject_CallObject(train_trainMthd, 
+        PyTuple_Pack(4, PyUnicode_FromString(emu_train.c_str()),
+          train_tParam_Names, test_vals, addtl_sources));
     }
-    
+
     // Finally, set the value of log_wgt equal to the value returned
     // by the python emulator
     
@@ -296,35 +296,30 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     ubvector preds;
     preds.resize(PyList_Size(target_pred));
     
-    for(long int i=0; i < PyList_Size(target_pred); i++) {
+    for(size_t i=0; i < PyList_Size(target_pred); i++){
       PyObject *pTarget = PyList_GetItem(target_pred, i);
       preds[i] = PyFloat_AsDouble(pTarget);
     }
     
     log_wgt = preds[0];
-    
     /*
-      cout << "Emulated log_wgt by rank "<< mpi_rank
+    cout << "Emulated log_wgt by rank "<< mpi_rank
       <<" and thread "<< pthread <<
       " : " << log_wgt << endl;
     */
-    
-    double pred_Mmax=preds[2];
-    int iret=0;
-    if(pred_Mmax<2.0) {
+
+    double pred_Mmax = preds[2];
+    if(pred_Mmax < 2.0){
       iret=1;
     }
 
-    // Check speed of sound causal limit
-    for (size_t i=0;i<100;i++) {
-      if (preds[preds.size()-(i+1)]>1) {
+
+    // Check Speed of sound causal limit
+    for(size_t i=0; i<100; i++){
+      if(preds[preds.size()-(i+1)] > 1){
         iret=1;
       }
     }
-    
-    // apply_emu section is done.
-    dat.eos.zero_table();
-    dat.mvsr.zero_table();
 
     return iret;
   }

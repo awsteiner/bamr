@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   cout.setf(ios::scientific);
 
   // Set error handler for this thread
-  o2scl::err_hnd_cpp error_handler;
+  o2scl::err_hnd_gsl error_handler;
   o2scl::err_hnd=&error_handler;
   
 #ifdef BAMR_MPI

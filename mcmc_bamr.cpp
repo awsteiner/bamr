@@ -45,6 +45,8 @@ mcmc_bamr::mcmc_bamr() {
 }
 
 int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
+
+  cout << "Here1." << endl;
   
   Py_Initialize();
   PyRun_SimpleString("import sys");
@@ -795,7 +797,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
 
       // copy pyobject to bint class
-      bc.emu_train=emu_train;
+      //bc.emu_train=emu_train;
       bc.train_modFile=train_modFile;
       bc.train_trainClass=train_trainClass;
       bc.train_instance=train_instance;
