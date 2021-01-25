@@ -274,7 +274,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       target_pred = PyObject_CallObject
 	(train_trainMthd,
 	 PyTuple_Pack(4,
-		      PyUnicode_FromString(emu_train.c_str()),
+		      PyUnicode_FromString(set->emu_train.c_str()),
 		      train_tParam_Names, test_vals, addtl_sources));
     }
     

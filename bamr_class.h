@@ -85,7 +85,7 @@ namespace bamr {
 
     /** \brief If true, include emulator from sklearn
      */
-    bool apply_emu;
+    //bool apply_emu;
 
     /** \brief If true, use index2 to take derivative of M_max
      */
@@ -93,7 +93,7 @@ namespace bamr {
 
     /** \brief Train file name for python emulator
      */
-    std::string emu_train;    
+    //std::string emu_train;    
 
     bool py_train;
 

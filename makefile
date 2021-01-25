@@ -557,3 +557,16 @@ compare:
 		-mcmc
 
 #		acol -read compare_0_out -get-row 0 > compare.txt
+
+test_emu:
+	./bamr_nompi -threads 1 -set n_walk 50 \
+		-set aff_inv 1 -set step_fac 2.0 -set max_time 864000 \
+		-set prefix py_threep_nodata \
+		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
+		-set crust_from_L 0 -set compute_cthick 1 \
+		-set file_update_time 30 -set verbose 2 -set mcmc_verbose 1 \
+		-model tews_threep_ligo \
+		-set apply_emu 1 \
+		-set emu_train emu_test/nodata_dpde_test \
+		-set prior_eta 1 \
+		-mcmc 

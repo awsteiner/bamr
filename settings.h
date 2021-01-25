@@ -76,6 +76,8 @@ namespace bamr {
       crust_from_L=false;
       mpi_load_debug=false;
       data_dir="data";
+      apply_emu=false;
+      emu_train="";
     }
     
     /// \name Parameter objects for the 'set' command
@@ -113,6 +115,7 @@ namespace bamr {
     o2scl::cli::parameter_string p_data_dir;
     o2scl::cli::parameter_bool p_apply_emu;
     o2scl::cli::parameter_bool p_couple_threads;
+    o2scl::cli::parameter_string p_emu_train;
     //@}
 
     /// Verbosity parameter
@@ -205,6 +208,10 @@ namespace bamr {
     /** \brief If true, include emulator from sklearn
      */
     bool apply_emu;
+
+    /** \brief Desc
+     */
+    std::string emu_train;
     
     bool couple_threads;
     //@}
@@ -427,6 +434,10 @@ namespace bamr {
       p_apply_emu.help="Activate emulator";
       cl.par_list.insert(std::make_pair("apply_emu",&p_apply_emu));
 
+      p_emu_train.str=&emu_train;
+      p_emu_train.help="help";
+      cl.par_list.insert(std::make_pair("emu_train",&p_emu_train));
+      
       return;
     }
     

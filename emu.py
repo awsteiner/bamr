@@ -141,6 +141,7 @@ class modGpr:
             Y_train = Y_train.transpose()
 
             print("PyModule : Training array : ", X_train.shape)
+            print("PyModule : Target array : ", Y_train.shape)
 
             print("PyModule : Training GPR model.")
             kernel = 1.0 * RBF(1)
