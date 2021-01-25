@@ -94,7 +94,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
 		     std::vector<double> &line, model_data &dat) {
 
   if (set->apply_emu) return 0;
-  
+  else{
   for(size_t i=0;i<nsd->n_sources;i++) {
     line.push_back(dat.sourcet.get("wgt",i));
   }
@@ -226,12 +226,16 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.eos.get_constant("delta_m"));
     }
   }
+	}  
+
   
   return o2scl::success;
 }
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &log_wgt, model_data &dat) {
+
+	int iret;
 
   if (set->apply_emu) {
 
@@ -251,13 +255,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       for(size_t i=0; i<pars.size(); i++){
         test_pars[i] = pars[i];
       }
-      
-      for(size_t i=0; i<nsd->n_sources; i++){
-        double alt=dat.mass[i]*1.0e8-((double)((int)(dat.mass[i]*1.0e8)));
+	/* 
+		MCMC paprmeter vector contains moddel params and $mf_$'s
+		from the sources. We calculate "alt" values from the $mf_$'s
+		and pass the additional alt values to the "emy.py". "emu.py"
+		was trained with "alt" columns with the mcmc_params. To 
+		emulate a point we need to update the "alt" values.
+	*/      
+    for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
+        double alt=pars[i]*1.0e8-((double)((int)(pars[i]*1.0e8)));
         if(alt<2/3){
-          test_pars[pars.size()+i] = 0;
+          test_pars[pars.size()] = 0;
         } else {
-          test_pars[pars.size()+i] = 1;
+          test_pars[pars.size()] = 1;
         }
       }
     }
@@ -272,9 +282,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
        As a test, call emu.py:modGpr:show().
     */
 
+    cout << "emu_train file : "<< set->emu_train << endl;
+
     if (PyCallable_Check(train_trainMthd)) {
       target_pred = PyObject_CallObject(train_trainMthd, 
-        PyTuple_Pack(4, PyUnicode_FromString(emu_train.c_str()),
+        PyTuple_Pack(4, PyUnicode_FromString(set->emu_train.c_str()),
           train_tParam_Names, test_vals, addtl_sources));
     }
 
@@ -324,8 +336,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     return iret;
   }
   
+  else{
   // Compute the M vs R curve and return a non-zero value if it failed
-  int iret;
   mod->compute_star(pars,scr_out,iret,dat);
   if (iret!=0) {
     log_wgt=0.0;
@@ -340,6 +352,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   // are out of range
   
   for(size_t i=0;i<nsd->n_sources;i++) {
+  	cout << "Here1" << endl;
     double mass=dat.sourcet.get("M",i);
     double rad=dat.sourcet.get("R",i);
     if (mass<set->in_m_min || mass>set->in_m_max || 
@@ -1410,6 +1423,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	
       }
     }
+  }
   }
 
   return 0;
