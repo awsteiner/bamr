@@ -94,6 +94,7 @@ class modGpr:
             print("PyModule : Parameter names :", self.params)
             print("PyModule : Parameter names :", self.target_cols)
 
+
             # Read train file
             train_file = h5py.File(hdf_file, 'r')
 
@@ -156,7 +157,7 @@ class modGpr:
 
         # If trained model is avaiable, predictions from given parameter values
         else:
-            #print("PyModule : GPR model already exist.\t")
+            #print("PyModule : GPR model already exist.")
             # normalize initial parameter values
             norm_init_vals = np.array([])
 

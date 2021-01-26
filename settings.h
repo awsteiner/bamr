@@ -77,7 +77,7 @@ namespace bamr {
       mpi_load_debug=false;
       data_dir="data";
       apply_emu=false;
-      emu_train="";
+      //emu_train="";
     }
     
     /// \name Parameter objects for the 'set' command

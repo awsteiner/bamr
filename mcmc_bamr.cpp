@@ -236,14 +236,14 @@ int mcmc_bamr::mcmc_init() {
     return exc_efailed;
   }
 
-  // -----------------------------------------------------------
+      // -----------------------------------------------------------
   // Add columns to table
 
   for(size_t i=0;i<nsd->n_sources;i++) {
     this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
     if (!set->norm_max) {
       this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
-			    "1/km/Msun");
+          "1/km/Msun");
     }
   }
   
@@ -254,42 +254,42 @@ int mcmc_bamr::mcmc_init() {
   for(size_t i=0;i<nsd->n_sources;i++) {
     this->table->new_column(((std::string)"Rns_")+nsd->source_names[i]);
     this->table->set_unit(((std::string)"Rns_")+nsd->source_names[i],
-			  "km");
+        "km");
   }
   
   for(size_t i=0;i<nsd->n_sources;i++) {
     this->table->new_column(((std::string)"Mns_")+nsd->source_names[i]);
     this->table->set_unit(((std::string)"Mns_")+nsd->source_names[i],
-			  "Msun");
+        "Msun");
   }
   
   if (m.has_eos) {
     for(int i=0;i<set->grid_size;i++) {
       this->table->new_column(((string)"P_")+o2scl::itos(i));
       this->table->set_unit(((string)"P_")+o2scl::itos(i),
-			    "1/fm^4");
+          "1/fm^4");
     }
   }
   
   for(int i=0;i<set->grid_size;i++) {
     this->table->new_column(((string)"R_")+o2scl::itos(i));
     this->table->set_unit(((string)"R_")+o2scl::itos(i),
-			  "km");
+        "km");
     if (m.has_eos) {
       this->table->new_column(((string)"PM_")+o2scl::itos(i));
       this->table->set_unit(((string)"PM_")+o2scl::itos(i),
-			    "1/fm^4");
+          "1/fm^4");
     }
   }
   if (m.has_eos) {
     if (set->baryon_density) {
       for(int i=0;i<set->grid_size;i++) {
-	this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
-	this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
-			      "1/fm^4");
-	this->table->new_column(((string)"EoA_")+o2scl::itos(i));
-	this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
-			      "MeV");
+  this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
+  this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
+            "1/fm^4");
+  this->table->new_column(((string)"EoA_")+o2scl::itos(i));
+  this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
+            "MeV");
       }
     }
     if (m.has_esym) {
@@ -313,13 +313,13 @@ int mcmc_bamr::mcmc_init() {
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((string)"ce_")+nsd->source_names[i]);
       this->table->set_unit(((string)"ce_")+nsd->source_names[i],
-			    "1/fm^4");
+          "1/fm^4");
     }
     if (set->baryon_density) {
       for(size_t i=0;i<nsd->n_sources;i++) {
-	this->table->new_column(((string)"cnb_")+nsd->source_names[i]);
-	this->table->set_unit(((string)"cnb_")+nsd->source_names[i],
-			      "1/fm^3");
+  this->table->new_column(((string)"cnb_")+nsd->source_names[i]);
+  this->table->set_unit(((string)"cnb_")+nsd->source_names[i],
+            "1/fm^3");
       }
       this->table->new_column("gm_nb1");
       this->table->set_unit("gm_nb1","Msun");
@@ -362,7 +362,7 @@ int mcmc_bamr::mcmc_init() {
 
       this->table->new_column(((string)"I_")+o2scl::itos(i));
       this->table->set_unit(((string)"I_")+o2scl::itos(i),
-			    "Msun*km^2");
+          "Msun*km^2");
       this->table->new_column(((string)"I_bar_")+o2scl::itos(i));
       
       this->table->new_column(((string)"Lambda_bar_")+o2scl::itos(i));
@@ -786,7 +786,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "Applying train function." << endl;
 
     // train the module
-    int pinfo = train(emu_train, names);
+    int pinfo = train(set->emu_train, names);
     if(pinfo != 0){
       cout << "Training Failed. " << endl;
       exit(-1);

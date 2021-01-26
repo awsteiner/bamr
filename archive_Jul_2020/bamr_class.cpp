@@ -51,6 +51,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   if (m.has_eos) {
 
     // The central energy density in the maximum mass configuration
+    cout << "bamr_class: check emax." << endl;
     emax=dat.mvsr.max("ed");
     // The central pressure in the maximum mass configuration
     pmax=dat.mvsr.max("pr");
@@ -165,6 +166,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   }
   
   if (set->baryon_density) {
+    cout << "bamr_class:: check gms." << endl;
     line.push_back(dat.mvsr.get_constant("gm_nb1"));
     line.push_back(dat.mvsr.get_constant("r_nb1"));
     line.push_back(dat.mvsr.get_constant("gm_nb2"));
