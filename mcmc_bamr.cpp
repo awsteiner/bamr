@@ -45,8 +45,6 @@ mcmc_bamr::mcmc_bamr() {
 }
 
 int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
-
-  cout << "Here1." << endl;
   
   Py_Initialize();
   PyRun_SimpleString("import sys");
@@ -236,7 +234,9 @@ int mcmc_bamr::mcmc_init() {
     return exc_efailed;
   }
 
-      // -----------------------------------------------------------
+  if(set->apply_emu == false){
+
+         // -----------------------------------------------------------
   // Add columns to table
 
   for(size_t i=0;i<nsd->n_sources;i++) {
@@ -420,6 +420,7 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("q");
       this->table->new_column("delta_m");
     }
+  }
   }
 
   // -----------------------------------------------------------

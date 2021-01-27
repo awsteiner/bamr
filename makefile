@@ -564,7 +564,8 @@ test_emu_nodata:
 		-set prefix test_emu_nodata \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 30 -set verbose 2 -set mcmc_verbose 1 \
+		-set file_update_time 30 -set verbose 1
+		 -set mcmc_verbose 1 \
 		-model tews_threep_ligo \
 		-set apply_emu 1 \
 		-set emu_train emu_test/nodata_dpde_test \
@@ -577,7 +578,7 @@ test_emu:
 		-set prefix test_emu \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 1800 -set verbose 1 -set mcmc_verbose 1 \
+		-set file_update_time 60 -set verbose 1 -set mcmc_verbose 1 \
 		-add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
