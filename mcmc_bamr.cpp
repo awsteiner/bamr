@@ -60,13 +60,14 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
 
   // Import python module
   train_modFile = PyImport_ImportModule("emu");
-  if (train_modFile == NULL) {
+  if (train_modFile == 0) {
     PyErr_Print();
     std::exit(1);
   }
 
-  // Copy parameter names to python module
-  train_tParam_Names =PyList_New(names.size());
+  // Copy parameter names to python module. This does not
+  // currently include the alt_ parameters for the atmosphere
+  train_tParam_Names=PyList_New(names.size());
   for(size_t i=0; i<names.size(); i++){
     PyList_SetItem(train_tParam_Names, i, 
 		   PyUnicode_FromString(names[i].c_str()));
@@ -74,15 +75,13 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
 
   // Python class object
   train_trainClass = PyObject_GetAttrString(train_modFile, "modGpr");
-  assert(train_trainClass != NULL);
+  assert(train_trainClass != 0);
 
-  // Pyhton function to execute
-  // train_trainMthd = PyObject_GetAttrString(train_trainClass, "modTrain");
-
-  if(PyCallable_Check(train_trainClass)){
-    train_instance = PyObject_CallObject(train_trainClass, NULL);
+  // Create an instance of the modGpr class
+  if(PyCallable_Check(train_trainClass)) {
+    train_instance = PyObject_CallObject(train_trainClass, 0);
   }
-  assert(train_instance != NULL);
+  assert(train_instance != 0);
 
   if(nsd->n_sources == 0 && !set->apply_intsc){
     addtl_sources = PyLong_FromSize_t(0);
@@ -94,14 +93,15 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
     addtl_sources = PyLong_FromSize_t(nsd->n_sources);
   } 
 
-  // Python arguments for the callable function
+  // Python arguments for the modGpr::modTrain() function
   train_pArgs = PyTuple_Pack(4, 
 			     PyUnicode_FromString(train_file.c_str()),
 			     train_tParam_Names, train_tParam_Names,
 			     addtl_sources);
 
   train_trainMthd = PyObject_GetAttrString(train_instance, "modTrain");
-  // Call Python function and copy predicted list
+  
+  // Call Python training function
   if (PyCallable_Check(train_trainMthd)) {
     PyObject_CallObject(train_trainMthd, train_pArgs);
   }

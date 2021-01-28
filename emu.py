@@ -29,7 +29,9 @@ def inv_norm(data, d_mean, d_std):
 
 # GPR Class
 class modGpr:
+    
     def __init__(self):
+        
         # Class variable for GPR
         self.gpr = 0
 
@@ -40,7 +42,7 @@ class modGpr:
         self.init_vals = 0
 
         # Class variable for target columns
-        self.target_cols = ['log_wgt', 'R_43', 'M_max']
+        self.target_cols = ['log_wgt', 'R_43', 'M_max', 'e_max']
 
         # additional target column for speed of sound
         for i in range(0, 100):
@@ -64,7 +66,7 @@ class modGpr:
     # PyObject_CallObject does not update the instance.
     # Issue with calling different methods
     '''
-    def show(slef, param_vals):
+    def show(self, param_vals):
         # copy parameter initial values
         init_vals = param_vals
         print("PyMOdule : Parameter values as arguments : ", init_vals)
@@ -72,8 +74,14 @@ class modGpr:
         # print("PyModule : Trained models :", self.gpr)
     '''
 
-    # Training and prediction Method
     def modTrain(self, hdf_file, param_name, param_vals, n_sources):
+        """
+        Train the emulator based on file named `hdf_file` using
+        parameters from the list `param_name` or evaluate the emulator
+        based on the values in `param_vals` presuming the number of
+        sources is `n_sources`.
+        """
+        
         # Update class parameter names
         self.params = param_name
 
@@ -94,7 +102,6 @@ class modGpr:
             print("PyModule : Parameter names :", self.params)
             print("PyModule : Parameter names :", self.target_cols)
 
-
             # Read train file
             train_file = h5py.File(hdf_file, 'r')
 
@@ -103,11 +110,13 @@ class modGpr:
             for i in range(0, len(self.params)):
                 if(i == 0):
                     temp = np.array(
-                        train_file.file["markov_chain_0/data/"+self.params[i]])
+                        train_file.file["markov_chain_0/data/"+
+                                        self.params[i]])
                     X_train = np.array([temp])
                 else:
                     temp = np.array(
-                        train_file.file["markov_chain_0/data/"+self.params[i]])
+                        train_file.file["markov_chain_0/data/"+
+                                        self.params[i]])
                     X_train = np.vstack([X_train, [temp]])
 
             # Read the target columns
@@ -115,11 +124,13 @@ class modGpr:
             for i in range(0, len(self.target_cols)):
                 if(i == 0):
                     temp = np.array(
-                        train_file.file["markov_chain_0/data/"+self.target_cols[i]])
+                        train_file.file["markov_chain_0/data/"+
+                                        self.target_cols[i]])
                     Y_train = np.array([temp])
                 else:
                     temp = np.array(
-                        train_file.file["markov_chain_0/data/"+self.target_cols[i]])
+                        train_file.file["markov_chain_0/data/"+
+                                        self.target_cols[i]])
                     Y_train = np.vstack([Y_train, [temp]])
 
             train_file.close()
@@ -153,24 +164,30 @@ class modGpr:
             # delete training arrays
             del X_train
             del Y_train
+            
             return 0
 
-        # If trained model is avaiable, predictions from given parameter values
+        # If trained model is available, predictions from given
+        # parameter values
         else:
+            
             #print("PyModule : GPR model already exist.")
             # normalize initial parameter values
+            
             norm_init_vals = np.array([])
 
             ##################################################################
-            ##### parameter values from bint class does not contain "alt" values.
-            ##### Need to include those values for other models except nodata
-            ####################################################################
+            # parameter values from bint class does not
+            # contain "alt" values.
+            # Need to include those values for other models except nodata
+            #################################################################
 
             for i in range(0, len(self.init_vals)):
                 temp_mean = self.param_mean_train[self.params[i]]
                 temp_std = self.param_std_train[self.params[i]]
                 norm_init_vals = np.append(norm_init_vals,
-                                           (self.init_vals[i]-temp_mean)/temp_std)
+                                           (self.init_vals[i]-temp_mean)/
+                                           temp_std)
 
             norm_init_vals = norm_init_vals.reshape(1, len(self.params))
             #print("PyModule : normalized parameter values: ", norm_init_vals)
@@ -180,13 +197,16 @@ class modGpr:
 
             re_predicted = []
             for i in range(0, len(self.target_cols)):
-                re_temp = (predicted[0][i] * self.target_std_train[self.target_cols[i]] +
-                    self.target_mean_train[self.target_cols[i]])
+                re_temp = (predicted[0][i] *
+                           self.target_std_train[self.target_cols[i]] +
+                           self.target_mean_train[self.target_cols[i]])
                 re_predicted.append(re_temp)
-            #print("Pymodule : predicted M_max :", re_predicted[2])
-
-            predicted_log_wgt = (predicted[0][0] * self.target_std_train['log_wgt'] +
-             self.target_mean_train['log_wgt'])
+                
+                #print("Pymodule : predicted M_max :", re_predicted[2])
+                
+            predicted_log_wgt = (predicted[0][0] *
+                                 self.target_std_train['log_wgt'] +
+                                 self.target_mean_train['log_wgt'])
             #print(predicted)
 
             return re_predicted

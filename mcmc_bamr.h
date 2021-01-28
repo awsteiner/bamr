@@ -125,16 +125,24 @@ namespace bamr {
     PyObject *train_instance;
     PyObject *train_trainMthd;
     PyObject *train_pArgs;
+
+    /// The number of sources
     PyObject *addtl_sources;
+    
     PyObject *train_res;
     PyObject *train_pTemp;
     PyObject *train_temp;
 
     bool py_train;
 
-    int train(std::string file_name, std::vector<std::string> &names);
+    /** \brief Train the emulator based on data from \c file_name
+        using parameter names listed in \c names.
 
-  /// A string indicating which model is used, set in \ref set_model().
+        This is called in mcmc_bamr::mcmc_func().
+     */
+    int train(std::string file_name, std::vector<std::string> &names);
+    
+    /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
     
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP
