@@ -89,7 +89,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   ret=ix_success;
   bool new_derivative=true;
-
+//if(set->new_flag == true){} - could i just do == false return;
   if (has_eos) {
     
     // ---------------------------------------------------------------
