@@ -97,7 +97,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
-
+    
     // Sarah's section
     if (new_derivative) {
       
@@ -120,7 +120,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
-      
+      //if(model_type ==((string) "tews_threep_ligo")){
+      //	call in index3
+      //	from mcmc_bamr.cpp - get_param_info('index3')
+      //	param = 'index3';
+      //	dxdy = param/m_max;
+      //}
+      //if(model_type = ((string) "tews_fixedp_ligo")){
+      //	call in pres4
+      //	param = 'pres4';
+      //	dxdy = param/m_max
+      //}  no return so code isn't killed, do i need to add 
+      //	an error for different models?
+
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed = 0.0;
@@ -152,7 +164,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       pars2[0]*=1.001;
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
-      
+
+
       // Call read_table()
       teos.read_table(teos_temp, "ed", "pr", "nb");
       
