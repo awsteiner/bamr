@@ -88,8 +88,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
-  bool new_derivative=true;
-//if(set->new_flag == true){} - could i just do == false return;
+//  bool new_derivative=true;
+
   if (has_eos) {
     
     // ---------------------------------------------------------------
@@ -99,7 +99,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (ret!=ix_success) return;
     
     // Sarah's section
-    if (new_derivative) {
+    if (set->new_flag == true) {
       
       // Call read_table()
       table_units<> &teos_temp=dat.eos;
@@ -120,30 +120,23 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
-      //if(model_type ==((string) "tews_threep_ligo")){
-      //	call in index3
-      //	from mcmc_bamr.cpp - get_param_info('index3')
-      //	param = 'index3';
-      //	dxdy = param/m_max;
-      //}
-      //if(model_type = ((string) "tews_fixedp_ligo")){
-      //	call in pres4
-      //	param = 'pres4';
-      //	dxdy = param/m_max
-      //}  no return so code isn't killed, do i need to add 
+      if(model_type ==((string) "tews_threep_ligo")){
+      	index3 = pars[9];
+      	dxdy = (index3[i+1]-index3[i])/(m_max[i+1]-m_max[i]);
+      }
+      if(model_type = ((string) "tews_fixp_ligo")){
+      	pres4 = pars[8];
+      	dxdy = param/m_max
+      }//  no return so code isn't killed, do i need to add 
       //	an error for different models?
 
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed = 0.0;
    
-      cout << "here2" << endl;
-
       dat.eos.summary(&cout);
       dat.mvsr.summary(&cout);
       
-      cout << "here3" << endl;
-
       size_t row=dat.mvsr.lookup("gm", m_max);
       c_ed=dat.mvsr.get("ed",row);
       cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
@@ -159,7 +152,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
 	}
       }	
-      cout << "Check" << endl;        
+              
       ubvector pars2 = pars;   
       pars2[0]*=1.001;
       compute_eos(pars2,ret,scr_out,dat);
@@ -181,6 +174,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
+      if(model_type ==((string) "tews_threep_ligo")){
+        index3 = pars2[9];
+        dxdy = (index3[i+1]-index3[i])/(m_max[i+1]-m_max[i]);
+      }
+      if(model_type = ((string) "tews_fixp_ligo")){
+        pres4 = pars2[8];
+        dxdy = (pres4[i+1]-pres4[i])/(m_max[i+1]-m_max[i]);
+      }
+
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);
       c_ed=dat.mvsr.get("ed",row);
