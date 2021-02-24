@@ -78,7 +78,7 @@ namespace bamr {
       data_dir="data";
       apply_emu=false;
       //emu_train="";
-      //new_flag = false;
+      mmax_deriv = false;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -117,7 +117,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_apply_emu;
     o2scl::cli::parameter_bool p_couple_threads;
     o2scl::cli::parameter_string p_emu_train;
-    o2scl::cli::parameter_bool p_new_flag;
+    o2scl::cli::parameter_bool p_mmax_deriv;
     //@}
 
     /// Verbosity parameter

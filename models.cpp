@@ -99,7 +99,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (ret!=ix_success) return;
     
     // Sarah's section
-    if (set->new_flag == true) {
+    if (set->mmax_deriv == true) {
       
       // Call read_table()
       table_units<> &teos_temp=dat.eos;
@@ -122,13 +122,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
       if(model_type ==((string) "tews_threep_ligo")){
       	index3 = pars[9];
-      	dxdy = (index3[i+1]-index3[i])/(m_max[i+1]-m_max[i]);
+	//m_max1 
+	//index32 = pars[9]*1.001;
+      	//dxdy = (index32 - index3)/(m_max1 - m_max);
       }
       if(model_type = ((string) "tews_fixp_ligo")){
       	pres4 = pars[8];
-      	dxdy = param/m_max
-      }//  no return so code isn't killed, do i need to add 
-      //	an error for different models?
+	//pres42 = pars[8]*1.001;
+      	
+	//dxdy = (pres42 - pres4)/(m_max2 - m_max1)
+      }
 
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
@@ -166,7 +169,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.mvsr();
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
-      m_max=dat.mvsr.max("gm");
+      m_max2=dat.mvsr.max("gm");
       
       if (m_max<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max << " < "
@@ -175,12 +178,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       if(model_type ==((string) "tews_threep_ligo")){
-        index3 = pars2[9];
-        dxdy = (index3[i+1]-index3[i])/(m_max[i+1]-m_max[i]);
+        index32 = pars2[9];
+        dxdy = (index32 - index3)/(m_max2 - m_max);
       }
       if(model_type = ((string) "tews_fixp_ligo")){
-        pres4 = pars2[8];
-        dxdy = (pres4[i+1]-pres4[i])/(m_max[i+1]-m_max[i]);
+        pres42 = pars2[8];
+        dxdy = (pres42 - pres4)/(m_max2 - m_max);
       }
 
       // Check the speed of sound
