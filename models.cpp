@@ -121,17 +121,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	return;
       }
       if(model_type ==((string) "tews_threep_ligo")){
-      	index3 = pars[9];
-	//m_max1 
-	//index32 = pars[9]*1.001;
-      	//dxdy = (index32 - index3)/(m_max1 - m_max);
-      }
+      	double index3 = pars[8];
+	}
       if(model_type = ((string) "tews_fixp_ligo")){
-      	pres4 = pars[8];
-	//pres42 = pars[8]*1.001;
-      	
-	//dxdy = (pres42 - pres4)/(m_max2 - m_max1)
-      }
+      	double pres4 = pars[7];
+      	}
 
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
@@ -157,7 +151,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }	
               
       ubvector pars2 = pars;   
-      pars2[0]*=1.001;
+       if(model_type ==((string) "tews_threep_ligo")){
+        //double index32 = pars2[8];
+        pars2[8]*=1.001;
+       }
+      if(model_type = ((string) "tews_fixp_ligo")){
+        //double pres42 = pars2[7];
+       pars2[7]*=1.001; 
+      }
+
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
@@ -178,12 +180,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       if(model_type ==((string) "tews_threep_ligo")){
-        index32 = pars2[9];
-        dxdy = (index32 - index3)/(m_max2 - m_max);
+        dxdy = (pars2[8] - index3)/(m_max2 - m_max);
       }
       if(model_type = ((string) "tews_fixp_ligo")){
-        pres42 = pars2[8];
-        dxdy = (pres42 - pres4)/(m_max2 - m_max);
+        dxdy = (pars2[7] - pres4)/(m_max2 - m_max);
       }
 
       // Check the speed of sound
