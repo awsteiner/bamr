@@ -88,8 +88,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
-//  bool new_derivative=true;
-
+  
   if (has_eos) {
     
     // ---------------------------------------------------------------
@@ -120,6 +119,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
+      // AWS: declare index3 and pres4 here
       if(model_type ==((string) "tews_threep_ligo")){
       	double index3 = pars[8];
 	}
@@ -151,6 +151,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }	
               
       ubvector pars2 = pars;   
+
        if(model_type ==((string) "tews_threep_ligo")){
         //double index32 = pars2[8];
         pars2[8]*=1.001;
@@ -171,6 +172,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.mvsr();
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+      // AWS: add declaration
       m_max2=dat.mvsr.max("gm");
       
       if (m_max<set->min_max_mass) {
