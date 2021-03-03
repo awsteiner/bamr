@@ -119,10 +119,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
-      if(model_type ==((string) "tews_threep_ligo")){
+      if (this->n_eos_params==12) {
+        //if(model_type ==((string) "tews_threep_ligo")){
       	//double index3 = pars[8];
 	}
-      if(model_type = ((string) "tews_fixp_ligo")){
+      if (this->n_eos_params==11) {
+        //if(model_type = ((string) "tews_fixp_ligo")){
       	//double pres4 = pars[7];
       	}
 
@@ -151,10 +153,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
               
       ubvector pars2 = pars;   
 
-       if(model_type ==((string) "tews_threep_ligo")){
+      if (this->n_eos_params==12) {
+        //if(model_type ==((string) "tews_threep_ligo")){
         pars2[8]*=1.001;
        }
-      if(model_type = ((string) "tews_fixp_ligo")){
+      if (this->n_eos_params==11) {
+        //if(model_type = ((string) "tews_fixp_ligo")){
        pars2[7]*=1.001; 
       }
 
@@ -177,12 +181,21 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-      if(model_type ==((string) "tews_threep_ligo")){
-        double dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
+      double dxdy;
+      if (this->n_eos_params==12) {
+        //if(model_type ==((string) "tews_threep_ligo")){
+        dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
+        cout << pars2[8] << " " <<  pars[8] << " " 
+             << m_max2 << " " <<  m_max << endl;
       }
-      if(model_type = ((string) "tews_fixp_ligo")){
-        double dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
+      if (this->n_eos_params==11) {
+        //if(model_type = ((string) "tews_fixp_ligo")){
+        dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
+        cout << pars2[7] << " " <<  pars[7] << " " 
+             << m_max2 << " " <<  m_max << endl;
       }
+      cout << "Here: " << dxdy << endl;
+      exit(-1);
 
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);

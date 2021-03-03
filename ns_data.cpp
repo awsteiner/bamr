@@ -103,7 +103,8 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	if (table_names[file].length()>0) {
 	  hdf_input(hf,source_tables[file],table_names[file]);
 	} else {
-	  hdf_input(hf,source_tables[file]);
+          std::string name_temp;
+	  hdf_input(hf,source_tables[file],name_temp);
 	}
 	source_tables[file].set_interp_type(o2scl::itp_linear);
 	hf.close();
@@ -112,9 +113,10 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	  o2scl_hdf::hdf_file hf2;
 	  hf2.open(source_fnames_alt[file]);
 	  if (table_names[file].length()>0) {
-	    hdf_input(hf2,source_tables_alt[file],table_names[file]);
+            hdf_input(hf2,source_tables_alt[file],table_names[file]);
 	  } else {
-	    hdf_input(hf2,source_tables_alt[file]);
+            std::string name_temp;
+	    hdf_input(hf2,source_tables_alt[file],name_temp);
 	  }
 	  source_tables_alt[file].set_interp_type(o2scl::itp_linear);
 	  hf2.close();
@@ -155,7 +157,8 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
       if (table_names[k].length()>0) {
 	hdf_input(hf,source_tables[k],table_names[k]);
       } else {
-	hdf_input(hf,source_tables[k]);
+        std::string name_temp;
+	hdf_input(hf,source_tables[k],name_temp);
       }
       source_tables[k].set_interp_type(o2scl::itp_linear);
       hf.close();
@@ -166,7 +169,8 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	if (table_names[k].length()>0) {
 	  hdf_input(hf2,source_tables_alt[k],table_names[k]);
 	} else {
-	  hdf_input(hf2,source_tables_alt[k]);
+          std::string name_temp;
+          hdf_input(hf2,source_tables_alt[k],name_temp);
 	}
 	source_tables_alt[k].set_interp_type(o2scl::itp_linear);
 	hf2.close();
