@@ -500,7 +500,7 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib
 
 compare:
-	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set prefix compare -set max_iters 1 \
 		-set n_walk 120 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
@@ -554,6 +554,7 @@ compare:
 		-set cached_intsc 1 \
 		-model tews_threep_ligo \
 		-set prior_eta 1 \
+		-set mmax_deriv 1 \
 		-mcmc
 
 #		acol -read compare_0_out -get-row 0 > compare.txt
