@@ -36,7 +36,7 @@ using namespace bamr;
 
 void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 		      std::shared_ptr<settings> set) {
-      
+
   double tot, max;
       
   std::string name;
@@ -104,7 +104,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	  hdf_input(hf,source_tables[file],table_names[file]);
 	} else {
           std::string name_temp;
-	  hdf_input(hf,source_tables[file],name_temp);
+	  hdf_input_n(hf,source_tables[file],name_temp);
 	}
 	source_tables[file].set_interp_type(o2scl::itp_linear);
 	hf.close();
@@ -116,7 +116,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
             hdf_input(hf2,source_tables_alt[file],table_names[file]);
 	  } else {
             std::string name_temp;
-	    hdf_input(hf2,source_tables_alt[file],name_temp);
+	    hdf_input_n(hf2,source_tables_alt[file],name_temp);
 	  }
 	  source_tables_alt[file].set_interp_type(o2scl::itp_linear);
 	  hf2.close();
@@ -158,7 +158,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	hdf_input(hf,source_tables[k],table_names[k]);
       } else {
         std::string name_temp;
-	hdf_input(hf,source_tables[k],name_temp);
+	hdf_input_n(hf,source_tables[k],name_temp);
       }
       source_tables[k].set_interp_type(o2scl::itp_linear);
       hf.close();
@@ -170,7 +170,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	  hdf_input(hf2,source_tables_alt[k],table_names[k]);
 	} else {
           std::string name_temp;
-          hdf_input(hf2,source_tables_alt[k],name_temp);
+          hdf_input_n(hf2,source_tables_alt[k],name_temp);
 	}
 	source_tables_alt[k].set_interp_type(o2scl::itp_linear);
 	hf2.close();
@@ -326,7 +326,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 	  << set->in_m_min << "," << set->in_m_max << ")" << std::endl;
   scr_out << "R limits: ("
 	  << set->in_r_min << "," << set->in_r_max << ")" << std::endl;
-  
+
   return;
 }
   

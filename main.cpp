@@ -54,7 +54,6 @@ int main(int argc, char *argv[]) {
   b.mpi_start_time=time(0);
 #endif
 
-  cout << "1." << endl;
   b.setup_cli_mb();
   
   // Set command-line args
@@ -64,7 +63,6 @@ int main(int argc, char *argv[]) {
   }
 
   b.cl.prompt="bamr> ";
-  cout << "2." << endl;
   b.cl.run_auto(argc,argv);
 
 #ifdef BAMR_MPI

@@ -476,7 +476,9 @@ int mcmc_bamr::mcmc_init() {
       bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
       hfx.open("data/ligo/ligo_tg3_v4.o2");
       std::string name;
-      hdf_input(hfx,bc.ligo_data_table,name);
+      cout << "Here." << endl;
+      hdf_input_n(hfx,bc.ligo_data_table,name);
+      cout << "Here2." << endl;
       hfx.close();
     }
   }

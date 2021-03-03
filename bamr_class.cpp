@@ -1687,7 +1687,7 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
     string fname=setp->data_dir+"/ligo/ligo_tg3_v4.o2";
     hfx.open(fname);
     std::string name;
-    hdf_input(hfx,bcp->ligo_data_table,name);
+    hdf_input_n(hfx,bcp->ligo_data_table,name);
     hfx.close();
   }
 
