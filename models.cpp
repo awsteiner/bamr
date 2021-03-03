@@ -169,7 +169,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.mvsr();
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
-      // AWS: add declaration
       m_max2=dat.mvsr.max("gm");
       
       if (m_max<set->min_max_mass) {
@@ -201,7 +200,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-
+      cout << dat.eos.deriv << exit(-1);
       // End of Sarah's section
     }
     
