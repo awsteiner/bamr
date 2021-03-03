@@ -437,7 +437,10 @@ namespace bamr {
       cl.par_list.insert(std::make_pair("apply_emu",&p_apply_emu));
 
       // AWS: section for mmax_deriv
-      
+      p_mmax_deriv.b=&mmax_deriv;
+      p_mmax_deriv.help="help";
+      cl.par_list.insert(std::make_pair("mmax_deriv",&p_mmax_deriv));
+
       p_emu_train.str=&emu_train;
       p_emu_train.help="help";
       cl.par_list.insert(std::make_pair("emu_train",&p_emu_train));

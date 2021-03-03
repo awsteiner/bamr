@@ -119,12 +119,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
-      // AWS: declare index3 and pres4 here
       if(model_type ==((string) "tews_threep_ligo")){
-      	double index3 = pars[8];
+      	//double index3 = pars[8];
 	}
       if(model_type = ((string) "tews_fixp_ligo")){
-      	double pres4 = pars[7];
+      	//double pres4 = pars[7];
       	}
 
       // Here: Find the central energy density of the maximum
@@ -153,11 +152,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ubvector pars2 = pars;   
 
        if(model_type ==((string) "tews_threep_ligo")){
-        //double index32 = pars2[8];
         pars2[8]*=1.001;
        }
       if(model_type = ((string) "tews_fixp_ligo")){
-        //double pres42 = pars2[7];
        pars2[7]*=1.001; 
       }
 
@@ -182,10 +179,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       if(model_type ==((string) "tews_threep_ligo")){
-        dxdy = (pars2[8] - index3)/(m_max2 - m_max);
+        dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
       }
       if(model_type = ((string) "tews_fixp_ligo")){
-        dxdy = (pars2[7] - pres4)/(m_max2 - m_max);
+        dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
       }
 
       // Check the speed of sound
