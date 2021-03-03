@@ -215,6 +215,8 @@ namespace bamr {
      */
     std::string emu_train;
     
+    bool mmax_deriv;
+
     bool couple_threads;
     //@}
 

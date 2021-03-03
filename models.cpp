@@ -169,7 +169,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.mvsr();
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
-      m_max2=dat.mvsr.max("gm");
+      double m_max2=dat.mvsr.max("gm");
       
       if (m_max<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max << " < "
@@ -178,10 +178,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       if(model_type ==((string) "tews_threep_ligo")){
-        dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
+        double dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
       }
       if(model_type = ((string) "tews_fixp_ligo")){
-        dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
+        double dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
       }
 
       // Check the speed of sound
@@ -200,7 +200,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      cout << dat.eos.deriv << exit(-1);
+      //cout << dat.eos.deriv << exit(-1);
       // End of Sarah's section
     }
     
