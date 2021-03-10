@@ -194,7 +194,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         cout << pars2[7] << " " <<  pars[7] << " " 
              << m_max2 << " " <<  m_max << endl;
       }
-      cout << "Here: " << dxdy << endl;
+      cout << "Here dxdy: " << dxdy << endl;
       exit(-1);
 
       // Check the speed of sound
