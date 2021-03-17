@@ -119,14 +119,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	ret=ix_small_max;
 	return;
       }
-      if (this->n_eos_params==12) {
-        //if(model_type ==((string) "tews_threep_ligo")){
-      	//double index3 = pars[8];
-	}
-      if (this->n_eos_params==11) {
-        //if(model_type = ((string) "tews_fixp_ligo")){
-      	//double pres4 = pars[7];
-      	}
 
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
