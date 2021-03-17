@@ -3091,7 +3091,8 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
     std::string name;
 	
     o2scl_hdf::hdf_file hf;
-    hf.open("thetaANL-1002x12.o2");
+    string fname=s->data_dir+"/thetaANL-1002x12.o2";
+    hf.open(fname);
     hdf_input_n(hf,UNEDF_tab,name);
     hf.close();
   }
