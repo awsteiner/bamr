@@ -187,8 +187,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
              << m_max2 << " " <<  m_max << endl;
       }
       cout << "Here dxdy: " << dxdy << endl;
-      exit(-1);
-
+      
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);
       c_ed=dat.mvsr.get("ed",row);

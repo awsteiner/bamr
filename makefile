@@ -552,10 +552,10 @@ compare:
 		prob 0.7 table3d \
 		-set apply_intsc 1 \
 		-set cached_intsc 1 \
-		-model tews_threep_ligo \
+		-model tews_fixp_ligo \
 		-set prior_eta 1 \
 		-set mmax_deriv 1 \
-		-mcmc
+		-mcmc > mcmc_fixp.out 2>&1 &
 
 #		acol -read compare_0_out -get-row 0 > compare.txt
 
