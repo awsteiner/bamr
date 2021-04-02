@@ -102,7 +102,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Call read_table()
       table_units<> &teos_temp=dat.eos;
+      cout << "H1." << endl;
       teos.read_table(teos_temp, "ed", "pr", "nb");
+      cout << "H2." << endl;
       
       // First TOV solve here
       ts.mvsr();
@@ -159,7 +161,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
 
       // Call read_table()
+      cout << "H3." << endl;
       teos.read_table(teos_temp, "ed", "pr", "nb");
+      cout << "H4." << endl;
       
       // Second TOV solve here
       ts.mvsr();
@@ -376,11 +380,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.eos.set_unit("ed","1/fm^4");
       dat.eos.set_unit("pr","1/fm^4");
       dat.eos.set_unit("nb","1/fm^3");
+      cout << "H5" << endl;
       teos.read_table(teos_temp,"ed","pr","nb");
+      cout << "H6" << endl;
     } else {
       dat.eos.set_unit("ed","1/fm^4");
       dat.eos.set_unit("pr","1/fm^4");
+      cout << "H7" << endl;
       teos.read_table(teos_temp,"ed","pr");
+      cout << "H8" << endl;
     }
 
     // ---------------------------------------------------------------
