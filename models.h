@@ -84,6 +84,7 @@ namespace bamr {
     static const int ix_eos_solve_failed=18;
     static const int ix_trans_invalid=19;
     static const int ix_SL_invalid=20;
+    static const int ix_infinite=21;
     //@}
 
     /// Number of EOS parameters

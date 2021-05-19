@@ -148,11 +148,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ubvector pars2 = pars;   
 
       if (this->n_eos_params==12) {
-        //if(model_type ==((string) "tews_threep_ligo")){
         pars2[8]*=1.001;
        }
       if (this->n_eos_params==11) {
-        //if(model_type = ((string) "tews_fixp_ligo")){
        pars2[7]*=1.001; 
       }
 
@@ -191,7 +189,18 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
              << m_max2 << " " <<  m_max << endl;
       }
       cout << "Here dxdy: " << dxdy << endl;
-      
+      //reject derivative if it's not finite:
+      if(isfinite(dxdy) != 1){
+        ret = ix_infinite;
+     	return;
+      } 
+
+      ofstream myfile;
+      myfile.open ("dxdy_ouput.txt");
+      myfile << dxdy;
+      myfile.close();
+
+
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);
       c_ed=dat.mvsr.get("ed",row);
