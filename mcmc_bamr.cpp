@@ -302,6 +302,9 @@ int mcmc_bamr::mcmc_init() {
     this->table->set_unit("R_max","km");
     this->table->new_column("M_max");
     this->table->set_unit("M_max","Msun");
+    if (set->mmax_deriv) {
+      this->table->new_column("dpdM");
+    }
     this->table->new_column("P_max");
     this->table->set_unit("P_max","1/fm^4");
     this->table->new_column("e_max");

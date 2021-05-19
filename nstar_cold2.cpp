@@ -58,22 +58,28 @@ int nstar_cold2::calc_eos(double np_0) {
   else x=np_0;
 
   thermo hb, h, l;
-  funct sf=std::bind(std::mem_fn<double(double, thermo &)>
-		     (&nstar_cold2::solve_fun),
-		     this,std::placeholders::_1,std::ref(hb));
-
   bool success=true, n1_set=false;
-  double y;
 
-  for(barn=nb_start;barn<=nb_end+dnb/10.0;barn+=dnb) {
+  ubvector ux(1);
+  ux[0]=x;
+  
+  for(double barn=nb_start;barn<=nb_end+dnb/10.0;barn+=dnb) {
 
-    ret=rp->solve(x,sf);
-    y=solve_fun(x,hb);
+    //int nstar_cold::solve_fun(size_t nv, const ubvector &x, ubvector &y,
+    //thermo &hb, double n_B) {
+    
+    mm_funct sf=std::bind(std::mem_fn<int(size_t,const ubvector &,
+                                          ubvector &, thermo &,double)>
+                       (&nstar_cold2::solve_fun),
+                          this,std::placeholders::_1,
+                          std::placeholders::_2,std::placeholders::_3,
+                          std::ref(hb),barn);
 
-    if (ret!=0 || fabs(y)>solver_tol) {
+    int tret=mh.msolve(1,ux,sf);
+    if (tret!=0) {
       success=false;
     }
-
+    
     if (include_muons) {
       h=hb+e+mu;
     } else {

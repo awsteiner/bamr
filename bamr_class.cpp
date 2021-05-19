@@ -134,6 +134,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
       
       line.push_back(dat.mvsr.get_constant("R_max"));
       line.push_back(dat.mvsr.get_constant("M_max"));
+      if (set->mmax_deriv) {
+        line.push_back(dat.mvsr.get_constant("dpdM"));
+      }
       line.push_back(dat.mvsr.get_constant("P_max"));
       line.push_back(dat.mvsr.get_constant("e_max"));
       if (set->baryon_density) {

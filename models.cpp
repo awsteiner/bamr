@@ -195,12 +195,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
      	return;
       } 
 
-      ofstream myfile;
-      myfile.open ("dxdy_ouput.txt");
-      myfile << dxdy;
-      myfile.close();
-
-
+      dat.mvsr.add_constant("dpdM",dxdy);
+      
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);
       c_ed=dat.mvsr.get("ed",row);
@@ -2680,7 +2676,7 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
   this->n_eos_params=12;
 
   cns.err_nonconv=false;
-  cns.def_root.err_nonconv=false;
+  //cns.def_root.err_nonconv=false;
 
   int mpi_rank=0, mpi_size=0;
 
@@ -3066,7 +3062,7 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
   this->n_eos_params=11;
 
   cns.err_nonconv=false;
-  cns.def_root.err_nonconv=false;
+  //cns.def_root.err_nonconv=false;
   
   int mpi_rank=0, mpi_size=0;
   
