@@ -500,7 +500,8 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib
 
 compare_threep:
-	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
+		-set min_max_mass 1.93 \
 		-set prefix compare_threep_1 -set max_time 86400 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \

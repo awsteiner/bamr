@@ -113,7 +113,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.mvsr=*(ts.get_results());
       double m_max=dat.mvsr.max("gm");
       
-      cout << "Here1" << endl;
+      cout << "Here1: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
 	scr_out << "Maximum mass too small: " << m_max << " < "
@@ -138,6 +138,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
 	if (dat.eos.get("ed",i) < c_ed) {
           if (dat.eos.get("cs2",i)>1.0) {
+            cout << dat.eos.get("ed",i) << " " << c_ed << endl;
             cout << "Here4" << endl;
             ret=ix_acausal;
             return;
@@ -175,7 +176,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-      double dxdy;
+      double dxdy=0.0;
       if (this->n_eos_params==12) {
         //if(model_type ==((string) "tews_threep_ligo")){
         dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
@@ -195,7 +196,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
      	return;
       } 
 
-      dat.mvsr.add_constant("dpdM",dxdy);
+      cout << "Setting constant." << endl;
+      dat.eos.add_constant("dpdM",dxdy);
       
       // Check the speed of sound
       row=dat.mvsr.lookup("gm", m_max);
@@ -2797,9 +2799,9 @@ void tews_threep_ligo::initial_point(ubvector &params) {
   params[3]=55.0;
   params[4]=0.202468;
   params[5]=1.658677;
-  params[6]=1.941257;
-  params[7]=4.906005;
-  params[8]=0.687587;
+  params[6]=1.94;
+  params[7]=4.9;
+  params[8]=0.71;
 
   params[9]=1.1975;
   params[10]=0.245;
