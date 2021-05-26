@@ -501,7 +501,7 @@ clean:
 
 compare_threep:
 	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set prefix compare_threep_2 -set max_time 172800 \
+		-set prefix compare_threep_1 -set max_time 86400 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
@@ -559,7 +559,7 @@ compare_threep:
 
 compare_fixp:
 	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set prefix compare_fixp_2 -set max_time 172800 \
+		-set prefix compare_fixp_1 -set max_time 86400 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
