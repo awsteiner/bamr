@@ -316,11 +316,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
     
     log_wgt = preds[0];
-    /*
+    if (false) {
       cout << "Emulated log_wgt by rank "<< mpi_rank
-      <<" and thread "<< pthread <<
-      " : " << log_wgt << endl;
-    */
+           <<" and thread "<< pthread <<
+        " : " << log_wgt << endl;
+    }
 
     double pred_Mmax = preds[2];
     if (pred_Mmax < 2.0) {
