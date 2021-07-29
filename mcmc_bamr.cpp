@@ -109,6 +109,128 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
   return 0;
 }
 
+int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
+
+  if(sv.size()<2){
+    cout << "Need an emulated output file." << endl;
+  }
+  string emu_file = sv[1];    
+
+  // Read emulated file to table
+  o2scl::table_units<> emu_init_table;
+  o2scl::table_units<> out_table;      
+  hdf_file hf_emu;
+  hf_emu.open(emu_file);
+  hf_emu.get_szt("n_params",this->n_params);
+  hdf_input(hf_emu,emu_init_table,"markov_chain_0");
+  hf_emu.close();
+  cout << "Emulated file copied to table" << endl;
+
+  model_data test_point;
+  double log_wgt;
+  ubvector emu_pars(n_params);
+
+  model &m=*(bc_arr[0]->mod);
+  bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[0]));
+  bc.setup_filters();
+
+  // Open or create output file
+  hdf_file hf_out;
+
+  size_t nrows = emu_init_table.get_nlines();
+
+  int pthread=0;
+  bool set_col =false;
+  std::clock_t start_time = std::clock();
+  cout << "Start time : " << start_time << endl;
+  for(size_t i=0; i<nrows; i++){
+
+    //cout << "working on row : " << i  << endl;
+
+    // copy parameter values
+    for(size_t j=5;j<5+n_params;j++) {
+      emu_pars(j-5) = emu_init_table.get(emu_init_table.get_column_name(j), i);
+    }
+
+    size_t iret = bc.compute_point(emu_pars, scr_out, log_wgt, test_point);
+    if(iret==0){
+      vector<string> cols;
+      vector<double> col_vals;
+
+      cout << "compute_point return status : " << iret << endl;
+      cout << "predicted log_wgt : " <<
+       emu_init_table.get(emu_init_table.get_column_name(4), i) << endl;
+      cout << "compute_point log_wgt : " << log_wgt << endl;
+
+      std:string temp_const;
+      double temp_val;
+
+      for(size_t j=0; j<test_point.mvsr.get_nconsts(); j++){
+        test_point.mvsr.get_constant(j, temp_const, temp_val);
+        cols.push_back(temp_const);
+        col_vals.push_back(temp_val);
+      }
+
+      for(size_t j=0; j<test_point.eos.get_nconsts(); j++){
+        test_point.eos.get_constant(j, temp_const, temp_val);
+        cols.push_back(temp_const);
+        col_vals.push_back(temp_val);
+      }
+      
+      if(set_col==false){
+        for(size_t j=0; j<cols.size(); j++){
+          out_table.new_column(cols[j]);
+        }
+        // add M-R grid columns
+        for(int i=0;i<set->grid_size;i++) {
+          out_table.new_column(((string)"R_")+o2scl::itos(i));
+        }
+/*
+        // add EOS grid
+        for(int i=0;i<set->grid_size;i++) {
+          out_table.new_column(((string)"P_")+o2scl::itos(i));
+        }
+*/
+        set_col=true;
+      }
+
+      // Interpolate M-R grid
+      test_point.mvsr.set_interp_type(itp_linear);
+      for(int i=0;i<set->grid_size;i++) {
+        col_vals.push_back(test_point.mvsr.interp("gm",(i+1)*(3.0-0.02)/100.0,"r"));
+      }
+
+/*
+      for(int i=0;i<set->grid_size;i++) {
+          double eval = m.e_grid[i];
+          double pres_temp=test_point.eos.interp("ed",eval,"pr");
+          col_vals.push_back(pres_temp);
+      }
+*/
+      
+      // cout << out_table.get_ncolumns() << " " << col_vals.size() << endl;
+      out_table.line_of_data(col_vals);
+      double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
+      cout << "duration : "<< duration << endl;
+      if(duration-60.0 > 0.0 && duration-60.0 < 10.0){
+        hf_out.open_or_create("emu_points_out");
+        hdf_output(hf_out, out_table, "emulated");
+        hf_out.close();
+      }
+
+    }else{
+      continue;
+    }
+  }
+  
+  hf_out.open_or_create("emu_points_out");
+  hdf_output(hf_out, out_table, "emulated");
+  hf_out.close();
+
+  
+  return 0;
+}
+
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
   if (sv.size()==1) {
