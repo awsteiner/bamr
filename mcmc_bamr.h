@@ -137,7 +137,7 @@ namespace bamr {
 
     /** \brief Train the emulator based on data from \c file_name
         using parameter names listed in \c names.
-
+        
         This is called in mcmc_bamr::mcmc_func().
      */
     int train(std::string file_name, std::vector<std::string> &names);
@@ -145,7 +145,7 @@ namespace bamr {
     /** \brief Calculate posteriors from the emulated points.
      */
     virtual int emu_points(std::vector<std::string> &sv,
-           bool itive_com);
+                           bool itive_com);
     
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;

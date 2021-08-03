@@ -182,8 +182,8 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
           out_table.new_column(cols[j]);
         }
         // add M-R grid columns
-        for(int i=0;i<set->grid_size;i++) {
-          out_table.new_column(((string)"R_")+o2scl::itos(i));
+        for(int ij=0;ij<set->grid_size;ij++) {
+          out_table.new_column(((string)"R_")+o2scl::itos(ij));
         }
 /*
         // add EOS grid
@@ -196,8 +196,9 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
 
       // Interpolate M-R grid
       test_point.mvsr.set_interp_type(itp_linear);
-      for(int i=0;i<set->grid_size;i++) {
-        col_vals.push_back(test_point.mvsr.interp("gm",(i+1)*(3.0-0.02)/100.0,"r"));
+      for(int ik=0;ik<set->grid_size;ik++) {
+        col_vals.push_back(test_point.mvsr.interp("gm",(ik+1)*
+                                                  (3.0-0.02)/100.0,"r"));
       }
 
 /*
@@ -606,9 +607,7 @@ int mcmc_bamr::mcmc_init() {
       bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
       hfx.open("data/ligo/ligo_tg3_v4.o2");
       std::string name;
-      cout << "Here." << endl;
       hdf_input_n(hfx,bc.ligo_data_table,name);
-      cout << "Here2." << endl;
       hfx.close();
     }
   }

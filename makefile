@@ -687,3 +687,4 @@ test_emu:
 		-set apply_emu 1 -set emu_train emu_test/nicer_dpde_test \
 		-set prior_eta 1 \
 		-mcmc 
+
