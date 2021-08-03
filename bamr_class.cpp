@@ -490,6 +490,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	      
         // Include the weight for this source
         log_wgt+=log(dat.sourcet.get("wgt",i));
+
+        // Update each weight into output table
+        dat.eos.add_constant(((std::string)"log_wgt_")+nsd->source_names[i]
+          ,log(dat.sourcet.get("wgt",i)));
 	      
         if (set->verbose>=2) {
           scr_out.width(10);

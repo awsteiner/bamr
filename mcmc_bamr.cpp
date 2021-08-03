@@ -546,6 +546,11 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("delta_m");
     }
   }
+  if(nsd->n_sources>0){
+	  for(size_t i=0;i<nsd->n_sources;i++) {
+	    this->table->new_column(((std::string)"log_wgt_")+nsd->source_names[i]);
+	  }
+  }
   }
 
   // -----------------------------------------------------------
