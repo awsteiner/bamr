@@ -46,7 +46,7 @@ class modGpr:
 
         # additional target column for speed of sound
         for i in range(0, 100):
-            self.target_cols.append('dpde_'+str(i))
+            self.target_cols.append('cs2_'+str(i))
 
         # Class variable for parameter columns std
         self.param_std_train = {}
