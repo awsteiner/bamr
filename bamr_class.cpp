@@ -93,8 +93,10 @@ void bamr_class::setup_filters() {
 int bamr_class::fill(const ubvector &pars, double weight, 
 		     std::vector<double> &line, model_data &dat) {
 
-  if (set->apply_emu) return 0;
-  else{
+  if (set->apply_emu) {
+    return 0;
+  } else {
+    
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("wgt",i));
     }
@@ -111,6 +113,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
     if (m.has_eos) {
       for(int i=0;i<set->grid_size;i++) {
         line.push_back(dat.gridt.get("P",i));
+        line.push_back(dat.gridt.get("cs2",i));
       }
     }
 
@@ -1266,6 +1269,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           dat.gridt.set("e_grid",i,m.e_grid[i]);
         }
         dat.gridt.new_column("P");
+        dat.gridt.new_column("cs2");
         dat.gridt.new_column("PM");
       }
       if (set->baryon_density) {
@@ -1322,14 +1326,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (m.has_eos) {
       for(int i=0;i<set->grid_size;i++) {
         double eval=m.e_grid[i];
-        // Make sure the energy density from the grid
-        // isn't beyond the table limit
+        // Make sure the energy density from the grid isn't beyond the
+        // last energy density computed by the EOS model (but still
+        // include energy densities larger than the maximum energy
+        // density of the maximum mass star)
         double emax2=dat.eos.max("ed");
         if (eval<emax2) {
           double pres_temp=dat.eos.interp("ed",eval,"pr");
+          double cs2_temp=dat.eos.interp("ed",eval,"cs2");
           dat.gridt.set("P",i,pres_temp);
+          dat.gridt.set("cs2",i,cs2_temp);
         } else {
           dat.gridt.set("P",i,0.0);
+          dat.gridt.set("cs2",i,0.0);
         }
       }
     }

@@ -690,7 +690,57 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   if (has_eos) {
     
     // Compute speed of sound squared
-    dat.mvsr.deriv("ed","pr","dpde");
+    double ed_max=dat.mvsr.max("ed");
+    
+    for(size_t i=0;i<dat.eos.get_nlines();i++) {
+      if (dat.eos.get("ed",i)>ed_max &&
+          !std::isfinite(dat.eos.get("pr",i))) {
+        dat.eos.set("pr",i,0.0);
+      }
+    }
+    
+    dat.eos.deriv("ed","pr","cs2");
+    
+    for(size_t i=0;i<dat.eos.get_nlines();i++) {
+      if (dat.eos.get("ed",i)<ed_max &&
+          (!std::isfinite(dat.eos.get("cs2",i)) ||
+           dat.eos.get("cs2",i)<0.0)) {
+        cout << "cs2 not finite." << endl;
+        cout << "ed_max: " << ed_max << endl;
+        if (i>0) {
+          cout << i-1 << " " << dat.eos.get("ed",i-1) << " "
+               << dat.eos.get("pr",i-1) << endl;
+        }
+        cout << i << " " << dat.eos.get("ed",i) << " "
+             << dat.eos.get("pr",i) << endl;
+        if (i<dat.eos.get_nlines()-1) {
+          cout << i+1 << " " << dat.eos.get("ed",i+1) << " "
+               << dat.eos.get("pr",i+1) << endl;
+        }
+        for(size_t j=0;j<dat.eos.get_nlines();j++) {
+          cout << j << " " << dat.eos.get("ed",j) << " "
+               << dat.eos.get("pr",j) << endl;
+        }
+        exit(-1);
+      }
+    }
+
+    for(size_t i=0;i<dat.eos.get_nlines();i++) {
+      if (dat.eos.get("ed",i)<ed_max && dat.eos["cs2"][i]>1.0) {
+        scr_out.precision(4);
+        scr_out << "Rejected: Acausal."<< std::endl;
+        scr_out << "ed_max=" << ed_max
+                << " ed_bad=" << (dat.eos)["ed"][i]
+                << " pr_bad=" << (dat.eos)["pr"][i] << std::endl;
+        scr_out.precision(6);
+        ret=ix_acausal;
+        return;
+      }
+    }
+    
+    /*
+    // Compute speed of sound squared
+    dat.eos.deriv("ed","pr","cs2");
 
     for(size_t i=0;i<dat.mvsr.get_nlines();i++) {
       if ((dat.mvsr)["dpde"][i]>1.0) {
@@ -706,6 +756,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	return;
       }
     }
+    */
     
   } else {
 
