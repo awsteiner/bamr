@@ -980,7 +980,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=8;
+  static const int nopt=9;
   comm_option_s options[nopt]=
     {
      {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
@@ -1037,6 +1037,11 @@ void mcmc_bamr::setup_cli_mb() {
       1,1,"<filename>","Long. desc.",
       new o2scl::comm_option_mfptr<mcmc_bamr>
       (this,&mcmc_bamr::read_prev_results_mb),
+      o2scl::cli::comm_option_both},
+     {0,"emu-points","emu-points help.",
+      2,2,"<input filename> <output filename>","Long description.",
+      new o2scl::comm_option_mfptr<mcmc_bamr>
+      (this,&mcmc_bamr::emu_points),
       o2scl::cli::comm_option_both}
     };
   cl.set_comm_option_vec(nopt,options);
