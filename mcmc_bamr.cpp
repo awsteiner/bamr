@@ -112,9 +112,13 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
 int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
 
   if(sv.size()<2){
-    cout << "Need an emulated output file." << endl;
+    cout << "Need an emulated output filename." << endl;
   }
-  string emu_file = sv[1];    
+  if(sv.size()<3){
+    cout << "Need an posterior output filename." << endl;
+  }
+  string emu_file = sv[1];
+  string post_out = sv[2];
 
   // Read emulated file to table
   o2scl::table_units<> emu_init_table;
@@ -214,7 +218,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
       double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
       cout << "duration : "<< duration << endl;
       if(duration-60.0 > 0.0 && duration-60.0 < 10.0){
-        hf_out.open_or_create("emu_points_out");
+        hf_out.open_or_create(post_out);
         hdf_output(hf_out, out_table, "emulated");
         hf_out.close();
       }
@@ -224,7 +228,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
     }
   }
   
-  hf_out.open_or_create("emu_points_out");
+  hf_out.open_or_create(post_out);
   hdf_output(hf_out, out_table, "emulated");
   hf_out.close();
 
