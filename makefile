@@ -632,6 +632,14 @@ test_emu_nodata:
 		-set prior_eta 1 \
 		-mcmc 
 
+test_emulate_post:
+	./bamr_nompi -threads 1 -model tews_threep_ligo \
+		-set verbose 3 -set norm_max 0 \
+		-set addl_quants 1 -set inc_baryon_mass 1 \
+		-set crust_from_L 0 -set compute_cthick 1 \
+		-emu-points test_emu_nodata_0_out test_emu_nodata_0_post
+
+
 test_emu:
 	./bamr_nompi -threads 1 -set n_walk 50 \
 		-set aff_inv 1 -set step_fac 2.0 -set max_time 864000 \
