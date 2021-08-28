@@ -37,7 +37,6 @@
 #include <o2scl/root_cern.h>
 #include <o2scl/mroot_hybrids.h>
 #include <o2scl/interpm_idw.h>
-#include <o2scl/rng_gsl.h>
 
 #include "nstar_cold2.h"
 #include "models.h"
