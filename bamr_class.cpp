@@ -1218,13 +1218,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         //cout << "tensor grid tg3 : " << ligo_data_tg3 << endl;
 
         // Check the ligo_data_table for new or old data
-        if (true) {
+        if (!set->emu_post) {
 	        
           ubvector lin_v(3);
           lin_v[0]=M_chirp_det;
           lin_v[1]=delta_m;
           lin_v[2]=Lambdat;
 
+          cout << "Ligo prob interp."  << endl;
           double prob=ligo_data_table.interp_linear(lin_v);
           // If the point is outside of the range specified
           // in the data file, give it a very small probability
@@ -1257,11 +1258,17 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // initialization
 
     if (dat.gridt.get_ncolumns()==0) {
+      
       dat.gridt.set_nlines(set->grid_size);
+      cout << "Debug_mam : set_grid." << endl;
+      
       dat.gridt.new_column("m_grid");
       for(int i=0;i<set->grid_size;i++) {
         dat.gridt.set("m_grid",i,m.m_grid[i]);
       }
+      
+      cout << "Debug_mam : m_grid." << endl;
+      
       dat.gridt.new_column("R");
       if (m.has_eos) {
         dat.gridt.new_column("e_grid");
@@ -1272,12 +1279,15 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         dat.gridt.new_column("cs2");
         dat.gridt.new_column("PM");
       }
+      cout << "Debug_mam : r_grid." << endl;
+
       if (set->baryon_density) {
         dat.gridt.line_of_names("nb_grid Pnb EoA");
         for(int i=0;i<set->grid_size;i++) {
           dat.gridt.set("nb_grid",i,m.nb_grid[i]);
         }
       }
+      cout << "Debug_mam : nb_grid." << endl;
       if (set->compute_cthick) {
         dat.gridt.new_column("CT");
       }

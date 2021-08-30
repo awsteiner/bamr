@@ -637,6 +637,7 @@ test_emulate_post:
 		-set verbose 3 -set norm_max 0 \
 		-set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
+		-set emu_post 1 \
 		-emu-points test_emu_nodata_0_out test_emu_nodata_0_post
 
 
