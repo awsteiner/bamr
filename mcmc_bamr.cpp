@@ -51,7 +51,7 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
   PyRun_SimpleString("sys.path.append('./')");
 
   // Todo: check to see if threading really works
-  PyEval_InitThreads();
+  //PyEval_InitThreads();
   Py_DECREF(PyImport_ImportModule("threading"));
 
   // train and test file names
@@ -111,6 +111,7 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
 
 int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
 
+
   if(sv.size()<2){
     cout << "Need an emulated output filename." << endl;
   }
@@ -119,6 +120,19 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
   }
   string emu_file = sv[1];
   string post_out = sv[2];
+  
+  // Initial row number
+  size_t init_row = 0;
+  if(sv.size()<4){
+    cout << "Computing postesrior from the first row." << endl;
+  }else{
+  	init_row = o2scl::stoszt(sv[3]);
+  	cout << "Computing postesrior from row number " << init_row << endl;
+  }
+
+  
+  // initialize the grids and columns
+  mcmc_init();
 
   // Read emulated file to table
   o2scl::table_units<> emu_init_table;
@@ -146,18 +160,47 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
   int pthread=0;
   bool set_col =false;
   std::clock_t start_time = std::clock();
-  cout << "Start time : " << start_time << endl;
-  for(size_t i=0; i<nrows; i++){
+
+  
+  // Check start time, which can be used to update file after some interval
+  // cout << "Start time : " << start_time << endl;
+  
+  for(size_t i=init_row; i<nrows; i++){
 
     //cout << "working on row : " << i  << endl;
 
-    // copy parameter values
+    // copy parameter values to use in bamr_class::compute_point()
     for(size_t j=5;j<5+n_params;j++) {
       emu_pars(j-5) = emu_init_table.get(emu_init_table.get_column_name(j), i);
     }
 
+    // Compute point success status
     size_t iret = bc.compute_point(emu_pars, scr_out, log_wgt, test_point);
+
     if(iret==0){
+
+      // copy row from tables in model_data 
+      ubvector temp_mvsr_row;
+      test_point.mvsr.get_row(i, temp_mvsr_row);
+      ubvector temp_eos_row;
+      test_point.eos.get_row(i, temp_eos_row);
+      ubvector temp_gridt_row;
+      test_point.gridt.get_row(i, temp_gridt_row);
+      /*
+      ubvector temp_sourcet_row;
+      test_point.sourcet.get_row(i, temp_sourcet_row);
+      */
+
+
+      cout << "mvsr table size : " << temp_mvsr_row.size() << endl;
+      cout << "eos table size : " << temp_eos_row.size() << endl;
+      cout << "gridt table size : " << temp_gridt_row.size() << endl;
+      //cout << "eos table size : " << temp_sourcet_row.size() << endl;
+
+
+      exit(0);
+      // copy data done.
+
       vector<string> cols;
       vector<double> col_vals;
 
@@ -181,6 +224,8 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
         col_vals.push_back(temp_val);
       }
       
+
+      // Create/check column names in the new table
       if(set_col==false){
         for(size_t j=0; j<cols.size(); j++){
           out_table.new_column(cols[j]);
@@ -211,8 +256,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
           double pres_temp=test_point.eos.interp("ed",eval,"pr");
           col_vals.push_back(pres_temp);
       }
-*/
-      
+*/    
       // cout << out_table.get_ncolumns() << " " << col_vals.size() << endl;
       out_table.line_of_data(col_vals);
       double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
@@ -231,7 +275,6 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
   hf_out.open_or_create(post_out);
   hdf_output(hf_out, out_table, "emulated");
   hf_out.close();
-
   
   return 0;
 }
@@ -1039,7 +1082,7 @@ void mcmc_bamr::setup_cli_mb() {
       (this,&mcmc_bamr::read_prev_results_mb),
       o2scl::cli::comm_option_both},
      {0,"emu-points","emu-points help.",
-      2,2,"<input filename> <output filename>","Long description.",
+      2,3,"<input filename> <output filename> <strting row number>","Long description.",
       new o2scl::comm_option_mfptr<mcmc_bamr>
       (this,&mcmc_bamr::emu_points),
       o2scl::cli::comm_option_both}

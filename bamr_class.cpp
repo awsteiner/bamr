@@ -1260,14 +1260,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (dat.gridt.get_ncolumns()==0) {
       
       dat.gridt.set_nlines(set->grid_size);
-      cout << "Debug_mam : set_grid." << endl;
-      
       dat.gridt.new_column("m_grid");
       for(int i=0;i<set->grid_size;i++) {
         dat.gridt.set("m_grid",i,m.m_grid[i]);
       }
-      
-      cout << "Debug_mam : m_grid." << endl;
       
       dat.gridt.new_column("R");
       if (m.has_eos) {
@@ -1279,7 +1275,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         dat.gridt.new_column("cs2");
         dat.gridt.new_column("PM");
       }
-      cout << "Debug_mam : r_grid." << endl;
 
       if (set->baryon_density) {
         dat.gridt.line_of_names("nb_grid Pnb EoA");
@@ -1287,7 +1282,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           dat.gridt.set("nb_grid",i,m.nb_grid[i]);
         }
       }
-      cout << "Debug_mam : nb_grid." << endl;
+
       if (set->compute_cthick) {
         dat.gridt.new_column("CT");
       }
