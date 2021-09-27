@@ -1,0 +1,1937 @@
+(rank 0) Start mcmc_bamr::mcmc_init().
+mcmc: Table column names and units: 
+rank 
+thread 
+walker 
+mult 
+log_wgt 
+a MeV
+alpha 
+param_S MeV
+param_L MeV
+index1 
+trans1 1/fm^4
+index2 
+trans2 1/fm^4
+index3 
+M_chirp_det Msun
+eta 
+z_cdf 
+mf_6304 
+mf_6397 
+mf_M13 
+mf_M28 
+mf_M30 
+mf_wCen 
+mf_X7 
+mf_1810b 
+mf_1724b 
+mf_1702 
+mf_0030 
+log10_is_6304 
+log10_is_6397 
+log10_is_M13 
+log10_is_M28 
+log10_is_M30 
+log10_is_wCen 
+log10_is_X7 
+log10_is_1810b 
+log10_is_1724b 
+log10_is_1702 
+log10_is_0030 
+Prefix is: compare_threep_2
+bamr: Loading 11 data files with rank 0 and size 1
+(rank 0) End mcmc_bamr::mcmc_init().
+Here2.
+H1.
+H2.
+Here1: 1.934691e+00
+3 constants:
+L 2.787252e-01
+S 1.621674e-01
+tews -3.801798e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+11 columns: 
+0. gm [Msun]        4. ed [1/fm^4]      8. dmdr [Msun/km]   
+1. r [km]           5. nb [1/fm^3]      9. dlogpdr [1/km]   
+2. bm [Msun]        6. sg [1/km]        10. dbmdr [Msun/km] 
+3. pr [1/fm^4]      7. rs []            
+99 lines of data.
+Central energy density (in 1/fm^4): 7.252503e+00
+H3.
+H4.
+7.107100e-01 7.100000e-01 1.934611e+00 1.934691e+00
+Here dxdy: -8.824035e+00
+Setting constant.
+Central energy density (in 1/fm^4): 7.254147e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 1.907724e+00
+Here2.
+H1.
+H2.
+Here1: 2.032394e+00
+3 constants:
+L 2.791290e-01
+S 1.623274e-01
+tews -3.720279e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.278727e+00
+H3.
+H4.
+6.674520e-01 6.667852e-01 2.032392e+00 2.032394e+00
+Here dxdy: -3.302887e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.278955e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.057701e+00
+3 constants:
+L 2.794588e-01
+S 1.623546e-01
+tews -3.715259e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.212219e+00
+H3.
+H4.
+6.517015e-01 6.510504e-01 2.057699e+00 2.057701e+00
+Here dxdy: -3.763709e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.212426e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 1.986978e+00
+3 constants:
+L 2.790187e-01
+S 1.624519e-01
+tews -3.632425e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 8.300352e+00
+6.657887e+00 8.300352e+00
+Here4
+Here2.
+H1.
+H2.
+Here1: 2.063704e+00
+3 constants:
+L 2.799001e-01
+S 1.624118e-01
+tews -3.700252e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.212353e+00
+H3.
+H4.
+6.788842e-01 6.782060e-01 2.063703e+00 2.063704e+00
+Here dxdy: -5.468523e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.212532e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 1.979909e+00
+3 constants:
+L 2.804229e-01
+S 1.621909e-01
+tews -3.865074e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 6.792689e+00
+H3.
+H4.
+6.756187e-01 6.749438e-01 1.979851e+00 1.979909e+00
+Here dxdy: -1.163739e+01
+Setting constant.
+Central energy density (in 1/fm^4): 6.794004e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.052317e+00
+3 constants:
+L 2.797770e-01
+S 1.622301e-01
+tews -3.811979e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.053625e+00
+H3.
+H4.
+6.331639e-01 6.325314e-01 2.052317e+00 2.052317e+00
+Here dxdy: -2.554817e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.053717e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 1.957738e+00
+3 constants:
+L 2.810622e-01
+S 1.620639e-01
+tews -3.983748e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 7.920952e+00
+6.954408e+00 7.920952e+00
+Here4
+Here2.
+H1.
+H2.
+Here1: 2.113629e+00
+3 constants:
+L 2.800519e-01
+S 1.622675e-01
+tews -3.800704e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.966660e+00
+H3.
+H4.
+6.941708e-01 6.934773e-01 2.113629e+00 2.113629e+00
+Here dxdy: -1.445175e+05
+Setting constant.
+Central energy density (in 1/fm^4): 4.966678e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 1.911168e+00
+Here2.
+H1.
+H2.
+Here1: 1.920270e+00
+Here2.
+H1.
+H2.
+Here1: 2.064921e+00
+3 constants:
+L 2.797606e-01
+S 1.622930e-01
+tews -3.764413e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.048891e+00
+H3.
+H4.
+6.988906e-01 6.981924e-01 2.064921e+00 2.064921e+00
+Here dxdy: -6.456859e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.048958e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.050596e+00
+3 constants:
+L 2.804200e-01
+S 1.622733e-01
+tews -3.807852e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.075502e+00
+H3.
+H4.
+6.581291e-01 6.574716e-01 2.050596e+00 2.050596e+00
+Here dxdy: -5.846021e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.075570e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 2.241678e+00
+3 constants:
+L 2.790986e-01
+S 1.621511e-01
+tews -3.831602e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.628237e+00
+1.684688e+00 4.628237e+00
+Here4
+Here2.
+H1.
+H2.
+Here1: 1.974843e+00
+3 constants:
+L 2.794934e-01
+S 1.622436e-01
+tews -3.786832e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.438909e+00
+H3.
+H4.
+7.268159e-01 7.260898e-01 1.974840e+00 1.974843e+00
+Here dxdy: -2.408117e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.439197e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 1.940792e+00
+3 constants:
+L 2.795985e-01
+S 1.620789e-01
+tews -3.900685e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 7.222767e+00
+H3.
+H4.
+6.927359e-01 6.920439e-01 1.940720e+00 1.940792e+00
+Here dxdy: -9.595521e+00
+Setting constant.
+Central energy density (in 1/fm^4): 7.224374e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 1.980927e+00
+3 constants:
+L 2.802628e-01
+S 1.622073e-01
+tews -3.845294e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 7.300025e+00
+6.981955e+00 7.300025e+00
+Here4
+Here2.
+H1.
+H2.
+Here1: 1.912599e+00
+Here2.
+H1.
+H2.
+Here1: 1.979421e+00
+3 constants:
+L 2.785967e-01
+S 1.619790e-01
+tews -3.917682e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.439035e+00
+H3.
+H4.
+7.367803e-01 7.360443e-01 1.979418e+00 1.979421e+00
+Here dxdy: -3.147958e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.439293e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 1.963954e+00
+3 constants:
+L 2.786231e-01
+S 1.619320e-01
+tews -3.953681e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.271520e+00
+H3.
+H4.
+7.801838e-01 7.794044e-01 1.963954e+00 1.963954e+00
+Here dxdy: -1.563752e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.271652e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.003332e+00
+3 constants:
+L 2.781324e-01
+S 1.620109e-01
+tews -3.873581e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.180250e+00
+H3.
+H4.
+7.462656e-01 7.455201e-01 2.003332e+00 2.003332e+00
+Here dxdy: -3.382067e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.180341e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 1.981699e+00
+3 constants:
+L 2.793959e-01
+S 1.618875e-01
+tews -4.020792e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.450047e+00
+H3.
+H4.
+8.125912e-01 8.117794e-01 1.981697e+00 1.981699e+00
+Here dxdy: -3.759464e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.450299e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 2.031640e+00
+3 constants:
+L 2.781638e-01
+S 1.617839e-01
+tews -4.035860e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.149379e+00
+H3.
+H4.
+7.464587e-01 7.457130e-01 2.031640e+00 2.031640e+00
+Here dxdy: -1.022751e+04
+Setting constant.
+Central energy density (in 1/fm^4): 5.149439e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.085304e+00
+3 constants:
+L 2.783131e-01
+S 1.618476e-01
+tews -3.998105e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.061930e+00
+H3.
+H4.
+7.905768e-01 7.897870e-01 2.085304e+00 2.085304e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.025793e+00
+3 constants:
+L 2.780362e-01
+S 1.618043e-01
+tews -4.011279e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.923136e+00
+H3.
+H4.
+7.496967e-01 7.489478e-01 2.025793e+00 2.025793e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.028337e+00
+3 constants:
+L 2.783397e-01
+S 1.618145e-01
+tews -4.019294e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.154834e+00
+H3.
+H4.
+7.649443e-01 7.641801e-01 2.028337e+00 2.028337e+00
+Here dxdy: -7.608704e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.154902e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 2.121876e+00
+3 constants:
+L 2.790488e-01
+S 1.617827e-01
+tews -4.083865e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.955638e+00
+H3.
+H4.
+7.470543e-01 7.463080e-01 2.121876e+00 2.121876e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.047529e+00
+3 constants:
+L 2.774272e-01
+S 1.618851e-01
+tews -3.930416e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.131571e+00
+H3.
+H4.
+7.633912e-01 7.626285e-01 2.047529e+00 2.047529e+00
+Here dxdy: -5.752765e+04
+Setting constant.
+Central energy density (in 1/fm^4): 5.131601e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 2.028054e+00
+3 constants:
+L 2.781233e-01
+S 1.618827e-01
+tews -3.960198e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.148603e+00
+H3.
+H4.
+7.536525e-01 7.528996e-01 2.028053e+00 2.028054e+00
+Here dxdy: -8.034608e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.148669e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Here2.
+H1.
+H2.
+Here1: 2.028809e+00
+3 constants:
+L 2.775423e-01
+S 1.618952e-01
+tews -3.922503e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.160109e+00
+H3.
+H4.
+7.168448e-01 7.161287e-01 2.028809e+00 2.028809e+00
+Here dxdy: -6.712734e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.160179e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.027502e+00
+3 constants:
+L 2.783280e-01
+S 1.618736e-01
+tews -3.975835e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.142088e+00
+H3.
+H4.
+7.607525e-01 7.599925e-01 2.027502e+00 2.027502e+00
+Here dxdy: -5.503314e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.142164e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.028853e+00
+3 constants:
+L 2.775531e-01
+S 1.619903e-01
+tews -3.861694e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.324550e+00
+H3.
+H4.
+7.577365e-01 7.569795e-01 2.028851e+00 2.028853e+00
+Here dxdy: -5.312535e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.324751e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.127264e+00
+3 constants:
+L 2.779235e-01
+S 1.620410e-01
+tews -3.844953e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.897878e+00
+H3.
+H4.
+7.814377e-01 7.806570e-01 2.127264e+00 2.127264e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.193733e+00
+3 constants:
+L 2.784481e-01
+S 1.619719e-01
+tews -3.917667e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.750194e+00
+H3.
+H4.
+7.464574e-01 7.457116e-01 2.193733e+00 2.193733e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.094839e+00
+3 constants:
+L 2.773696e-01
+S 1.621063e-01
+tews -3.774081e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.987269e+00
+H3.
+H4.
+7.497138e-01 7.489649e-01 2.094839e+00 2.094839e+00
+Here dxdy: -4.897166e+05
+Setting constant.
+Central energy density (in 1/fm^4): 4.987280e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.167319e+00
+3 constants:
+L 2.775273e-01
+S 1.622513e-01
+tews -3.686438e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.035437e+00
+H3.
+H4.
+7.200595e-01 7.193401e-01 2.167319e+00 2.167319e+00
+Here dxdy: -2.748066e+04
+Setting constant.
+Central energy density (in 1/fm^4): 5.035475e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.122830e+00
+3 constants:
+L 2.782616e-01
+S 1.624172e-01
+tews -3.615748e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.121509e+00
+H3.
+H4.
+6.844118e-01 6.837280e-01 2.122830e+00 2.122830e+00
+Here dxdy: -3.342141e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.121597e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.218542e+00
+3 constants:
+L 2.773053e-01
+S 1.624674e-01
+tews -3.544338e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.941006e+00
+H3.
+H4.
+7.080499e-01 7.073425e-01 2.218542e+00 2.218542e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.096066e+00
+3 constants:
+L 2.777198e-01
+S 1.624856e-01
+tews -3.553184e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.156943e+00
+H3.
+H4.
+6.723716e-01 6.716999e-01 2.096066e+00 2.096066e+00
+Here dxdy: -1.736997e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.157058e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.187141e+00
+3 constants:
+L 2.770494e-01
+S 1.624700e-01
+tews -3.535177e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.976747e+00
+H3.
+H4.
+6.593655e-01 6.587068e-01 2.187141e+00 2.187141e+00
+Here dxdy: -3.886594e+06
+Setting constant.
+Central energy density (in 1/fm^4): 4.976752e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.271136e+00
+3 constants:
+L 2.772951e-01
+S 1.624736e-01
+tews -3.544415e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.763581e+00
+H3.
+H4.
+6.266780e-01 6.260519e-01 2.271136e+00 2.271136e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.275596e+00
+3 constants:
+L 2.769471e-01
+S 1.624154e-01
+tews -3.565312e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.742166e+00
+H3.
+H4.
+6.331086e-01 6.324762e-01 2.275596e+00 2.275596e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.135502e+00
+3 constants:
+L 2.776573e-01
+S 1.625840e-01
+tews -3.494924e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.087530e+00
+H3.
+H4.
+6.298001e-01 6.291709e-01 2.135502e+00 2.135502e+00
+Here dxdy: -8.748507e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.087586e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.148272e+00
+3 constants:
+L 2.773867e-01
+S 1.627414e-01
+tews -3.396418e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.059902e+00
+H3.
+H4.
+6.247116e-01 6.240875e-01 2.148272e+00 2.148272e+00
+Here dxdy: -2.783955e+04
+Setting constant.
+Central energy density (in 1/fm^4): 5.059937e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.199408e+00
+3 constants:
+L 2.780204e-01
+S 1.626722e-01
+tews -3.460202e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 4.956869e+00
+H3.
+H4.
+6.670690e-01 6.664026e-01 2.199408e+00 2.199408e+00
+Here dxdy: inf
+Here2.
+H1.
+H2.
+Here1: 2.132315e+00
+3 constants:
+L 2.779171e-01
+S 1.627455e-01
+tews -3.411453e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.067023e+00
+H3.
+H4.
+6.563926e-01 6.557368e-01 2.132315e+00 2.132315e+00
+Here dxdy: -7.638349e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.067083e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.131116e+00
+3 constants:
+L 2.776432e-01
+S 1.627172e-01
+tews -3.414264e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.063417e+00
+H3.
+H4.
+6.212833e-01 6.206626e-01 2.131116e+00 2.131116e+00
+Here dxdy: -5.047090e+03
+Setting constant.
+Central energy density (in 1/fm^4): 5.063485e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.078955e+00
+3 constants:
+L 2.769583e-01
+S 1.628552e-01
+tews -3.313217e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.763504e+00
+H3.
+H4.
+6.592056e-01 6.585470e-01 2.078942e+00 2.078955e+00
+Here dxdy: -5.323388e+01
+Setting constant.
+Central energy density (in 1/fm^4): 5.764038e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.107953e+00
+3 constants:
+L 2.779710e-01
+S 1.629975e-01
+tews -3.274583e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.477230e+00
+H3.
+H4.
+6.165384e-01 6.159225e-01 2.107948e+00 2.107953e+00
+Here dxdy: -1.165705e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.477571e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.149690e+00
+3 constants:
+L 2.782598e-01
+S 1.629437e-01
+tews -3.308928e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.197407e+00
+H3.
+H4.
+6.219979e-01 6.213766e-01 2.149689e+00 2.149690e+00
+Here dxdy: -5.002378e+02
+Setting constant.
+Central energy density (in 1/fm^4): 5.197581e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.111455e+00
+3 constants:
+L 2.785275e-01
+S 1.630337e-01
+tews -3.273620e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.447296e+00
+H3.
+H4.
+5.899406e-01 5.893513e-01 2.111448e+00 2.111455e+00
+Here dxdy: -9.313228e+01
+Setting constant.
+Central energy density (in 1/fm^4): 5.447662e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.141600e+00
+3 constants:
+L 2.785432e-01
+S 1.631052e-01
+tews -3.238408e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 5.554768e+00
+H3.
+H4.
+5.734451e-01 5.728722e-01 2.141590e+00 2.141600e+00
+Here dxdy: -6.009107e+01
+Setting constant.
+Central energy density (in 1/fm^4): 5.367039e+00
+H5
+H6
+End model::compute_star().
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Here1
+Ligo prob interp.
+Getting constant.
+Here2.
+H1.
+H2.
+Here1: 2.091849e+00
+3 constants:
+L 2.788529e-01
+S 1.629479e-01
+tews -3.328136e+00
+3 columns: 
+0. ed [1/fm^4] 1. pr [1/fm^4] 2. nb [1/fm^3] 
+104 lines of data.
+0 constants:
+18 columns: 
+0. gm [Msun]        6. pr [1/fm^4]      12. dlogpdr [1/km]  
+1. r [km]           7. ed [1/fm^4]      13. dgpdr [1/km]    
+2. gp []            8. nb [1/fm^3]      14. dbmdr [Msun/km] 
+3. rjw [km^4]       9. sg [1/km]        15. r0 [km]         
+4. omega_rat []     10. rs []           16. gm0 [Msun]      
+5. bm [Msun]        11. dmdr [Msun/km]  17. bm0 [Msun]      
+99 lines of data.
+Central energy density (in 1/fm^4): 6.130109e+00
+H3.
+H4.

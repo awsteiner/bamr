@@ -7,22 +7,34 @@
 # HDF5 libraries. By default, this is taken from the enviroment
 # variable LDFLAGS.
 
+LDFLAGS = -L/usr/local/lib \
+		-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib
+
 LIB_DIRS = $(LDFLAGS)
 
 # This variable may need to be modified to specify the include
 # directories for the GSL, Boost, HDF5, and O2scl header files. By
 # default this is taken from the environment variable CXXFLAGS.
 
+CXXFLAGS = -I/usr/lib/x86_64-linux-gnu/openmpi/include \
+		-I/usr/lib/x86_64-linux-gnu/hdf5/serial/include \
+		-I/usr/include/python3.8 
+
 INC_DIRS = $(CXXFLAGS)
+
+PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.8
+PYTHON_CXXFLAGS = $(SHELL_PYTHON_INCLUDES)
 
 # Generic (no MPI necessary) C++ compiler (e.g. g++)
 
-# CXX = 
+# CXX = g++
 
 # C++ compiler (e.g. mpicxx). By default this is taken from the
 # environment variable CXX.
 
-MPI_CXX = $(CXX)
+#MPI_CXX = $(CXX)
+
+MPI_CXX = mpic++
 
 # Set these two variables to be empty if you do not have GNU readline
 # readline support
@@ -500,9 +512,9 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib
 
 compare_threep:
-	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set min_max_mass 1.93 \
-		-set prefix compare_threep_2 -set max_time 172800 \
+		-set prefix compare_threep_2 -set max_time 43200 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
@@ -620,7 +632,7 @@ compare_fixp:
 
 test_emu_nodata:
 	./bamr_nompi -threads 1 -set n_walk 50 \
-		-set aff_inv 1 -set step_fac 2.0 -set max_time 864000 \
+		-set aff_inv 1 -set step_fac 2.0 -set max_time 43200 \
 		-set prefix test_emu_nodata \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
