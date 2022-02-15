@@ -90,8 +90,7 @@ ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
 	$(PYTHON_INCLUDES)
 
 LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
-	-lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
-	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
+	-lo2scl -lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
 	$(FFTW_LIB)
 
 # ----------------------------------------------------------------------
