@@ -63,29 +63,17 @@ void like::load_data() {
   nsns_id[17] = "J1518+4904 comp."; nsns_sid[17] = "J1518c";
   nsns[17][0] = 1.05; nsns[17][1] = 0.45; nsns[17][2] = 0.11;
 
-  nsns_id[18] = "J1756-2251 pulsar"; nsns_sid[18] = "J1756p";
-  nsns[18][0] = 1.40; nsns[18][1] = 0.02; nsns[18][2] = 0.03;
+  nsns_id[18] = "J1811-1736 pulsar"; nsns_sid[18] = "J1811p";
+  nsns[18][0] = 1.56; nsns[18][1] = 0.24; nsns[18][2] = 0.45;
 
-  nsns_id[19] = "J1756-2251 comp."; nsns_sid[19] = "J1756c";
-  nsns[19][0] = 1.18; nsns[19][1] = 0.03; nsns[19][2] = 0.02;
+  nsns_id[19] = "J1811-1736 comp."; nsns_sid[19] = "J1811c";
+  nsns[19][0] = 1.12; nsns[19][1] = 0.47; nsns[19][2] = 0.13;
 
-  nsns_id[20] = "J1811-1736 pulsar"; nsns_sid[20] = "J1811p";
-  nsns[20][0] = 1.56; nsns[20][1] = 0.24; nsns[20][2] = 0.45;
+  nsns_id[20] = "J1829+2456 pulsar"; nsns_sid[20] = "J1829p";
+  nsns[20][0] = 1.20; nsns[20][1] = 0.12; nsns[20][2] = 0.46;
 
-  nsns_id[21] = "J1811-1736 comp."; nsns_sid[21] = "J1811c";
-  nsns[21][0] = 1.12; nsns[21][1] = 0.47; nsns[21][2] = 0.13;
-
-  nsns_id[22] = "J1829+2456 pulsar"; nsns_sid[22] = "J1829p";
-  nsns[22][0] = 1.20; nsns[22][1] = 0.12; nsns[22][2] = 0.46;
-
-  nsns_id[23] = "J1829+2456 comp."; nsns_sid[23] = "J1829c";
-  nsns[23][0] = 1.40; nsns[23][1] = 0.46; nsns[23][2] = 0.12;
-
-  nsns_id[24] = "J1906+0746 pulsar"; nsns_sid[24] = "J1906p";
-  nsns[24][0] = 1.248; nsns[24][1] = 0.018; nsns[24][2] = 0.018;
-
-  nsns_id[25] = "J1906+0746 comp."; nsns_sid[25] = "J1906c";
-  nsns[25][0] = 1.365; nsns[25][1] = 0.018; nsns[25][2] = 0.018;
+  nsns_id[21] = "J1829+2456 comp."; nsns_sid[21] = "J1829c";
+  nsns[21][0] = 1.40; nsns[21][1] = 0.46; nsns[21][2] = 0.12;
 
   /* Data from NS-WD (some with asymmetric 68% limits)
      [source: Alsing et al. 2018, Kiziltan et al. 2013] */
@@ -156,59 +144,38 @@ void like::load_data() {
   nswd[21][0] = 2.3; nswd[21][1] = 0.7; nswd[21][2] = 0.7;
 
   // [source: Kiziltan et al. 2013]
-  nswd_id[22] = "J0437-4715"; nswd_sid[22] = "J0437"; 
-  nswd[22][0] = 1.76; nswd[22][1] = 0.20; nswd[22][2] = 0.20;
+  nswd_id[22] = "J0621+1002"; nswd_sid[22] = "J0621";
+  nswd[22][0] = 1.70; nswd[22][1] = 0.10; nswd[22][2] = 0.17;
 
-  nswd_id[23] = "J0621+1002"; nswd_sid[23] = "J0621";
-  nswd[23][0] = 1.70; nswd[23][1] = 0.10; nswd[23][2] = 0.17;
+  nswd_id[23] = "B2303+46"; nswd_sid[23] = "B2303";
+  nswd[23][0] = 1.38; nswd[23][1] = 0.06; nswd[23][2] = 0.10;
 
-  nswd_id[24] = "J0751+1807"; nswd_sid[24] = "J0751";
-  nswd[24][0] = 1.26; nswd[24][1] = 0.14; nswd[24][2] = 0.14;
+  nswd_id[24] = "J0024-7204H"; nswd_sid[24] = "J0024";
+  nswd[24][0] = 1.48; nswd[24][1] = 0.03; nswd[24][2] = 0.06;
 
-  nswd_id[25] = "J1012+5307"; nswd_sid[25] = "J1012";
-  nswd[25][0] = 1.64; nswd[25][1] = 0.22; nswd[25][2] = 0.22;
+  nswd_id[25] = "J0514-4002A"; nswd_sid[25] = "J0514";
+  nswd[25][0] = 1.49; nswd[25][1] = 0.04; nswd[25][2] = 0.27;
 
-  nswd_id[26] = "J1614-2230"; nswd_sid[26] = "J1614";
-  nswd[26][0] = 1.97; nswd[26][1] = 0.04; nswd[26][2] = 0.04;
+  nswd_id[26] = "B1516+02B"; nswd_sid[26] = "B1516";
+  nswd[26][0] = 2.10; nswd[26][1] = 0.19; nswd[26][2] = 0.19;
 
-  nswd_id[27] = "J1713+0747"; nswd_sid[27] = "J1713";
-  nswd[27][0] = 1.53; nswd[27][1] = 0.08; nswd[27][2] = 0.06;
+  nswd_id[27] = "J1748-2446I"; nswd_sid[27] = "J1748I";
+  nswd[27][0] = 1.91; nswd[27][1] = 0.02; nswd[27][2] = 0.10;
 
-  nswd_id[28] = "B1855+09"; nswd_sid[28] = "B1855";
-  nswd[28][0] = 1.57; nswd[28][1] = 0.12; nswd[28][2] = 0.11;
+  nswd_id[28] = "J1748-2446J"; nswd_sid[28] = "J1748J";
+  nswd[28][0] = 1.79; nswd[28][1] = 0.02; nswd[28][2] = 0.10;
 
-  nswd_id[29] = "J1909-3744"; nswd_sid[29] = "J1909";
-  nswd[29][0] = 1.438; nswd[29][1] = 0.024; nswd[29][2] = 0.024;
+  nswd_id[29] = "B1802-07"; nswd_sid[29] = "B1802";
+  nswd[29][0] = 1.26; nswd[29][1] = 0.08; nswd[29][2] = 0.17;
 
-  nswd_id[30] = "B2303+46"; nswd_sid[30] = "B2303";
-  nswd[30][0] = 1.38; nswd[30][1] = 0.06; nswd[30][2] = 0.10;
-
-  nswd_id[31] = "J0024-7204H"; nswd_sid[31] = "J0024";
-  nswd[31][0] = 1.48; nswd[31][1] = 0.03; nswd[31][2] = 0.06;
-
-  nswd_id[32] = "J0514-4002A"; nswd_sid[32] = "J0514";
-  nswd[32][0] = 1.49; nswd[32][1] = 0.04; nswd[32][2] = 0.27;
-
-  nswd_id[33] = "B1516+02B"; nswd_sid[33] = "B1516";
-  nswd[33][0] = 2.10; nswd[33][1] = 0.19; nswd[33][2] = 0.19;
-
-  nswd_id[34] = "J1748-2446I"; nswd_sid[34] = "J1748";
-  nswd[34][0] = 1.91; nswd[34][1] = 0.02; nswd[34][2] = 0.10;
-
-  nswd_id[35] = "J1748-2446J"; nswd_sid[35] = "J1748";
-  nswd[35][0] = 1.79; nswd[35][1] = 0.02; nswd[35][2] = 0.10;
-
-  nswd_id[36] = "B1802-07"; nswd_sid[36] = "B1802";
-  nswd[36][0] = 1.26; nswd[36][1] = 0.08; nswd[36][2] = 0.17;
-
-  nswd_id[37] = "B1911-5958A"; nswd_sid[37] = "B1911";
-  nswd[37][0] = 1.40; nswd[37][1] = 0.16; nswd[37][2] = 0.10;
+  nswd_id[30] = "B1911-5958A"; nswd_sid[30] = "B1911";
+  nswd[30][0] = 1.40; nswd[30][1] = 0.16; nswd[30][2] = 0.10;
 
   // [source: Cromartie et al. 2020]
-  nswd_id[38] = "J0740+6620"; nswd_sid[38] = "J0740";
-  nswd[38][0] = 2.14; nswd[38][1] = 0.20; nswd[38][2] = 0.18;
+  nswd_id[31] = "J0740+6620"; nswd_sid[31] = "J0740";
+  nswd[31][0] = 2.14; nswd[31][1] = 0.20; nswd[31][2] = 0.18;
 
-  /* Data from x-ray/optical (all with symmetric 68% limits)
+  /* Data from NS-MS (some from X-ray/Optical, all with symmetric 68% limits)
      [source: Alsing et al. 2018] */
   nsms_id[0]  = "4U1700-377"; nsms_sid[0] = "4U1700";
   nsms[0][0]  = 1.96;  nsms[0][1] = 0.19; 
@@ -348,12 +315,32 @@ double like::calc_d(double l, double u) {
 }
 
 // The likelihood function for NS-NS (see refs/method.pdf)
-double like::wgt_ns(double mu, double sigma,
-			  double alpha, ubvector Mj) {
-  double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
-  for (int j=0; j<26; j++) {
+double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
+
+  double mu = pars[pvi["mu_ns"]];
+  double sigma = pars[pvi["sigma_ns"]];
+  double alpha = pars[pvi["alpha_ns"]];
+
+  double mj, lj, uj, cj, dj, Lj, L=1.0;
+
+  for (int j=0; j<N_ns; j++) {
     mj = nsns[j][0]; uj = nsns[j][1];
     lj = nsns[j][2]; cj = sqrt(uj/lj);
+    dj = calc_d(lj, uj);
+    double Mj = pars[pvi[((string)"M_")+nsns_sid[j]]];
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    if (Lj<=1.0e-6) Lj = 1.0; // Ignore small likelihoods
+    L *= Lj; // Note: This is not log-likelihood
+  }
+  return L;
+}
+
+// The likelihood function for NS-WD (see refs/method.pdf)
+double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
+  double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
+  for (int j=0; j<N_wd; j++) {
+    mj = nswd[j][0]; uj = nswd[j][1];
+    lj = nswd[j][2]; cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
     wj = mj - Mj.at(j);
     Lj = asym_norm(wj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
@@ -363,66 +350,70 @@ double like::wgt_ns(double mu, double sigma,
   return L;
 }
 
-// The likelihood function for NS-WD (see refs/method.pdf)
-double like::wgt_wd(double mu, double sigma,
-			  double alpha, ubvector Mj) {
-  double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
-  for (int j=0; j<38; j++) {
-    mj = nswd[j][0]; uj = nswd[j][1];
-    lj = nswd[j][2]; cj = sqrt(uj/lj);
-    dj = calc_d(lj, uj);
-    wj = mj - Mj.at(j);
-    Lj = asym_norm(wj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
-    if (Lj<=1.0e-6) Lj = 1.0;
-    L *= Lj;
-  }
-  return L;
-}
-
 // The likelihood function for NS-MS (see refs/method.pdf)
-double like::wgt_ms(double mu, double sigma,
-			  double alpha, ubvector Mj) {
+double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
   double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
-  for (int j=0; j<16; j++) {
+  for (int j=0; j<N_ms; j++) {
     mj = nsms[j][0]; uj = nsms[j][1];
     lj = uj; cj = sqrt(uj/lj); // Symmetric 68% limits
     dj = calc_d(lj, uj);
     wj = mj - Mj.at(j);
     Lj = asym_norm(wj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
-    if (Lj<=1.0e-6) Lj = 1.0;
-    L *= Lj;
+    if (Lj<=1.0e-6) Lj = 1.0; // Ignore small likelihoods
+    L *= Lj; // Note: This is not log-likelihood
   }
   return L;
 }
 
-/*
- */
-
 /** \brief Set the vec_index object with the parameters from
-    the mass data
+    the mass data.
     
     This function will be called by bamr to fill the \c pvi
     object with the mass parameters from the data set.
 */
 void like::set_params(vec_index &pvi) {
   
-  for(size_t i=0;i<26;i++) {
-    string mass_par=((string)"M_")+nsns_id[i];
+// Start with NS-NS parameters
+  pvi.append("mu_ns");
+  pvi.append("sigma_ns");
+  pvi.append("alpha_ns");
+  for(size_t i=0; i<N_ns; i++) {
+    string mass_par=((string)"M_")+nsns_sid[i];
     pvi.append(mass_par);
   }
-  
+// Next, fill in NS-WD parameters
+  pvi.append("mu_wd");
+  pvi.append("sigma_wd");
+  pvi.append("alpha_wd");
+  for(size_t i=0; i<N_wd; i++) {
+    string mass_par=((string)"M_")+nswd_sid[i];
+    pvi.append(mass_par);
+  }
+// Finally, fill in NS-MS parameters
+  pvi.append("mu_ms");
+  pvi.append("sigma_ms");
+  pvi.append("alpha_ms");
+  for(size_t i=0; i<N_ms; i++) {
+    string mass_par=((string)"M_")+nsms_sid[i];
+    pvi.append(mass_par);
+  }
   return;
 }
 
 /// The combined likelihood function to be calculated
-double like::wgt_all(const ubvector &pars, vec_index &pvi) {
+double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
    
-  double mu_NSNS=pars[pvi["mu_NSNS"]];
-  //double M_1913a=pars[pvi["M_1913a"]];
+
+  double mu_wd = pars[pvi["mu_wd"]];
+  double sigma_wd = pars[pvi["sigma_wd"]];
+  double alpha_wd = pars[pvi["alpha_wd"]];
+  double mu_ms = pars[pvi["mu_ms"]];
+  double sigma_ms = pars[pvi["sigma_ms"]];
+  double alpha_ms = pars[pvi["alpha_ms"]];
   
-  for(size_t i=0;i<26;i++) {
-    double mass_par=pars[pvi[((string)"M_")+nsns_sid[i]]];
-    // double mass_par=pars[pvi[(std::string("M_"))+nsns_sid[i]]];
+  for(size_t i=0; i<N_ns; i++) {
+    double mass_par = pars[pvi[((string)"M_")+nsns_sid[i]]];
+    //double mass_par=pars[pvi[(std::string("M_"))+nsns_sid[i]]];
     double temp=skew_norm(nsns[i][0],mass_par);
   }
   
@@ -435,7 +426,7 @@ double like::wgt_all(const ubvector &pars, vec_index &pvi) {
   int j, k, n=94;
   double mu, sigma, alpha, L_ns, L_wd, L_ms, L=1.0;
   
-  load_data(); // Load data from likelihood.h
+  this->load_data(); // Load source data 
   
   mu = fmean(seed);
   sigma = fsigma(seed);
@@ -446,9 +437,9 @@ double like::wgt_all(const ubvector &pars, vec_index &pvi) {
   }
 
   // Calculate likelihood for each population
-  L_ns = wgt_ns(mu, sigma, alpha, Mj);
-  L_wd = wgt_wd(mu, sigma, alpha, Mj);
-  L_ms = wgt_ms(mu, sigma, alpha, Mj);
+  L_ns = calc_likelihood_ns(mu, sigma, alpha, Mj);
+  L_wd = calc_likelihood_wd(mu, sigma, alpha, Mj);
+  L_ms = calc_likelihood_ms(mu, sigma, alpha, Mj);
 
   // Multiply the likelihoods
   L *= L_ns * L_wd * L_ms;
@@ -459,6 +450,6 @@ double like::wgt_all(const ubvector &pars, vec_index &pvi) {
 
 int main() {
   like c;
-  c.log_wgt();
+  c.calc_likelihood();
   return 0;
 }
