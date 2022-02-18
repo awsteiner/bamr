@@ -23,6 +23,9 @@ typedef boost::numeric::ublas::vector<double> ubvector;
 // Total number of stars in each population
 int N_ns=22, N_wd=32, N_ms=16;
 
+// Set tolerance for small likelihoods
+double tol = 1.0e-6;
+
 // std::string vectors to store the full names/identifiers of the stars
 string nsns_id[N_ns],  nswd_id[N_wd],  nsms_id[N_ms];
 

@@ -323,44 +323,62 @@ double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
 
   double mj, lj, uj, cj, dj, Lj, L=1.0;
 
-  for (int j=0; j<N_ns; j++) {
-    mj = nsns[j][0]; uj = nsns[j][1];
-    lj = nsns[j][2]; cj = sqrt(uj/lj);
+  for (size_t j=0; j<N_ns; j++) {
+    mj = nsns[j][0]; 
+    uj = nsns[j][1];
+    lj = nsns[j][2]; 
+    cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
-    double Mj = pars[pvi[((string)"M_")+nsns_sid[j]]];
+    double Mj = pars[pvi[((string)"M")+nsns_sid[j]]];
     Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
-    if (Lj<=1.0e-6) Lj = 1.0; // Ignore small likelihoods
-    L *= Lj; // Note: This is not log-likelihood
+    if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
+    L *= Lj; 
   }
   return L;
 }
 
 // The likelihood function for NS-WD (see refs/method.pdf)
 double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
-  double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
-  for (int j=0; j<N_wd; j++) {
-    mj = nswd[j][0]; uj = nswd[j][1];
-    lj = nswd[j][2]; cj = sqrt(uj/lj);
+  
+  double mu = pars[pvi["mu_wd"]];
+  double sigma = pars[pvi["sigma_wd"]];
+  double alpha = pars[pvi["alpha_wd"]];
+  
+  double mj, lj, uj, cj, dj, Lj, L=1.0;
+  
+  for (size_t j=0; j<N_wd; j++) {
+    mj = nswd[j][0];
+    uj = nswd[j][1];
+    lj = nswd[j][2];
+    cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
-    wj = mj - Mj.at(j);
-    Lj = asym_norm(wj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
-    if (Lj<=1.0e-6) Lj = 1.0; // Ignore small likelihoods
-    L *= Lj; // Note: This is not log-likelihood
+    double Mj = pars[pvi[((string)"M")+nswd_sid[j]]];
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
+    L *= Lj; 
   }
   return L;
 }
 
 // The likelihood function for NS-MS (see refs/method.pdf)
 double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
-  double mj, lj, uj, cj, dj, wj, Lj, L=1.0;
-  for (int j=0; j<N_ms; j++) {
-    mj = nsms[j][0]; uj = nsms[j][1];
-    lj = uj; cj = sqrt(uj/lj); // Symmetric 68% limits
+  
+  double mu = pars[pvi["mu_ms"]];
+  double sigma = pars[pvi["sigma_ms"]];
+  double alpha = pars[pvi["alpha_ms"]];
+
+  double mj, lj, uj, cj, dj, Lj, L=1.0;
+
+  for (size_t j=0; j<N_ms; j++) {
+    mj = nsms[j][0];
+    uj = nsms[j][1];
+    lj = uj; // Symmetric 68% limits
+    cj = sqrt(uj/lj); 
     dj = calc_d(lj, uj);
-    wj = mj - Mj.at(j);
-    Lj = asym_norm(wj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
-    if (Lj<=1.0e-6) Lj = 1.0; // Ignore small likelihoods
-    L *= Lj; // Note: This is not log-likelihood
+    double Mj = pars[pvi[((string)"M")+nsms_sid[j]]];
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
+    L *= Lj; 
   }
   return L;
 }
@@ -378,7 +396,7 @@ void like::set_params(vec_index &pvi) {
   pvi.append("sigma_ns");
   pvi.append("alpha_ns");
   for(size_t i=0; i<N_ns; i++) {
-    string mass_par=((string)"M_")+nsns_sid[i];
+    string mass_par=((string)"M")+nsns_sid[i];
     pvi.append(mass_par);
   }
 // Next, fill in NS-WD parameters
@@ -386,7 +404,7 @@ void like::set_params(vec_index &pvi) {
   pvi.append("sigma_wd");
   pvi.append("alpha_wd");
   for(size_t i=0; i<N_wd; i++) {
-    string mass_par=((string)"M_")+nswd_sid[i];
+    string mass_par=((string)"M")+nswd_sid[i];
     pvi.append(mass_par);
   }
 // Finally, fill in NS-MS parameters
@@ -394,7 +412,7 @@ void like::set_params(vec_index &pvi) {
   pvi.append("sigma_ms");
   pvi.append("alpha_ms");
   for(size_t i=0; i<N_ms; i++) {
-    string mass_par=((string)"M_")+nsms_sid[i];
+    string mass_par=((string)"M")+nsms_sid[i];
     pvi.append(mass_par);
   }
   return;
@@ -402,20 +420,6 @@ void like::set_params(vec_index &pvi) {
 
 /// The combined likelihood function to be calculated
 double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
-   
-
-  double mu_wd = pars[pvi["mu_wd"]];
-  double sigma_wd = pars[pvi["sigma_wd"]];
-  double alpha_wd = pars[pvi["alpha_wd"]];
-  double mu_ms = pars[pvi["mu_ms"]];
-  double sigma_ms = pars[pvi["sigma_ms"]];
-  double alpha_ms = pars[pvi["alpha_ms"]];
-  
-  for(size_t i=0; i<N_ns; i++) {
-    double mass_par = pars[pvi[((string)"M_")+nsns_sid[i]]];
-    //double mass_par=pars[pvi[(std::string("M_"))+nsns_sid[i]]];
-    double temp=skew_norm(nsns[i][0],mass_par);
-  }
   
   default_random_engine seed;
   uniform_real_distribution<double> fmean(0.5, 2.5);
@@ -423,25 +427,16 @@ double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
   uniform_real_distribution<double> falpha(-1.0, 1.0);
   uniform_real_distribution<double> fmass(1.0, 2.3);
   
-  int j, k, n=94;
-  double mu, sigma, alpha, L_ns, L_wd, L_ms, L=1.0;
+  double L_ns, L_wd, L_ms, L=1.0;
   
   this->load_data(); // Load source data 
-  
-  mu = fmean(seed);
-  sigma = fsigma(seed);
-  alpha = falpha(seed);
-  
-  for(j=0; j<94; j++) {
-    Mj.push_back(fmass(seed));
-  }
 
   // Calculate likelihood for each population
-  L_ns = calc_likelihood_ns(mu, sigma, alpha, Mj);
-  L_wd = calc_likelihood_wd(mu, sigma, alpha, Mj);
-  L_ms = calc_likelihood_ms(mu, sigma, alpha, Mj);
+  L_ns = calc_likelihood_ns(pars, pvi);
+  L_wd = calc_likelihood_wd(pars, pvi);
+  L_ms = calc_likelihood_ms(pars, pvi);
 
-  // Multiply the likelihoods
+  // Multiply all likelihoods. Note: This is not log-likelihood.
   L *= L_ns * L_wd * L_ms;
   
   return log(L);
