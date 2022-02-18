@@ -387,7 +387,7 @@ double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
     the mass data.
     
     This function will be called by bamr to fill the \c pvi
-    object with the mass parameters from the data set.
+    object with the all parameters from the data set.
 */
 void like::set_params(vec_index &pvi) {
   
@@ -420,14 +420,15 @@ void like::set_params(vec_index &pvi) {
 
 /// The combined likelihood function to be calculated
 double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
-  
+  /*
   default_random_engine seed;
   uniform_real_distribution<double> fmean(0.5, 2.5);
   uniform_real_distribution<double> fsigma(0.0, 1.0);
   uniform_real_distribution<double> falpha(-1.0, 1.0);
   uniform_real_distribution<double> fmass(1.0, 2.3);
-  
-  double L_ns, L_wd, L_ms, L=1.0;
+  */
+
+  double L_ns, L_wd, L_ms, L;
   
   this->load_data(); // Load source data 
 
@@ -437,7 +438,7 @@ double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
   L_ms = calc_likelihood_ms(pars, pvi);
 
   // Multiply all likelihoods. Note: This is not log-likelihood.
-  L *= L_ns * L_wd * L_ms;
+  L = L_ns * L_wd * L_ms;
   
   return log(L);
 }

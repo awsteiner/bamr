@@ -1778,6 +1778,31 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   low=&(bcp->ppi.low[0]);
   high=&(bcp->ppi.high[0]);
   
+  /*
+  // Set prior for mu
+  low2[0]=0.5;
+  high2[0]=2.5;
+
+  // Set prior for sigma
+  low2[1]=;
+  high2[1]=;
+
+  // Set prior for alpha
+  low2[2]=-1.0;
+  high2[2]=1.0;
+
+  // Set prior for all mass parameters
+  low2[3]=1.0;
+  high2[3]=2.3;
+  */
+
+  /*
+  vec_index pvi;
+  like c;
+  c.set_params(pvi);
+  low[pvi[((string)"M")+c.nsms_sid[j]]]=1.0;
+  */
+
   return 0;
 }
 
