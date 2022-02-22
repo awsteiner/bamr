@@ -1978,25 +1978,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   high[6]=8.0;
   high[7]=8.0;
   high[8]=8.0;
-
-  /*
-  // Set prior for mu
-  low2[0]=0.5;
-  high2[0]=2.5;
-
-  // Set prior for sigma
-  low2[1]=;
-  high2[1]=;
-
-  // Set prior for alpha
-  low2[2]=-1.0;
-  high2[2]=1.0;
-
-  // Set prior for all mass parameters
-  low2[3]=1.0;
-  high2[3]=2.3;
-  */
-    
+      
   // Go to the parent which takes care of the data-related
   // parameters
   model::get_param_info(names,units,low,high);

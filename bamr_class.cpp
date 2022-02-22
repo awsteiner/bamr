@@ -25,6 +25,8 @@
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
 
+#include "likelihood.h"
+
 using namespace std;
 using namespace o2scl;
 // For I/O with HDF files
@@ -366,6 +368,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       return iret;
     }
 
+    like c;
+    vec_index pvi;
+    c.set_params(pvi);
+    c.calc_likelihood(pars, pvi);
+
     // Reference to model object for convenience
     model &m=*this->mod;
 
@@ -548,7 +555,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
 	    
-    } else {
+    } 
+    
+    else {
 
       // Apply intrinsic scatter
 
@@ -1778,30 +1787,42 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   low=&(bcp->ppi.low[0]);
   high=&(bcp->ppi.high[0]);
   
-  /*
-  // Set prior for mu
-  low2[0]=0.5;
-  high2[0]=2.5;
-
-  // Set prior for sigma
-  low2[1]=;
-  high2[1]=;
-
-  // Set prior for alpha
-  low2[2]=-1.0;
-  high2[2]=1.0;
-
-  // Set prior for all mass parameters
-  low2[3]=1.0;
-  high2[3]=2.3;
-  */
-
-  /*
   vec_index pvi;
   like c;
   c.set_params(pvi);
-  low[pvi[((string)"M")+c.nsms_sid[j]]]=1.0;
-  */
+  
+  low[pvi[mean_ns]]=0.5;
+  low[pvi[width_ns]]=0.5;
+  low[pvi[asym_ns]]=-1.0;
+  low[pvi[mean_wd]]=0.5;
+  low[pvi[width_wd]]=0.5;
+  low[pvi[asym_wd]]=-1.0;
+  low[pvi[mean_ms]]=0.5;
+  low[pvi[width_ms]]=0.5;
+  low[pvi[asym_ms]]=-1.0;
+
+  high[pvi[mean_ns]]=2.5;
+  high[pvi[width_ns]]=0.5;
+  high[pvi[asym_ns]]=1.0;
+  high[pvi[mean_wd]]=2.5;
+  high[pvi[width_wd]]=0.5;
+  high[pvi[asym_wd]]=1.0;
+  high[pvi[mean_ms]]=2.5;
+  high[pvi[width_ms]]=0.5;
+  high[pvi[asym_ms]]=1.0;
+
+  for (size_t i=0; i<=c.N_ns; i++) {
+    low[pvi[((string)"M_")+c.nsns_sid[i]]]=1.0;
+    high[pvi[((string)"M_")+c.nsns_sid[i]]]=2.3;
+  }
+  for (size_t i=0; i<=c.N_wd; i++) {
+    low[pvi[((string)"M_")+c.nswd_sid[i]]]=1.0;
+    high[pvi[((string)"M_")+c.nswd_sid[i]]]=2.3;
+  }
+  for (size_t i=0; i<=c.N_ms; i++) {
+    low[pvi[((string)"M_")+c.nsms_sid[i]]]=1.0;
+    high[pvi[((string)"M_")+c.nsms_sid[i]]]=2.3;
+  }  
 
   return 0;
 }

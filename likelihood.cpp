@@ -6,6 +6,8 @@
   // int nf;
 
 void like::load_data() {
+  data_t dt;
+  dt.mass.push_back(1.4);
   /* Data from NS-NS/DNS (some with asymmetric 68% limits)
      [source: Alsing et al. 2018] */
   nsns_id[0] = "J0453+1559 pulsar"; nsns_sid[0] = "J0453p";
@@ -246,9 +248,9 @@ double like::norm_cdf(double x) {
 }
 
 // Skewed Normal PDF [eq. 13, refs/kiziltan13]
-double like::skew_norm(double x, double mu, double sigma, double alpha) {
-  return 2.0 * norm_pdf((x-mu)/sigma)
-    * norm_cdf((x-mu)*alpha/sigma) / sigma;
+double like::skew_norm(double x, double mean, double width, double asym) {
+  return 2.0 * norm_pdf((x-mean)/width)
+    * norm_cdf((x-mean)*asym/width) / width;
 }
 
 // Asymmetric Normal PDF [eq. 14, refs/kiziltan13]
@@ -317,9 +319,9 @@ double like::calc_d(double l, double u) {
 // The likelihood function for NS-NS (see refs/method.pdf)
 double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
 
-  double mu = pars[pvi["mu_ns"]];
-  double sigma = pars[pvi["sigma_ns"]];
-  double alpha = pars[pvi["alpha_ns"]];
+  double mean = pars[pvi["mean_ns"]];
+  double width = pars[pvi["width_ns"]];
+  double asym = pars[pvi["asym_ns"]];
 
   double mj, lj, uj, cj, dj, Lj, L=1.0;
 
@@ -330,7 +332,7 @@ double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
     cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
     double Mj = pars[pvi[((string)"M")+nsns_sid[j]]];
-    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
   }
@@ -340,9 +342,9 @@ double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
 // The likelihood function for NS-WD (see refs/method.pdf)
 double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
   
-  double mu = pars[pvi["mu_wd"]];
-  double sigma = pars[pvi["sigma_wd"]];
-  double alpha = pars[pvi["alpha_wd"]];
+  double mean = pars[pvi["mean_wd"]];
+  double width = pars[pvi["width_wd"]];
+  double asym = pars[pvi["asym_wd"]];
   
   double mj, lj, uj, cj, dj, Lj, L=1.0;
   
@@ -353,7 +355,7 @@ double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
     cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
     double Mj = pars[pvi[((string)"M")+nswd_sid[j]]];
-    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
   }
@@ -363,9 +365,9 @@ double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
 // The likelihood function for NS-MS (see refs/method.pdf)
 double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
   
-  double mu = pars[pvi["mu_ms"]];
-  double sigma = pars[pvi["sigma_ms"]];
-  double alpha = pars[pvi["alpha_ms"]];
+  double mean = pars[pvi["mean_ms"]];
+  double width = pars[pvi["width_ms"]];
+  double asym = pars[pvi["asym_ms"]];
 
   double mj, lj, uj, cj, dj, Lj, L=1.0;
 
@@ -376,7 +378,7 @@ double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
     cj = sqrt(uj/lj); 
     dj = calc_d(lj, uj);
     double Mj = pars[pvi[((string)"M")+nsms_sid[j]]];
-    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mu, sigma, alpha);
+    Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
   }
@@ -392,27 +394,27 @@ double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
 void like::set_params(vec_index &pvi) {
   
 // Start with NS-NS parameters
-  pvi.append("mu_ns");
-  pvi.append("sigma_ns");
-  pvi.append("alpha_ns");
+  pvi.append("mean_ns");
+  pvi.append("width_ns");
+  pvi.append("asym_ns");
   for(size_t i=0; i<N_ns; i++) {
-    string mass_par=((string)"M")+nsns_sid[i];
+    string mass_par=((string)"M_")+nsns_sid[i];
     pvi.append(mass_par);
   }
 // Next, fill in NS-WD parameters
-  pvi.append("mu_wd");
-  pvi.append("sigma_wd");
-  pvi.append("alpha_wd");
+  pvi.append("mean_wd");
+  pvi.append("width_wd");
+  pvi.append("asym_wd");
   for(size_t i=0; i<N_wd; i++) {
-    string mass_par=((string)"M")+nswd_sid[i];
+    string mass_par=((string)"M_")+nswd_sid[i];
     pvi.append(mass_par);
   }
 // Finally, fill in NS-MS parameters
-  pvi.append("mu_ms");
-  pvi.append("sigma_ms");
-  pvi.append("alpha_ms");
+  pvi.append("mean_ms");
+  pvi.append("width_ms");
+  pvi.append("asym_ms");
   for(size_t i=0; i<N_ms; i++) {
-    string mass_par=((string)"M")+nsms_sid[i];
+    string mass_par=((string)"M_")+nsms_sid[i];
     pvi.append(mass_par);
   }
   return;
