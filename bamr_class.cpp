@@ -357,7 +357,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     iret = 0;
     
-  } else {
+  } 
+  
+  else {
 
     cout << "Here2." << endl;
     
@@ -1791,35 +1793,35 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   like c;
   c.set_params(pvi);
   
-  low[pvi[mean_ns]]=0.5;
-  low[pvi[width_ns]]=0.5;
-  low[pvi[asym_ns]]=-1.0;
-  low[pvi[mean_wd]]=0.5;
-  low[pvi[width_wd]]=0.5;
-  low[pvi[asym_wd]]=-1.0;
-  low[pvi[mean_ms]]=0.5;
-  low[pvi[width_ms]]=0.5;
-  low[pvi[asym_ms]]=-1.0;
+  low[pvi["mean_ns"]]=0.5;
+  low[pvi["width_ns"]]=0.5;
+  low[pvi["asym_ns"]]=-1.0;
+  low[pvi["mean_wd"]]=0.5;
+  low[pvi["width_wd"]]=0.5;
+  low[pvi["asym_wd"]]=-1.0;
+  low[pvi["mean_ms"]]=0.5;
+  low[pvi["width_ms"]]=0.5;
+  low[pvi["asym_ms"]]=-1.0;
 
-  high[pvi[mean_ns]]=2.5;
-  high[pvi[width_ns]]=0.5;
-  high[pvi[asym_ns]]=1.0;
-  high[pvi[mean_wd]]=2.5;
-  high[pvi[width_wd]]=0.5;
-  high[pvi[asym_wd]]=1.0;
-  high[pvi[mean_ms]]=2.5;
-  high[pvi[width_ms]]=0.5;
-  high[pvi[asym_ms]]=1.0;
+  high[pvi["mean_ns"]]=2.5;
+  high[pvi["width_ns"]]=0.5;
+  high[pvi["asym_ns"]]=1.0;
+  high[pvi["mean_wd"]]=2.5;
+  high[pvi["width_wd"]]=0.5;
+  high[pvi["asym_wd"]]=1.0;
+  high[pvi["mean_ms"]]=2.5;
+  high[pvi["width_ms"]]=0.5;
+  high[pvi["asym_ms"]]=1.0;
 
-  for (size_t i=0; i<=c.N_ns; i++) {
+  for (size_t i=0; i<c.N_ns; i++) {
     low[pvi[((string)"M_")+c.nsns_sid[i]]]=1.0;
     high[pvi[((string)"M_")+c.nsns_sid[i]]]=2.3;
   }
-  for (size_t i=0; i<=c.N_wd; i++) {
+  for (size_t i=0; i<c.N_wd; i++) {
     low[pvi[((string)"M_")+c.nswd_sid[i]]]=1.0;
     high[pvi[((string)"M_")+c.nswd_sid[i]]]=2.3;
   }
-  for (size_t i=0; i<=c.N_ms; i++) {
+  for (size_t i=0; i<c.N_ms; i++) {
     low[pvi[((string)"M_")+c.nsms_sid[i]]]=1.0;
     high[pvi[((string)"M_")+c.nsms_sid[i]]]=2.3;
   }  

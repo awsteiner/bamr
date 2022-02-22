@@ -331,7 +331,7 @@ double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
     lj = nsns[j][2]; 
     cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
-    double Mj = pars[pvi[((string)"M")+nsns_sid[j]]];
+    double Mj = pars[pvi[((string)"M_")+nsns_sid[j]]];
     Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
@@ -354,7 +354,7 @@ double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
     lj = nswd[j][2];
     cj = sqrt(uj/lj);
     dj = calc_d(lj, uj);
-    double Mj = pars[pvi[((string)"M")+nswd_sid[j]]];
+    double Mj = pars[pvi[((string)"M_")+nswd_sid[j]]];
     Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
@@ -377,7 +377,7 @@ double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
     lj = uj; // Symmetric 68% limits
     cj = sqrt(uj/lj); 
     dj = calc_d(lj, uj);
-    double Mj = pars[pvi[((string)"M")+nsms_sid[j]]];
+    double Mj = pars[pvi[((string)"M_")+nsms_sid[j]]];
     Lj = asym_norm(mj-Mj, cj, dj) * skew_norm(Mj, mean, width, asym);
     if (Lj<tol) Lj = 1.0; // Ignore small likelihoods
     L *= Lj; 
