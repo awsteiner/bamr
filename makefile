@@ -97,10 +97,11 @@ LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o
+bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o \
+		mass_data.o likelihood.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o \
-		nstar_cold2.o ns_data.o models.o mcmc_bamr.o \
-		bamr_class.o $(LIBS) 
+		nstar_cold2.o ns_data.o models.o mcmc_bamr.o bamr_class.o \
+		mass_data.o likelihood.o $(LIBS) 
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -123,6 +124,12 @@ bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
 
+likelihood.o: likelihood.cpp likelihood.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o likelihood.o -c likelihood.cpp
+
+mass_data.o: mass_data.cpp likelihood.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mass_data.o -c mass_data.cpp
+
 # ----------------------------------------------------------------------
 # Help target
 # ----------------------------------------------------------------------
@@ -144,11 +151,11 @@ help:
 
 bamr_nompi: bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o 
+		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
 		bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o $(LIBS) 
+		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o $(LIBS) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
@@ -167,6 +174,12 @@ mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 
 bamr_class_nompi.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
+
+likelihood_nompi.o: likelihood.cpp likelihood.h
+	$(CXX) $(ALL_FLAGS) -o likelihood_nompi.o -c likelihood.cpp
+
+mass_data_nompi.o: mass_data.cpp likelihood.h
+	$(CXX) $(ALL_FLAGS) -o mass_data_nompi.o -c mass_data.cpp
 
 #bc_wrap_nompi.o: bc_wrap.cpp bc_wrap.h
 #	$(CXX) $(ALL_FLAGS) -o bc_wrap_nompi.o -c bc_wrap.cpp

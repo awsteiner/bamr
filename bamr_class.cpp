@@ -373,7 +373,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     like c;
     vec_index pvi;
     c.set_params(pvi);
-    c.calc_likelihood(pars, pvi);
+    log_wgt += c.calc_likelihood(pars, pvi);
 
     // Reference to model object for convenience
     model &m=*this->mod;
