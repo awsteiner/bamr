@@ -370,10 +370,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       return iret;
     }
 
-    like c;
-    vec_index pvi;
-    c.set_params(pvi);
-    log_wgt += c.calc_likelihood(pars, pvi);
+    // Calculate likelihood if using mass data from populations
+    if (set->use_population) {
+      like c;
+      vec_index pvi;
+      c.set_params(pvi);
+      log_wgt += c.calc_likelihood(pars, pvi);
+    }
 
     // Reference to model object for convenience
     model &m=*this->mod;
@@ -1789,42 +1792,48 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   low=&(bcp->ppi.low[0]);
   high=&(bcp->ppi.high[0]);
   
-  vec_index pvi;
-  like c;
-  c.set_params(pvi);
-  
-  low[pvi["mean_ns"]]=0.5;
-  low[pvi["width_ns"]]=0.5;
-  low[pvi["asym_ns"]]=-1.0;
-  low[pvi["mean_wd"]]=0.5;
-  low[pvi["width_wd"]]=0.5;
-  low[pvi["asym_wd"]]=-1.0;
-  low[pvi["mean_ms"]]=0.5;
-  low[pvi["width_ms"]]=0.5;
-  low[pvi["asym_ms"]]=-1.0;
 
-  high[pvi["mean_ns"]]=2.5;
-  high[pvi["width_ns"]]=0.5;
-  high[pvi["asym_ns"]]=1.0;
-  high[pvi["mean_wd"]]=2.5;
-  high[pvi["width_wd"]]=0.5;
-  high[pvi["asym_wd"]]=1.0;
-  high[pvi["mean_ms"]]=2.5;
-  high[pvi["width_ms"]]=0.5;
-  high[pvi["asym_ms"]]=1.0;
+  // Set priors if using mass data from populations
+  if (setp->use_population) {
+    vec_index pvi;
+    like c;
+    mass_data md;
+    c.load_data();
+    c.set_params(pvi);
 
-  for (size_t i=0; i<c.N_ns; i++) {
-    low[pvi[((string)"M_")+c.nsns_sid[i]]]=1.0;
-    high[pvi[((string)"M_")+c.nsns_sid[i]]]=2.3;
+    low[pvi["mean_ns"]]=0.5;
+    low[pvi["width_ns"]]=0.0;
+    low[pvi["asym_ns"]]=-1.0;
+    low[pvi["mean_wd"]]=0.5;
+    low[pvi["width_wd"]]=0.0;
+    low[pvi["asym_wd"]]=-1.0;
+    low[pvi["mean_ms"]]=0.5;
+    low[pvi["width_ms"]]=0.0;
+    low[pvi["asym_ms"]]=-1.0;
+
+    high[pvi["mean_ns"]]=2.5;
+    high[pvi["width_ns"]]=1.0;
+    high[pvi["asym_ns"]]=1.0;
+    high[pvi["mean_wd"]]=2.5;
+    high[pvi["width_wd"]]=1.0;
+    high[pvi["asym_wd"]]=1.0;
+    high[pvi["mean_ms"]]=2.5;
+    high[pvi["width_ms"]]=1.0;
+    high[pvi["asym_ms"]]=1.0;
+
+    for (size_t i=0; i<md.id_ns.size(); i++) {
+      low[pvi[((string)"M_")+md.id_ns[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_ns[i]]]=2.3;
+    }
+    for (size_t i=0; i<md.id_wd.size(); i++) {
+      low[pvi[((string)"M_")+md.id_wd[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_wd[i]]]=2.3;
+    }
+    for (size_t i=0; i<md.id_ms.size(); i++) {
+      low[pvi[((string)"M_")+md.id_ms[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_ms[i]]]=2.3;
+    }
   }
-  for (size_t i=0; i<c.N_wd; i++) {
-    low[pvi[((string)"M_")+c.nswd_sid[i]]]=1.0;
-    high[pvi[((string)"M_")+c.nswd_sid[i]]]=2.3;
-  }
-  for (size_t i=0; i<c.N_ms; i++) {
-    low[pvi[((string)"M_")+c.nsms_sid[i]]]=1.0;
-    high[pvi[((string)"M_")+c.nsms_sid[i]]]=2.3;
-  }  
 
   return 0;
 }

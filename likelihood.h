@@ -18,23 +18,28 @@ typedef boost::numeric::ublas::vector<double> ubvector;
 
 struct mass_data {
   // std::string to store the full names of stars
-  vector<string> name;
+  vector<string> name_ns;
+  vector<string> name_wd;
+  vector<string> name_ms;
 
   // std::string to store the shortened names of stars
-  vector<string> id;
-
-  /* std::string to store the NS population types,
-  i.e. NS-NS, NS-WD, or NS-MS */
-  vector<string> type;
+  vector<string> id_ns;
+  vector<string> id_wd;
+  vector<string> id_ms;
 
   //std::vector to store the measured NS mass
-  vector<double> mass;
+  vector<double> mass_ns;
+  vector<double> mass_wd;
+  vector<double> mass_ms;
 
   //std::vector to store +68% central limits of NS masses
-  vector<double> uplim;
+  vector<double> uplim_ns;
+  vector<double> uplim_wd;
+  vector<double> lim_ms;
 
   //std::vector to store -68% central limits of NS masses
-  vector<double> lowlim;
+  vector<double> lowlim_ns;
+  vector<double> lowlim_wd;
 };
 
 class like {
@@ -46,7 +51,7 @@ class like {
     double asym_norm(double, double, double);
     double f2solve(double, double &, double &);
     double df2solve(double, double &, double &);
-    double calc_d(double, double);
+    double calc_par_d(double, double);
     double calc_likelihood_ns(const ubvector &, vec_index &);
     double calc_likelihood_wd(const ubvector &, vec_index &);
     double calc_likelihood_ms(const ubvector &, vec_index &);

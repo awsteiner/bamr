@@ -525,10 +525,10 @@ clean:
 
 compare_threep:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
+		-set use_population 1 \
 		-set min_max_mass 1.93 \
 		-set prefix compare_threep_2 \
 		-set max_time 43200 \
-		-set max_iters 1 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
