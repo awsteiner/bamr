@@ -361,8 +361,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   
   else {
 
-    cout << "Here2." << endl;
-    
+    cout << "In bamr_class::compute_point()" << endl;
+
     // Compute the M vs R curve and return a non-zero value if it failed
     mod->compute_star(pars,scr_out,iret,dat);
     if (iret!=0) {
@@ -386,7 +386,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // are out of range
 	  
     for(size_t i=0;i<nsd->n_sources;i++) {
-      cout << "Here1" << endl;
       double mass=dat.sourcet.get("M",i);
       double rad=dat.sourcet.get("R",i);
       if (mass<set->in_m_min || mass>set->in_m_max || 
