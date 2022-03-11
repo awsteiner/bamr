@@ -406,7 +406,7 @@ int mcmc_bamr::mcmc_init() {
 
   if(set->apply_emu == false){
 
-         // -----------------------------------------------------------
+    // -----------------------------------------------------------
     // Add columns to table
 
     for(size_t i=0;i<nsd->n_sources;i++) {
@@ -598,28 +598,13 @@ int mcmc_bamr::mcmc_init() {
       }
     }
     if(nsd->n_sources>0){
-	    for(size_t i=0;i<nsd->n_sources;i++) {
-	      this->table->new_column(((std::string)"log_wgt_")+nsd->source_names[i]);
-	    }
+      for(size_t i=0;i<nsd->n_sources;i++) {
+        this->table->new_column(((std::string)"log_wgt_")+
+                                nsd->source_names[i]);
+      }
     }
   }
-  if (set->use_population) {
-    this->table->new_column("mean_ns");
-    this->table->set_unit("mean_ns","Msun");
-    this->table->new_column("width_ns");
-    this->table->set_unit("width_ns","Msun");
-    this->table->new_column("asym_ns");
-    this->table->new_column("mean_wd");
-    this->table->set_unit("mean_wd","Msun");
-    this->table->new_column("width_wd");
-    this->table->set_unit("width_wd","Msun");
-    this->table->new_column("asym_wd");
-    this->table->new_column("mean_ms");
-    this->table->set_unit("mean_ms","Msun");
-    this->table->new_column("width_ms");
-    this->table->set_unit("width_ms","Msun");
-    this->table->new_column("asym_ms");
-  }
+  
   // -----------------------------------------------------------
   // Make grids
 
@@ -897,6 +882,76 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // to table::new_column().
   bc_arr[0]->mod->get_param_info(names,units,low,high);
 
+  if (set->use_population) {
+    
+    // Ugly hack to increase the size of the 'low' and 'high' vectors
+    ubvector low2(low.size()+nsd->n_sources);
+    ubvector high2(low.size()+nsd->n_sources);
+    vector_copy(low.size(),low,low2);
+    vector_copy(high.size(),high,high2);
+
+    names.push_back("mean_ns");
+    units.push_back("Msun");
+    names.push_back("width_ns");
+    units.push_back("Msun");
+    names.push_back("asym_ns");
+    units.push_back("");
+    names.push_back("mean_wd");
+    units.push_back("Msun");
+    names.push_back("width_wd");
+    units.push_back("Msun");
+    names.push_back("asym_wd");
+    units.push_back("");
+    names.push_back("mean_ms");
+    units.push_back("Msun");
+    names.push_back("width_ms");
+    units.push_back("Msun");
+    names.push_back("asym_ms");
+    units.push_back("");
+    
+    low2[0+low.size()]=0.5;
+    low2[1+low.size()]=0.0;
+    low2[2+low.size()]=-1.0;
+    low2[3+low.size()]=0.5;
+    low2[4+low.size()]=0.0;
+    low2[5+low.size()]=-1.0;
+    low2[6+low.size()]=0.5;
+    low2[7+low.size()]=0.0;
+    low2[8+low.size()]=-1.0;
+    high2[0+high.size()]=2.5;
+    high2[1+high.size()]=1.0;
+    high2[2+high.size()]=1.0;
+    high2[3+high.size()]=2.5;
+    high2[4+high.size()]=1.0;
+    high2[5+high.size()]=1.0;
+    high2[6+high.size()]=2.5;
+    high2[7+high.size()]=1.0;
+    high2[8+high.size()]=1.0;
+    
+    /*
+      c.set_params(pvi);
+      
+      for (size_t i=0; i<md.id_ns.size(); i++) {
+      low[pvi[((string)"M_")+md.id_ns[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_ns[i]]]=2.3;
+      }
+      for (size_t i=0; i<md.id_wd.size(); i++) {
+      low[pvi[((string)"M_")+md.id_wd[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_wd[i]]]=2.3;
+      }
+      for (size_t i=0; i<md.id_ms.size(); i++) {
+      low[pvi[((string)"M_")+md.id_ms[i]]]=1.0;
+      high[pvi[((string)"M_")+md.id_ms[i]]]=2.3;
+      }
+    */
+    
+    // Ugly hack, part 2
+    low.resize(low2.size());
+    high.resize(high2.size());
+    vector_copy(low.size(),low2,low);
+    vector_copy(high.size(),high2,high);
+  }
+
   if (set->apply_intsc) {
 
     // Ugly hack to increase the size of the 'low' and 'high' vectors
@@ -1010,6 +1065,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     Py_DECREF(train_trainClass);
   }
 
+  for(size_t j=0;j<names.size();j++) {
+    pvi.append(names[j]);
+  }
+  // Copy the pvi object from mcmc_bamr to bamr_class so it can
+  // be used in compute_point()
+  for(size_t j=0;j<bc_arr.size();j++) {
+    bc_arr[j]->pvi=pvi;
+  }
+  
   // Perform the MCMC simulation
   this->mcmc_fill(names.size(),low,high,pfa,ffa);
   

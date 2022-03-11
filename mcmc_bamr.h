@@ -149,6 +149,9 @@ namespace bamr {
     
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
+
+    /// Desc
+    vec_index pvi;
     
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP
 	thread)

@@ -236,7 +236,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
       if(nsd->n_sources>0){
         for(size_t i=0;i<nsd->n_sources;i++) {
-          if(dat.eos.is_constant(((std::string)"log_wgt_")+nsd->source_names[i])){
+          if(dat.eos.is_constant(((std::string)"log_wgt_")+
+                                 nsd->source_names[i])){
             line.push_back(dat.eos.get_constant(
               ((std::string)"log_wgt_")+nsd->source_names[i]));
           }
@@ -372,10 +373,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
-      like c;
-      vec_index pvi;
-      c.set_params(pvi);
-      log_wgt += c.calc_likelihood(pars, pvi);
+      log_wgt += nsd->pop_like.calc_likelihood(pars,pvi);
     }
 
     // Reference to model object for convenience
@@ -1790,49 +1788,6 @@ int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
   units=&(bcp->ppi.unit_c[0]);
   low=&(bcp->ppi.low[0]);
   high=&(bcp->ppi.high[0]);
-  
-
-  // Set priors if using mass data from populations
-  if (setp->use_population) {
-    vec_index pvi;
-    like c;
-    mass_data md;
-    c.load_data();
-    c.set_params(pvi);
-
-    low[pvi["mean_ns"]]=0.5;
-    low[pvi["width_ns"]]=0.0;
-    low[pvi["asym_ns"]]=-1.0;
-    low[pvi["mean_wd"]]=0.5;
-    low[pvi["width_wd"]]=0.0;
-    low[pvi["asym_wd"]]=-1.0;
-    low[pvi["mean_ms"]]=0.5;
-    low[pvi["width_ms"]]=0.0;
-    low[pvi["asym_ms"]]=-1.0;
-
-    high[pvi["mean_ns"]]=2.5;
-    high[pvi["width_ns"]]=1.0;
-    high[pvi["asym_ns"]]=1.0;
-    high[pvi["mean_wd"]]=2.5;
-    high[pvi["width_wd"]]=1.0;
-    high[pvi["asym_wd"]]=1.0;
-    high[pvi["mean_ms"]]=2.5;
-    high[pvi["width_ms"]]=1.0;
-    high[pvi["asym_ms"]]=1.0;
-
-    for (size_t i=0; i<md.id_ns.size(); i++) {
-      low[pvi[((string)"M_")+md.id_ns[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_ns[i]]]=2.3;
-    }
-    for (size_t i=0; i<md.id_wd.size(); i++) {
-      low[pvi[((string)"M_")+md.id_wd[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_wd[i]]]=2.3;
-    }
-    for (size_t i=0; i<md.id_ms.size(); i++) {
-      low[pvi[((string)"M_")+md.id_ms[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_ms[i]]]=2.3;
-    }
-  }
 
   return 0;
 }

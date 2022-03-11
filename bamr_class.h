@@ -65,7 +65,7 @@ namespace bamr {
       set in \ref mcmc_bamr::set_model() .
   */
   class bamr_class {
-    
+
   public:
 
     PyObject *train_modFile;
@@ -171,6 +171,9 @@ namespace bamr {
 
     /// Desc
     py_param_info ppi;
+    
+    /// Desc
+    vec_index pvi;
     
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;

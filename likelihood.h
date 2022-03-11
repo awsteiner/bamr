@@ -1,3 +1,6 @@
+#ifndef LIKELIHOOD_H
+#define LIKELIHOOD_H
+
 #include <fstream>
 #include <cmath>
 #include <random>
@@ -77,3 +80,5 @@ class like {
     void set_params(vec_index &);
     double calc_likelihood(const ubvector &, vec_index &);
 };
+
+#endif

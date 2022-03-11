@@ -31,6 +31,7 @@
 #include <o2scl/table3d.h>
 
 #include "settings.h"
+#include "likelihood.h"
 
 namespace bamr {
   
@@ -49,6 +50,7 @@ namespace bamr {
 
     ns_data() {
       n_sources=0;
+      pop_like.load_data();
     }      
 
     virtual ~ns_data() {
@@ -92,6 +94,12 @@ namespace bamr {
      */
     virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
 
+    /// Desc
+    like pop_like;
+    
+    /// Desc
+    mass_data pop_mass;
+    
     /** \brief Load input probability distributions
 	
 	Ensure all MPI ranks read all files while ensuring that
