@@ -942,8 +942,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Ugly hack, part 2
     low.resize(low3.size());
     high.resize(high3.size());
-    vector_copy(low3.size(), low3, low);
-    vector_copy(high3.size(), high3, high);
+    vector_copy(low.size(), low3, low);
+    vector_copy(high.size(), high3, high);
   } 
 
   if (set->apply_intsc) {
