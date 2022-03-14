@@ -1,23 +1,24 @@
 #include "likelihood.h"
 
 // PDF of standard normal distribution N(0,1)
-double like::norm_pdf(double x) {
+double likelihood::norm_pdf(double x) {
   return exp(-0.5*x*x) / sqrt(2.0*M_PI);
 }
 
-// CDF of standard N(0,1) in terms of erf(x)
-double like::norm_cdf(double x) {
+// CDF of standard normal N(0,1) in terms of erf(x)
+double likelihood::norm_cdf(double x) {
   return 0.5 * (1.0 + erf(x/sqrt(2.0)));
 }
 
-// Skewed Normal PDF [eq. 13, refs/kiziltan13]
-double like::skew_norm(double x, double mean, double width, double asym) {
+// Skewed Normal PDF 
+double likelihood::skew_norm(double x, double mean, double width, 
+    double asym) {
   return 2.0 * norm_pdf((x-mean)/width)
     * norm_cdf((x-mean)*asym/width) / width;
 }
 
-// Asymmetric Normal PDF [eq. 14, refs/kiziltan13]
-double like::asym_norm(double x, double c, double d) {
+// Asymmetric Normal PDF 
+double likelihood::asym_norm(double x, double c, double d) {
   double a = 2.0 / (d*(c+1.0/c));
   if (x>=0.0)
     return a * norm_pdf(x/(c*d));
@@ -25,23 +26,23 @@ double like::asym_norm(double x, double c, double d) {
     return a * norm_pdf(c*x/d);
 }
 
-// This is the function to solve [see refs/calc.pdf]
-double like::f2solve(double x, double &l, double &u) {
+// This is the function to solve 
+double likelihood::f2solve(double x, double &l, double &u) {
   double c = sqrt(u/l);
   return c*c*erf(u/(sqrt(2.0)*c*x)) - erf(-c*l/(sqrt(2.0)*x))
     - 0.68*(c*c+1.0);
 }
 
-// Derivative of the function to solve (for use with root_stef)
-double like::df2solve(double x, double &l, double &u) {
+// Derivative of the function to solve 
+double likelihood::df2solve(double x, double &l, double &u) {
   double c = sqrt(u/l);
   double a = sqrt(2.0/M_PI) * c / x / x;
   return a*l*exp(-pow(u/(sqrt(2.0)*c*x), 2.0))
     - a*u*exp(-pow(c*l/sqrt(2.0)/x, 2.0));
 }
 
-// The solver that calculates parameters dj, given cj = sqrt(uj/lj)
-double like::calc_par_d(double l, double u) {
+// Solver to calculates parameters d, given c
+double likelihood::calc_par_d(double l, double u) {
   cout.setf(ios::scientific);
   
   test_mgr t;
@@ -51,7 +52,7 @@ double like::calc_par_d(double l, double u) {
   // The solver, specifying the function type: funct<double>
   root_brent_gsl<> solver;
   
-  like c;
+  likelihood c;
   
   /* This is the code that allows specification of class member
      functions as functions to solve. This approach avoids the use of
@@ -59,10 +60,10 @@ double like::calc_par_d(double l, double u) {
      expense of a little overhead. We need to provide the address of
      an instantiated object and the address of the member function. */
   funct f2 = bind(mem_fn<double(double, double &, double &)>
-		  (&like::f2solve), &c, _1, ref(l), ref(u));
+		  (&likelihood::f2solve), &c, _1, ref(l), ref(u));
   
   /* funct df2 = bind(mem_fn<double(double, double &, double &)>
-     (&like::df2solve), &c, _1, ref(l), ref(u)); */
+     (&likelihood::df2solve), &c, _1, ref(l), ref(u)); */
   
   // The root is bracketted in [x1, x2]
   double x1=0.0, x2=1.0;
@@ -80,14 +81,14 @@ double like::calc_par_d(double l, double u) {
 }
 
 // The likelihood function for NS-NS (see refs/method.pdf)
-double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi) {
 
   double mean = pars[pvi["mean_ns"]];
   double width = pars[pvi["width_ns"]];
   double asym = pars[pvi["asym_ns"]];
   
   mass_data md;
-  this->load_data(); // Load source data
+  md.load_data(); // Load source data
   
   double mj, lj, uj, cj, dj, Lj, L=1.0;
 
@@ -106,14 +107,14 @@ double like::calc_likelihood_ns(const ubvector &pars, vec_index &pvi) {
 }
 
 // The likelihood function for NS-WD (see refs/method.pdf)
-double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi) {
   
   double mean = pars[pvi["mean_wd"]];
   double width = pars[pvi["width_wd"]];
   double asym = pars[pvi["asym_wd"]];
   
   mass_data md;
-  this->load_data(); // Load source data
+  md.load_data(); // Load source data
   
   double mj, lj, uj, cj, dj, Lj, L=1.0;
   
@@ -132,14 +133,14 @@ double like::calc_likelihood_wd(const ubvector &pars, vec_index &pvi) {
 }
 
 // The likelihood function for NS-MS (see refs/method.pdf)
-double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi) {
   
   double mean = pars[pvi["mean_ms"]];
   double width = pars[pvi["width_ms"]];
   double asym = pars[pvi["asym_ms"]];
   
   mass_data md;
-  this->load_data(); // Load source data
+  md.load_data(); // Load source data
   
   double mj, lj, uj, cj, dj, Lj, L=1.0;
 
@@ -163,10 +164,10 @@ double like::calc_likelihood_ms(const ubvector &pars, vec_index &pvi) {
     This function will be called by bamr to fill the \c pvi
     object with the all parameters from the data set.
 */
-void like::set_params(vec_index &pvi) {
+void likelihood::set_params(vec_index &pvi) {
   
   mass_data md;
-  this->load_data(); // Load source data
+  md.load_data(); // Load source data
 
   // Fill in NS-NS parameters
   pvi.append("mean_ns");
@@ -195,18 +196,19 @@ void like::set_params(vec_index &pvi) {
   return;
 }
 
-/// The combined likelihood function to be calculated
-double like::calc_likelihood(const ubvector &pars, vec_index &pvi) {
+// The combined likelihood function to be calculated
+double likelihood::get_weight(const ubvector &pars, vec_index &pvi) {
 
-  double L_ns, L_wd, L_ms, L; 
+  double wgt_ns, wgt_wd, wgt_ms, wgt; 
 
   // Calculate likelihood for each population
-  L_ns = calc_likelihood_ns(pars, pvi);
-  L_wd = calc_likelihood_wd(pars, pvi);
-  L_ms = calc_likelihood_ms(pars, pvi);
+  wgt_ns = get_weight_ns(pars, pvi);
+  wgt_wd = get_weight_wd(pars, pvi);
+  wgt_ms = get_weight_ms(pars, pvi);
 
   // Multiply all likelihoods. Note: This is not log-likelihood.
-  L = L_ns * L_wd * L_ms;
+  wgt = wgt_ns * wgt_wd * wgt_ms;
   
-  return log(L);
+  // Return the log-likelihood
+  return log(wgt);
 }

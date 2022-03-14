@@ -373,7 +373,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
-      log_wgt += nsd->pop_like.calc_likelihood(pars,pvi);
+      log_wgt += nsd->pop_like.get_weight(pars, pvi);
     }
 
     // Reference to model object for convenience

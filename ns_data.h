@@ -50,7 +50,7 @@ namespace bamr {
 
     ns_data() {
       n_sources=0;
-      pop_like.load_data();
+      pop_mass.load_data();
     }      
 
     virtual ~ns_data() {
@@ -94,10 +94,10 @@ namespace bamr {
      */
     virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
 
-    /// Desc
-    like pop_like;
+    /// Object to call functions from class likelihood
+    likelihood pop_like;
     
-    /// Desc
+    /// Object to load mass data from struct mass_data
     mass_data pop_mass;
     
     /** \brief Load input probability distributions

@@ -884,11 +884,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (set->use_population) {
     
+    mass_data mdat;
+    mdat.load_data();
+
     // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low2(low.size()+nsd->n_sources);
-    ubvector high2(low.size()+nsd->n_sources);
-    vector_copy(low.size(),low,low2);
-    vector_copy(high.size(),high,high2);
+    ubvector low3(low.size()+mdat.n_stars);
+    ubvector high3(high.size()+mdat.n_stars);
+    vector_copy(low.size(), low, low3);
+    vector_copy(high.size(), high, high3);
 
     names.push_back("mean_ns");
     units.push_back("Msun");
@@ -908,49 +911,40 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     units.push_back("Msun");
     names.push_back("asym_ms");
     units.push_back("");
+
+    for (size_t i=0; i<mdat.id_ns.size(); i++) {
+      names.push_back(string("M_")+mdat.id_ns[i]);
+      units.push_back("Msun");
+    }
+    for (size_t i=0; i<mdat.id_wd.size(); i++) {
+      names.push_back(string("M_")+mdat.id_wd[i]);
+      units.push_back("Msun");
+    }
+    for (size_t i=0; i<mdat.id_ms.size(); i++) {
+      names.push_back(string("M_")+mdat.id_ms[i]);
+      units.push_back("Msun");
+    }
     
-    low2[0+low.size()]=0.5;
-    low2[1+low.size()]=0.0;
-    low2[2+low.size()]=-1.0;
-    low2[3+low.size()]=0.5;
-    low2[4+low.size()]=0.0;
-    low2[5+low.size()]=-1.0;
-    low2[6+low.size()]=0.5;
-    low2[7+low.size()]=0.0;
-    low2[8+low.size()]=-1.0;
-    high2[0+high.size()]=2.5;
-    high2[1+high.size()]=1.0;
-    high2[2+high.size()]=1.0;
-    high2[3+high.size()]=2.5;
-    high2[4+high.size()]=1.0;
-    high2[5+high.size()]=1.0;
-    high2[6+high.size()]=2.5;
-    high2[7+high.size()]=1.0;
-    high2[8+high.size()]=1.0;
-    
-    /*
-      c.set_params(pvi);
-      
-      for (size_t i=0; i<md.id_ns.size(); i++) {
-      low[pvi[((string)"M_")+md.id_ns[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_ns[i]]]=2.3;
-      }
-      for (size_t i=0; i<md.id_wd.size(); i++) {
-      low[pvi[((string)"M_")+md.id_wd[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_wd[i]]]=2.3;
-      }
-      for (size_t i=0; i<md.id_ms.size(); i++) {
-      low[pvi[((string)"M_")+md.id_ms[i]]]=1.0;
-      high[pvi[((string)"M_")+md.id_ms[i]]]=2.3;
-      }
-    */
+    // Set priors for population parameters
+    for (size_t i=0; i<9; i+=3) {
+      low3[i+0+low.size()] = 0.5;
+      low3[i+1+low.size()] = 0.0;
+      low3[i+2+low.size()] = -1.0;
+      high3[i+0+high.size()] = 2.5;
+      high3[i+1+high.size()] = 1.0;
+      high3[i+2+high.size()] = 1.0;
+    }
+    for (size_t i=0; i<mdat.n_stars; i++) {
+      low3[i+9+low.size()] = 1.0;
+      high3[i+9+high.size()] = 2.3;
+    }
     
     // Ugly hack, part 2
-    low.resize(low2.size());
-    high.resize(high2.size());
-    vector_copy(low.size(),low2,low);
-    vector_copy(high.size(),high2,high);
-  }
+    low.resize(low3.size());
+    high.resize(high3.size());
+    vector_copy(low3.size(), low3, low);
+    vector_copy(high3.size(), high3, high);
+  } 
 
   if (set->apply_intsc) {
 
