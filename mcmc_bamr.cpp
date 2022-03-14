@@ -880,7 +880,35 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // nuisance variables for the data points). The other columns and
   // units are specified in mcmc_init() function manually using a call
   // to table::new_column().
-  bc_arr[0]->mod->get_param_info(names,units,low,high);
+  bc_arr[0]->mod->get_param_info(names,units,low,high); 
+
+  if (set->apply_intsc) {
+
+    // Ugly hack to increase the size of the 'low' and 'high' vectors
+    ubvector low2(low.size()+nsd->n_sources);
+    ubvector high2(low.size()+nsd->n_sources);
+    cout << "set->apply_intsc" << endl;
+    cout << "low.size() = " << low.size() << endl;
+    cout << "high.size() = " << high.size() << endl;
+    cout << "n_sources = " << nsd->n_sources << endl;
+    vector_copy(low.size(),low,low2);
+    vector_copy(high.size(),high,high2);
+
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      names.push_back(((string)"log10_is_")+nsd->source_names[i]);
+      units.push_back("");
+      low2[i+low.size()]=-2.0;
+      high2[i+high.size()]=2.0;
+    }
+
+    // Ugly hack, part 2
+    low.resize(low2.size());
+    high.resize(high2.size());
+    vector_copy(low.size(),low2,low);
+    vector_copy(high.size(),high2,high);
+    
+  }
+
 
   if (set->use_population) {
     
@@ -888,8 +916,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     mdat.load_data();
 
     // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low3(low.size()+mdat.n_stars);
-    ubvector high3(high.size()+mdat.n_stars);
+    ubvector low3(low.size()+9+mdat.n_stars);
+    ubvector high3(high.size()+9+mdat.n_stars);
     vector_copy(low.size(), low, low3);
     vector_copy(high.size(), high, high3);
 
@@ -942,32 +970,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Ugly hack, part 2
     low.resize(low3.size());
     high.resize(high3.size());
-    vector_copy(low.size(), low3, low);
-    vector_copy(high.size(), high3, high);
-  } 
-
-  if (set->apply_intsc) {
-
-    // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low2(low.size()+nsd->n_sources);
-    ubvector high2(low.size()+nsd->n_sources);
-    vector_copy(low.size(),low,low2);
-    vector_copy(high.size(),high,high2);
-
-    for(size_t i=0;i<nsd->n_sources;i++) {
-      names.push_back(((string)"log10_is_")+nsd->source_names[i]);
-      units.push_back("");
-      low2[i+low.size()]=-2.0;
-      high2[i+high.size()]=2.0;
-    }
-
-    // Ugly hack, part 2
-    low.resize(low2.size());
-    high.resize(high2.size());
-    vector_copy(low.size(),low2,low);
-    vector_copy(high.size(),high2,high);
-    
+    vector_copy(low3.size(), low3, low);
+    vector_copy(high3.size(), high3, high);
   }
+
 
   set_names_units(names,units);
   
