@@ -887,10 +887,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Ugly hack to increase the size of the 'low' and 'high' vectors
     ubvector low2(low.size()+nsd->n_sources);
     ubvector high2(low.size()+nsd->n_sources);
-    cout << "set->apply_intsc" << endl;
-    cout << "low.size() = " << low.size() << endl;
-    cout << "high.size() = " << high.size() << endl;
-    cout << "n_sources = " << nsd->n_sources << endl;
     vector_copy(low.size(),low,low2);
     vector_copy(high.size(),high,high2);
 
