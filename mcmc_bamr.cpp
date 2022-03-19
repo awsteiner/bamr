@@ -980,12 +980,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     ubvector init(names.size());
     bc_arr[0]->mod->initial_point(init);
 
+
     if (set->apply_intsc) {
       for(size_t i=0;i<nsd->n_sources;i++) {
 	init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
-    }
+    } /* Do the same for use_population */
     
+
     // AWS: 3/20/18: I changed this part, because we want the MCMC class
     // to be able to expect that different entries in the initial_points
     // array

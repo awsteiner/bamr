@@ -189,7 +189,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
         line.push_back(dat.gridt.get("Lambda_bar",i));
       }
     }
-
+    cout << "After set->addl_quants" << endl;
     if (nsd->source_fnames_alt.size()>0) {
       for(size_t i=0;i<nsd->n_sources;i++) {
         line.push_back(dat.sourcet.get("alt",i));
@@ -247,6 +247,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
         }
       }
     }
+    cout << "In bamr_class::fill()" << endl;
     return o2scl::success;
   }  
 
@@ -256,7 +257,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 			      double &log_wgt, model_data &dat) {
 
   int iret;
-
+  cout << "In bamr_class::compiute_point()" << endl;
   if (set->apply_emu) {
 
     // create vector for emulator prediction
