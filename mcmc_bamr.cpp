@@ -962,7 +962,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       low3[i+9+low.size()] = 1.0;
       high3[i+9+high.size()] = 2.3;
     }
-    
+
     // Ugly hack, part 2
     low.resize(low3.size());
     high.resize(high3.size());
@@ -973,26 +973,65 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   set_names_units(names,units);
   
-  // Set initial points if they have not already been set by the
-  // user
+  // Set initial points if they have not already been set by the user
   if (this->initial_points.size()==0) {
+    
     // Get the parameter initial values for this model 
     ubvector init(names.size());
     bc_arr[0]->mod->initial_point(init);
-
-
+    /*for (size_t i=0; i<init.size(); i++) {
+        cout << "init[" << i << "] = " << init[i] << endl;
+    }*/
     if (set->apply_intsc) {
-      for(size_t i=0;i<nsd->n_sources;i++) {
-	init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
+      for (size_t i=0; i<nsd->n_sources; i++) {
+	      init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
-    } /* Do the same for use_population */
+      cout << "bc_arr[0]->mod->n_eos_params+nsd->n_sources = " 
+        << bc_arr[0]->mod->n_eos_params+nsd->n_sources << endl;
+      cout << "bc_arr[0]->mod->n_eos_params = " 
+        << bc_arr[0]->mod->n_eos_params << endl;
+      cout << "nsd->n_sources = " 
+        << nsd->n_sources << endl;
+    } 
     
+    // Do the same for use_population
+    /* bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
+       bc_arr[0]->mod->n_eos_params = 12
+       nsd->n_sources = 11 */
 
+    if (set->use_population) {
+      mass_data mdat;
+      mdat.load_data();
+      if (set->apply_intsc) {
+        for (size_t i=0; i<9; i+=3) {
+          init[i+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 1.4;
+          init[i+1+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 0.1;
+          init[i+2+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 0.0;
+        }
+        for (size_t i=0; i<mdat.n_stars; i++)
+          init[i+9+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 1.4;
+      }
+      else {
+        for (size_t i=0; i<9; i+=3) {
+          init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 1.4;
+          init[i+1+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 0.1;
+          init[i+2+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 0.0;
+        }
+        for (size_t i=0; i<mdat.n_stars; i++)
+          init[i+9+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 1.4;
+      }
+    }
+    for (size_t i=0; i<init.size(); i++) {
+        cout << "init[" << i << "] = " << init[i] << endl;
+    }
     // AWS: 3/20/18: I changed this part, because we want the MCMC class
     // to be able to expect that different entries in the initial_points
     // array
     this->initial_points.clear();
     this->initial_points.push_back(init);
+    for (size_t i=0; i<init.size(); i++) {
+      cout << "initial_points[" << i << "] = " << this->initial_points[0][i] << endl;
+    }
   }
   
   if (model_type==((string)"tews_threep_ligo")) {

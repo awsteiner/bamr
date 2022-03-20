@@ -582,7 +582,8 @@ compare_threep:
 		-model tews_threep_ligo \
 		-set prior_eta 1 \
 		-set mmax_deriv 1 \
-		-mcmc > mcmc_threep_2.out 2>&1 &
+		-mcmc 
+# > mcmc_threep_2.out 2>&1 &
 
 compare_fixp:
 	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
