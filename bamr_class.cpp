@@ -247,7 +247,11 @@ int bamr_class::fill(const ubvector &pars, double weight,
         }
       }
     }
-    cout << "In bamr_class::fill()" << endl;
+    /*
+    Here, do something like:
+      line.push_back("population_params")
+    in loops.
+    */
     return o2scl::success;
   }  
 
@@ -257,7 +261,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 			      double &log_wgt, model_data &dat) {
 
   int iret;
-  cout << "In bamr_class::compiute_point()" << endl;
+
   if (set->apply_emu) {
 
     // create vector for emulator prediction

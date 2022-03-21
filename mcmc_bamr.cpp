@@ -603,6 +603,10 @@ int mcmc_bamr::mcmc_init() {
                                 nsd->source_names[i]);
       }
     }
+    /*
+    Add columns to table to include outputs: log_weights of NS 
+    populations, along with population_params.
+    */
   }
   
   // -----------------------------------------------------------
@@ -986,12 +990,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       for (size_t i=0; i<nsd->n_sources; i++) {
 	      init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
-      cout << "bc_arr[0]->mod->n_eos_params+nsd->n_sources = " 
-        << bc_arr[0]->mod->n_eos_params+nsd->n_sources << endl;
-      cout << "bc_arr[0]->mod->n_eos_params = " 
-        << bc_arr[0]->mod->n_eos_params << endl;
-      cout << "nsd->n_sources = " 
-        << nsd->n_sources << endl;
     } 
     
     // Do the same for use_population
@@ -1021,17 +1019,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
           init[i+9+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 1.4;
       }
     }
-    for (size_t i=0; i<init.size(); i++) {
-        cout << "init[" << i << "] = " << init[i] << endl;
-    }
     // AWS: 3/20/18: I changed this part, because we want the MCMC class
     // to be able to expect that different entries in the initial_points
     // array
     this->initial_points.clear();
     this->initial_points.push_back(init);
-    for (size_t i=0; i<init.size(); i++) {
-      cout << "initial_points[" << i << "] = " << this->initial_points[0][i] << endl;
-    }
   }
   
   if (model_type==((string)"tews_threep_ligo")) {
