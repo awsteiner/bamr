@@ -912,49 +912,22 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (set->use_population) {
     
-    mass_data mdat;
-    mdat.load_data();
+    likelihood &like = nsd->pop_like;
+    mass_data &mdat = nsd->pop_mass;
 
     // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low3(low.size()+9+mdat.n_stars);
-    ubvector high3(high.size()+9+mdat.n_stars);
+    ubvector low3(low.size()+like.n_params);
+    ubvector high3(high.size()+like.n_params);
     vector_copy(low.size(), low, low3);
     vector_copy(high.size(), high, high3);
 
-    names.push_back("mean_ns");
-    units.push_back("Msun");
-    names.push_back("width_ns");
-    units.push_back("Msun");
-    names.push_back("asym_ns");
-    units.push_back("");
-    names.push_back("mean_wd");
-    units.push_back("Msun");
-    names.push_back("width_wd");
-    units.push_back("Msun");
-    names.push_back("asym_wd");
-    units.push_back("");
-    names.push_back("mean_ms");
-    units.push_back("Msun");
-    names.push_back("width_ms");
-    units.push_back("Msun");
-    names.push_back("asym_ms");
-    units.push_back("");
+    for (size_t i=0; i<like.n_params; i++) {
+      names.push_back(like.par_names[i]);
+      units.push_back(like.par_units[i]);
+    }
 
-    for (size_t i=0; i<mdat.id_ns.size(); i++) {
-      names.push_back(string("M_")+mdat.id_ns[i]);
-      units.push_back("Msun");
-    }
-    for (size_t i=0; i<mdat.id_wd.size(); i++) {
-      names.push_back(string("M_")+mdat.id_wd[i]);
-      units.push_back("Msun");
-    }
-    for (size_t i=0; i<mdat.id_ms.size(); i++) {
-      names.push_back(string("M_")+mdat.id_ms[i]);
-      units.push_back("Msun");
-    }
-    
-    // Set priors for population parameters
-    for (size_t i=0; i<9; i+=3) {
+    // Set priors for the population parameters
+    for (size_t i=0; i<like.n_dist_pars; i+=3) {
       low3[i+0+low.size()] = 0.5;
       low3[i+1+low.size()] = 0.0;
       low3[i+2+low.size()] = -1.0;
@@ -963,8 +936,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       high3[i+2+high.size()] = 1.0;
     }
     for (size_t i=0; i<mdat.n_stars; i++) {
-      low3[i+9+low.size()] = 1.0;
-      high3[i+9+high.size()] = 2.3;
+      low3[i+like.n_dist_pars+low.size()] = 1.0;
+      high3[i+like.n_dist_pars+high.size()] = 2.3;
     }
 
     // Ugly hack, part 2
@@ -983,40 +956,56 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Get the parameter initial values for this model 
     ubvector init(names.size());
     bc_arr[0]->mod->initial_point(init);
-    /*for (size_t i=0; i<init.size(); i++) {
-        cout << "init[" << i << "] = " << init[i] << endl;
-    }*/
+
     if (set->apply_intsc) {
       for (size_t i=0; i<nsd->n_sources; i++) {
 	      init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
     } 
     
-    // Do the same for use_population
-    /* bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
-       bc_arr[0]->mod->n_eos_params = 12
-       nsd->n_sources = 11 */
+    /* Note:
+    bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
+    bc_arr[0]->mod->n_eos_params = 12
+    nsd->n_sources = 11 */
 
     if (set->use_population) {
-      mass_data mdat;
-      mdat.load_data();
+      
+      likelihood &like = nsd->pop_like;
+      mass_data &mdat = nsd->pop_mass;
+      size_t &n_eos_params = bc_arr[0]->mod->n_eos_params;
+      size_t &n_sources = nsd->n_sources;
+
       if (set->apply_intsc) {
-        for (size_t i=0; i<9; i+=3) {
-          init[i+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 1.4;
-          init[i+1+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 0.1;
-          init[i+2+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 0.0;
+        for (size_t i=0; i<like.n_dist_pars; i+=3) {
+          init[i+0+n_eos_params+2*n_sources] = 1.4;
+          init[i+1+n_eos_params+2*n_sources] = 0.1;
+          init[i+2+n_eos_params+2*n_sources] = 0.0;
         }
-        for (size_t i=0; i<mdat.n_stars; i++)
-          init[i+9+bc_arr[0]->mod->n_eos_params+2*nsd->n_sources] = 1.4;
+        for (size_t i=0; i<mdat.id_ns.size(); i++)
+          init[i+like.n_dist_pars+n_eos_params+2*n_sources]
+           = mdat.mass_ns[i];
+        for (size_t i=0; i<mdat.id_wd.size(); i++)
+          init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
+            +2*n_sources] = mdat.mass_wd[i];
+        for (size_t i=0; i<mdat.id_ms.size(); i++)
+          init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
+            +n_eos_params+2*n_sources] = mdat.mass_ms[i];
       }
       else {
-        for (size_t i=0; i<9; i+=3) {
-          init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 1.4;
-          init[i+1+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 0.1;
-          init[i+2+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 0.0;
+        for (size_t i=0; i<like.n_dist_pars; i+=3) {
+          init[i+0+n_eos_params+n_sources] = 1.4;
+          init[i+1+n_eos_params+n_sources] = 0.1;
+          init[i+2+n_eos_params+n_sources] = 0.0;
         }
-        for (size_t i=0; i<mdat.n_stars; i++)
-          init[i+9+bc_arr[0]->mod->n_eos_params+nsd->n_sources] = 1.4;
+        for (size_t i=0; i<mdat.id_ns.size(); i++)
+          init[i+like.n_dist_pars+n_eos_params+n_sources]
+           = mdat.mass_ns[i];
+        for (size_t i=0; i<mdat.id_wd.size(); i++)
+          init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
+            +n_sources] = mdat.mass_wd[i];
+        for (size_t i=0; i<mdat.id_ms.size(); i++)
+          init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
+            +n_eos_params+n_sources] = mdat.mass_ms[i];
       }
     }
     // AWS: 3/20/18: I changed this part, because we want the MCMC class

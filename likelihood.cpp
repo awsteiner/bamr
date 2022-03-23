@@ -164,35 +164,49 @@ double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi) {
     This function will be called by bamr to fill the \c pvi
     object with the all parameters from the data set.
 */
-void likelihood::set_params(vec_index &pvi) {
+void likelihood::set_params() {
   
   mass_data md;
   md.load_data(); // Load source data
 
-  // Fill in NS-NS parameters
-  pvi.append("mean_ns");
-  pvi.append("width_ns");
-  pvi.append("asym_ns");
+  // Fill names and units of distribution parameters
+  par_names.push_back("mean_ns");
+  par_units.push_back("Msun");
+  par_names.push_back("width_ns");
+  par_units.push_back("Msun");
+  par_names.push_back("asym_ns");
+  par_units.push_back("");
+  par_names.push_back("mean_wd");
+  par_units.push_back("Msun");
+  par_names.push_back("width_wd");
+  par_units.push_back("Msun");
+  par_names.push_back("asym_wd");
+  par_units.push_back("");
+  par_names.push_back("mean_ms");
+  par_units.push_back("Msun");
+  par_names.push_back("width_ms");
+  par_units.push_back("Msun");
+  par_names.push_back("asym_ms");
+  par_units.push_back("");
+
+  n_dist_pars = par_names.size();
+
+  // Fill names and units of mass parameters
   for(size_t i=0; i<md.id_ns.size(); i++) {
-    string mass_par=((string)"M_")+md.id_ns[i];
-    pvi.append(mass_par);
+    par_names.push_back(string("M_")+md.id_ns[i]);
+    par_units.push_back("Msun");
   }
-  // Fill in NS-WD parameters
-  pvi.append("mean_wd");
-  pvi.append("width_wd");
-  pvi.append("asym_wd");
   for(size_t i=0; i<md.id_wd.size(); i++) {
-    string mass_par=((string)"M_")+md.id_wd[i];
-    pvi.append(mass_par);
+    par_names.push_back(string("M_")+md.id_wd[i]);
+    par_units.push_back("Msun");
   }
-  // Fill in NS-MS parameters
-  pvi.append("mean_ms");
-  pvi.append("width_ms");
-  pvi.append("asym_ms");
   for(size_t i=0; i<md.id_ms.size(); i++) {
-    string mass_par=((string)"M_")+md.id_ms[i];
-    pvi.append(mass_par);
+    par_names.push_back(string("M_")+md.id_ms[i]);
+    par_units.push_back("Msun");
   }
+
+  n_params = par_names.size();
+
   return;
 }
 

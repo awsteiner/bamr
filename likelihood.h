@@ -85,10 +85,23 @@ class likelihood {
   
     /* Tolerance for small weights, below which weights are
     ignored. This ensures that log-weights do not explode. */
-    const double tol = 1.0e-6;
+    const double tol=1.0e-6;
     
-    // Function to fill pvi object with all parameter names
-    void set_params(vec_index &);
+    // Counts the total number of population parameters 
+    size_t n_params;
+
+    // Counts the total number of distribution parameters
+    size_t n_dist_pars;
+
+    // Vector to store the names of all population parameters
+    vector<string> par_names;
+
+    // Vector to store the units of all population parameters
+    vector<string> par_units;
+
+    /* Function to fill vectors with names and units of all 
+    population parameter */
+    void set_params();
 
     // Likelihood function for NS-NS
     double get_weight_ns(const ubvector &, vec_index &);
