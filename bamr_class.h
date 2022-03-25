@@ -175,6 +175,9 @@ namespace bamr {
     /// Desc
     vec_index pvi;
     
+    /// Vector to store log_weights to be passed to table
+    vector<double> pop_weights(4);
+
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
     }

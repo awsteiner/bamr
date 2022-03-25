@@ -597,16 +597,19 @@ int mcmc_bamr::mcmc_init() {
         this->table->new_column("delta_m");
       }
     }
-    if(nsd->n_sources>0){
+    if (nsd->n_sources>0){
       for(size_t i=0;i<nsd->n_sources;i++) {
         this->table->new_column(((std::string)"log_wgt_")+
                                 nsd->source_names[i]);
       }
     }
-    /*
-    Add columns to table to include outputs: log_weights of NS 
-    populations, along with population_params.
-    */
+    if (set->use_population) {
+      cout << "In mcmc_bamr::mcmc_init(), set->use_population:" << endl;
+      this->table->new_column("log_wgt_NS");
+      this->table->new_column("log_wgt_WD");
+      this->table->new_column("log_wgt_MS");
+      this->table->new_column("log_wgt_pop");
+    }
   }
   
   // -----------------------------------------------------------

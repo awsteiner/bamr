@@ -97,8 +97,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
   if (set->apply_emu) {
     return 0;
-  } else {
-    
+  } 
+  
+  else {
+
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("wgt",i));
     }
@@ -236,22 +238,23 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
       if(nsd->n_sources>0){
         for(size_t i=0;i<nsd->n_sources;i++) {
-          if(dat.eos.is_constant(((std::string)"log_wgt_")+
+          if (dat.eos.is_constant(((std::string)"log_wgt_")+
                                  nsd->source_names[i])){
             line.push_back(dat.eos.get_constant(
               ((std::string)"log_wgt_")+nsd->source_names[i]));
           }
-          else{
+          else {
             line.push_back(-800);
           }
         }
       }
     }
-    /*
-    Here, do something like:
-      line.push_back("population_params")
-    in loops.
-    */
+    if (set->use_population) {
+      cout << "In bamr_class::fill(), set->use_population:" << endl;
+      for (size_t i=0; i<pop_weights.size(); i++) {
+        line.push_back(pop_weights[i]);
+      }
+    }
     return o2scl::success;
   }  
 
@@ -367,8 +370,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   
   else {
 
-    cout << "In bamr_class::compute_point()" << endl;
-
     // Compute the M vs R curve and return a non-zero value if it failed
     mod->compute_star(pars,scr_out,iret,dat);
     if (iret!=0) {
@@ -378,7 +379,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
-      log_wgt += nsd->pop_like.get_weight(pars, pvi);
+      cout << "In bamr_class::compute_point(), set->use_population:" << endl;
+      likelihood &like = nsd->pop_like;
+      pop_weights[0] = like.get_weight_ns(pars, pvi);
+      pop_weights[1] = like.get_weight_wd(pars, pvi);
+      pop_weights[2] = like.get_weight_ms(pars, pvi);
+      pop_weights[3] = like.get_weight(pars, pvi);
+      log_wgt += pop_weights[3];
     }
 
     // Reference to model object for convenience
