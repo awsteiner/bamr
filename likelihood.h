@@ -70,18 +70,28 @@ class likelihood {
     double asym_norm(double, double, double);
 
     // The function to solve f(x)=0 [see refs/calc.pdf]
-    double f2solve(double, double &, double &);
+    double f_to_solve(double, double &, double &);
     
     /* Derivative of the function to solve f'(x)
     (for use with root_stef only) */
-    double df2solve(double, double &, double &);
+    double df_to_solve(double, double &, double &);
     
     /* Solver to calculate scale parameters d for a given 
     asymmetry parameter c of function asym_norm (AN) */
-    double calc_par_d(double, double);
+    double get_scale(double, double);
 
 
   public:
+
+    likelihood () {
+      md.load_data(); // Load source data
+    }
+
+    virtual ~likelihood() {
+    }
+
+    // Object to load source data from class mass_data
+    mass_data md;
   
     /* Tolerance for small weights, below which weights are
     ignored. This ensures that log-weights do not explode. */
@@ -101,7 +111,11 @@ class likelihood {
 
     /* Function to fill vectors with names and units of all 
     population parameter */
-    void set_params();
+    void get_params();
+    
+    /* Function to fill the pvi object with names of all 
+    population parameter */
+    void set_params(vec_index &);
 
     // Likelihood function for NS-NS
     double get_weight_ns(const ubvector &, vec_index &);

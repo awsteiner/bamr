@@ -51,7 +51,7 @@ namespace bamr {
     ns_data() {
       n_sources=0;
       pop_mass.load_data();
-      pop_like.set_params();
+      pop_like.get_params();
     }      
 
     virtual ~ns_data() {

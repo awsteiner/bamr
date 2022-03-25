@@ -137,7 +137,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	if (dat.eos.get("ed",i) < c_ed) {
           if (dat.eos.get("cs2",i)>1.0) {
             cout << dat.eos.get("ed",i) << " " << c_ed << endl;
-            cout << "Here4" << endl;
             ret=ix_acausal;
             return;
           }
@@ -204,7 +203,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
         if(dat.eos.get("ed",i) < c_ed){
            if (dat.eos.get("cs2",i)>1.0) {
-             cout << "Here4" << endl;
              ret=ix_acausal;
              return;
            }

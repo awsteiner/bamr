@@ -604,7 +604,6 @@ int mcmc_bamr::mcmc_init() {
       }
     }
     if (set->use_population) {
-      cout << "In mcmc_bamr::mcmc_init(), set->use_population:" << endl;
       this->table->new_column("log_wgt_NS");
       this->table->new_column("log_wgt_WD");
       this->table->new_column("log_wgt_MS");
@@ -984,15 +983,18 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
           init[i+1+n_eos_params+2*n_sources] = 0.1;
           init[i+2+n_eos_params+2*n_sources] = 0.0;
         }
-        for (size_t i=0; i<mdat.id_ns.size(); i++)
+        for (size_t i=0; i<mdat.id_ns.size(); i++) {
           init[i+like.n_dist_pars+n_eos_params+2*n_sources]
            = mdat.mass_ns[i];
-        for (size_t i=0; i<mdat.id_wd.size(); i++)
+        }
+        for (size_t i=0; i<mdat.id_wd.size(); i++) {
           init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
             +2*n_sources] = mdat.mass_wd[i];
-        for (size_t i=0; i<mdat.id_ms.size(); i++)
+        }
+        for (size_t i=0; i<mdat.id_ms.size(); i++) {
           init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
             +n_eos_params+2*n_sources] = mdat.mass_ms[i];
+        }
       }
       else {
         for (size_t i=0; i<like.n_dist_pars; i+=3) {
@@ -1000,15 +1002,18 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
           init[i+1+n_eos_params+n_sources] = 0.1;
           init[i+2+n_eos_params+n_sources] = 0.0;
         }
-        for (size_t i=0; i<mdat.id_ns.size(); i++)
+        for (size_t i=0; i<mdat.id_ns.size(); i++) {
           init[i+like.n_dist_pars+n_eos_params+n_sources]
            = mdat.mass_ns[i];
-        for (size_t i=0; i<mdat.id_wd.size(); i++)
+        }
+        for (size_t i=0; i<mdat.id_wd.size(); i++) {
           init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
             +n_sources] = mdat.mass_wd[i];
-        for (size_t i=0; i<mdat.id_ms.size(); i++)
+        }
+        for (size_t i=0; i<mdat.id_ms.size(); i++) {
           init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
             +n_eos_params+n_sources] = mdat.mass_ms[i];
+        }
       }
     }
     // AWS: 3/20/18: I changed this part, because we want the MCMC class

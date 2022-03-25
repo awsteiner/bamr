@@ -250,7 +250,6 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
     if (set->use_population) {
-      cout << "In bamr_class::fill(), set->use_population:" << endl;
       for (size_t i=0; i<pop_weights.size(); i++) {
         line.push_back(pop_weights[i]);
       }
@@ -379,11 +378,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
-      cout << "In bamr_class::compute_point(), set->use_population:" << endl;
       likelihood &like = nsd->pop_like;
-      
       if (pop_weights.size()==0) pop_weights.resize(4); 
-
       pop_weights[0] = like.get_weight_ns(pars, pvi);
       pop_weights[1] = like.get_weight_wd(pars, pvi);
       pop_weights[2] = like.get_weight_ms(pars, pvi);

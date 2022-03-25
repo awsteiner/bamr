@@ -528,11 +528,11 @@ compare_threep:
 		-set use_population 1 \
 		-set min_max_mass 1.93 \
 		-set prefix compare_threep_2 \
-		-set max_time 43200 \
+		-set max_iters 10 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 1800 -set verbose 3 \
+		-set file_update_time 10 -set verbose 3 \
 		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
