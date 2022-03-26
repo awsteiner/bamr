@@ -118,17 +118,17 @@ class likelihood {
     void set_params(vec_index &);
 
     // Likelihood function for NS-NS
-    double get_weight_ns(const ubvector &, vec_index &);
+    double get_weight_ns(const ubvector &, vec_index &, int &);
     
     // Likelihood function for NS-WD
-    double get_weight_wd(const ubvector &, vec_index &);
+    double get_weight_wd(const ubvector &, vec_index &, int &);
     
     // Likelihood function for NS-MS
-    double get_weight_ms(const ubvector &, vec_index &);
+    double get_weight_ms(const ubvector &, vec_index &, int &);
     
     /* Combined likelihood function for all stars, except 
     GW170817, QLMXBs, PREs, and NICER */
-    double get_weight(const ubvector &, vec_index &);
+    double get_weight(const ubvector &, vec_index &, int &);
 
 };
 

@@ -928,13 +928,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       units.push_back(like.par_units[i]);
     }
 
-    // Set priors for the population parameters
+    /* Set (uniform) priors for the population parameters:
+    mean [-0.5, 2.5]; skewness [-1, 1]; mass [1, 2.3]
+    width [1e-4, 1] => log10_width [-4, 0] */ 
     for (size_t i=0; i<like.n_dist_pars; i+=3) {
       low3[i+0+low.size()] = 0.5;
-      low3[i+1+low.size()] = 0.0;
+      low3[i+1+low.size()] = -4.0;
       low3[i+2+low.size()] = -1.0;
       high3[i+0+high.size()] = 2.5;
-      high3[i+1+high.size()] = 1.0;
+      high3[i+1+high.size()] = 0.0;
       high3[i+2+high.size()] = 1.0;
     }
     for (size_t i=0; i<mdat.n_stars; i++) {
@@ -970,6 +972,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     bc_arr[0]->mod->n_eos_params = 12
     nsd->n_sources = 11 */
 
+    // Set initial points for the population parameters
     if (set->use_population) {
       
       likelihood &like = nsd->pop_like;
@@ -978,11 +981,17 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       size_t &n_sources = nsd->n_sources;
 
       if (set->apply_intsc) {
-        for (size_t i=0; i<like.n_dist_pars; i+=3) {
-          init[i+0+n_eos_params+2*n_sources] = 1.4;
-          init[i+1+n_eos_params+2*n_sources] = 0.1;
-          init[i+2+n_eos_params+2*n_sources] = 0.0;
-        }
+        init[0+n_eos_params+2*n_sources] = 1.327; // mean_NS
+        init[1+n_eos_params+2*n_sources] = -1.068; // log_width_NS
+        init[2+n_eos_params+2*n_sources] = 0.0; // skewness_NS
+        init[3+n_eos_params+2*n_sources] = 1.583; // mean_WD
+        init[4+n_eos_params+2*n_sources] = -0.909; // log_width_WD
+        init[5+n_eos_params+2*n_sources] = 0.0; // skewness_WD
+        init[6+n_eos_params+2*n_sources] = 1.612; // mean_MS
+        init[7+n_eos_params+2*n_sources] = -0.602; // log_width_MS
+        init[8+n_eos_params+2*n_sources] = 0.0; // skewness_MS
+        
+        // Use data to set initial points of mass parameters
         for (size_t i=0; i<mdat.id_ns.size(); i++) {
           init[i+like.n_dist_pars+n_eos_params+2*n_sources]
            = mdat.mass_ns[i];
@@ -997,11 +1006,16 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         }
       }
       else {
-        for (size_t i=0; i<like.n_dist_pars; i+=3) {
-          init[i+0+n_eos_params+n_sources] = 1.4;
-          init[i+1+n_eos_params+n_sources] = 0.1;
-          init[i+2+n_eos_params+n_sources] = 0.0;
-        }
+        init[0+n_eos_params+n_sources] = 1.327;
+        init[1+n_eos_params+n_sources] = -1.071;
+        init[2+n_eos_params+n_sources] = 0.0;
+        init[3+n_eos_params+n_sources] = 1.583;
+        init[4+n_eos_params+n_sources] = -0.455;
+        init[5+n_eos_params+n_sources] = 0.0;
+        init[6+n_eos_params+n_sources] = 1.612;
+        init[7+n_eos_params+n_sources] = -0.561;
+        init[8+n_eos_params+n_sources] = 0.0;
+
         for (size_t i=0; i<mdat.id_ns.size(); i++) {
           init[i+like.n_dist_pars+n_eos_params+n_sources]
            = mdat.mass_ns[i];

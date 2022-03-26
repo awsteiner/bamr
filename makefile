@@ -528,7 +528,7 @@ compare_threep:
 		-set use_population 1 \
 		-set min_max_mass 1.93 \
 		-set prefix compare_threep_2 \
-		-set max_iters 10 \
+		-set max_iters 100 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \

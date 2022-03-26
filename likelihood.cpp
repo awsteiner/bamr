@@ -79,61 +79,72 @@ double likelihood::get_scale(double l, double u) {
 }
 
 // The likelihood function for NS-NS (see refs/method.pdf)
-double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi, int &ret) {
 
   double mean = pars[pvi["mean_NS"]];
-  double width = exp(pars[pvi["log_width_NS"]]);
+  double log_width = pars[pvi["log_width_NS"]];
+  double width = pow(10.0, log_width);
   double skewness = pars[pvi["skewness_NS"]];
   
-  double mass, lowlim, uplim, asym, scale, wgt_star, weight=1.0;
-
+  double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
+  
   for (size_t i=0; i<md.id_ns.size(); i++) {
     mass = md.mass_ns[i]; 
     uplim = md.uplim_ns[i];
     lowlim = md.lowlim_ns[i]; 
     asym = sqrt(uplim/lowlim);
     scale = get_scale(lowlim, uplim);
-    double M_star = pars[pvi[((string)"M_")+md.id_ns[i]]];
+    M_star = pars[pvi[string("M_")+md.id_ns[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
-    if (wgt_star<tol) wgt_star = 1.0; // Ignore small likelihoods
-    weight *= wgt_star; 
+    if (wgt_star==0.0) {
+      wgt_star = 1.0; // Ignore small likelihoods
+      ret = 1;
+      cout << "Zero weight found!" << endl;
+    }
+    log_wgt += log(wgt_star); 
   }
-  return log(weight);
+  return log_wgt;
 }
 
 // The likelihood function for NS-WD (see refs/method.pdf)
-double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi, int &ret) {
   
   double mean = pars[pvi["mean_WD"]];
-  double width = exp(pars[pvi["log_width_WD"]]);
+  double log_width = pars[pvi["log_width_WD"]];
+  double width = pow(10.0, log_width);
   double skewness = pars[pvi["skewness_WD"]];
   
-  double mass, lowlim, uplim, asym, scale, wgt_star, weight=1.0;
-  
+  double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
+
   for (size_t i=0; i<md.id_wd.size(); i++) {
     mass = md.mass_wd[i]; 
     uplim = md.uplim_wd[i];
     lowlim = md.lowlim_wd[i];
     asym = sqrt(uplim/lowlim);
     scale = get_scale(lowlim, uplim);
-    double M_star = pars[pvi[((string)"M_")+md.id_wd[i]]];
+    M_star = pars[pvi[string("M_")+md.id_wd[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
-    if (wgt_star<tol) wgt_star = 1.0; // Ignore small likelihoods
-    weight *= wgt_star; 
+    if (wgt_star==0.0) {
+      wgt_star = 1.0; // Ignore small likelihoods
+      ret = 1;
+      cout << "Zero weight found!" << endl;
+    }
+    log_wgt += log(wgt_star); 
   }
-  return log(weight);
+  return log_wgt;
 }
 
 // The likelihood function for NS-MS (see refs/method.pdf)
-double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi, int &ret) {
   
   double mean = pars[pvi["mean_MS"]];
-  double width = exp(pars[pvi["log_width_MS"]]);
+  double log_width = pars[pvi["log_width_MS"]];
+  double width = pow(10.0, log_width);
   double skewness = pars[pvi["skewness_MS"]];
   
-  double mass, lowlim, uplim, asym, scale, wgt_star, weight=1.0;
+  double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
 
   for (size_t i=0; i<md.id_ms.size(); i++) {
     mass = md.mass_ms[i]; 
@@ -141,27 +152,31 @@ double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi) {
     lowlim = uplim; // Symmetric 68% limits
     asym = sqrt(uplim/lowlim); 
     scale = get_scale(lowlim, uplim);
-    double M_star = pars[pvi[((string)"M_")+md.id_ms[i]]];
+    M_star = pars[pvi[string("M_")+md.id_ms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
-    if (wgt_star<tol) wgt_star = 1.0; // Ignore small likelihoods
-    weight *= wgt_star; 
+    if (wgt_star==0.0) {
+      wgt_star = 1.0; // Ignore small likelihoods
+      ret = 1;
+      cout << "Zero weight found!" << endl;
+    }
+    log_wgt += log(wgt_star); 
   }
-  return log(weight);
+  return log_wgt;
 }
 
 // The combined likelihood function to be calculated
-double likelihood::get_weight(const ubvector &pars, vec_index &pvi) {
+double likelihood::get_weight(const ubvector &pars, vec_index &pvi, int &ret) {
 
   double wgt_ns, wgt_wd, wgt_ms, wgt; 
 
-  // Calculate likelihood for each population
-  wgt_ns = get_weight_ns(pars, pvi);
-  wgt_wd = get_weight_wd(pars, pvi);
-  wgt_ms = get_weight_ms(pars, pvi);
+  // Calculate log-likelihood for each population
+  wgt_ns = get_weight_ns(pars, pvi, ret);
+  wgt_wd = get_weight_wd(pars, pvi, ret);
+  wgt_ms = get_weight_ms(pars, pvi, ret);
 
   // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt = wgt_ns * wgt_wd * wgt_ms;
+  wgt = wgt_ns + wgt_wd + wgt_ms;
   
   // Return the log-likelihood
   return wgt;

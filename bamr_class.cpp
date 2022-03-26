@@ -380,10 +380,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (set->use_population) {
       likelihood &like = nsd->pop_like;
       if (pop_weights.size()==0) pop_weights.resize(4); 
-      pop_weights[0] = like.get_weight_ns(pars, pvi);
-      pop_weights[1] = like.get_weight_wd(pars, pvi);
-      pop_weights[2] = like.get_weight_ms(pars, pvi);
-      pop_weights[3] = like.get_weight(pars, pvi);
+      pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
+      pop_weights[1] = like.get_weight_wd(pars, pvi, iret);
+      pop_weights[2] = like.get_weight_ms(pars, pvi, iret);
+      pop_weights[3] = like.get_weight(pars, pvi, iret);
       log_wgt += pop_weights[3];
     }
 
