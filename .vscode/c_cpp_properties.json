@@ -3,6 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
+                "${default}",
                 "${workspaceFolder}/**",
                 "/usr/local/include/o2scl",
                 "/usr/include",
