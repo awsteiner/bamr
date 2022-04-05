@@ -55,7 +55,14 @@ struct mass_data {
 
 class likelihood {
 
-  private:
+  public:
+
+    likelihood () {
+      md.load_data(); // Load source data
+    }
+
+    virtual ~likelihood() {
+    } 
 
     // PDF of standard normal distribution N(0,1)
     double norm_pdf(double);
@@ -81,14 +88,9 @@ class likelihood {
     double get_scale(double, double);
 
 
-  public:
+//  public:
 
-    likelihood () {
-      md.load_data(); // Load source data
-    }
-
-    virtual ~likelihood() {
-    }
+    
 
     // Object to load source data from class mass_data
     mass_data md;

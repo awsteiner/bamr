@@ -18,11 +18,11 @@ LIB_DIRS = $(LDFLAGS)
 
 CXXFLAGS = -I/usr/lib/x86_64-linux-gnu/openmpi/include \
 		-I/usr/lib/x86_64-linux-gnu/hdf5/serial/include \
-		-I/usr/include/python3.9 
+		-I/usr/include/python3.8 
 
 INC_DIRS = $(CXXFLAGS)
 
-PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.9
+PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.8
 PYTHON_CXXFLAGS = $(SHELL_PYTHON_INCLUDES)
 
 # Generic (no MPI necessary) C++ compiler (e.g. g++)
@@ -90,18 +90,18 @@ ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
 	$(PYTHON_INCLUDES)
 
 LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
-	-lo2scl_hdf -lo2scl_eos -lo2scl_part -lo2scl \
-	-lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
+	-lo2scl -lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
 	$(FFTW_LIB)
 
 # ----------------------------------------------------------------------
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o
+bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o \
+		mass_data.o likelihood.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o \
-		nstar_cold2.o ns_data.o models.o mcmc_bamr.o \
-		bamr_class.o $(LIBS) 
+		nstar_cold2.o ns_data.o models.o mcmc_bamr.o bamr_class.o \
+		mass_data.o likelihood.o $(LIBS) 
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -124,6 +124,12 @@ bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
 
+likelihood.o: likelihood.cpp likelihood.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o likelihood.o -c likelihood.cpp
+
+mass_data.o: mass_data.cpp likelihood.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mass_data.o -c mass_data.cpp
+
 # ----------------------------------------------------------------------
 # Help target
 # ----------------------------------------------------------------------
@@ -145,11 +151,11 @@ help:
 
 bamr_nompi: bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o 
+		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
 		bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o $(LIBS) 
+		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o $(LIBS) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
@@ -168,6 +174,12 @@ mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 
 bamr_class_nompi.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
+
+likelihood_nompi.o: likelihood.cpp likelihood.h
+	$(CXX) $(ALL_FLAGS) -o likelihood_nompi.o -c likelihood.cpp
+
+mass_data_nompi.o: mass_data.cpp likelihood.h
+	$(CXX) $(ALL_FLAGS) -o mass_data_nompi.o -c mass_data.cpp
 
 #bc_wrap_nompi.o: bc_wrap.cpp bc_wrap.h
 #	$(CXX) $(ALL_FLAGS) -o bc_wrap_nompi.o -c bc_wrap.cpp
@@ -513,13 +525,14 @@ clean:
 
 compare_threep:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
+		-set use_population 1 \
 		-set min_max_mass 1.93 \
-		-set max_iters 1 \
-		-set prefix compare_threep_2 -set max_time 3600 \
+		-set prefix compare_threep_2 \
+		-set max_iters 100 \
 		-set n_walk 1 -set step_fac 200.0 \
 		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 1800 -set verbose 3 \
+		-set file_update_time 10 -set verbose 3 \
 		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
@@ -569,7 +582,8 @@ compare_threep:
 		-model tews_threep_ligo \
 		-set prior_eta 1 \
 		-set mmax_deriv 1 \
-		-mcmc > mcmc_threep_2.out 2>&1 &
+		-mcmc 
+# > mcmc_threep_2.out 2>&1 &
 
 compare_fixp:
 	./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \

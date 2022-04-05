@@ -1,405 +1,204 @@
-/*
-  -------------------------------------------------------------------
-  
-  Copyright (C) 2018-2020, Andrew W. Steiner
-  
-  This file is part of Bamr.
-  
-  Bamr is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3 of the License, or
-  (at your option) any later version.
-  
-  Bamr is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with Bamr. If not, see <http://www.gnu.org/licenses/>.
-
-  -------------------------------------------------------------------
-*/
-#include <o2scl/test_mgr.h>
-#include <o2scl/hdf_io.h>
-#include <o2scl/hdf_file.h>
+#include "likelihood.h"
+#include <o2scl/multi_funct.h>
+#include <o2scl/inte_qng_gsl.h>
+#include <o2scl/mcarlo_vegas.h>
 
 using namespace std;
 using namespace o2scl;
-using namespace o2scl_hdf;
 
-int main(int argc, char *argv[]) {
+int n_times=1;
+double m=0.0, w=0.0, s=0.0, M=0.0;
 
-  cout.setf(ios::scientific);
+const int n_pts=10;
+const double dm = (2.5-0.5)/((double)n_pts);
+const double dw = (1.0-0.0)/((double)n_pts);
+const double ds = (1.0+1.0)/((double)n_pts);
+const double dM = (2.3-1.0)/((double)n_pts);
 
-  test_mgr t;
-  t.set_output_level(2);
+// The likelihood function for NS-NS (see refs/method.pdf)
+double get_weight_ns(size_t nv, const ubvector &x) {
+    
+  double mean = x[0];
+  double width = x[1];
+  double skewness = x[2];
 
-  hdf_file hf;
-  std::string name;
+  likelihood lk;
+  lk.get_params();
+
+  mass_data md;
+  md.load_data();
+
+  double M_star, mass, lowlim, uplim, asym, scale, wgt_star, wgt=1.0;
   
-  {
-    cout << "test_debug_eos: " << endl;
-    hf.open("data_temp/debug_eos.o2");
-    table_units<> eos;
-    name="eos";
-    hdf_input(hf,eos,name);
-    hf.close();
-
-    // Check causality
-    for(size_t j=0;j<eos.get_nlines()-1;j++) {
-      if (j==0) {
-	t.set_output_level(2);
-      } else {
-	t.set_output_level(1);
-      }
-      t.test_gen(eos.get("ed",j+1)>eos.get("ed",j),"ed");
-      t.test_gen(eos.get("pr",j+1)>eos.get("pr",j),"pr");
+  for (size_t i=0; i<1; i++) {
+    mass = md.mass_ns[i]; 
+    uplim = md.uplim_ns[i];
+    lowlim = md.lowlim_ns[i]; 
+    asym = sqrt(uplim/lowlim);
+    scale = lk.get_scale(lowlim, uplim);
+    M_star = x[i+3];
+    wgt_star = lk.asym_norm(mass-M_star, asym, scale) 
+      * lk.skew_norm(M_star, mean, width, skewness);
+    if (wgt_star==0.0) {
+      cout << "Zero weight found in NS" << endl;
+      wgt_star = 1.0; // Ignore small likelihoods
     }
-      
-    t.set_output_level(2);
-    cout << endl;
+    wgt *= wgt_star; 
   }
+  return wgt;
+}
 
-  {
-    cout << "test_debug_star: " << endl;
-    hf.open("data_temp/debug_star.o2");
-    table_units<> mvsr;
-    name="";
-    hdf_input(hf,mvsr,name);
-    hf.close();
+// The likelihood function for NS-WD (see refs/method.pdf)
+double get_weight_wd(size_t nv, const ubvector &x) {
+  
+  double mean = x[0];
+  double width = x[1];
+  double skewness = x[2];
+  double M_star = M; 
 
-    // Check maximum mass
-    t.test_gen(mvsr.max("gm")>2.0,"M_max");
-    cout << endl;
+  likelihood lk;
+  lk.get_params();
+
+  mass_data md;
+  md.load_data();
+
+  double mass, lowlim, uplim, asym, scale, wgt_star, wgt=1.0;
+
+  for (size_t i=0; i<md.id_wd.size(); i++) {
+    mass = md.mass_wd[i]; 
+    uplim = md.uplim_wd[i];
+    lowlim = md.lowlim_wd[i];
+    asym = sqrt(uplim/lowlim);
+    scale = lk.get_scale(lowlim, uplim);
+    wgt_star = lk.asym_norm(mass-M_star, asym, scale) 
+      * lk.skew_norm(M_star, mean, width, skewness);
+    /*if (wgt_star==0.0) {
+      wgt_star = 1.0; // Ignore small likelihoods
+    }*/
+    wgt *= wgt_star; 
   }
+  return wgt;
+}
 
-  cout << "test_data: " << endl;
-  for(size_t irank=0;irank<2;irank++) {
+// The likelihood function for NS-MS (see refs/method.pdf)
+double get_weight_ms(size_t nv, const ubvector &x) {
+  
+  double mean = x[0];
+  double width = x[1];
+  double skewness = x[2];
+  double M_star = M; 
+  
+  likelihood lk;
+  lk.get_params();
 
-    hf.open(((string)"data_temp/twop_data_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
+  mass_data md;
+  md.load_data();
+  
+  double mass, lowlim, uplim, asym, scale, wgt_star, wgt=1.0;
 
-    // Check average radius for one of the stars
-    t.test_rel(vector_mean(mcmc["Rns_1608"]),11.5,1.0,"R_1608");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
+  for (size_t i=0; i<md.id_ms.size(); i++) {
+    mass = md.mass_ms[i]; 
+    uplim = md.lim_ms[i];
+    lowlim = uplim; // Symmetric 68% limits
+    asym = sqrt(uplim/lowlim); 
+    scale = lk.get_scale(lowlim, uplim);
+    wgt_star = lk.asym_norm(mass-M_star, asym, scale) 
+      * lk.skew_norm(M_star, mean, width, skewness);
+    /*if (wgt_star==0.0) {
+      wgt_star = 1.0; // Ignore small likelihoods
+    }*/
+    wgt *= wgt_star; 
   }
-  cout << endl;
+  return wgt;
+}
 
-  cout << "test_nodata: " << endl;
-  for(size_t irank=0;irank<2;irank++) {
+// The combined likelihood function to be calculated
+double get_weight(size_t nv, const ubvector &x) {
 
-    hf.open(((string)"data_temp/twop_nodata_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
+  double wgt_ns, wgt_wd, wgt_ms, wgt; 
 
-    // Check average radius
-    t.test_rel(vector_mean(mcmc["R_43"]),11.5,1.0,"R_43");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
+  // Calculate log-likelihood for each population
+  wgt_ns = get_weight_ns(nv, x);
+  wgt_wd = get_weight_wd(nv, x);
+  wgt_ms = get_weight_ms(nv, x);
 
-  cout << "test_cthick:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
+  // Multiply all likelihoods. Note: This is log-likelihood.
+  wgt = wgt_ns * wgt_wd * wgt_ms;
+  
+  // Return the log-likelihood
+  return wgt;
+}
 
-    hf.open(((string)"data_temp/twop_cthick_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
+int main(void) {
 
-    // Check crust thickness
-    t.test_rel(vector_mean(mcmc["CT_50"]),1.0,1.0,"CT_50");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
+  likelihood lk;
+  lk.get_params();
 
-  cout << "test_fixp:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
+  mass_data md;
+  md.load_data();
 
-    hf.open(((string)"data_temp/fixp_nodata_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
+  ofstream file; // file_ns, file_wd, file_ms;
+  // file_ns.open("L_ns.dat");
+  // file_wd.open("L_wd.dat");
+  // file_ms.open("L_ms.dat");
+  file.open("test.dat");
+ 
+  double res=0.0,    err=0.0;
+  double res_ns=0.0, err_ns=0.0;
+  double res_wd=0.0, err_wd=0.0;
+  double res_ms=0.0, err_ms=0.0;
+  
+  size_t n_dpars = 3;
+  size_t n_mpars = md.id_ns.size();
+  size_t n_pars = n_dpars + n_mpars;
 
-    // Check fixp EOS parameter
-    t.test_rel(vector_mean(mcmc["pres1"]),1.0,1.0,"pres1");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
+  mcarlo_vegas<> gm;
+  ubvector a(4), b(4);
 
-  cout << "test_qt:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
+  a[0]=0.5;  b[0]=2.5;
+  a[1]=0.0;  b[1]=1.0;
+  a[2]=-1.0; b[2]=1.0;
+  a[3]=1.55;  b[3]=1.56;
 
-    hf.open(((string)"data_temp/qt_nodata_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
+  /*for (size_t i=0; i<n_mpars; i++) {
+    a[i+n_dpars] = 1.4;
+    b[i+n_dpars] = 1.6;
+  }*/
 
-    // Check fixp EOS parameter
-    t.test_rel(vector_mean(mcmc["index3"]),5.0,1.0,"index3");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
+  multi_funct f = get_weight;
+  multi_funct f_ns = get_weight_ns;
+  multi_funct f_wd = get_weight_wd;
+  multi_funct f_ms = get_weight_ms;
+ 
+  gm.n_points=100000;
 
-  cout << "test_qf:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
+  // cout << "n_params = " << lk.n_params << endl;
+  // cout << "n_dist_pars = " << lk.n_dist_pars << endl;
+  // cout << "id_ns.size() = " << md.id_ns.size() << endl;
 
-    hf.open(((string)"data_temp/qf_nodata_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check fixp EOS parameter
-    t.test_rel(vector_mean(mcmc["pres1"]),1.0,1.0,"pres1");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_warmup:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_warmup_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    
-    // Here there is no guarantee that the number of lines matches
-    // the number of acceptances because the warm up iterations
-    // are not stored in the table
-    
-  }
-  cout << endl;
-
-  cout << "test_ai:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_ai_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus 20 for the
-    // initial point for each walker for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+20,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_addl:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_addl_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check moment of inertia
-    t.test_rel(vector_mean(mcmc["I_43"]),70.0,10.0,"I_43");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_crustL:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_crustL_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check crust thickness parameter
-    t.test_rel(vector_mean(mcmc["CT_50"]),1.0,1.0,"CT_50");
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==100,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==100,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_storej:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_storej_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_tableseq:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_tableseq_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
-  cout << "test_rejtab:" << endl;
-  for(size_t irank=0;irank<2;irank++) {
-
-    hf.open(((string)"data_temp/twop_rejtab_")+o2scl::szttos(irank)+
-	    "_out");
-    table_units<> mcmc;
-    vector<size_t> n_accept, n_reject;
-    name="";
-    hdf_input(hf,mcmc,name);
-    hf.get_szt_vec("n_accept",n_accept);
-    hf.get_szt_vec("n_reject",n_reject);
-    hf.close();
-
-    // Check total iterations
-    t.test_gen(n_accept[0]+n_reject[0]==300,"iters thread 0");
-    t.test_gen(n_accept[1]+n_reject[1]==300,"iters thread 1");
-    // Table lines has number of acceptances plus two for the
-    // initial point for each thread
-    mcmc.delete_rows_func("mult<0.5");
-    t.test_gen(mcmc.get_nlines()==n_accept[0]+n_accept[1]+2,"iters table");
-    
-  }
-  cout << endl;
-
+  /* for (int i=0; i<n_pts; i++) {
+    gm.minteg_err(f, 3, a, b, res, err);
+    M += dM;
+    file << M << "\t" << res << endl;
+    cout << "i=" << i << "\t M = " << M << "\t L(M) = " << res << endl;
+  } */
+  
+  gm.minteg_err(f_ns, 4, a, b, res_ns, err_ns);
+  
+  // gm.minteg_err(f_wd, 3, a, b, res_wd, err_wd);
+  // gm.minteg_err(f_ms, 3, a, b, res_ms, err_ms);
+  
+  // cout << "res_all = " << res << "\t err_all = " << err << endl;
+  
+  cout << "res_ns = " << res_ns << "\t err_ns = " << err_ns << endl;
+  
+  // cout << "res_wd = " << res_wd << "\t err_wd = " << err_wd << endl;
+  // cout << "res_ms = " << res_ms << "\t err_ms = " << err_ms << endl;
+ 
+  // file_ns.close();
+  // file_wd.close();
+  // file_ms.close();
+  
+  file.close();
   return 0;
 }
