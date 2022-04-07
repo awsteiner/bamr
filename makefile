@@ -34,5 +34,5 @@ plot:
 	gnuplot "likelihood.gnu"
 
 clean:	
-	rm -f like test *.dat *.pdf *.out *.cpp~
+	rm -f like test *.cpp~
 
