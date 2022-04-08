@@ -941,7 +941,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
     for (size_t i=0; i<mdat.n_stars; i++) {
       low3[i+like.n_dist_pars+low.size()] = 1.0;
-      high3[i+like.n_dist_pars+high.size()] = 2.3;
+      high3[i+like.n_dist_pars+high.size()] = 2.4;
     }
 
     // Ugly hack, part 2
@@ -981,14 +981,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       size_t &n_sources = nsd->n_sources;
 
       if (set->apply_intsc) {
-        init[0+n_eos_params+2*n_sources] = 1.327; // mean_NS
-        init[1+n_eos_params+2*n_sources] = -1.068; // log10_width_NS
+        init[0+n_eos_params+2*n_sources] = 1.3; // mean_NS
+        init[1+n_eos_params+2*n_sources] = -0.6; // log10_width_NS
         init[2+n_eos_params+2*n_sources] = 0.0; // skewness_NS
-        init[3+n_eos_params+2*n_sources] = 1.583; // mean_WD
-        init[4+n_eos_params+2*n_sources] = -0.909; // log10_width_WD
+        init[3+n_eos_params+2*n_sources] = 1.8; // mean_WD
+        init[4+n_eos_params+2*n_sources] = -0.5; // log10_width_WD
         init[5+n_eos_params+2*n_sources] = 0.0; // skewness_WD
-        init[6+n_eos_params+2*n_sources] = 1.612; // mean_MS
-        init[7+n_eos_params+2*n_sources] = -0.602; // log10_width_MS
+        init[6+n_eos_params+2*n_sources] = 1.5; // mean_MS
+        init[7+n_eos_params+2*n_sources] = -0.5; // log10_width_MS
         init[8+n_eos_params+2*n_sources] = 0.0; // skewness_MS
         
         // Use data to set initial points of mass parameters

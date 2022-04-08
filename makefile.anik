@@ -10,4 +10,3 @@ test2:
 
 plot:	
 	gnuplot "likelihood.gnu"
-
