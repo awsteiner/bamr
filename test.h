@@ -56,7 +56,7 @@ class t_class {
     const double dw = (1.0-0.0)/n_pts;
     const double ds = (1.0+1.0)/n_pts;
     const double dM = (2.3-1.0)/n_pts;
-    const double tol = 1.0e-10;
+    const double tol = 1.0e-1;
 
     double get_weight(size_t, const ubvector &);
     double get_weight_ns(size_t, const ubvector &);
