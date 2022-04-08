@@ -56,10 +56,13 @@ struct mass_data {
 class likelihood {
   
   public:
+
+  bool debug;
   
   // Constructor to load source data
   likelihood () {
     md.load_data();
+    debug=false;
   }
 
   virtual ~likelihood() {

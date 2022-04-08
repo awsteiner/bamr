@@ -982,13 +982,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
       if (set->apply_intsc) {
         init[0+n_eos_params+2*n_sources] = 1.327; // mean_NS
-        init[1+n_eos_params+2*n_sources] = -1.068; // log_width_NS
+        init[1+n_eos_params+2*n_sources] = -1.068; // log10_width_NS
         init[2+n_eos_params+2*n_sources] = 0.0; // skewness_NS
         init[3+n_eos_params+2*n_sources] = 1.583; // mean_WD
-        init[4+n_eos_params+2*n_sources] = -0.909; // log_width_WD
+        init[4+n_eos_params+2*n_sources] = -0.909; // log10_width_WD
         init[5+n_eos_params+2*n_sources] = 0.0; // skewness_WD
         init[6+n_eos_params+2*n_sources] = 1.612; // mean_MS
-        init[7+n_eos_params+2*n_sources] = -0.602; // log_width_MS
+        init[7+n_eos_params+2*n_sources] = -0.602; // log10_width_MS
         init[8+n_eos_params+2*n_sources] = 0.0; // skewness_MS
         
         // Use data to set initial points of mass parameters
