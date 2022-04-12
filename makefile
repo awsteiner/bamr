@@ -577,8 +577,8 @@ compare_threep:
 		data/nicer/0030_st_pst.o2 \
 		data/nicer/0030_st_pst.o2 \
 		prob 0.7 table3d \
-		-set apply_intsc 1 \
-		-set cached_intsc 1 \
+		-set apply_intsc 0 \
+		-set cached_intsc 0 \
 		-model tews_threep_ligo \
 		-set prior_eta 1 \
 		-set mmax_deriv 1 \

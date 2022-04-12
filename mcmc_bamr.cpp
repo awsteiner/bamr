@@ -982,7 +982,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
       if (set->apply_intsc) {
         init[0+n_eos_params+2*n_sources] = 1.3; // mean_NS
-        init[1+n_eos_params+2*n_sources] = -0.6; // log10_width_NS
+        init[1+n_eos_params+2*n_sources] = -0.7; // log10_width_NS
         init[2+n_eos_params+2*n_sources] = 0.0; // skewness_NS
         init[3+n_eos_params+2*n_sources] = 1.8; // mean_WD
         init[4+n_eos_params+2*n_sources] = -0.5; // log10_width_WD
