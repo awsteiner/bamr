@@ -383,8 +383,21 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       if (pop_weights.size()==0) pop_weights.resize(4); 
       pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
+      if (iret!=0) {
+        log_wgt=0.0;
+        return iret;
+      }
       pop_weights[1] = like.get_weight_wd(pars, pvi, iret);
+      if (iret!=0) {
+        log_wgt=0.0;
+        return iret;
+      }
       pop_weights[2] = like.get_weight_ms(pars, pvi, iret);
+      if (iret!=0) {
+        log_wgt=0.0;
+        return iret;
+      }
+
       pop_weights[3] = pop_weights[0]+pop_weights[1]+pop_weights[2];
       
       log_wgt += pop_weights[3];
