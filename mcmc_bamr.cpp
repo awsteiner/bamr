@@ -782,6 +782,7 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
       
   model &m=*(bc_arr[0]->mod);
   size_t np=m.n_eos_params+nsd->n_sources;
+  np=102;
   
   string fname=sv[1];
   size_t pos=fname.find("<rank>");

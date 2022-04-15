@@ -262,6 +262,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &log_wgt, model_data &dat) {
 
+  log_wgt=0.0;
+  
   int iret;
 
   if (set->apply_emu) {
@@ -448,7 +450,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // -----------------------------------------------
       // Compute the weights for each source
 	    
-      log_wgt=0.0;
+      //log_wgt=0.0;
 
       dat.mvsr.set_interp_type(o2scl::itp_linear);
 	    

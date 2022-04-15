@@ -526,13 +526,14 @@ clean:
 compare_threep:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set use_population 1 \
-		-set min_max_mass 1.93 \
+		-set min_max_mass 1.98 \
 		-set prefix compare_threep_2 \
-		-set max_iters 1 \
-		-set n_walk 1 -set step_fac 200.0 \
-		-set norm_max 0 -set addl_quants 1 -set inc_baryon_mass 1 \
+		-set max_iters 100 \
+		-set n_walk 1 -set step_fac 4000.0 \
+		-set norm_max 0 -set addl_quants 1 \
+		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 10 -set verbose 3 \
+		-set file_update_time 10 -set verbose 2 \
 		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
@@ -577,9 +578,10 @@ compare_threep:
 		data/nicer/0030_st_pst.o2 \
 		data/nicer/0030_st_pst.o2 \
 		prob 0.7 table3d \
-		-set apply_intsc 1 \
-		-set cached_intsc 1 \
+		-set apply_intsc 0 \
+		-set cached_intsc 0 \
 		-model tews_threep_ligo \
+		-initial-point-last guess \
 		-set prior_eta 1 \
 		-set mmax_deriv 1 \
 		-mcmc 
