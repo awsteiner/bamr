@@ -106,9 +106,9 @@ void t_class::set_dist_limits() {
   double y, mean, width, skewness, M_star;
   double y_min=100.0, y_max=0.0;
   double m_min=0.5, m_max=2.5;
-  double w_min=0.25, w_max=1.0;
-  double s_min=-1.0, s_max=1.0;
-  double dx = 0.01, tol_sn=0.001;
+  double w_min=0.2, w_max=0.2;
+  double s_min=0.0, s_max=0.0;
+  double dx = 0.01, tol_sn=0.1;
   bool is_bounded=false;
 
   start_over_ns:
@@ -159,7 +159,7 @@ void t_class::set_dist_limits() {
   start_wd:
   y_min=100.0, y_max=0.0;
   m_min=0.5, m_max=2.5;
-  w_min=0.25, w_max=1.0;
+  w_min=0.3, w_max=0.3;
   is_bounded=false;
 
   start_over_wd:
@@ -210,7 +210,7 @@ void t_class::set_dist_limits() {
   start_ms:
   y_min=100.0, y_max=0.0;
   m_min=0.5, m_max=2.5;
-  w_min=0.3, w_max=1.0;
+  w_min=0.3, w_max=0.3;
   is_bounded=false;
 
   start_over_ms:
@@ -493,14 +493,14 @@ int main(void) {
     }
   } */
 
-  gm.minteg_err(f_ns, n_pars_ns, a_ns, b_ns, res_ns, err_ns);
+  /*gm.minteg_err(f_ns, n_pars_ns, a_ns, b_ns, res_ns, err_ns);
   gm.minteg_err(f_wd, n_pars_wd, a_wd, b_wd, res_wd, err_wd);
   gm.minteg_err(f_ms, n_pars_ms, a_ms, b_ms, res_ms, err_ms);
   
   cout << scientific;
   cout << "res_ns = " << res_ns << "\t err_ns = " << err_ns << endl;
   cout << "res_wd = " << res_wd << "\t err_wd = " << err_wd << endl;
-  cout << "res_ms = " << res_ms << "\t err_ms = " << err_ms << endl;
+  cout << "res_ms = " << res_ms << "\t err_ms = " << err_ms << endl;*/
  
   // file_ns.close();
   // file_wd.close();
