@@ -1007,14 +1007,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         }
       }
       else {
-        init[0+n_eos_params+n_sources] = 1.327;
-        init[1+n_eos_params+n_sources] = -1.071;
+        init[0+n_eos_params+n_sources] = 1.3;
+        init[1+n_eos_params+n_sources] = -0.7;
         init[2+n_eos_params+n_sources] = 0.0;
-        init[3+n_eos_params+n_sources] = 1.583;
-        init[4+n_eos_params+n_sources] = -0.455;
+        init[3+n_eos_params+n_sources] = 1.8;
+        init[4+n_eos_params+n_sources] = -0.5;
         init[5+n_eos_params+n_sources] = 0.0;
-        init[6+n_eos_params+n_sources] = 1.612;
-        init[7+n_eos_params+n_sources] = -0.561;
+        init[6+n_eos_params+n_sources] = 1.5;
+        init[7+n_eos_params+n_sources] = -0.5;
         init[8+n_eos_params+n_sources] = 0.0;
 
         for (size_t i=0; i<mdat.id_ns.size(); i++) {
