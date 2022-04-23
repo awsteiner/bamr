@@ -88,6 +88,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 			 int &ret, model_data &dat) {
 
   ret=ix_success;
+  bool new_derivative=false;
   
   if (has_eos) {
     
@@ -98,7 +99,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (ret!=ix_success) return;
     
     // Sarah's section
-    if (set->mmax_deriv == true) {
+    if (set->mmax_deriv==true) {
       
       // Call read_table()
       table_units<> &teos_temp=dat.eos;
@@ -122,12 +123,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
-      double c_ed = 0.0;
+      double c_ed=0.0;
    
       dat.eos.summary(&cout);
       dat.mvsr.summary(&cout);
       
-      size_t row=dat.mvsr.lookup("gm", m_max);
+      size_t row=dat.mvsr.lookup("gm",m_max);
       c_ed=dat.mvsr.get("ed",row);
       cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
       
@@ -143,18 +144,17 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	}
       }	
               
-      ubvector pars2 = pars;   
+      ubvector pars2=pars;   
 
       if (this->n_eos_params==12) {
         pars2[8]*=1.001;
-       }
+      }
       if (this->n_eos_params==11) {
-       pars2[7]*=1.001; 
+        pars2[7]*=1.001; 
       }
 
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
-
 
       // Call read_table()
       teos.read_table(teos_temp, "ed", "pr", "nb");
@@ -172,6 +172,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
       double dxdy=0.0;
+      
       if (this->n_eos_params==12) {
         //if(model_type ==((string) "tews_threep_ligo")){
         dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
@@ -209,7 +210,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      //cout << dat.eos.deriv << exit(-1);
+      dat.sourcet.add_constant("mmax_deriv",dxdy);
+
       // End of Sarah's section
     }
     
@@ -241,15 +243,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // If requested, compute the baryon density automatically
 
   if (has_eos && set->baryon_density && !dat.eos.is_column("nb")) {
-
-    cout << "Phasing out automatic baryon density calculation."
-	 << endl;
-    scr_out << "Phasing out automatic baryon density calculation."
-	    << endl;
-    exit(-1);
-    
-    // End of loop 'if (has_eos && baryon_density && 
-    // !dat.eos.is_column("nb")) {' 
+    O2SCL_ERR2("Setting baryon_density is true but EOS does not ",
+               "have a column \"nb\".",o2scl::exc_einval);
   }
 
   // ---------------------------------------------------------------
@@ -615,15 +610,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd->n_sources;i++) {
-      if (set->mass_switch==0) {
-	dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i]);
-      } else if (set->mass_switch==1) {
-	dat.sourcet.set("M",i,0.4*pars[this->n_eos_params+i]+1.3);
+      if (set->inc_ligo) {
+        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+3]);
+        dat.sourcet.set("R",i,
+                        dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
       } else {
-	dat.sourcet.set("M",i,0.2*pars[this->n_eos_params+i]+1.3);
+        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+3]);
+        dat.sourcet.set("R",i,
+                        dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
       }
-      dat.sourcet.set("R",i,
-		      dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
     }
 
     // End of loop 'if (has_eos)'
@@ -728,28 +723,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
     
-    /*
-    // Compute speed of sound squared
-    dat.eos.deriv("ed","pr","cs2");
-
-    for(size_t i=0;i<dat.mvsr.get_nlines();i++) {
-      if ((dat.mvsr)["dpde"][i]>1.0) {
-	scr_out.precision(4);
-	scr_out << "Rejected: Acausal."<< std::endl;
-	scr_out << "ed_max="
-		<< dat.mvsr.max("ed") << " ed_bad="
-		<< (dat.mvsr)["ed"][i] << " pr_max=" 
-		<< dat.mvsr.max("pr") << " pr_bad=" 
-		<< (dat.mvsr)["pr"][i] << std::endl;
-	scr_out.precision(6);
-	ret=ix_acausal;
-	return;
-      }
-    }
-    */
-    
   } else {
-
+    
     for(size_t i=0;i<nsd->n_sources;i++) {
       if (dat.sourcet.get("R",i)<2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
 	scr_out << "Source " << nsd->source_names[i] << " acausal."
@@ -831,14 +806,14 @@ two_polytropes::two_polytropes(std::shared_ptr<const settings> s,
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
-				    ubvector &low, ubvector &high) {
+				    std::vector<double> &low, std::vector<double> &high) {
 
   names={"comp","kprime","esym","gamma","trans1","index1",
 	 "trans2","index2"};
   
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4",""};
 
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -850,7 +825,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   low[6]=0.75;
   low[7]=0.2;
   
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 MeV or so
   high[1]=-200.0/hc_mev_fm;
@@ -871,7 +846,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void two_polytropes::initial_point(ubvector &params) {
+void two_polytropes::initial_point(std::vector<double> &params) {
   params[0]=1.0;
   params[1]=-3.0;
   params[2]=0.165;
@@ -1008,7 +983,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
 
 void alt_polytropes::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
-				    ubvector &low, ubvector &high) {
+				    std::vector<double> &low, std::vector<double> &high) {
 
   two_polytropes::get_param_info(names,units,low,high);
 
@@ -1026,7 +1001,7 @@ void alt_polytropes::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void alt_polytropes::initial_point(ubvector &params) {
+void alt_polytropes::initial_point(std::vector<double> &params) {
   params[0]=1.0;
   params[1]=-2.66;
   params[2]=0.165;
@@ -1158,7 +1133,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   
 void fixed_pressure::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
-				    ubvector &low, ubvector &high) {
+				    std::vector<double> &low, std::vector<double> &high) {
 
   two_polytropes::get_param_info(names,units,low,high);
 
@@ -1194,7 +1169,7 @@ void fixed_pressure::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void fixed_pressure::initial_point(ubvector &params) {
+void fixed_pressure::initial_point(std::vector<double> &params) {
   params[0]=1.0;
   params[1]=-2.5;
   params[2]=0.165;
@@ -1298,14 +1273,14 @@ void fixed_pressure::compute_eos(const ubvector &params, int &ret,
   
 void generic_quarks::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
-				    ubvector &low, ubvector &high) {
+				    std::vector<double> &low, std::vector<double> &high) {
 
   names={"comp","kprime","esym","gamma","trans1","exp1",
 	 "trans2","a2","a4"};
 
   units={"1/fm","1/fm","1/fm","","1/fm^4","","1/fm^4","1/fm^2",""};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   low[0]=180.0/hc_mev_fm;
   low[1]=-1000.0/hc_mev_fm;
   low[2]=28.0/hc_mev_fm;
@@ -1320,7 +1295,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   // a4
   low[8]=0.045;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=300.0/hc_mev_fm;
   // FSU gold is -280 or so
   high[1]=-200.0/hc_mev_fm;
@@ -1340,7 +1315,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void generic_quarks::initial_point(ubvector &params) {
+void generic_quarks::initial_point(std::vector<double> &params) {
   params[0]=1.19;
   params[1]=-2.52;
   params[2]=0.188;
@@ -1561,13 +1536,13 @@ double quark_star::pressure2(double mu) {
 
 void quark_star::get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				ubvector &low, ubvector &high) {
+				std::vector<double> &low, std::vector<double> &high) {
 
   names={"B","c","Delta","ms"};
 
   units={"1/fm","","1/fm","1/fm"};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // B
   low[0]=-10.0;
   // c
@@ -1577,7 +1552,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   // ms
   low[3]=0.75;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   // B
   high[0]=10.0;
   // c
@@ -1590,7 +1565,7 @@ void quark_star::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void quark_star::initial_point(ubvector &params) {
+void quark_star::initial_point(std::vector<double> &params) {
   params[0]=0.2446;
   params[1]=0.0740;
   params[2]=0.00289;
@@ -1765,13 +1740,13 @@ qmc_neut::~qmc_neut() {
 
 void qmc_neut::get_param_info(std::vector<std::string> &names,
 			      std::vector<std::string> &units,
-			      ubvector &low, ubvector &high) {
+			      std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","b","beta","index1","trans1","index2"};
 
   units={"MeV","","MeV","","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   low[0]=12.7;
   low[1]=0.48;
   low[2]=1.0;
@@ -1780,7 +1755,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   low[5]=2.0;
   low[6]=0.2;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.3;
   high[1]=0.52;
   high[2]=5.0;
@@ -1796,7 +1771,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void qmc_neut::initial_point(ubvector &params) {
+void qmc_neut::initial_point(std::vector<double> &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
@@ -1935,14 +1910,14 @@ qmc_threep::~qmc_threep() {
 
 void qmc_threep::get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				ubvector &low, ubvector &high) {
+				std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","index1","trans1","index2","trans2",
 	 "index3"};
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -1957,7 +1932,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   low[7]=0.75;
   low[8]=0.2;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -1976,17 +1951,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void qmc_threep::initial_point(ubvector &params) {
-
-  params[0]=13.0;
-  params[1]=0.5;
-  params[2]=32.0;
-  params[3]=50.0;
-  params[4]=0.5;
-  params[5]=2.0;
-  params[6]=0.5;
-  params[7]=2.5;
-  params[8]=1.0;
+void qmc_threep::initial_point(std::vector<double> &params) {
 
   params[0]=13.229;
   params[1]=0.4894965;
@@ -2219,13 +2184,13 @@ qmc_fixp::~qmc_fixp() {
 
 void qmc_fixp::get_param_info(std::vector<std::string> &names,
 			      std::vector<std::string> &units,
-			      ubvector &low, ubvector &high) {
+			      std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","pres1","pres2","pres3","pres4"};
 
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2239,7 +2204,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2261,7 +2226,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void qmc_fixp::initial_point(ubvector &params) {
+void qmc_fixp::initial_point(std::vector<double> &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
@@ -2460,13 +2425,13 @@ qmc_twolines::~qmc_twolines() {
 
 void qmc_twolines::get_param_info(std::vector<std::string> &names,
 				  std::vector<std::string> &units,
-				  ubvector &low, ubvector &high) {
+				  std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","pres1","ed1","pres2","ed2"};
   
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4"};
 
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2480,7 +2445,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   low[6]=0.0;
   low[7]=0.0;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2494,7 +2459,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
   return;
 }
 
-void qmc_twolines::initial_point(ubvector &params) {
+void qmc_twolines::initial_point(std::vector<double> &params) {
 
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
@@ -2785,14 +2750,14 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
     
 void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
 				      std::vector<std::string> &units,
-				      ubvector &low, ubvector &high) {
+				      std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","index1","trans1",
 	 "index2","trans2","index3","M_chirp_det","eta","z_cdf"};
 
   units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4","","Msun","",""};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -2811,7 +2776,7 @@ void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
   low[10]=0.2;
   low[11]=0.0;
     
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -2832,7 +2797,7 @@ void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
 
 }
     
-void tews_threep_ligo::initial_point(ubvector &params) {
+void tews_threep_ligo::initial_point(std::vector<double> &params) {
       
   params[0]=12.7;
   params[1]=0.4894965;
@@ -3170,8 +3135,9 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
 }
     
 void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
-				      std::vector<std::string> &units,
-				      ubvector &low, ubvector &high) {
+                                    std::vector<std::string> &units,
+                                    std::vector<double> &low,
+                                    std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","pres1","pres2",
 	 "pres3","pres4","M_chirp_det","eta","z_cdf"};
@@ -3179,7 +3145,7 @@ void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
   units={"MeV","","MeV","MeV","1/fm^4","1/fm^4","1/fm^4","1/fm^4",
 	 "Msun","",""};
   
-  low.resize(n_eos_params+nsd->n_sources);
+  low.resize(n_eos_params);
   // The paper gives 12.7-13.4, we enlarge this to 12.5 to 13.5, and
   // this should allow S values as small as 28.5
   low[0]=12.5;
@@ -3197,7 +3163,7 @@ void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
   low[9]=0.2;
   low[10]=0.0;
 
-  high.resize(n_eos_params+nsd->n_sources);
+  high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
   high[2]=36.1;
@@ -3221,7 +3187,7 @@ void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
 
 }
     
-void tews_fixp_ligo::initial_point(ubvector &params) {
+void tews_fixp_ligo::initial_point(std::vector<double> &params) {
       
   params[0]=13.229;
   params[1]=0.4894965;
@@ -3525,3 +3491,316 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   return;
 }
 
+new_poly::new_poly(std::shared_ptr<const settings> s,
+				   std::shared_ptr<const ns_data> n) :
+  qmc_threep(s,n) {
+  this->n_eos_params=9;
+
+  cns.err_nonconv=false;
+  cns.def_root.err_nonconv=false;
+
+  nb_trans=0.32;
+}
+    
+void new_poly::get_param_info(std::vector<std::string> &names,
+				      std::vector<std::string> &units,
+				      std::vector<double> &low,
+                              std::vector<double> &high) {
+
+  names={"a","alpha","param_S","param_L","exp1","trans1",
+	 "exp2","trans2","exp3"};
+
+  units={"MeV","","MeV","MeV","","1/fm^4","","1/fm^4",""};
+  
+  low.resize(n_eos_params);
+  low[0]=12.5;
+  low[1]=0.47;
+  low[2]=29.5;
+  low[3]=30.0;
+  
+  low[4]=1.0e-6;
+  low[5]=0.75;
+  low[6]=1.0e-6;
+  low[7]=0.75;
+  low[8]=1.0e-6;
+
+  low[9]=1.1971;
+  low[10]=0.0;
+  low[11]=0.0;
+    
+  high.resize(n_eos_params);
+  high[0]=13.5;
+  high[1]=0.53;
+  high[2]=36.1;
+  high[3]=70.0;
+
+  high[4]=10.0;
+  high[5]=8.0;
+  high[6]=10.0;
+  high[7]=8.0;
+  high[8]=10.0;
+  
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
+
+}
+    
+void new_poly::initial_point(std::vector<double> &params) {
+      
+  params.resize(9);
+
+  params[0]=12.7;
+  params[1]=0.4894965;
+  params[2]=32.0;
+  params[3]=55.0;
+  params[4]=4.0;
+  params[5]=1.658677;
+  params[6]=1.515;
+  params[7]=4.906005;
+  params[8]=2.454;
+
+  return;
+}
+
+void new_poly::setup_params(o2scl::cli &cl) {
+  p_nb_trans.d=&nb_trans;
+  p_nb_trans.help="Transition from neutron matter to polytropes.";
+  cl.par_list.insert(std::make_pair("nb_trans",&p_nb_trans));
+  
+  return;
+}
+
+void new_poly::remove_params(o2scl::cli &cl) {
+  size_t i=cl.par_list.erase("nb_trans");
+  if (i!=1) {
+    O2SCL_ERR("Failed to erase parameter 'nb_trans'.",o2scl::exc_esanity);
+  }
+  return;
+}
+    
+void new_poly::copy_params(model &m) {
+  // Dynamic casts to references throw exceptions when they fail
+  // while dynamic casts to pointers return null pointers when
+  // they fail.
+  new_poly &tp=dynamic_cast<new_poly &>(m);
+  nb_trans=tp.nb_trans;
+  return;
+}
+
+void new_poly::compute_eos(const ubvector &params, int &ret,
+				   std::ofstream &scr_out, model_data &dat) {
+
+  bool debug=false;
+
+  ret=ix_success;
+
+  // Start with a fresh table
+  dat.eos.clear();
+  dat.eos.line_of_names("ed pr nb");
+  // We don't need to set units because this is done in
+  // compute_star() above.
+  dat.eos.set_interp_type(itp_linear);
+
+  // Add the QMC calculations over the suggested range, but go a
+  // little bit lower in density to make sure we extend all the way
+  // down to the crust
+
+  double a=params[0];
+  double alpha=params[1];
+  double Stmp=params[2];
+  double Ltmp=params[3];
+
+  /*
+    This is based on limits from two lines, as in Jim and I's EPJA
+    review. In (S,L) space, the lower line is (29,0) to (35,55),
+    and the upper line is (26.5,0) to (33.5,100)
+  */
+  double Lmin=9.17*Stmp-266.0;
+  double Lmax=14.3*Stmp-379.0;
+  if (Ltmp<Lmin || Ltmp>Lmax) {
+    scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
+            << "\n\tL_min: " << Lmin << " L_max: "
+            << Lmax << endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+
+  double b=Stmp-16.0-a;
+  double beta=(Ltmp/3.0-a*alpha)/b;
+  if (b<=0.0 || beta<=0.0 || alpha>beta) {
+    scr_out << "Parameter b=" << b << " or beta=" 
+            << beta << " out of range." << endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+  if (debug) {
+    scr_out << "b=" << b << " beta=" << beta << endl;
+  }
+
+  
+  dat.eos.add_constant("S",Stmp/hc_mev_fm);
+  dat.eos.add_constant("L",Ltmp/hc_mev_fm);
+
+  double exp1=params[4];
+  double trans1=params[5];
+  double exp2=params[6];
+  double trans2=params[7];
+  double exp3=params[9];
+
+  double ed_last=0.0, pr_last=0.0, nb_last=0.0;
+
+  for(double nb=0.02;nb<nb_trans;nb+=0.01) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    double ed=nb*(ene/hc_mev_fm+
+                  o2scl_settings.get_convert_units().convert_const
+                  ("kg","1/fm",o2scl_mks::mass_neutron));
+    double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
+    
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+    
+    ed_last=ed;
+    pr_last=pr;
+    nb_last=nb;
+  }
+
+  // Check that the transition densities are ordered
+  if (ed_last>trans1 || trans1>trans2) {
+    scr_out << "Transition densities misordered." << endl;
+    scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
+    ret=ix_param_mismatch;
+    return;
+  }
+
+  if (debug) {
+    cout << "Crust-core: " << endl;
+    for(size_t j=0;j<dat.eos.get_nlines();j++) {
+      cout << dat.eos.get("ed",j) << " ";
+      cout << dat.eos.get("pr",j) << " ";
+      cout << dat.eos.get("nb",j) << endl;
+    }
+  }
+
+  if (debug) cout << endl;
+
+  // Compute coefficient given index
+  double coeff1=pr_last/pow(ed_last,exp1);
+
+  // Compute stepsize in energy density
+  double delta_ed=(trans1-ed_last)/30.01;
+
+  double ed1=ed_last;
+  double pr1=pr_last;
+  double nb1=nb_last;
+  
+  // Add first polytrope to table
+  if (debug) {
+    cout << "First polytrope: " << exp1 << endl;
+  }
+  for(double ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
+    double pr=coeff1*pow(ed,exp1);
+    double nb=nb1*pow(ed,1.0/(1.0-1.0/exp1))*
+      pow(ed+pr,1.0/(1.0-exp1))/pow(ed1,1.0/(1.0-1.0/exp1))/
+      pow(ed1+pr1,1.0/(1.0-exp1));
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_param_mismatch;
+      return;
+    }
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // Compute second coefficient given index
+  double coeff2=pr_last/pow(ed_last,exp2);
+
+  double ed2=ed_last;
+  double pr2=pr_last;
+  double nb2=nb_last;
+  
+  // Add second polytrope to table
+  if (debug) {
+    cout << "Second polytrope: " << exp2 << endl;
+  }
+  delta_ed=(trans2-trans1)/20.01;
+  for(double ed=trans1;ed<trans2;ed+=delta_ed) {
+    double pr=coeff2*pow(ed,exp2);
+    double nb=nb2*pow(ed,1.0/(1.0-1.0/exp2))*
+      pow(ed+pr,1.0/(1.0-exp2))/pow(ed2,1.0/(1.0-1.0/exp2))/
+      pow(ed2+pr2,1.0/(1.0-exp2));
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_param_mismatch;
+      return;
+    }
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+    
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // Compute third coefficient given index
+  double coeff3=pr_last/pow(ed_last,exp3);
+
+  double ed3=ed_last;
+  double pr3=pr_last;
+  double nb3=nb_last;
+
+  // Add third polytrope to table
+  delta_ed=(10.0-trans2)/20.01;
+  if (debug) {
+    cout << "Third polytrope: " << exp3 << endl;
+  }
+  // We compute to energy densities slightly higher than 10
+  // because the energy grid ends at 10 and it makes sure
+  // we're not extrapolating
+  for(double ed=trans2;ed<10.5;ed+=delta_ed) {
+    double pr=coeff3*pow(ed,exp3);
+    double nb=nb3*pow(ed,1.0/(1.0-1.0/exp3))*
+      pow(ed+pr,1.0/(1.0-exp3))/pow(ed3,1.0/(1.0-1.0/exp3))/
+      pow(ed3+pr3,1.0/(1.0-exp3));
+    double line[3]={ed,pr,nb};
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    dat.eos.line_of_data(3,line);
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_param_mismatch;
+      return;
+    }
+    
+  }
+
+  if (debug) exit(-1);
+
+  return;
+}

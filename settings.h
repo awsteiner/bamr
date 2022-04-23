@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2020, Andrew W. Steiner
+  Copyright (C) 2012-2022, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -71,7 +71,6 @@ namespace bamr {
       in_r_min=5.0;
       in_r_max=18.0;
       addl_quants=false;
-      mass_switch=0;
       compute_cthick=false;
       crust_from_L=false;
       mpi_load_debug=false;
@@ -81,6 +80,7 @@ namespace bamr {
       //emu_train="";
       mmax_deriv = false;
       use_population=true;
+      inc_ligo=true;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -90,7 +90,6 @@ namespace bamr {
     o2scl::cli::parameter_double p_input_dist_thresh;
     o2scl::cli::parameter_double p_min_mass;
     o2scl::cli::parameter_int p_grid_size;
-    o2scl::cli::parameter_int p_mass_switch;
     o2scl::cli::parameter_int p_verbose;
     o2scl::cli::parameter_bool p_debug_star;
     o2scl::cli::parameter_bool p_debug_load;
@@ -112,9 +111,6 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_low;
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
-    o2scl::cli::parameter_bool p_prior_q;
-    o2scl::cli::parameter_bool p_prior_eta;
-    o2scl::cli::parameter_bool p_prior_delm;
     o2scl::cli::parameter_string p_data_dir;
     o2scl::cli::parameter_bool p_apply_emu;
     o2scl::cli::parameter_bool p_use_population;
@@ -122,6 +118,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_couple_threads;
     o2scl::cli::parameter_string p_emu_train;
     o2scl::cli::parameter_bool p_mmax_deriv;
+    o2scl::cli::parameter_bool p_inc_ligo;
     //@}
 
     /// Verbosity parameter
@@ -140,6 +137,8 @@ namespace bamr {
     double in_r_max;
     //@}
 
+    bool inc_ligo;
+    
     /// \name Other parameters accessed by 'set' and 'get'
     //@{
     /// Number of bins for all histograms (default 100)
@@ -209,7 +208,6 @@ namespace bamr {
 	provides S and L.
     */
     bool crust_from_L;
-    int mass_switch;
 
     /** \brief If true, include emulator from sklearn
      */
@@ -232,18 +230,6 @@ namespace bamr {
 
     bool couple_threads;
     //@}
-
-    /** \brief If true, use the eta prior
-     */
-    bool prior_eta;
-
-    /** \brief If true, use the q prior
-     */
-    bool prior_q;
-
-    /** \brief If true, use the delta_m prior
-     */
-    bool prior_delm;
 
     /** \name Histogram limits
      */
@@ -407,10 +393,6 @@ namespace bamr {
       p_mpi_load_debug.help="";
       cl.par_list.insert(std::make_pair("mpi_load_debug",&p_mpi_load_debug));
 
-      p_mass_switch.i=&mass_switch;
-      p_mass_switch.help="";
-      cl.par_list.insert(std::make_pair("mass_switch",&p_mass_switch));
-
       p_verbose.i=&verbose;
       p_verbose.help=((std::string)"This controls verbose output ")+
 	"not already managed by 'mcmc_verbose'. Currently, no output "+
@@ -419,21 +401,13 @@ namespace bamr {
 	"defaults to zero.";
       cl.par_list.insert(std::make_pair("verbose",&p_verbose));
 
-      p_prior_q.b=&prior_q;
-      p_prior_q.help="";
-      cl.par_list.insert(std::make_pair("prior_q",&p_prior_q));
-
-      p_prior_eta.b=&prior_eta;
-      p_prior_eta.help="";
-      cl.par_list.insert(std::make_pair("prior_eta",&p_prior_eta));
-
-      p_prior_delm.b=&prior_delm;
-      p_prior_delm.help="";
-      cl.par_list.insert(std::make_pair("prior_delm",&p_prior_delm));
-
       p_apply_intsc.b=&apply_intsc;
       p_apply_intsc.help="help";
       cl.par_list.insert(std::make_pair("apply_intsc",&p_apply_intsc));
+      
+      p_inc_ligo.b=&inc_ligo;
+      p_inc_ligo.help="help";
+      cl.par_list.insert(std::make_pair("inc_ligo",&p_inc_ligo));
       
       p_cached_intsc.b=&cached_intsc;
       p_cached_intsc.help="help";

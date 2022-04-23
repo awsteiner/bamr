@@ -518,6 +518,14 @@ int mcmc_bamr::mcmc_init() {
         this->table->new_column("r_nb5");
         this->table->set_unit("r_nb5","km");
       }
+      if (set->mmax_deriv) {
+        this->table->new_column("mmax_deriv");
+        if (model_type==((string)"tews_threep_ligo")) {
+          this->table->set_unit("mmax_deriv","Msun");
+        } else if (model_type==((string)"tews_fixp_ligo")) {
+          this->table->set_unit("mmax_deriv","Msun*fm^4");
+        }
+      }
       if (set->compute_cthick) {
         this->table->new_column("nt");
         this->table->set_unit("nt","1/fm^3");
@@ -551,10 +559,7 @@ int mcmc_bamr::mcmc_init() {
       }
     }
 
-    if (model_type==((string)"qmc_threep_ligo") ||
-      model_type==((string)"tews_threep_ligo") ||
-      model_type==((string)"tews_fixp_ligo") ||
-      model_type==((string)"qmc_fixp_ligo")) {
+    if (set->inc_ligo) {
       this->table->new_column("M_chirp");
       this->table->set_unit("M_chirp","Msun");
       this->table->new_column("m1");
@@ -575,40 +580,22 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("Lambda2");
       this->table->new_column("Lambdat");
       this->table->new_column("del_Lambdat");    
-      this->table->new_column("Lambda_rat");
-      this->table->new_column("q6");
-      this->table->new_column("Lambda_s");
-      this->table->new_column("Lambda_a");
-      this->table->new_column("Lambda_a_YY");
-      this->table->new_column("C1");
-      this->table->new_column("C2");
-      this->table->new_column("tews_prob");
       this->table->new_column("ligo_prob");
-      if (set->prior_q) {
-        this->table->new_column("eta");
-        this->table->new_column("delta_m");
-      }
-      if (set->prior_delm) {
-        this->table->new_column("q");
-        this->table->new_column("eta");
-      }
-      if (set->prior_eta) {
-        this->table->new_column("q");
-        this->table->new_column("delta_m");
-      }
+      this->table->new_column("eta");
     }
-    if (nsd->n_sources>0){
-      for(size_t i=0;i<nsd->n_sources;i++) {
-        this->table->new_column(((std::string)"log_wgt_")+
-                                nsd->source_names[i]);
-      }
+  }
+  
+  if (nsd->n_sources>0){
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      this->table->new_column(((std::string)"log_wgt_")+
+                              nsd->source_names[i]);
     }
-    if (set->use_population) {
-      this->table->new_column("log_wgt_NS");
-      this->table->new_column("log_wgt_WD");
-      this->table->new_column("log_wgt_MS");
-      this->table->new_column("log_wgt_pop");
-    }
+  }
+  if (set->use_population) {
+    this->table->new_column("log_wgt_NS");
+    this->table->new_column("log_wgt_WD");
+    this->table->new_column("log_wgt_MS");
+    this->table->new_column("log_wgt_pop");
   }
   
   // -----------------------------------------------------------
@@ -1036,30 +1023,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // array
     this->initial_points.clear();
     this->initial_points.push_back(init);
-  }
-  
-  if (model_type==((string)"tews_threep_ligo")) {
-    if (set->prior_eta) {
-      names[10]="eta";
-    }
-    if (set->prior_q) {
-      names[10]="q";
-    }
-    if (set->prior_delm) {
-      names[10]="delta_m";
-    }
-  }
-  
-  if (model_type==((string)"tews_fixp_ligo")) {
-    if (set->prior_eta) {
-      names[9]="eta";
-    }
-    if (set->prior_q) {
-      names[9]="q";
-    }
-    if (set->prior_delm) {
-      names[9]="delta_m";
-    }
   }
   
   vector<bamr::point_funct> pfa(n_threads);
