@@ -528,7 +528,6 @@ compare_threep:
 		-set use_population 1 \
 		-set min_max_mass 1.98 \
 		-set prefix compare_threep_2 \
-		-set max_iters 10 \
 		-set max_time 86400 \
 		-set n_walk 1 -set step_fac 4000.0 \
 		-set norm_max 0 -set addl_quants 1 \
