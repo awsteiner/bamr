@@ -234,12 +234,12 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
         for(int ij=0;ij<set->grid_size;ij++) {
           out_table.new_column(((string)"R_")+o2scl::itos(ij));
         }
-/*
+        /*
         // add EOS grid
         for(int i=0;i<set->grid_size;i++) {
-          out_table.new_column(((string)"P_")+o2scl::itos(i));
+        out_table.new_column(((string)"P_")+o2scl::itos(i));
         }
-*/
+        */
         set_col=true;
       }
 
@@ -249,14 +249,14 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
         col_vals.push_back(test_point.mvsr.interp("gm",(ik+1)*
                                                   (3.0-0.02)/100.0,"r"));
       }
-
-/*
-      for(int i=0;i<set->grid_size;i++) {
-          double eval = m.e_grid[i];
-          double pres_temp=test_point.eos.interp("ed",eval,"pr");
-          col_vals.push_back(pres_temp);
-      }
-*/    
+      
+      /*
+        for(int i=0;i<set->grid_size;i++) {
+        double eval = m.e_grid[i];
+        double pres_temp=test_point.eos.interp("ed",eval,"pr");
+        col_vals.push_back(pres_temp);
+        }
+      */    
       // cout << out_table.get_ncolumns() << " " << col_vals.size() << endl;
       out_table.line_of_data(col_vals);
       double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
@@ -404,7 +404,7 @@ int mcmc_bamr::mcmc_init() {
     return exc_efailed;
   }
 
-  if(set->apply_emu == false){
+  if (set->apply_emu==false) {
 
     // -----------------------------------------------------------
     // Add columns to table
@@ -555,7 +555,7 @@ int mcmc_bamr::mcmc_init() {
 
     if (nsd->source_fnames_alt.size()>0) {
       for(size_t i=0;i<nsd->n_sources;i++) {
-        this->table->new_column(((std::string)"alt_")+o2scl::szttos(i));
+        this->table->new_column(((std::string)"atm_")+o2scl::szttos(i));
       }
     }
 
@@ -642,20 +642,6 @@ int mcmc_bamr::mcmc_init() {
     }
   }
 
-  if (model_type==((string)"qmc_threep_ligo") ||
-      model_type==((string)"tews_threep_ligo") ||
-      model_type==((string)"tews_fixp_ligo") ||
-      model_type==((string)"qmc_fixp_ligo")) {
-    hdf_file hfx;
-    for(size_t i=0;i<n_threads;i++) {
-      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-      hfx.open("data/ligo/ligo_tg3_v4.o2");
-      std::string name;
-      hdf_input_n(hfx,bc.ligo_data_table,name);
-      hfx.close();
-    }
-  }
-  
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank
 	      << ") End mcmc_bamr::mcmc_init()." << std::endl;
@@ -745,6 +731,12 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
       bc_arr[i]->mod=mnew;
       bc_arr[i]->model_type=sv[1];
     }
+  } else if (sv[1]==((string)"new_poly")) {
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new new_poly(set,nsd));
+      bc_arr[i]->mod=mnew;
+      bc_arr[i]->model_type=sv[1];
+    }
   } else {
     cerr << "Model unknown." << endl;
     return exc_efailed;
@@ -769,7 +761,6 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
       
   model &m=*(bc_arr[0]->mod);
   size_t np=m.n_eos_params+nsd->n_sources;
-  np=102;
   
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
@@ -867,8 +858,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   std::vector<std::string> names;
   std::vector<std::string> units;
 
-  ubvector low;
-  ubvector high;
+  vector<double> low, high;
   // Get upper and lower parameter limits and also the column names
   // and units for the data table (which also automatically includes
   // nuisance variables for the data points). The other columns and
@@ -878,67 +868,50 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (set->apply_intsc) {
 
-    // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low2(low.size()+nsd->n_sources);
-    ubvector high2(low.size()+nsd->n_sources);
-    vector_copy(low.size(),low,low2);
-    vector_copy(high.size(),high,high2);
-
     for(size_t i=0;i<nsd->n_sources;i++) {
       names.push_back(((string)"log10_is_")+nsd->source_names[i]);
       units.push_back("");
-      low2[i+low.size()]=-2.0;
-      high2[i+high.size()]=2.0;
+      low.push_back(-2.0);
+      high.push_back(2.0);
     }
-
-    // Ugly hack, part 2
-    low.resize(low2.size());
-    high.resize(high2.size());
-    vector_copy(low.size(),low2,low);
-    vector_copy(high.size(),high2,high);
-    
   }
-
 
   if (set->use_population) {
     
     likelihood &like = nsd->pop_like;
     mass_data &mdat = nsd->pop_mass;
 
-    // Ugly hack to increase the size of the 'low' and 'high' vectors
-    ubvector low3(low.size()+like.n_params);
-    ubvector high3(high.size()+like.n_params);
-    vector_copy(low.size(), low, low3);
-    vector_copy(high.size(), high, high3);
-
     for (size_t i=0; i<like.n_params; i++) {
       names.push_back(like.par_names[i]);
       units.push_back(like.par_units[i]);
     }
-
-    /* Set (uniform) priors for the population parameters:
-    mean [-0.5, 2.5]; skewness [-1, 1]; mass [1, 2.3]
-    width [1e-4, 1] => log10_width [-4, 0] */ 
-    for (size_t i=0; i<like.n_dist_pars; i+=3) {
-      low3[i+0+low.size()] = 0.5;
-      low3[i+1+low.size()] = -4.0;
-      low3[i+2+low.size()] = -1.0;
-      high3[i+0+high.size()] = 2.5;
-      high3[i+1+high.size()] = 0.0;
-      high3[i+2+high.size()] = 1.0;
+    
+    for(size_t i=0;i<3;i++) {
+      low.push_back(0.5);
+      high.push_back(2.5);
+      low.push_back(-4.0);
+      high.push_back(0.0);
+      low.push_back(-1.0);
+      high.push_back(1.0);
     }
+
     for (size_t i=0; i<mdat.n_stars; i++) {
-      low3[i+like.n_dist_pars+low.size()] = 1.0;
-      high3[i+like.n_dist_pars+high.size()] = 2.4;
+      low.push_back(1.0);
+      high.push_back(2.4);
     }
 
-    // Ugly hack, part 2
-    low.resize(low3.size());
-    high.resize(high3.size());
-    vector_copy(low3.size(), low3, low);
-    vector_copy(high3.size(), high3, high);
   }
 
+  if (set->apply_emu) {
+    
+    for(size_t i=0;i<nsd->n_sources;i++) {
+      names.push_back(((string)"atm_")+o2scl::szttos(i));
+      units.push_back("");
+      low.push_back(0.0);
+      high.push_back(1.0);
+    }
+    
+  }
 
   set_names_units(names,units);
   
@@ -946,19 +919,24 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   if (this->initial_points.size()==0) {
     
     // Get the parameter initial values for this model 
-    ubvector init(names.size());
+    vector<double> init;
+    
     bc_arr[0]->mod->initial_point(init);
 
+    nsd->initial_point(set,init);
+    
     if (set->apply_intsc) {
       for (size_t i=0; i<nsd->n_sources; i++) {
 	      init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
-    } 
-    
-    /* Note:
-    bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
-    bc_arr[0]->mod->n_eos_params = 12
-    nsd->n_sources = 11 */
+    }
+
+    /* 
+       Note:
+       bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
+       bc_arr[0]->mod->n_eos_params = 12
+       nsd->n_sources = 11 
+    */
 
     // Set initial points for the population parameters
     if (set->use_population) {
@@ -968,61 +946,35 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       size_t &n_eos_params = bc_arr[0]->mod->n_eos_params;
       size_t &n_sources = nsd->n_sources;
 
-      if (set->apply_intsc) {
-        init[0+n_eos_params+2*n_sources] = 1.3; // mean_NS
-        init[1+n_eos_params+2*n_sources] = -0.7; // log10_width_NS
-        init[2+n_eos_params+2*n_sources] = 0.0; // skewness_NS
-        init[3+n_eos_params+2*n_sources] = 1.8; // mean_WD
-        init[4+n_eos_params+2*n_sources] = -0.5; // log10_width_WD
-        init[5+n_eos_params+2*n_sources] = 0.0; // skewness_WD
-        init[6+n_eos_params+2*n_sources] = 1.5; // mean_MS
-        init[7+n_eos_params+2*n_sources] = -0.5; // log10_width_MS
-        init[8+n_eos_params+2*n_sources] = 0.0; // skewness_MS
-        
-        // Use data to set initial points of mass parameters
-        for (size_t i=0; i<mdat.id_ns.size(); i++) {
-          init[i+like.n_dist_pars+n_eos_params+2*n_sources]
-           = mdat.mass_ns[i];
-        }
-        for (size_t i=0; i<mdat.id_wd.size(); i++) {
-          init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
-            +2*n_sources] = mdat.mass_wd[i];
-        }
-        for (size_t i=0; i<mdat.id_ms.size(); i++) {
-          init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
-            +n_eos_params+2*n_sources] = mdat.mass_ms[i];
-        }
+      init.push_back(1.3);
+      init.push_back(-0.7);
+      init.push_back(0.0);
+      init.push_back(1.8);
+      init.push_back(-0.5);
+      init.push_back(0.0);
+      init.push_back(1.5);
+      init.push_back(-0.5);
+      init.push_back(0.0);
+      
+      for (size_t i=0; i<mdat.id_ns.size(); i++) {
+        init.push_back(mdat.mass_ns[i]);
       }
-      else {
-        init[0+n_eos_params+n_sources] = 1.3;
-        init[1+n_eos_params+n_sources] = -0.7;
-        init[2+n_eos_params+n_sources] = 0.0;
-        init[3+n_eos_params+n_sources] = 1.8;
-        init[4+n_eos_params+n_sources] = -0.5;
-        init[5+n_eos_params+n_sources] = 0.0;
-        init[6+n_eos_params+n_sources] = 1.5;
-        init[7+n_eos_params+n_sources] = -0.5;
-        init[8+n_eos_params+n_sources] = 0.0;
-
-        for (size_t i=0; i<mdat.id_ns.size(); i++) {
-          init[i+like.n_dist_pars+n_eos_params+n_sources]
-           = mdat.mass_ns[i];
-        }
-        for (size_t i=0; i<mdat.id_wd.size(); i++) {
-          init[i+mdat.id_ns.size()+like.n_dist_pars+n_eos_params
-            +n_sources] = mdat.mass_wd[i];
-        }
-        for (size_t i=0; i<mdat.id_ms.size(); i++) {
-          init[i+mdat.id_wd.size()+mdat.id_ns.size()+like.n_dist_pars
-            +n_eos_params+n_sources] = mdat.mass_ms[i];
-        }
+      for (size_t i=0; i<mdat.id_wd.size(); i++) {
+        init.push_back(mdat.mass_wd[i]);
+      }
+      for (size_t i=0; i<mdat.id_ms.size(); i++) {
+        init.push_back(mdat.mass_ms[i]);
       }
     }
+    
     // AWS: 3/20/18: I changed this part, because we want the MCMC class
     // to be able to expect that different entries in the initial_points
     // array
     this->initial_points.clear();
-    this->initial_points.push_back(init);
+    
+    ubvector init2(init.size());
+    vector_copy(init,init2);
+    this->initial_points.push_back(init2);
   }
   
   vector<bamr::point_funct> pfa(n_threads);
@@ -1166,8 +1118,8 @@ void mcmc_bamr::setup_cli_mb() {
       (this,&mcmc_bamr::read_prev_results_mb),
       o2scl::cli::comm_option_both},
      {0,"emu-points","emu-points help.",
-      2,3,"<input filename> <output filename> <strting row number>","Long description.",
-      new o2scl::comm_option_mfptr<mcmc_bamr>
+      2,3,"<input filename> <output filename> <strting row number>",
+      "Long description.",new o2scl::comm_option_mfptr<mcmc_bamr>
       (this,&mcmc_bamr::emu_points),
       o2scl::cli::comm_option_both}
     };

@@ -157,9 +157,9 @@ namespace bamr {
 	thread)
 
 	This is currently a pointer because it makes it a lot easier
-	to replace these pointers with children. A shared_ptr
-	might be better, but I've had problems implementing
-	vector<shared_ptr> correctly.
+	to replace these pointers with children. A shared_ptr might be
+	better, but I've had problems implementing vector<shared_ptr>
+	correctly.
      */
     std::vector<bamr_class *> bc_arr;
 

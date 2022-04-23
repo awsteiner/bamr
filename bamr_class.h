@@ -117,10 +117,6 @@ namespace bamr {
     std::vector<filters::Filter *> flt;
 #endif
     
-    /** \brief The LIGO data
-     */
-    o2scl::tensor_grid<> ligo_data_table;
-
     /** \brief Desc
      */
     o2scl::tensor_grid<> fft_data[22];
@@ -151,23 +147,6 @@ namespace bamr {
 
     /// Model type string
     std::string model_type;
-
-    /** \brief Desc
-     */
-    class py_param_info {
-      
-    public:
-
-      int np;
-      std::vector<double> low;
-      std::vector<double> high;
-      std::vector<std::string> names;
-      std::vector<std::string> units;
-      std::vector<int> name_counts;
-      std::vector<int> unit_counts;
-      std::vector<char> name_c;
-      std::vector<char> unit_c;
-    };
 
     /// Desc
     py_param_info ppi;
@@ -200,82 +179,6 @@ namespace bamr {
     
   };
 
-}
-
-extern "C" {
-
-  /** \brief Create a \ref bamr_class and \ref model_data object and
-      return the associated pointers
-  */
-  void create_pointers(char *model_name, void *&bcp2, void *&mdp2,
-		       void *&nsd2, void *&setp2, char *data_dir,
-		       int verbose);
-
-  /** \brief Set a parameter
-   */
-  void set_parameter(void *bcp2, void *setp2, char *param_name, double val);
-
-  /** \brief Set a string parameter
-   */
-  void set_parameter_string(void *bcp2, void *setp2, char *param_name,
-			    char *val);
-
-  /** \brief Desc
-   */
-  int init(void *bcp2, void *mdp2, void *nsd2, void *setp2,
-	   int *np, int *&name_counts, char *&names,
-	   int *&unit_counts, char *&units,
-	   double *&low, double *&high);
-  
-  /** \brief Compute a point using the parameters given in \c vals
-   */
-  int compute_point(void *bcp2, void *mdp2, int nv, double *vals,
-		    double *log_wgt);
-
-  /** \brief Summarize tables
-   */
-  void summarize_tables(void *mdp2);
-  
-  /** \brief Get a column from the M-R table
-   */
-  int get_mvsr_column(void *mdp2, char *col_name, int &n, double *&ptr);
-
-  /** \brief Get a column from the source table
-   */
-  int get_source_column(void *mdp2, char *col_name, int &n, double *&ptr);
-  
-  /** \brief Get a column from the reinterpolated table
-   */
-  int get_grid_column(void *mdp2, char *col_name, int &n, double *&ptr);
-
-  /** \brief Get a column from the EOS table
-   */
-  int get_eos_column(void *mdp2, char *col_name, int &n, double *&ptr);
-
-  /** \brief Get a constant from the M-R table
-   */
-  double get_mvsr_constant(void *mdp2, char *con_name);
-
-  /** \brief Get a constant from the EOS table
-   */
-  double get_eos_constant(void *mdp2, char *con_name);
-
-  /** \brief Free the memory associated with the \ref bamr_class
-      and \ref model_data objects
-   */
-  void destroy_pointers(void *bcp2, void *mdp2);
-
-  /** \brief Add a M-R data set
-   */
-  void add_data(void *nsd2, char *name, char *fname, char *slice,
-		double mass_frac, char *table);
-
-  /** \brief Add a M-R data set
-   */
-  void add_data_alt(void *nsd2, char *name, char *fname,
-		    char *fname_alt, char *slice,
-		    double mass_frac, char *table);
-  
 }
 
 #endif
