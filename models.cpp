@@ -806,7 +806,8 @@ two_polytropes::two_polytropes(std::shared_ptr<const settings> s,
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
 				    std::vector<std::string> &units,
-				    std::vector<double> &low, std::vector<double> &high) {
+				    std::vector<double> &low,
+                                    std::vector<double> &high) {
 
   names={"comp","kprime","esym","gamma","trans1","index1",
 	 "trans2","index2"};
@@ -847,6 +848,7 @@ void two_polytropes::get_param_info(std::vector<std::string> &names,
 }
 
 void two_polytropes::initial_point(std::vector<double> &params) {
+  params.resize(8);
   params[0]=1.0;
   params[1]=-3.0;
   params[2]=0.165;
@@ -1002,6 +1004,7 @@ void alt_polytropes::get_param_info(std::vector<std::string> &names,
 }
 
 void alt_polytropes::initial_point(std::vector<double> &params) {
+  params.resize(8);
   params[0]=1.0;
   params[1]=-2.66;
   params[2]=0.165;
@@ -1010,7 +1013,6 @@ void alt_polytropes::initial_point(std::vector<double> &params) {
   params[5]=2.913;
   params[6]=4.066;
   params[7]=1.80;
-  model::initial_point(params);
   return;
 }
 
@@ -1170,6 +1172,7 @@ void fixed_pressure::get_param_info(std::vector<std::string> &names,
 }
 
 void fixed_pressure::initial_point(std::vector<double> &params) {
+  params.resize(8);
   params[0]=1.0;
   params[1]=-2.5;
   params[2]=0.165;
@@ -1178,7 +1181,6 @@ void fixed_pressure::initial_point(std::vector<double> &params) {
   params[5]=0.74;
   params[6]=0.60;
   params[7]=1.84;
-  model::initial_point(params);
   return;
 }
 
@@ -1316,6 +1318,7 @@ void generic_quarks::get_param_info(std::vector<std::string> &names,
 }
 
 void generic_quarks::initial_point(std::vector<double> &params) {
+  params.resize(9);
   params[0]=1.19;
   params[1]=-2.52;
   params[2]=0.188;
@@ -1325,7 +1328,6 @@ void generic_quarks::initial_point(std::vector<double> &params) {
   params[6]=2.29;
   params[7]=0.1907;
   params[8]=0.0796;
-  model::initial_point(params);
   return;
 }
 
@@ -1566,11 +1568,11 @@ void quark_star::get_param_info(std::vector<std::string> &names,
 }
 
 void quark_star::initial_point(std::vector<double> &params) {
+  params.resize(4);
   params[0]=0.2446;
   params[1]=0.0740;
   params[2]=0.00289;
   params[3]=0.0754;
-  model::initial_point(params);
   return;
 }
 
@@ -1773,6 +1775,7 @@ void qmc_neut::get_param_info(std::vector<std::string> &names,
 
 void qmc_neut::initial_point(std::vector<double> &params) {
 
+  params.resize(7);
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
   params[2]=4.584098e+00;
@@ -1780,8 +1783,6 @@ void qmc_neut::initial_point(std::vector<double> &params) {
   params[4]=0.576;
   params[5]=4.60;
   params[6]=1.21;
-
-  model::initial_point(params);
   return;
 }
 
@@ -1953,6 +1954,7 @@ void qmc_threep::get_param_info(std::vector<std::string> &names,
 
 void qmc_threep::initial_point(std::vector<double> &params) {
 
+  params.resize(9);
   params[0]=13.229;
   params[1]=0.4894965;
   params[2]=36.07877;
@@ -1962,8 +1964,6 @@ void qmc_threep::initial_point(std::vector<double> &params) {
   params[6]=1.941257;
   params[7]=4.906005;
   params[8]=7.687587;
-
-  model::initial_point(params);
   return;
 }
 
@@ -2228,6 +2228,7 @@ void qmc_fixp::get_param_info(std::vector<std::string> &names,
 
 void qmc_fixp::initial_point(std::vector<double> &params) {
 
+  params.resize(8);
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
   params[2]=30.0;
@@ -2236,8 +2237,6 @@ void qmc_fixp::initial_point(std::vector<double> &params) {
   params[5]=0.74;
   params[6]=0.60;
   params[7]=1.84;
-
-  model::initial_point(params);
   return;
 }
 
@@ -2461,6 +2460,7 @@ void qmc_twolines::get_param_info(std::vector<std::string> &names,
 
 void qmc_twolines::initial_point(std::vector<double> &params) {
 
+  params.resize(8);
   params[0]=1.276936e+01;
   params[1]=5.043647e-01;
   params[2]=30.0;
@@ -2469,8 +2469,6 @@ void qmc_twolines::initial_point(std::vector<double> &params) {
   params[5]=1.0;
   params[6]=0.8;
   params[7]=1.84;
-
-  model::initial_point(params);
   return;
 }
 
@@ -2798,7 +2796,9 @@ void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
 }
     
 void tews_threep_ligo::initial_point(std::vector<double> &params) {
-      
+
+  params.resize(12);
+  
   params[0]=12.7;
   params[1]=0.4894965;
   params[2]=32.0;
@@ -2812,8 +2812,7 @@ void tews_threep_ligo::initial_point(std::vector<double> &params) {
   params[9]=1.1975;
   params[10]=0.245;
   params[11]=0.5;
-      
-  model::initial_point(params);
+
   return;
 }
 
@@ -3188,7 +3187,9 @@ void tews_fixp_ligo::get_param_info(std::vector<std::string> &names,
 }
     
 void tews_fixp_ligo::initial_point(std::vector<double> &params) {
-      
+
+  params.resize(11);
+  
   params[0]=13.229;
   params[1]=0.4894965;
   params[2]=32.0;
@@ -3202,7 +3203,6 @@ void tews_fixp_ligo::initial_point(std::vector<double> &params) {
   params[9]=0.245;
   params[10]=0.5;
       
-  model::initial_point(params);
   return;
 }
 
@@ -3497,7 +3497,7 @@ new_poly::new_poly(std::shared_ptr<const settings> s,
   this->n_eos_params=9;
 
   cns.err_nonconv=false;
-  cns.def_root.err_nonconv=false;
+  //cns.def_root.err_nonconv=false;
 
   nb_trans=0.32;
 }

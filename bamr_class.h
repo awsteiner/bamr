@@ -149,9 +149,6 @@ namespace bamr {
     std::string model_type;
 
     /// Desc
-    py_param_info ppi;
-    
-    /// Desc
     vec_index pvi;
     
     /// Vector to store log_weights to be passed to table

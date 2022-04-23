@@ -107,16 +107,16 @@ namespace bamr {
     
     /** \brief Desc
      */
-    //void data_params(std::vector<std::string> &names,
-    //std::vector<std::string> &units,
-    //std::vector<double> &low,
-    //std::vector<double> &high,
-    //std::shared_ptr<settings> set);
+    void data_params(std::vector<std::string> &names,
+                     std::vector<std::string> &units,
+                     std::vector<double> &low,
+                     std::vector<double> &high,
+                     std::shared_ptr<settings> set);
     
     /** \brief Desc
      */
-    //void initial_point(std::shared_ptr<settings> set,
-    //std::vector<double> &init);
+    void initial_point(std::shared_ptr<settings> set,
+                       std::vector<double> &init);
     
     /** \brief Load input probability distributions
 	

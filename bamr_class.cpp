@@ -254,9 +254,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
     // copy mcmc param values
     test_pars = pars;
-    p
+    
     // update emulator parameter vector with H or He atm values
-    if(nsd->n_sources>0) {
+    if (nsd->n_sources>0) {
       
       test_pars.resize(pars.size()+nsd->n_sources);
       

@@ -1031,7 +1031,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   
   // Perform the MCMC simulation
-  this->mcmc_fill(names.size(),low,high,pfa,ffa);
+  ubvector low2(low.size()), high2(high.size());
+  vector_copy(low,low2);
+  vector_copy(high,high2);
+  this->mcmc_fill(names.size(),low2,high2,pfa,ffa);
   
   if (set->apply_emu) {
     Py_Finalize();

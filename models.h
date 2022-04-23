@@ -348,7 +348,8 @@ namespace bamr {
      */
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+				std::vector<double> &low,
+                                std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
 	\c e and put output in \c tab_eos
@@ -977,11 +978,12 @@ namespace bamr {
      */
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+				std::vector<double> &low,
+                                std::vector<double> &high);
 
     /** \brief Specify the initial point
      */
-    virtual void initial_point(ubvector &params);
+    virtual void initial_point(std::vector<double> &params);
 
     /** \brief Setup model parameters */
     virtual void setup_params(o2scl::cli &cl);
@@ -1036,11 +1038,12 @@ namespace bamr {
      */
     virtual void get_param_info(std::vector<std::string> &names,
 				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+				std::vector<double> &low,
+                                std::vector<double> &high);
 
     /** \brief Specify the initial point
      */
-    virtual void initial_point(ubvector &params);
+    virtual void initial_point(std::vector<double> &params);
 
     /** \brief Setup model parameters */
     virtual void setup_params(o2scl::cli &cl);

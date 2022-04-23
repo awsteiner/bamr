@@ -135,7 +135,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
       // Send a message, unless the rank is the last one to read a
       // file.
       if (mpi_size>1 && (k<((int)n_sources)-1 ||
-			   mpi_rank<mpi_size-((int)n_sources))) {
+                         mpi_rank<mpi_size-((int)n_sources))) {
 	int next=mpi_rank+1;
 	if (next>=mpi_size) next-=mpi_size;
 	if (set->mpi_load_debug) {
@@ -243,11 +243,11 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
       for(size_t i=0;i<source_tables[k].get_nx();i++) {
 	for(size_t j=0;j<source_tables[k].get_ny();j++) {
 	  if (set->norm_max) {
-	     source_tables[k].set
+            source_tables[k].set
 	      (i,j,slice_names[k],source_tables[k].get
 	       (i,j,slice_names[k])/max);		   
 	  } else {
-	     source_tables[k].set
+            source_tables[k].set
 	      (i,j,slice_names[k],source_tables[k].get
 	       (i,j,slice_names[k])/tot);		   
 	  }
@@ -389,51 +389,49 @@ int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
-#ifdef NEVER_DEFINED
-< void ns_data::data_params(std::vector<std::string> &names,
-<                           std::vector<std::string> &units,
-<                           std::vector<double> &low,
-<                           std::vector<double> &high,
-<                           std::shared_ptr<settings> set) {
-< 
-<   if (set->inc_ligo) {
-<     names.push_back("M_chirp_det");
-<     names.push_back("q");
-<     names.push_back("z_cdf");
-<     units.push_back("Msun");
-<     units.push_back("");
-<     units.push_back("");
-<     low.push_back(1.1971);
-<     low.push_back(0.0);
-<     low.push_back(0.0);
-<     high.push_back(1.1979);
-<     high.push_back(1.0);
-<     high.push_back(1.0);
-<   }
-<   
-<   for(size_t i=0;i<n_sources;i++) {
-<     names.push_back("mf_"+source_names[i]);
-<     units.push_back("");
-<     low.push_back(0.0);
-<     high.push_back(1.0);
-<   }
-<   
-<   return;
-< }
-< 
-< void ns_data::initial_point(std::shared_ptr<settings> set,
-<                             std::vector<double> &init) {
-< 
-<   if (set->inc_ligo) {
-<     init.push_back(1.1975);
-<     init.push_back(0.6);
-<     init.push_back(0.5);
-<   }
-<   for(size_t i=0;i<n_sources;i++) {
-<     init.push_back(0.7);
-<   }
-<   
-<   return;
-< }
-< 
-#endif
+void ns_data::data_params(std::vector<std::string> &names,
+                          std::vector<std::string> &units,
+                          std::vector<double> &low,
+                          std::vector<double> &high,
+                          std::shared_ptr<settings> set) {
+
+  if (set->inc_ligo) {
+    names.push_back("M_chirp_det");
+    names.push_back("q");
+    names.push_back("z_cdf");
+    units.push_back("Msun");
+    units.push_back("");
+    units.push_back("");
+    low.push_back(1.1971);
+    low.push_back(0.0);
+    low.push_back(0.0);
+    high.push_back(1.1979);
+    high.push_back(1.0);
+    high.push_back(1.0);
+  }
+  
+  for(size_t i=0;i<n_sources;i++) {
+    names.push_back("mf_"+source_names[i]);
+    units.push_back("");
+    low.push_back(0.0);
+    high.push_back(1.0);
+  }
+  
+  return;
+}
+
+void ns_data::initial_point(std::shared_ptr<settings> set,
+                            std::vector<double> &init) {
+
+  if (set->inc_ligo) {
+    init.push_back(1.1975);
+    init.push_back(0.6);
+    init.push_back(0.5);
+  }
+  for(size_t i=0;i<n_sources;i++) {
+    init.push_back(0.7);
+  }
+  
+  return;
+}
+
