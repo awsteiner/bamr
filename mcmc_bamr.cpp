@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2020, Andrew W. Steiner
+  Copyright (C) 2012-2022, Andrew W. Steiner
   
   This file is part of Bamr.
   
@@ -310,7 +310,7 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
-  mcmc_para_cli::file_header(hf);
+  mcmc_para_new_cli::file_header(hf);
   
   model &m=*(bc_arr[0]->mod);
   
@@ -371,7 +371,7 @@ int mcmc_bamr::mcmc_init() {
     m.copy_params(m2);
   }
   
-  mcmc_para_cli::mcmc_init();
+  mcmc_para_new_cli::mcmc_init();
 
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -835,7 +835,7 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
        << " is reading previous results from " << fname << " ." << endl;
   hdf_file hf;
   hf.open(fname);
-  mcmc_para_table::read_prev_results(hf,np);
+  mcmc_para_new_table::read_prev_results(hf,np);
   hf.close();
   
 #ifdef BAMR_MPI
@@ -866,6 +866,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // to table::new_column().
   bc_arr[0]->mod->get_param_info(names,units,low,high); 
 
+  nsd->data_params(names,units,low,high,set);
+  
   if (set->apply_intsc) {
 
     for(size_t i=0;i<nsd->n_sources;i++) {
@@ -975,6 +977,47 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     ubvector init2(init.size());
     vector_copy(init,init2);
     this->initial_points.push_back(init2);
+    
+    if (this->verbose>1) {
+      cout << "Summary of default initial point: " << endl;
+      cout << "Sizes of names, units, low, high, and init: "
+           << names.size() << " " << units.size() << " "
+           << low.size() << " " << high.size() << " "
+           << init.size() << endl;
+      cout << "Parameter index, name, unit, low, init, high: " << endl;
+      for(size_t j=0;j<names.size();j++) {
+        cout.width(3);
+        cout << j << " ";
+        cout.width(18);
+        cout << names[j] << " ";
+        cout.width(6);
+        cout.setf(ios::left);
+        cout << units[j] << " ";
+        cout.unsetf(ios::left);
+        cout.setf(ios::showpos);
+        cout << low[j] << " " << init[j] << " " << high[j];
+        cout.unsetf(ios::showpos);
+        if (init[j]<low[j]) {
+          cout << " L";
+        }
+        if (init[j]>high[j]) {
+          cout << " H";
+        }
+        cout << endl;
+      }
+    }
+    
+  } else {
+
+    if (this->verbose>1) {
+      cout << "Parameters index, name, unit, low, high: " << endl;
+      for(size_t j=0;j<names.size();j++) {
+        cout << j << " " << names[j] << " " << units[j] << " "
+             << low[j] << " " << high[j] << endl;
+      }
+      exit(-1);
+    }
+    
   }
   
   vector<bamr::point_funct> pfa(n_threads);
@@ -1034,7 +1077,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   ubvector low2(low.size()), high2(high.size());
   vector_copy(low,low2);
   vector_copy(high,high2);
-  this->mcmc_fill(names.size(),low2,high2,pfa,ffa);
+
+  std::vector<model_data> dat_arr;
+  
+  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
   
   if (set->apply_emu) {
     Py_Finalize();
@@ -1055,7 +1101,7 @@ int mcmc_bamr::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
 
 void mcmc_bamr::setup_cli_mb() {
   
-  mcmc_para_cli::setup_cli(cl);
+  mcmc_para_new_cli::setup_cli(cl);
 
   set->setup_cli(cl);
   

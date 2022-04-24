@@ -3589,8 +3589,8 @@ void new_poly::copy_params(model &m) {
 }
 
 void new_poly::compute_eos(const ubvector &params, int &ret,
-				   std::ofstream &scr_out, model_data &dat) {
-
+                           std::ofstream &scr_out, model_data &dat) {
+  
   bool debug=false;
 
   ret=ix_success;
@@ -3637,7 +3637,6 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     scr_out << "b=" << b << " beta=" << beta << endl;
   }
-
   
   dat.eos.add_constant("S",Stmp/hc_mev_fm);
   dat.eos.add_constant("L",Ltmp/hc_mev_fm);
@@ -3646,7 +3645,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   double trans1=params[5];
   double exp2=params[6];
   double trans2=params[7];
-  double exp3=params[9];
+  double exp3=params[8];
 
   double ed_last=0.0, pr_last=0.0, nb_last=0.0;
 
@@ -3777,6 +3776,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     cout << "Third polytrope: " << exp3 << endl;
   }
+  
   // We compute to energy densities slightly higher than 10
   // because the energy grid ends at 10 and it makes sure
   // we're not extrapolating

@@ -227,19 +227,19 @@ void likelihood::get_params() {
   par_names.push_back("mean_NS");
   par_units.push_back("Msun");
   par_names.push_back("log10_width_NS");
-  par_units.push_back("Msun");
+  par_units.push_back("");
   par_names.push_back("skewness_NS");
   par_units.push_back("");
   par_names.push_back("mean_WD");
   par_units.push_back("Msun");
   par_names.push_back("log10_width_WD");
-  par_units.push_back("Msun");
+  par_units.push_back("");
   par_names.push_back("skewness_WD");
   par_units.push_back("");
   par_names.push_back("mean_MS");
   par_units.push_back("Msun");
   par_names.push_back("log10_width_MS");
-  par_units.push_back("Msun");
+  par_units.push_back("");
   par_names.push_back("skewness_MS");
   par_units.push_back("");
 
