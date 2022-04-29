@@ -1091,7 +1091,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   vector_copy(low,low2);
   vector_copy(high,high2);
 
-  std::vector<model_data> dat_arr;
+  std::vector<model_data> dat_arr(2*this->n_walk*this->n_threads);
   
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
   
