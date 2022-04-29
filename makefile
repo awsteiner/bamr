@@ -582,6 +582,7 @@ np:
 		-set cached_intsc 0 \
 		-model new_poly \
 		-set mmax_deriv 1 \
+		-set inc_ligo 1 \
 		-mcmc
 #> np.out 2>&1 &
 

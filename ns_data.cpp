@@ -395,20 +395,33 @@ void ns_data::data_params(std::vector<std::string> &names,
                           std::vector<double> &high,
                           std::shared_ptr<settings> set) {
 
+  std::cout << "Here8." << std::endl;
+  std::cout << "Here8b: " << set << " " << set->inc_ligo << std::endl;
+  
   if (set->inc_ligo) {
+    std::cout << "Here8c." << std::endl;
     names.push_back("M_chirp_det");
     names.push_back("q");
     names.push_back("z_cdf");
+    std::cout << "Here8d." << std::endl;
     units.push_back("Msun");
     units.push_back("");
     units.push_back("");
+    std::cout << "Here8e." << std::endl;
     low.push_back(1.1971);
     low.push_back(0.0);
     low.push_back(0.0);
+    std::cout << "Here8f." << high.size() << std::endl;
     high.push_back(1.1979);
+    std::cout << "Here8g." << std::endl;
     high.push_back(1.0);
+    std::cout << "Here8h." << std::endl;
     high.push_back(1.0);
+    std::cout << "Here8i." << std::endl;
   }
+  
+  std::cout << "Here9 " << n_sources << std::endl;
+  vector_out(std::cout,source_names,true);
   
   for(size_t i=0;i<n_sources;i++) {
     names.push_back("mf_"+source_names[i]);
@@ -416,6 +429,8 @@ void ns_data::data_params(std::vector<std::string> &names,
     low.push_back(0.0);
     high.push_back(1.0);
   }
+
+  std::cout << "Here10." << std::endl;
   
   return;
 }
