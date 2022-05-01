@@ -89,8 +89,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
                          std::string model_type) {
 
   ret=ix_success;
-  bool new_derivative=false;
-  
+
+  // Call read_table()
+  table_units<> &eost=dat.eos;
+
   if (has_eos) {
     
     // ---------------------------------------------------------------
@@ -102,15 +104,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Sarah's section
     if (set->mmax_deriv==true) {
       
-      // Call read_table()
-      table_units<> &teos_temp=dat.eos;
+      eost.set_interp_type(o2scl::itp_linear);
+      eost.set_unit("ed","1/fm^4");
+      eost.set_unit("pr","1/fm^4");
+      eost.set_unit("nb","1/fm^3");
 
-      dat.eos.set_interp_type(o2scl::itp_linear);
-      dat.eos.set_unit("ed","1/fm^4");
-      dat.eos.set_unit("pr","1/fm^4");
-      dat.eos.set_unit("nb","1/fm^3");
-
-      teos.read_table(teos_temp,"ed","pr","nb");
+      teos.read_table(eost,"ed","pr","nb");
       
       // First TOV solve here
       ts.mvsr();
@@ -118,9 +117,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
       double m_max=dat.mvsr.max("gm");
-
-      cout.precision(10);
-      cout << "m_max1: " << m_max << endl;
+      
+      //cout << "m_max1: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
 	scr_out << "Maximum mass too small: " << m_max << " < "
@@ -129,43 +127,47 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	return;
       }
 
-      // Here: Find the central energy density of the maximum
-      // mass star, it's in dat.mvsr
-      double c_ed=0.0;
+      // Find the central energy density of the maximum mass star
       size_t row=dat.mvsr.lookup("gm",m_max);
-      c_ed=dat.mvsr.get("ed",row);
-      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
+      double c_ed=dat.mvsr.get("ed",row);
+
+      // Ensure that the last polytrope appears in the center
+      // of the maximum mass star
+      if (model_type==((string)"new_poly")) {
+        double trans2=pars[7];
+        if (trans2>c_ed) {
+          cout << "trans2, c_ed: " << trans2 << " " << c_ed << endl;
+          ret=ix_param_mismatch;
+          return;
+        }
+      }
       
-      // Check the speed of sound, cs2 > one - if so reject that point
-      dat.eos.deriv("ed","pr","cs2");
-      for (size_t i=0;i<dat.eos.get_nlines();i++) {
-	if (dat.eos.get("ed",i) < c_ed) {
-          if (dat.eos.get("cs2",i)>1.0) {
-            cout << dat.eos.get("ed",i) << " " << c_ed << endl;
+      // Check that the speed of sound is less than 1
+      eost.deriv("ed","pr","cs2");
+      for (size_t i=0;i<eost.get_nlines();i++) {
+	if (eost.get("ed",i)<c_ed) {
+          if (eost.get("cs2",i)>1.0) {
+            //cout << eost.get("ed",i) << " " << c_ed << endl;
             ret=ix_acausal;
             return;
           }
 	}
       }	
-              
-      ubvector pars2=pars;
-      cout << "pars: ";
-      vector_out(cout,pars,true);
 
+      // Now modify the last parameter
+      ubvector pars2=pars;
       pars2[this->n_eos_params-1]*=1.001;
 
-      cout << "pars2: ";
-      vector_out(cout,pars2,true);
-      
+      // Recompute the EOS
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
-      dat.eos.set_unit("ed","1/fm^4");
-      dat.eos.set_unit("pr","1/fm^4");
-      dat.eos.set_unit("nb","1/fm^3");
+      eost.set_unit("ed","1/fm^4");
+      eost.set_unit("pr","1/fm^4");
+      eost.set_unit("nb","1/fm^3");
       
       // Call read_table()
-      teos.read_table(teos_temp,"ed","pr","nb");
+      teos.read_table(eost,"ed","pr","nb");
       
       // Second TOV solve here
       ts.mvsr();
@@ -174,7 +176,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.mvsr=*(ts.get_results());
       double m_max2=dat.mvsr.max("gm");
 
-      cout << "m_max2: " << m_max << endl;
+      //cout << "m_max2: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max << " < "
@@ -182,46 +184,45 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-      double dxdy=0.0;
+
+      // Now, compute the derivative
+      double dpdM=(pars2[this->n_eos_params-1]-
+                   pars[this->n_eos_params-1])/(m_max2-m_max);
+      //cout << "dpdM: " << dpdM << endl;
       
-      if (this->n_eos_params==9) {
-        //if(model_type ==((string) "tews_threep_ligo")){
-        dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
-        cout << pars2[8] << " " <<  pars[8] << " " 
-             << m_max2 << " " <<  m_max << endl;
-      }
-      if (this->n_eos_params==8) {
-        //if(model_type = ((string) "tews_fixp_ligo")){
-        dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
-        cout << pars2[7] << " " <<  pars[7] << " " 
-             << m_max2 << " " <<  m_max << endl;
-      }
-      cout << "dxdy: " << dxdy << endl;
-      
-      //reject derivative if it's not finite:
-      if (isfinite(dxdy)!=1) {
-        ret = ix_infinite;
+      // Reject the point if the derivative is not finite
+      if (isfinite(dpdM)!=1) {
+        ret=ix_infinite;
      	return;
       } 
 
-      cout << "Setting constant." << endl;
-      dat.eos.add_constant("dpdM",dxdy);
+      eost.add_constant("dpdM",dpdM);
 
-      cout << "m_max0: " << m_max << endl;
-      // Check the speed of sound
+      // Compute the central energy density
       row=dat.mvsr.lookup("gm",m_max);
-      cout << "row: " << row << " " << dat.mvsr.get_nlines() << endl;
       c_ed=dat.mvsr.get("ed",row);
-      cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
 
-      dat.eos.deriv("ed","pr","cs2");
-      cout << "Jm3." << endl;
-      for (size_t i=0;i<dat.eos.get_nlines();i++) {
-        if (dat.eos.get("ed",i)<c_ed) {
-          cout << i << " " << dat.eos.get("ed",i) << " "
-               << c_ed << " "
-               << dat.eos.get("cs2",i) << endl;
-          if (dat.eos.get("cs2",i)>1.0) {
+      // Ensure that the last polytrope appears in the center
+      // of the maximum mass star
+      if (model_type==((string)"new_poly")) {
+        double trans2=pars[7];
+        if (trans2>c_ed) {
+          //cout << "trans2, c_ed (2): " << trans2 << " " << c_ed << endl;
+          ret=ix_param_mismatch;
+          return;
+        }
+      }
+      
+      // Check that the speed of sound is less than 1
+      eost.deriv("ed","pr","cs2");
+      for (size_t i=0;i<eost.get_nlines();i++) {
+        if (eost.get("ed",i)<c_ed) {
+          /*
+            cout << i << " " << eost.get("ed",i) << " "
+            << c_ed << " "
+            << eost.get("cs2",i) << endl;
+          */
+          if (eost.get("cs2",i)>1.0) {
             ret=ix_acausal;
             return;
           }
@@ -237,37 +238,31 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
     // instead.
   
-    cout << "Jm2." << endl;
-    
-    for(size_t i=0;(dat.eos.get_nlines()>0 &&
-		    i<dat.eos.get_nlines()-1);i++) {
-      if ((!set->use_crust || dat.eos.get("ed",i)>0.6) && 
-	  dat.eos.get("pr",i+1)<dat.eos.get("pr",i)) {
+    for(size_t i=0;(eost.get_nlines()>0 &&
+		    i<eost.get_nlines()-1);i++) {
+      if ((!set->use_crust || eost.get("ed",i)>0.6) && 
+	  eost.get("pr",i+1)<eost.get("pr",i)) {
 	scr_out << "Rejected: Pressure decreasing." << std::endl;
-	scr_out << "ed=" << dat.eos.get("ed",i) 
-		<< " pr=" << dat.eos.get("pr",i) << std::endl;
-	scr_out << "ed=" << dat.eos.get("ed",i+1) 
-		<< " pr=" << dat.eos.get("pr",i+1) << std::endl;
+	scr_out << "ed=" << eost.get("ed",i) 
+		<< " pr=" << eost.get("pr",i) << std::endl;
+	scr_out << "ed=" << eost.get("ed",i+1) 
+		<< " pr=" << eost.get("pr",i+1) << std::endl;
 	ret=ix_press_dec;
 	return;
       }
     }
   }
 
-  cout << "Jm1." << endl;
-
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
 
-  if (has_eos && set->baryon_density && !dat.eos.is_column("nb")) {
+  if (has_eos && set->baryon_density && !eost.is_column("nb")) {
     O2SCL_ERR2("Setting baryon_density is true but EOS does not ",
                "have a column \"nb\".",o2scl::exc_einval);
   }
 
   // ---------------------------------------------------------------
 
-  cout << "J0." << endl;
-  
   if (has_eos) {
     
     // ---------------------------------------------------------------
@@ -307,8 +302,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	  csamp=nt_c.mean();
 	}
       
-	double St=dat.eos.get_constant("S")*o2scl_const::hc_mev_fm;
-	double Lt=dat.eos.get_constant("L")*o2scl_const::hc_mev_fm;
+	double St=eost.get_constant("S")*o2scl_const::hc_mev_fm;
+	double Lt=eost.get_constant("L")*o2scl_const::hc_mev_fm;
 	double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))*(St/30.0);
 
 	if (nt<nt_low || nt>nt_high) {
@@ -316,10 +311,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	  ret=ix_trans_invalid;
 	  return;
 	}
-	dat.eos.add_constant("nt",nt);
+	eost.add_constant("nt",nt);
 	
-	double prt=dat.eos.interp("nb",nt,"pr");
-	dat.eos.add_constant("prt",prt);
+	double prt=eost.interp("nb",nt,"pr");
+	eost.add_constant("prt",prt);
 
 	// Add the transition pressure to the tov_solve object
 	
@@ -330,12 +325,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
 	// Set the crust and it's transition pressure
       
-	if (dat.eos.get_constant("S")*hc_mev_fm<28.0 || 
-	    dat.eos.get_constant("S")*hc_mev_fm>38.0 || 
-	    dat.eos.get_constant("L")*hc_mev_fm<25.0 ||
-	    dat.eos.get_constant("L")*hc_mev_fm>115.0 ||
-	    dat.eos.get_constant("L")*hc_mev_fm>
-	    dat.eos.get_constant("S")*hc_mev_fm*5.0-65.0) {
+	if (eost.get_constant("S")*hc_mev_fm<28.0 || 
+	    eost.get_constant("S")*hc_mev_fm>38.0 || 
+	    eost.get_constant("L")*hc_mev_fm<25.0 ||
+	    eost.get_constant("L")*hc_mev_fm>115.0 ||
+	    eost.get_constant("L")*hc_mev_fm>
+	    eost.get_constant("S")*hc_mev_fm*5.0-65.0) {
 	  scr_out << "S or L out of range" << endl;
 	  ret=ix_SL_invalid;
 	  return;
@@ -347,8 +342,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 #endif
 	{
 	  teos.ngl13_low_dens_eos2
-	    (dat.eos.get_constant("S")*hc_mev_fm,
-	     dat.eos.get_constant("L")*hc_mev_fm,nt,"");
+	    (eost.get_constant("S")*hc_mev_fm,
+	     eost.get_constant("L")*hc_mev_fm,nt,"");
 	}
       
 	// Set the transition pressure and width. Note that
@@ -369,9 +364,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	// fm^{-3}
 
 	double nt=0.08;
-	dat.eos.add_constant("nt",nt);
-	double prt=dat.eos.interp("nb",0.08,"pr");
-	dat.eos.add_constant("prt",prt);
+	eost.add_constant("nt",nt);
+	double prt=eost.interp("nb",0.08,"pr");
+	eost.add_constant("prt",prt);
 	if (ts.pr_list.size()>0) {
 	  ts.pr_list.clear();
 	}
@@ -387,21 +382,18 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     }
 
-    cout << "J1." << endl;
-    
     // ---------------------------------------------------------------
     // Read the EOS into the tov_eos object
     
-    table_units<> &teos_temp=dat.eos;
     if (set->baryon_density && set->inc_baryon_mass) {
-      dat.eos.set_unit("ed","1/fm^4");
-      dat.eos.set_unit("pr","1/fm^4");
-      dat.eos.set_unit("nb","1/fm^3");
-      teos.read_table(teos_temp,"ed","pr","nb");
+      eost.set_unit("ed","1/fm^4");
+      eost.set_unit("pr","1/fm^4");
+      eost.set_unit("nb","1/fm^3");
+      teos.read_table(eost,"ed","pr","nb");
     } else {
-      dat.eos.set_unit("ed","1/fm^4");
-      dat.eos.set_unit("pr","1/fm^4");
-      teos.read_table(teos_temp,"ed","pr");
+      eost.set_unit("ed","1/fm^4");
+      eost.set_unit("pr","1/fm^4");
+      teos.read_table(eost,"ed","pr");
     }
 
     // ---------------------------------------------------------------
@@ -421,8 +413,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	  scr_out << "Stability problem near crust-core transition."
 		  << std::endl;
 	  if (has_esym) {
-	    scr_out << "S=" << dat.eos.get_constant("S")*hc_mev_fm 
-		    << " L=" << dat.eos.get_constant("L")*hc_mev_fm
+	    scr_out << "S=" << eost.get_constant("S")*hc_mev_fm 
+		    << " L=" << eost.get_constant("L")*hc_mev_fm
 		    << std::endl;
 	  }
 	  scr_out << "Energy decreased with increasing pressure "
@@ -444,8 +436,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // End of 'if (set->use_crust)'
     }
 
-    cout << "J1b." << endl;
-    
     // ---------------------------------------------------------------
     // If necessary, output debug information (We want to make sure
     // this is after tov_eos::read_table() so that we can debug the
@@ -458,7 +448,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hfde.open_or_create("debug_eos.o2");
       
       // Output the core EOS
-      hdf_output(hfde,dat.eos,"eos");
+      hdf_output(hfde,eost,"eos");
       
       // Output core and crust EOS as reported by the tov_interp_eos object
       o2scl::table_units<> full_eos;
@@ -517,7 +507,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
     int info=ts.mvsr();
 
-    cout << "J2." << endl;
     dat.mvsr=*(ts.get_results());
     if (set->verbose>=2) {
       scr_out << "Done with TOV." << endl;
@@ -534,7 +523,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Add baryon density to M vs. R table if it's not already there
 
     if (set->baryon_density && !set->inc_baryon_mass) {
-      dat.mvsr.add_col_from_table(dat.eos,"pr","nb","pr");
+      dat.mvsr.add_col_from_table(eost,"pr","nb","pr");
       dat.mvsr.set_unit("nb","1/fm^3");
     }
     
@@ -624,7 +613,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     if (nsd->n_sources>0) {
       if (dat.sourcet.get_ncolumns()==0) {
-	dat.sourcet.line_of_names("R M wgt alt ce");
+	dat.sourcet.line_of_names("R M wgt atm ce");
 	if (set->baryon_density) {
 	  dat.sourcet.new_column("cnb");
 	}
@@ -701,46 +690,46 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute speed of sound squared
     double ed_max=dat.mvsr.max("ed");
     
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {
-      if (dat.eos.get("ed",i)>ed_max &&
-          !std::isfinite(dat.eos.get("pr",i))) {
-        dat.eos.set("pr",i,0.0);
+    for(size_t i=0;i<eost.get_nlines();i++) {
+      if (eost.get("ed",i)>ed_max &&
+          !std::isfinite(eost.get("pr",i))) {
+        eost.set("pr",i,0.0);
       }
     }
     
-    dat.eos.deriv("ed","pr","cs2");
+    eost.deriv("ed","pr","cs2");
     
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {
-      if (dat.eos.get("ed",i)<ed_max &&
-          (!std::isfinite(dat.eos.get("cs2",i)) ||
-           dat.eos.get("cs2",i)<0.0)) {
+    for(size_t i=0;i<eost.get_nlines();i++) {
+      if (eost.get("ed",i)<ed_max &&
+          (!std::isfinite(eost.get("cs2",i)) ||
+           eost.get("cs2",i)<0.0)) {
         cout << "cs2 not finite." << endl;
         cout << "ed_max: " << ed_max << endl;
         if (i>0) {
-          cout << i-1 << " " << dat.eos.get("ed",i-1) << " "
-               << dat.eos.get("pr",i-1) << endl;
+          cout << i-1 << " " << eost.get("ed",i-1) << " "
+               << eost.get("pr",i-1) << endl;
         }
-        cout << i << " " << dat.eos.get("ed",i) << " "
-             << dat.eos.get("pr",i) << endl;
-        if (i<dat.eos.get_nlines()-1) {
-          cout << i+1 << " " << dat.eos.get("ed",i+1) << " "
-               << dat.eos.get("pr",i+1) << endl;
+        cout << i << " " << eost.get("ed",i) << " "
+             << eost.get("pr",i) << endl;
+        if (i<eost.get_nlines()-1) {
+          cout << i+1 << " " << eost.get("ed",i+1) << " "
+               << eost.get("pr",i+1) << endl;
         }
-        for(size_t j=0;j<dat.eos.get_nlines();j++) {
-          cout << j << " " << dat.eos.get("ed",j) << " "
-               << dat.eos.get("pr",j) << endl;
+        for(size_t j=0;j<eost.get_nlines();j++) {
+          cout << j << " " << eost.get("ed",j) << " "
+               << eost.get("pr",j) << endl;
         }
         exit(-1);
       }
     }
 
-    for(size_t i=0;i<dat.eos.get_nlines();i++) {
-      if (dat.eos.get("ed",i)<ed_max && dat.eos["cs2"][i]>1.0) {
+    for(size_t i=0;i<eost.get_nlines();i++) {
+      if (eost.get("ed",i)<ed_max && eost["cs2"][i]>1.0) {
         scr_out.precision(4);
         scr_out << "Rejected: Acausal."<< std::endl;
         scr_out << "ed_max=" << ed_max
-                << " ed_bad=" << (dat.eos)["ed"][i]
-                << " pr_bad=" << (dat.eos)["pr"][i] << std::endl;
+                << " ed_bad=" << (eost)["ed"][i]
+                << " pr_bad=" << (eost)["pr"][i] << std::endl;
         scr_out.precision(6);
         ret=ix_acausal;
         return;
@@ -764,19 +753,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // Compute M, R for fixed central baryon densities
 
   if (has_eos && set->baryon_density) {
-    double ed1=dat.eos.interp("nb",0.16,"ed");
+    double ed1=eost.interp("nb",0.16,"ed");
     dat.mvsr.add_constant("gm_nb1",dat.mvsr.interp("ed",ed1,"gm"));
     dat.mvsr.add_constant("r_nb1",dat.mvsr.interp("ed",ed1,"r"));
-    double ed2=dat.eos.interp("nb",0.32,"ed");
+    double ed2=eost.interp("nb",0.32,"ed");
     dat.mvsr.add_constant("gm_nb2",dat.mvsr.interp("ed",ed2,"gm"));
     dat.mvsr.add_constant("r_nb2",dat.mvsr.interp("ed",ed2,"r"));
-    double ed3=dat.eos.interp("nb",0.48,"ed");
+    double ed3=eost.interp("nb",0.48,"ed");
     dat.mvsr.add_constant("gm_nb3",dat.mvsr.interp("ed",ed3,"gm"));
     dat.mvsr.add_constant("r_nb3",dat.mvsr.interp("ed",ed3,"r"));
-    double ed4=dat.eos.interp("nb",0.64,"ed");
+    double ed4=eost.interp("nb",0.64,"ed");
     dat.mvsr.add_constant("gm_nb4",dat.mvsr.interp("ed",ed4,"gm"));
     dat.mvsr.add_constant("r_nb4",dat.mvsr.interp("ed",ed4,"r"));
-    double ed5=dat.eos.interp("nb",0.80,"ed");
+    double ed5=eost.interp("nb",0.80,"ed");
     dat.mvsr.add_constant("gm_nb5",dat.mvsr.interp("ed",ed5,"gm"));
     dat.mvsr.add_constant("r_nb5",dat.mvsr.interp("ed",ed5,"r"));
   }
@@ -3575,14 +3564,14 @@ void new_poly::initial_point(std::vector<double> &params) {
   params.resize(9);
 
   params[0]=12.7;
-  params[1]=0.4894965;
+  params[1]=0.49;
   params[2]=32.0;
   params[3]=55.0;
   params[4]=4.0;
-  params[5]=1.658677;
+  params[5]=1.66;
   params[6]=1.515;
-  params[7]=4.906005;
-  params[8]=2.454;
+  params[7]=4.0;
+  params[8]=2.054;
 
   return;
 }
