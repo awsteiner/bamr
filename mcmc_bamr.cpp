@@ -477,6 +477,13 @@ int mcmc_bamr::mcmc_init() {
       this->table->set_unit("M_max","Msun");
       if (set->mmax_deriv) {
         this->table->new_column("dpdM");
+        if (model_type==((string)"tews_threep_ligo")) {
+          this->table->set_unit("dpdM","Msun");
+        } else if (model_type==((string)"tews_fixp_ligo")) {
+          this->table->set_unit("dpdM","Msun*fm^4");
+        } else if (model_type==((string)"new_poly")) {
+          this->table->set_unit("dpdM","Msun");
+        }
       }
       this->table->new_column("P_max");
       this->table->set_unit("P_max","1/fm^4");
@@ -517,14 +524,6 @@ int mcmc_bamr::mcmc_init() {
         this->table->set_unit("gm_nb5","Msun");
         this->table->new_column("r_nb5");
         this->table->set_unit("r_nb5","km");
-      }
-      if (set->mmax_deriv) {
-        this->table->new_column("mmax_deriv");
-        if (model_type==((string)"tews_threep_ligo")) {
-          this->table->set_unit("mmax_deriv","Msun");
-        } else if (model_type==((string)"tews_fixp_ligo")) {
-          this->table->set_unit("mmax_deriv","Msun*fm^4");
-        }
       }
       if (set->compute_cthick) {
         this->table->new_column("nt");

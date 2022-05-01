@@ -85,7 +85,8 @@ model::model(std::shared_ptr<const settings> s,
 }
 
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			 int &ret, model_data &dat) {
+			 int &ret, model_data &dat,
+                         std::string model_type) {
 
   ret=ix_success;
   bool new_derivative=false;
@@ -103,7 +104,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Call read_table()
       table_units<> &teos_temp=dat.eos;
-      teos.read_table(teos_temp, "ed", "pr", "nb");
+
+      dat.eos.set_interp_type(o2scl::itp_linear);
+      dat.eos.set_unit("ed","1/fm^4");
+      dat.eos.set_unit("pr","1/fm^4");
+      dat.eos.set_unit("nb","1/fm^3");
+
+      teos.read_table(teos_temp,"ed","pr","nb");
       
       // First TOV solve here
       ts.mvsr();
@@ -111,8 +118,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
       double m_max=dat.mvsr.max("gm");
-      
-      cout << "m_max: " << m_max << endl;
+
+      cout.precision(10);
+      cout << "m_max1: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
 	scr_out << "Maximum mass too small: " << m_max << " < "
@@ -124,10 +132,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Here: Find the central energy density of the maximum
       // mass star, it's in dat.mvsr
       double c_ed=0.0;
-   
-      dat.eos.summary(&cout);
-      dat.mvsr.summary(&cout);
-      
       size_t row=dat.mvsr.lookup("gm",m_max);
       c_ed=dat.mvsr.get("ed",row);
       cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
@@ -144,26 +148,33 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	}
       }	
               
-      ubvector pars2=pars;   
+      ubvector pars2=pars;
+      cout << "pars: ";
+      vector_out(cout,pars,true);
 
-      if (this->n_eos_params==12) {
-        pars2[8]*=1.001;
-      }
-      if (this->n_eos_params==11) {
-        pars2[7]*=1.001; 
-      }
+      pars2[this->n_eos_params-1]*=1.001;
 
+      cout << "pars2: ";
+      vector_out(cout,pars2,true);
+      
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
+      dat.eos.set_unit("ed","1/fm^4");
+      dat.eos.set_unit("pr","1/fm^4");
+      dat.eos.set_unit("nb","1/fm^3");
+      
       // Call read_table()
-      teos.read_table(teos_temp, "ed", "pr", "nb");
+      teos.read_table(teos_temp,"ed","pr","nb");
       
       // Second TOV solve here
       ts.mvsr();
+      
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
       double m_max2=dat.mvsr.max("gm");
+
+      cout << "m_max2: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max << " < "
@@ -173,57 +184,61 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
       double dxdy=0.0;
       
-      if (this->n_eos_params==12) {
+      if (this->n_eos_params==9) {
         //if(model_type ==((string) "tews_threep_ligo")){
         dxdy = (pars2[8] - pars[8])/(m_max2 - m_max);
         cout << pars2[8] << " " <<  pars[8] << " " 
              << m_max2 << " " <<  m_max << endl;
       }
-      if (this->n_eos_params==11) {
+      if (this->n_eos_params==8) {
         //if(model_type = ((string) "tews_fixp_ligo")){
         dxdy = (pars2[7] - pars[7])/(m_max2 - m_max);
         cout << pars2[7] << " " <<  pars[7] << " " 
              << m_max2 << " " <<  m_max << endl;
       }
       cout << "dxdy: " << dxdy << endl;
+      
       //reject derivative if it's not finite:
-      if(isfinite(dxdy) != 1){
+      if (isfinite(dxdy)!=1) {
         ret = ix_infinite;
      	return;
       } 
 
       cout << "Setting constant." << endl;
       dat.eos.add_constant("dpdM",dxdy);
-      
+
+      cout << "m_max0: " << m_max << endl;
       // Check the speed of sound
-      row=dat.mvsr.lookup("gm", m_max);
+      row=dat.mvsr.lookup("gm",m_max);
+      cout << "row: " << row << " " << dat.mvsr.get_nlines() << endl;
       c_ed=dat.mvsr.get("ed",row);
       cout << "Central energy density (in 1/fm^4): " << c_ed << endl;
 
       dat.eos.deriv("ed","pr","cs2");
+      cout << "Jm3." << endl;
       for (size_t i=0;i<dat.eos.get_nlines();i++) {
-        if(dat.eos.get("ed",i) < c_ed){
-           if (dat.eos.get("cs2",i)>1.0) {
-             ret=ix_acausal;
-             return;
-           }
+        if (dat.eos.get("ed",i)<c_ed) {
+          cout << i << " " << dat.eos.get("ed",i) << " "
+               << c_ed << " "
+               << dat.eos.get("cs2",i) << endl;
+          if (dat.eos.get("cs2",i)>1.0) {
+            ret=ix_acausal;
+            return;
+          }
         }
       }
-
-      dat.sourcet.add_constant("mmax_deriv",dxdy);
 
       // End of Sarah's section
     }
     
-    // Ensure we're using linear interpolation
-    dat.eos.set_interp_type(o2scl::itp_linear);
-
     // ---------------------------------------------------------------
     // Check that pressure is increasing. If we're using a crust EOS,
     // choose 0.6 as an arbitrary low-density cutoff which corresponds
     // to about n_B=0.12 fm^{-3}, and check the low-density part below
     // instead.
   
+    cout << "Jm2." << endl;
+    
     for(size_t i=0;(dat.eos.get_nlines()>0 &&
 		    i<dat.eos.get_nlines()-1);i++) {
       if ((!set->use_crust || dat.eos.get("ed",i)>0.6) && 
@@ -239,6 +254,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  cout << "Jm1." << endl;
+
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
 
@@ -249,6 +266,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   // ---------------------------------------------------------------
 
+  cout << "J0." << endl;
+  
   if (has_eos) {
     
     // ---------------------------------------------------------------
@@ -368,6 +387,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     }
 
+    cout << "J1." << endl;
+    
     // ---------------------------------------------------------------
     // Read the EOS into the tov_eos object
     
@@ -423,6 +444,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // End of 'if (set->use_crust)'
     }
 
+    cout << "J1b." << endl;
+    
     // ---------------------------------------------------------------
     // If necessary, output debug information (We want to make sure
     // this is after tov_eos::read_table() so that we can debug the
@@ -493,7 +516,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       ts.calc_gpot=false;
     }
     int info=ts.mvsr();
-    
+
+    cout << "J2." << endl;
     dat.mvsr=*(ts.get_results());
     if (set->verbose>=2) {
       scr_out << "Done with TOV." << endl;

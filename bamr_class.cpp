@@ -171,10 +171,6 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.mvsr.get_constant("r_nb5"));
     }
     
-    if (set->mmax_deriv) {
-      line.push_back(dat.mvsr.get_constant("mmax_deriv"));
-    }
-    
     if (set->compute_cthick) {
       line.push_back(dat.eos.get_constant("nt"));
       line.push_back(dat.eos.get_constant("prt"));
@@ -337,7 +333,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     double pred_e_max=preds[3];
 
     // Check speed of sound causal limit
-    for (size_t i=0; i<100; i++) {
+    for (size_t i=0;i<100;i++) {
       double e_i=mod->e_grid[i];
       if (e_i<pred_e_max) {
         if (preds[preds.size()-(i+1)] > 1.0) {
@@ -354,14 +350,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     model &m=*this->mod;
     
     // Compute the M vs R curve and return a non-zero value if it failed
-    m.compute_star(pars,scr_out,iret,dat);
+    cout << "I1." << endl;
+    m.compute_star(pars,scr_out,iret,dat,model_type);
+    cout << "I2: " << iret << endl;
     if (iret!=0) {
       log_wgt=0.0;
       return iret;
     }
+    cout << "I2b." << endl;
 
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
+      
+      cout << "I3." << endl;
       
       likelihood &like = nsd->pop_like;
       
@@ -390,6 +391,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         cout << "Final pop result: ";
         vector_out(cout,pop_weights,true);
       }
+
+      cout << "I4." << endl;
     }
 
     // ----------------------------------------------------------------
@@ -397,6 +400,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // are out of range
 	  
     for(size_t i=0;i<nsd->n_sources;i++) {
+      cout << "I5." << i << endl;
       double mass=dat.sourcet.get("M",i);
       double rad=dat.sourcet.get("R",i);
       if (mass<set->in_m_min || mass>set->in_m_max || 
@@ -430,7 +434,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // -----------------------------------------------
     // Determine the atm parameter
 	  
+    
     for (size_t i=0;i<nsd->n_sources;i++) {
+      cout << "I6." << i << endl;
 	    
       // Determine H or He from mass parameter
       double mf;
