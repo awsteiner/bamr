@@ -854,8 +854,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     return 1;
   }
 
-  std::cout << "Here4." << std::endl;
-  
   std::vector<std::string> names;
   std::vector<std::string> units;
 
@@ -865,13 +863,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // nuisance variables for the data points). The other columns and
   // units are specified in mcmc_init() function manually using a call
   // to table::new_column().
-  std::cout << "Here4a." << std::endl;
   bc_arr[0]->mod->get_param_info(names,units,low,high); 
-  std::cout << "Here4b." << std::endl;
-  vector_out(std::cout,names,true);
-  vector_out(std::cout,units,true);
-  vector_out(std::cout,low,true);
-  vector_out(std::cout,high,true);
 
   nsd->data_params(names,units,low,high,set);
   std::cout << "Here4c." << std::endl;
