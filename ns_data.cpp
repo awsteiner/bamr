@@ -385,13 +385,9 @@ int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
   } else {
     table_names.push_back("");
   }
-  cout << "ada: " << sv[1] << " " << sv[2] << " " << sv[3] << " " << sv[4] << " "
-       << sv[5] << " " << sv[6] << endl;
 
   n_sources++;
 
-  cout << "Yere." << endl;
-  
   return 0;
 }
 
