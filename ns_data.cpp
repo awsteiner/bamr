@@ -38,7 +38,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 		      std::shared_ptr<settings> set) {
 
   double tot, max;
-      
+
   std::string name;
 
   if (source_names.size()!=source_fnames.size() ||
@@ -357,6 +357,8 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
       
   n_sources++;
 
+  cout << "Xere." << endl;
+
   return 0;
 }
     
@@ -383,9 +385,13 @@ int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
   } else {
     table_names.push_back("");
   }
+  cout << "ada: " << sv[1] << " " << sv[2] << " " << sv[3] << " " << sv[4] << " "
+       << sv[5] << " " << sv[6] << endl;
 
   n_sources++;
 
+  cout << "Yere." << endl;
+  
   return 0;
 }
 

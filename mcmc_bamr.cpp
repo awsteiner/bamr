@@ -126,8 +126,8 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
   if(sv.size()<4){
     cout << "Computing postesrior from the first row." << endl;
   }else{
-  	init_row = o2scl::stoszt(sv[3]);
-  	cout << "Computing postesrior from row number " << init_row << endl;
+    init_row = o2scl::stoszt(sv[3]);
+    cout << "Computing postesrior from row number " << init_row << endl;
   }
 
   
@@ -187,8 +187,8 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
       ubvector temp_gridt_row;
       test_point.gridt.get_row(i, temp_gridt_row);
       /*
-      ubvector temp_sourcet_row;
-      test_point.sourcet.get_row(i, temp_sourcet_row);
+        ubvector temp_sourcet_row;
+        test_point.sourcet.get_row(i, temp_sourcet_row);
       */
 
 
@@ -206,10 +206,10 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
 
       cout << "compute_point return status : " << iret << endl;
       cout << "predicted log_wgt : " <<
-       emu_init_table.get(emu_init_table.get_column_name(4), i) << endl;
+        emu_init_table.get(emu_init_table.get_column_name(4), i) << endl;
       cout << "compute_point log_wgt : " << log_wgt << endl;
 
-      std:string temp_const;
+    std:string temp_const;
       double temp_val;
 
       for(size_t j=0; j<test_point.mvsr.get_nconsts(); j++){
@@ -413,7 +413,7 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
       if (!set->norm_max) {
         this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
-          "1/km/Msun");
+                              "1/km/Msun");
       }
     }
   
@@ -424,20 +424,20 @@ int mcmc_bamr::mcmc_init() {
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((std::string)"Rns_")+nsd->source_names[i]);
       this->table->set_unit(((std::string)"Rns_")+nsd->source_names[i],
-        "km");
+                            "km");
     }
   
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((std::string)"Mns_")+nsd->source_names[i]);
       this->table->set_unit(((std::string)"Mns_")+nsd->source_names[i],
-        "Msun");
+                            "Msun");
     }
   
     if (m.has_eos) {
       for(int i=0;i<set->grid_size;i++) {
         this->table->new_column(((string)"P_")+o2scl::itos(i));
         this->table->set_unit(((string)"P_")+o2scl::itos(i),
-          "1/fm^4");
+                              "1/fm^4");
       }
       for(int i=0;i<set->grid_size;i++) {
         this->table->new_column(((string)"cs2_")+o2scl::itos(i));
@@ -447,11 +447,11 @@ int mcmc_bamr::mcmc_init() {
     for(int i=0;i<set->grid_size;i++) {
       this->table->new_column(((string)"R_")+o2scl::itos(i));
       this->table->set_unit(((string)"R_")+o2scl::itos(i),
-        "km");
+                            "km");
       if (m.has_eos) {
         this->table->new_column(((string)"PM_")+o2scl::itos(i));
         this->table->set_unit(((string)"PM_")+o2scl::itos(i),
-          "1/fm^4");
+                              "1/fm^4");
       }
     }
     if (m.has_eos) {
@@ -459,10 +459,10 @@ int mcmc_bamr::mcmc_init() {
         for(int i=0;i<set->grid_size;i++) {
           this->table->new_column(((string)"Pnb_")+o2scl::itos(i));
           this->table->set_unit(((string)"Pnb_")+o2scl::itos(i),
-            "1/fm^4");
+                                "1/fm^4");
           this->table->new_column(((string)"EoA_")+o2scl::itos(i));
           this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
-            "MeV");
+                                "MeV");
         }
       }
       if (m.has_esym) {
@@ -496,13 +496,13 @@ int mcmc_bamr::mcmc_init() {
       for(size_t i=0;i<nsd->n_sources;i++) {
         this->table->new_column(((string)"ce_")+nsd->source_names[i]);
         this->table->set_unit(((string)"ce_")+nsd->source_names[i],
-          "1/fm^4");
+                              "1/fm^4");
       }
       if (set->baryon_density) {
         for(size_t i=0;i<nsd->n_sources;i++) {
           this->table->new_column(((string)"cnb_")+nsd->source_names[i]);
           this->table->set_unit(((string)"cnb_")+nsd->source_names[i],
-            "1/fm^3");
+                                "1/fm^3");
         }
         this->table->new_column("gm_nb1");
         this->table->set_unit("gm_nb1","Msun");
@@ -545,7 +545,7 @@ int mcmc_bamr::mcmc_init() {
 
         this->table->new_column(((string)"I_")+o2scl::itos(i));
         this->table->set_unit(((string)"I_")+o2scl::itos(i),
-          "Msun*km^2");
+                              "Msun*km^2");
         this->table->new_column(((string)"I_bar_")+o2scl::itos(i));
 
         this->table->new_column(((string)"Lambda_bar_")+o2scl::itos(i));
@@ -866,7 +866,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   bc_arr[0]->mod->get_param_info(names,units,low,high); 
 
   nsd->data_params(names,units,low,high,set);
-  std::cout << "Here4c." << std::endl;
   
   if (set->apply_intsc) {
 
@@ -878,8 +877,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
   }
 
-  std::cout << "Here5." << std::endl;
-  
   if (set->use_population) {
     
     likelihood &like = nsd->pop_like;
@@ -906,8 +903,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   }
 
-  std::cout << "Here6." << std::endl;
-  
   if (set->apply_emu) {
     
     for(size_t i=0;i<nsd->n_sources;i++) {
@@ -933,7 +928,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     if (set->apply_intsc) {
       for (size_t i=0; i<nsd->n_sources; i++) {
-	      init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
+        init[i+bc_arr[0]->mod->n_eos_params+nsd->n_sources]=-0.5;
       }
     }
 
@@ -1104,7 +1099,7 @@ int mcmc_bamr::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
 }
 
 void mcmc_bamr::setup_cli_mb() {
-  
+
   mcmc_para_new_cli::setup_cli(cl);
 
   set->setup_cli(cl);
@@ -1115,66 +1110,66 @@ void mcmc_bamr::setup_cli_mb() {
   static const int nopt=9;
   comm_option_s options[nopt]=
     {
-     {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
-      0,0,"",((std::string)"This is the main part of ")+
-      "the code which performs the simulation. Make sure to set the "+
-      "model first using the 'model' command first.",
-      new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc_func),
-      o2scl::cli::comm_option_both},
-     {'o',"model","Choose model.",
-      1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
-      "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
-      "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
-      "model must be chosen before a MCMC run.",
-      new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
-      cli::comm_option_both},
-     {0,"threads","Specify number of OpenMP threads",
-      1,1,"<number>","",
-      new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
-      cli::comm_option_both},
-     {'a',"add-data","Add data source to the list.",
-      4,5,"<name> <file> <slice> <initial mass> [obj name]",
-      ((string)"Specify data as a table3d object in a HDF5 file. ")+
-      "The string <name> is the name used, <file> is the filename, "+
-      "<slice> is the name of the slice in the table3d object, "+
-      "<initial mass> is the initial mass for the first point, and "+
-      "[obj name] is the optional name of table3d object in <file>. "+
-      "If [obj name] is not specified, then the first table3d object "+
-      "is used.",new comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::add_data),
-      cli::comm_option_both},
-     {0,"add-data-alt","Add data source to the list.",
-      5,6,"<name> <file> <alt file> <slice> <initial mass> [obj name]",
-      ((string)"Specify data as a table3d object in two HDF5 files. ")+
-      "The string <name> is the name used, <file> and <alt file> are "+
-      "the filenames, "+
-      "<slice> is the name of the slice in the table3d object, "+
-      "<initial mass> is the initial mass for the first point, and "+
-      "[obj name] is the optional name of table3d object in <file>. "+
-      "If [obj name] is not specified, then the first table3d object "+
-      "is used.",new comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::add_data_alt),
-      cli::comm_option_both},
-     {0,"initial-point-last","Set initial point from file.",1,1,
-      "<filename>","Long. desc.",
-      new o2scl::comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::initial_point_last),
-      o2scl::cli::comm_option_both},
-     {0,"initial-point-best","Set initial point from file.",1,1,
-      "<filename>","Long. desc.",
-      new o2scl::comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::initial_point_best),
-      o2scl::cli::comm_option_both},
-     {0,"read-prev-results","Read previous results from file (unfinished).",
-      1,1,"<filename>","Long. desc.",
-      new o2scl::comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::read_prev_results_mb),
-      o2scl::cli::comm_option_both},
-     {0,"emu-points","emu-points help.",
-      2,3,"<input filename> <output filename> <strting row number>",
-      "Long description.",new o2scl::comm_option_mfptr<mcmc_bamr>
-      (this,&mcmc_bamr::emu_points),
-      o2scl::cli::comm_option_both}
+      {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
+       0,0,"",((std::string)"This is the main part of ")+
+       "the code which performs the simulation. Make sure to set the "+
+       "model first using the 'model' command first.",
+       new o2scl::comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::mcmc_func),
+       o2scl::cli::comm_option_both},
+      {'o',"model","Choose model.",
+       1,1,"<model name>",((string)"Choose the EOS parameterization model. ")+
+       "Possible values are 'twop', 'altp', 'fixp', 'genq', 'qstar', "+
+       "'qmc', 'qmc_threep' ,'qmc_fixp', and 'qmc_twolines'. A "+
+       "model must be chosen before a MCMC run.",
+       new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
+       cli::comm_option_both},
+      {0,"threads","Specify number of OpenMP threads",
+       1,1,"<number>","",
+       new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
+       cli::comm_option_both},
+      {'a',"add-data","Add data source to the list.",
+       4,5,"<name> <file> <slice> <initial mass> [obj name]",
+       ((string)"Specify data as a table3d object in a HDF5 file. ")+
+       "The string <name> is the name used, <file> is the filename, "+
+       "<slice> is the name of the slice in the table3d object, "+
+       "<initial mass> is the initial mass for the first point, and "+
+       "[obj name] is the optional name of table3d object in <file>. "+
+       "If [obj name] is not specified, then the first table3d object "+
+       "is used.",new comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::add_data),
+       cli::comm_option_both},
+      {0,"add-data-alt","Add data source to the list.",
+       5,6,"<name> <file> <alt file> <slice> <initial mass> [obj name]",
+       ((string)"Specify data as a table3d object in two HDF5 files. ")+
+       "The string <name> is the name used, <file> and <alt file> are "+
+       "the filenames, "+
+       "<slice> is the name of the slice in the table3d object, "+
+       "<initial mass> is the initial mass for the first point, and "+
+       "[obj name] is the optional name of table3d object in <file>. "+
+       "If [obj name] is not specified, then the first table3d object "+
+       "is used.",new comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::add_data_alt),
+       cli::comm_option_both},
+      {0,"initial-point-last","Set initial point from file.",1,1,
+       "<filename>","Long. desc.",
+       new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::initial_point_last),
+       o2scl::cli::comm_option_both},
+      {0,"initial-point-best","Set initial point from file.",1,1,
+       "<filename>","Long. desc.",
+       new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::initial_point_best),
+       o2scl::cli::comm_option_both},
+      {0,"read-prev-results","Read previous results from file (unfinished).",
+       1,1,"<filename>","Long. desc.",
+       new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::read_prev_results_mb),
+       o2scl::cli::comm_option_both},
+      {0,"emu-points","emu-points help.",
+       2,3,"<input filename> <output filename> <strting row number>",
+       "Long description.",new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::emu_points),
+       o2scl::cli::comm_option_both}
     };
   cl.set_comm_option_vec(nopt,options);
 

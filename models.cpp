@@ -3537,10 +3537,6 @@ void new_poly::get_param_info(std::vector<std::string> &names,
   low[7]=0.75;
   low[8]=1.0e-6;
 
-  low[9]=1.1971;
-  low[10]=0.0;
-  low[11]=0.0;
-    
   high.resize(n_eos_params);
   high[0]=13.5;
   high[1]=0.53;
