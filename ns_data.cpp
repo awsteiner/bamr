@@ -38,7 +38,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 		      std::shared_ptr<settings> set) {
 
   double tot, max;
-      
+
   std::string name;
 
   if (source_names.size()!=source_fnames.size() ||
@@ -357,6 +357,8 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
       
   n_sources++;
 
+  cout << "Xere." << endl;
+
   return 0;
 }
     
@@ -383,9 +385,13 @@ int ns_data::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
   } else {
     table_names.push_back("");
   }
+  cout << "ada: " << sv[1] << " " << sv[2] << " " << sv[3] << " " << sv[4] << " "
+       << sv[5] << " " << sv[6] << endl;
 
   n_sources++;
 
+  cout << "Yere." << endl;
+  
   return 0;
 }
 
@@ -395,32 +401,21 @@ void ns_data::data_params(std::vector<std::string> &names,
                           std::vector<double> &high,
                           std::shared_ptr<settings> set) {
 
-  std::cout << "Here8." << std::endl;
-  std::cout << "Here8b: " << set << " " << set->inc_ligo << std::endl;
-  
   if (set->inc_ligo) {
-    std::cout << "Here8c." << std::endl;
     names.push_back("M_chirp_det");
     names.push_back("q");
     names.push_back("z_cdf");
-    std::cout << "Here8d." << std::endl;
     units.push_back("Msun");
     units.push_back("");
     units.push_back("");
-    std::cout << "Here8e." << std::endl;
     low.push_back(1.1971);
     low.push_back(0.0);
     low.push_back(0.0);
-    std::cout << "Here8f." << high.size() << std::endl;
     high.push_back(1.1979);
-    std::cout << "Here8g." << std::endl;
     high.push_back(1.0);
-    std::cout << "Here8h." << std::endl;
     high.push_back(1.0);
-    std::cout << "Here8i." << std::endl;
   }
   
-  std::cout << "Here9 " << n_sources << std::endl;
   vector_out(std::cout,source_names,true);
   
   for(size_t i=0;i<n_sources;i++) {
@@ -430,8 +425,6 @@ void ns_data::data_params(std::vector<std::string> &names,
     high.push_back(1.0);
   }
 
-  std::cout << "Here10." << std::endl;
-  
   return;
 }
 
