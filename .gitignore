@@ -9,6 +9,7 @@ test
 test.o
 data_temp
 mcmc_0_out
+mcmc_threep_2.out
 err.out
 mcmc_0_scr
 mcmc_ex
@@ -34,5 +35,6 @@ doc/doxygen.log
 data/.svn/*
 data/*/.svn/*
 old_rel/.svn/*
-
-
+data/np_0_out
+data/np_0_scr
+.vscode/
