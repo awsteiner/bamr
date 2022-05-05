@@ -35,6 +35,5 @@ doc/doxygen.log
 data/.svn/*
 data/*/.svn/*
 old_rel/.svn/*
-data/np_0_out
-data/np_0_scr
+out/*
 .vscode/

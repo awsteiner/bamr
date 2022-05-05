@@ -584,6 +584,6 @@ np:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc
-#> np.out 2>&1 &
+#> data/np.out 2>&1 &
 
 include makefile.anik
