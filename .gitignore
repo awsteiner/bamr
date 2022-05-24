@@ -35,5 +35,4 @@ doc/doxygen.log
 data/.svn/*
 data/*/.svn/*
 old_rel/.svn/*
-out/*
 .vscode/

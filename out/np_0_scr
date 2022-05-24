@@ -1,0 +1,32 @@
+
+Input data files: 
+Normalizing integral of distribution to 1.
+File                          name   total        max          P(10,1.4)
+data/shb18/6304_H_nopl_syst_w 6304   4.006259e+05 1.243598e+01 3.646179e-05
+data/shb18/6304_He_nopl_syst_ 6304   4.006259e+05 1.243598e+01 2.265780e-05
+data/shb18/6397_H_syst_wilm.o 6397   1.656649e+05 1.138417e+01 4.544921e-05
+data/shb18/6397_He_syst_wilm3 6397   1.656649e+05 1.138417e+01 5.718741e-05
+data/shs18/M13_H_rs.o2        M13    1.151978e+05 9.710483e+00 7.837199e-06
+data/shs18/M13_He_rs.o2       M13    1.151978e+05 9.710483e+00 6.689215e-09
+data/shb18/M28_H_syst_wilm.o2 M28    1.727032e+05 1.139652e+01 7.093786e-05
+data/shb18/M28_He_syst_wilm.o M28    1.727032e+05 1.139652e+01 9.210494e-06
+data/shb18/M30_H_syst_wilm.o2 M30    3.233549e+05 1.171571e+01 3.114863e-05
+data/shb18/M30_He_syst_wilm.o M30    3.233549e+05 1.171571e+01 1.114778e-05
+data/shb18/wCen_H_syst_wilm.o wCen   1.905010e+05 1.207856e+01 5.838096e-05
+data/shb18/wCen_H_syst_wilm.o wCen   1.905010e+05 1.207856e+01 5.838096e-05
+data/shb18/X7_H_syst_wilm.o2  X7     1.189589e+05 1.112760e+01 1.292347e-05
+data/shb18/X7_He_syst_wilm.o2 X7     1.189589e+05 1.112760e+01 3.154974e-26
+data/nks15/1810.o2            1810b  5.445000e+02 1.452633e+00 1.652909e-07
+data/nks15/1810.o2            1810b  5.445000e+02 1.452633e+00 1.652909e-07
+data/nks15/1724.o2            1724b  5.445000e+02 1.207623e+00 9.050740e-07
+data/nks15/1724.o2            1724b  5.445000e+02 1.207623e+00 9.050740e-07
+data/nat17/1702_D_X_int.o2    1702   1.257307e+02 1.000000e+00 0.000000e+00
+data/nat17/1702_D_X_int.o2    1702   1.257307e+02 1.000000e+00 0.000000e+00
+data/nicer/0030_st_pst.o2     0030   3.412000e+04 1.900000e+02 3.146192e-05
+data/nicer/0030_st_pst.o2     0030   3.412000e+04 1.900000e+02 3.146192e-05
+
+M limits: (1.000000e+00,2.700000e+00)
+R limits: (6.000000e+00,1.795002e+01)
+mcmc: Random-walk w/uniform dist., n_params=102, n_threads=2, rank=0, n_ranks=1
+Set start time to: 1.360020e-03
+mcmc: Writing to file. elapsed: 1.330397e+01 file_update_time: 1.000000e+01 last_write_time: 1.649261e-03
