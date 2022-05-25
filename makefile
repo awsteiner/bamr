@@ -650,3 +650,4 @@ np:
 #> out/np.out 2>&1 &
 
 include makefile.anik
+include makefile.aws
