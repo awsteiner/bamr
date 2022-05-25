@@ -241,7 +241,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 			      double &log_wgt, model_data &dat) {
 
   log_wgt=0.0;
-  
+
   int iret;
 
   if (set->apply_emu) {
