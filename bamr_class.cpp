@@ -227,6 +227,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
     
     if (set->use_population) {
+      std::cout << "XZ: " << pop_weights.size() << std::endl;
       for (size_t i=0; i<pop_weights.size(); i++) {
         line.push_back(pop_weights[i]);
       }
@@ -360,7 +361,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (set->use_population) {
       
       likelihood &like = nsd->pop_like;
-      
+
+      std::cout << "XY: " << pop_weights.size() << endl;
       if (pop_weights.size()==0) pop_weights.resize(4); 
       pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
