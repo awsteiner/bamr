@@ -53,10 +53,10 @@ emulator_bamr::emulator_bamr() {
 }
 
 void emulator_bamr::train(o2scl::table_units<> &tab_train,
-                        o2scl::vec_index &pvii,
-                        o2scl::vec_index &dvii,
-                        bamr_class *bcpi,
-                        std::ofstream *sopi) {
+                          o2scl::vec_index &pvii,
+                          o2scl::vec_index &dvii,
+                          bamr_class *bcpi,
+                          std::ofstream *sopi) {
 
   bcp=bcpi;
   sop=sopi;
@@ -415,7 +415,24 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
   return 0;
 }
 
-int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com){
+int mcmc_bamr::emu_train2(std::vector<std::string> &sv, bool itive_com) {
+
+  vector<string> files;
+  for(size_t k=1;k<sv.size();k++) {
+    files.push_back(sv[k]);
+  }
+
+  eb_arr.resize(n_threads);
+
+  for(size_t k=0;k<n_threads;k++) {
+    table_units<> tab;
+    //eb_arr[k].train(tab,bc_arr[i],&scr_out);
+  }
+    
+  return 0;
+}
+
+int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
 
 
   if(sv.size()<2){
@@ -1326,7 +1343,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 
   if (set->emu_aws) {
-    eb_arr.resize(n_threads);
+    if (eb_arr.size()!=n_threads) {
+      cerr << "Not enough emulators." << endl;
+    }
   }
   
   vector<bamr::point_funct> pfa(n_threads);
@@ -1425,7 +1444,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=9;
+  static const int nopt=10;
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
@@ -1487,6 +1506,11 @@ void mcmc_bamr::setup_cli_mb() {
        2,3,"<input filename> <output filename> <strting row number>",
        "Long description.",new o2scl::comm_option_mfptr<mcmc_bamr>
        (this,&mcmc_bamr::emu_points),
+       o2scl::cli::comm_option_both},
+      {0,"emu-train","emu-train help.",
+       -1,-1,"<training file 1> [training file 2] ...",
+       "Long description.",new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::emu_train2),
        o2scl::cli::comm_option_both}
     };
   cl.set_comm_option_vec(nopt,options);

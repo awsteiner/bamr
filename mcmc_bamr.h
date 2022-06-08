@@ -233,6 +233,9 @@ namespace bamr {
     virtual int emu_points(std::vector<std::string> &sv,
                            bool itive_com);
     
+    virtual int emu_train2(std::vector<std::string> &sv,
+                          bool itive_com);
+
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
