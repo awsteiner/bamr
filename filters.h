@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2018-2020, Joonas Nattila and Andrew W. Steiner
+  Copyright (C) 2018-2022, Joonas Nattila and Andrew W. Steiner
   
   This file is part of Bamr.
   
