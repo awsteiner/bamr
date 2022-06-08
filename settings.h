@@ -76,6 +76,7 @@ namespace bamr {
       mpi_load_debug=false;
       data_dir="data";
       apply_emu=false;
+      emu_aws=false;
       emu_post=false;
       //emu_train="";
       mmax_deriv = false;
@@ -113,6 +114,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_mvsr_pr_inc;
     o2scl::cli::parameter_string p_data_dir;
     o2scl::cli::parameter_bool p_apply_emu;
+    o2scl::cli::parameter_bool p_emu_aws;
     o2scl::cli::parameter_bool p_use_population;
     o2scl::cli::parameter_bool p_emu_post;
     o2scl::cli::parameter_bool p_couple_threads;
@@ -212,6 +214,8 @@ namespace bamr {
     /** \brief If true, include emulator from sklearn
      */
     bool apply_emu;
+    
+    bool emu_aws;
 
     /** \brief If true, include mass data from populations of binary
      neutron stars (default true)
@@ -424,6 +428,10 @@ namespace bamr {
       p_apply_emu.b=&apply_emu;
       p_apply_emu.help="Activate emulator";
       cl.par_list.insert(std::make_pair("apply_emu",&p_apply_emu));
+
+      p_emu_aws.b=&emu_aws;
+      p_emu_aws.help="Activate emulator (v2)";
+      cl.par_list.insert(std::make_pair("emu_aws",&p_emu_aws));
 
       p_use_population.b=&use_population;
       p_use_population.help="Use Population";

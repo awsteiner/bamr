@@ -36,12 +36,12 @@ using namespace bamr;
 /** \brief The interpolation estimate objects
  */
 
-emulator_rs::emulator_rs() {
+emulator_bamr::emulator_bamr() {
   
   mpi_rank=0;
   mpi_size=1;
   
-#ifndef NO_MPI    
+#ifdef BAMR_MPI    
   // Get MPI rank, etc.
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
@@ -52,7 +52,7 @@ emulator_rs::emulator_rs() {
   r.set_seed(seed);
 }
 
-void emulator_rs::train(o2scl::table_units<> &tab_train,
+void emulator_bamr::train(o2scl::table_units<> &tab_train,
                         o2scl::vec_index &pvii,
                         o2scl::vec_index &dvii,
                         bamr_class *bcpi,
@@ -105,7 +105,7 @@ void emulator_rs::train(o2scl::table_units<> &tab_train,
   
   for(size_t k=0;k<files.size();k++) {
     
-#ifndef NO_MPI    
+#ifdef BAMR_MPI    
     // Ensure that multiple MPI ranks are not writing to the 
     // filesystem at the same time
     int tag=0, buffer=0;
@@ -126,7 +126,7 @@ void emulator_rs::train(o2scl::table_units<> &tab_train,
     cout << "Rank " << mpi_rank << ": table has "
 	 << tab_k.get_nlines() << " lines." << endl;
     
-#ifndef NO_MPI
+#ifdef BAMR_MPI
     // Send a message to the next MPI rank
     if (mpi_size>1 && mpi_rank<mpi_size-1) {
       MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
@@ -221,7 +221,7 @@ void emulator_rs::train(o2scl::table_units<> &tab_train,
        << table.get_nlines() << " lines." << endl;
   table.summary(&std::cout);
 
-#ifndef NO_MPI    
+#ifdef BAMR_MPI    
     // Ensure that multiple MPI ranks are not writing to the 
     // filesystem at the same time
     int tag=0, buffer=0;
@@ -238,7 +238,7 @@ void emulator_rs::train(o2scl::table_units<> &tab_train,
     hdf_output(hf2,table,"train");
     hf2.close();
     
-#ifndef NO_MPI
+#ifdef BAMR_MPI
     // Send a message to the next MPI rank
     if (mpi_size>1 && mpi_rank<mpi_size-1) {
       MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
@@ -253,7 +253,7 @@ void emulator_rs::train(o2scl::table_units<> &tab_train,
   return;
 }
   
-int emulator_rs::eval(size_t n, const ubvector &p, double &log_wgt,
+int emulator_bamr::eval(size_t n, const ubvector &p, double &log_wgt,
                       model_data &dat) {
 
   if (false) {
@@ -333,7 +333,7 @@ int emulator_rs::eval(size_t n, const ubvector &p, double &log_wgt,
   return 0;
 }
 
-int emulator_rs::eval_unc(size_t n, const ubvector &p, double &log_wgt,
+int emulator_bamr::eval_unc(size_t n, const ubvector &p, double &log_wgt,
                           double &lw_unc, model_data &dat,
                           model_data &dat_unc) {
   return eval(n,p,log_wgt,dat);
@@ -1324,14 +1324,26 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
     
   }
+
+  if (set->emu_aws) {
+    eb_arr.resize(n_threads);
+  }
   
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
-    pfa[i]=std::bind
-      (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
-       (&bamr_class::compute_point),bc_arr[i],std::placeholders::_2,
-       std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
+    if (set->emu_aws) {
+      pfa[i]=std::bind
+        (std::mem_fn<int(size_t n,const ubvector &,double &,model_data &)>
+         (&emulator_bamr::eval),eb_arr[i],std::placeholders::_1,
+         std::placeholders::_2,std::placeholders::_3,
+         std::placeholders::_4);
+    } else {
+      pfa[i]=std::bind
+        (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
+         (&bamr_class::compute_point),bc_arr[i],std::placeholders::_2,
+         std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
+    }
     ffa[i]=std::bind
       (std::mem_fn<int(const ubvector &,double,vector<double> &,
 		       model_data &)>

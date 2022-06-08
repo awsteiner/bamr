@@ -71,7 +71,7 @@ namespace bamr {
       data type of vector<double>, since not all output fields are
       always emulated.
   */
-  class emulator_rs : public o2scl::emulator_unc<model_data,
+  class emulator_bamr : public o2scl::emulator_unc<model_data,
                                                  model_data,
                                                  ubvector> {
     
@@ -127,7 +127,7 @@ namespace bamr {
      */
     o2scl::rng<> r;
     
-    emulator_rs();
+    emulator_bamr();
     
     /** \brief Train the emulator with the data in \c tab_train
      */
@@ -248,6 +248,8 @@ namespace bamr {
 	correctly.
      */
     std::vector<bamr_class *> bc_arr;
+    
+    std::vector<emulator_bamr> eb_arr;
 
     /** \brief The \ref bamr::settings object 
 	(shared by instances of \ref bamr_class)
