@@ -1,7 +1,8 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2022, Andrew W. Steiner
+  Copyright (C) 2012-2022, Mohammad Al-Mamun, Mahmudul Hasan Anik, 
+  and Andrew W. Steiner
   
   This file is part of Bamr.
   
