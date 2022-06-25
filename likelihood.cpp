@@ -167,24 +167,24 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
   else return 0.0;
 }
 
-// The likelihood function for NS-MS (see refs/method.pdf)
-double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi,
+// The likelihood function for NS-MS/HMXB
+double likelihood::get_weight_hms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   
-  double mean = pars[pvi["mean_MS"]];
-  double log10_width = pars[pvi["log10_width_MS"]];
+  double mean = pars[pvi["mean_HMS"]];
+  double log10_width = pars[pvi["log10_width_HMS"]];
   double width = pow(10.0, log10_width);
-  double skewness = pars[pvi["skewness_MS"]];
+  double skewness = pars[pvi["skewness_HMS"]];
   
   double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
 
-  for (size_t i=0; i<md.id_ms.size(); i++) {
-    mass = md.mass_ms[i]; 
-    uplim = md.lim_ms[i];
+  for (size_t i=0; i<md.id_hms.size(); i++) {
+    mass = md.mass_hms[i]; 
+    uplim = md.lim_hms[i];
     lowlim = uplim; // Symmetric 68% limits
     asym = sqrt(uplim/lowlim); 
     scale = get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+md.id_ms[i]]];
+    M_star = pars[pvi[string("M_")+md.id_hms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     if (wgt_star==0.0) {
@@ -194,7 +194,41 @@ double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi,
     log_wgt += log(wgt_star); 
   }
   if (debug) {
-    cout << "MS: " << log_wgt << endl;
+    cout << "MS/HMXB: " << log_wgt << endl;
+    exit(-1);
+  }
+  if (ret==0) return log_wgt;
+  else return 0.0;
+}
+
+// The likelihood function for NS-MS/LMXB 
+double likelihood::get_weight_lms(const ubvector &pars, vec_index &pvi,
+                                 int &ret) {
+  
+  double mean = pars[pvi["mean_LMS"]];
+  double log10_width = pars[pvi["log10_width_LMS"]];
+  double width = pow(10.0, log10_width);
+  double skewness = pars[pvi["skewness_LMS"]];
+  
+  double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
+
+  for (size_t i=0; i<md.id_lms.size(); i++) {
+    mass = md.mass_lms[i]; 
+    uplim = md.lim_lms[i];
+    lowlim = uplim; // Symmetric 68% limits
+    asym = sqrt(uplim/lowlim); 
+    scale = get_scale(lowlim, uplim);
+    M_star = pars[pvi[string("M_")+md.id_lms[i]]];
+    wgt_star = asym_norm(mass-M_star, asym, scale) 
+      * skew_norm(M_star, mean, width, skewness);
+    if (wgt_star==0.0) {
+      ret = 1;
+      break;
+    }
+    log_wgt += log(wgt_star); 
+  }
+  if (debug) {
+    cout << "MS/LMXB: " << log_wgt << endl;
     exit(-1);
   }
   if (ret==0) return log_wgt;
@@ -205,15 +239,16 @@ double likelihood::get_weight_ms(const ubvector &pars, vec_index &pvi,
 double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
                               int &ret) {
 
-  double wgt_ns, wgt_wd, wgt_ms, wgt; 
+  double wgt_ns, wgt_wd, wgt_hms, wgt_lms, wgt; 
 
   // Calculate log-likelihood for each population
   wgt_ns = get_weight_ns(pars, pvi, ret);
   wgt_wd = get_weight_wd(pars, pvi, ret);
-  wgt_ms = get_weight_ms(pars, pvi, ret);
+  wgt_hms = get_weight_hms(pars, pvi, ret);
+  wgt_lms = get_weight_lms(pars, pvi, ret);
 
   // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt = wgt_ns + wgt_wd + wgt_ms;
+  wgt = wgt_ns + wgt_wd + wgt_hms + wgt_lms;
   
   // Return the log-likelihood
   return wgt;
@@ -236,11 +271,17 @@ void likelihood::get_params() {
   par_units.push_back("");
   par_names.push_back("skewness_WD");
   par_units.push_back("");
-  par_names.push_back("mean_MS");
+  par_names.push_back("mean_HMS");
   par_units.push_back("Msun");
-  par_names.push_back("log10_width_MS");
+  par_names.push_back("log10_width_HMS");
   par_units.push_back("");
-  par_names.push_back("skewness_MS");
+  par_names.push_back("skewness_HMS");
+  par_units.push_back("");
+  par_names.push_back("mean_LMS");
+  par_units.push_back("Msun");
+  par_names.push_back("log10_width_LMS");
+  par_units.push_back("");
+  par_names.push_back("skewness_LMS");
   par_units.push_back("");
 
   n_dist_pars = par_names.size();
@@ -254,8 +295,12 @@ void likelihood::get_params() {
     par_names.push_back(string("M_")+md.id_wd[i]);
     par_units.push_back("Msun");
   }
-  for(size_t i=0; i<md.id_ms.size(); i++) {
-    par_names.push_back(string("M_")+md.id_ms[i]);
+  for(size_t i=0; i<md.id_hms.size(); i++) {
+    par_names.push_back(string("M_")+md.id_hms[i]);
+    par_units.push_back("Msun");
+  }
+  for(size_t i=0; i<md.id_lms.size(); i++) {
+    par_names.push_back(string("M_")+md.id_lms[i]);
     par_units.push_back("Msun");
   }
 
@@ -288,12 +333,19 @@ void likelihood::set_params(vec_index &pvi) {
     string mass_par=string("M_")+md.id_wd[i];
     pvi.append(mass_par);
   }
-  // Fill in NS-MS parameters
-  pvi.append("mean_MS");
-  pvi.append("width_MS");
-  pvi.append("asym_MS");
-  for(size_t i=0; i<md.id_ms.size(); i++) {
-    string mass_par=string("M_")+md.id_ms[i];
+  // Fill in NS-MS (HMXBs & LMXBs) parameters
+  pvi.append("mean_HMS");
+  pvi.append("width_HMS");
+  pvi.append("asym_HMS");
+  for(size_t i=0; i<md.id_hms.size(); i++) {
+    string mass_par=string("M_")+md.id_hms[i];
+    pvi.append(mass_par);
+  }
+  pvi.append("mean_LMS");
+  pvi.append("width_LMS");
+  pvi.append("asym_LMS");
+  for(size_t i=0; i<md.id_lms.size(); i++) {
+    string mass_par=string("M_")+md.id_lms[i];
     pvi.append(mass_par);
   }
   return;

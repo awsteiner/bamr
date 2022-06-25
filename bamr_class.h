@@ -156,7 +156,7 @@ namespace bamr {
 
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
-      pop_weights.resize(4); 
+      pop_weights.resize(5); 
     }
 
     // Empty destructor to make sure its virtual

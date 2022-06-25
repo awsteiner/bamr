@@ -916,7 +916,8 @@ int mcmc_bamr::mcmc_init() {
   if (set->use_population) {
     this->table->new_column("log_wgt_NS");
     this->table->new_column("log_wgt_WD");
-    this->table->new_column("log_wgt_MS");
+    this->table->new_column("log_wgt_HMS");
+    this->table->new_column("log_wgt_LMS");
     this->table->new_column("log_wgt_pop");
   }
   
@@ -1199,7 +1200,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       high.push_back(2.0);
     }
   }
-
+  
+  // Set priors for population parameters
   if (set->use_population) {
     
     likelihood &like = nsd->pop_like;
@@ -1210,7 +1212,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       units.push_back(like.par_units[i]);
     }
     
-    for(size_t i=0;i<3;i++) {
+    // Set priors for distribution parameters
+    for(size_t i=0;i<4;i++) {
       low.push_back(0.5);
       high.push_back(2.5);
       low.push_back(-4.0);
@@ -1219,6 +1222,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       high.push_back(1.0);
     }
 
+    // Set priors for mass parameters
     for (size_t i=0; i<mdat.n_stars; i++) {
       low.push_back(1.0);
       high.push_back(2.4);
@@ -1255,8 +1259,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       }
     }
 
-    /* 
-       Note:
+    /* Note:
        bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
        bc_arr[0]->mod->n_eos_params = 12
        nsd->n_sources = 11 
@@ -1270,12 +1273,19 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       size_t &n_eos_params = bc_arr[0]->mod->n_eos_params;
       size_t &n_sources = nsd->n_sources;
 
+      // NS-NS
       init.push_back(1.3);
       init.push_back(-0.7);
       init.push_back(0.0);
+      // NS-WD
       init.push_back(1.8);
       init.push_back(-0.5);
       init.push_back(0.0);
+      // NS-MS/HMXB
+      init.push_back(1.5);
+      init.push_back(-0.5);
+      init.push_back(0.0);
+      // NS-MS/LMXB
       init.push_back(1.5);
       init.push_back(-0.5);
       init.push_back(0.0);
@@ -1286,8 +1296,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       for (size_t i=0; i<mdat.id_wd.size(); i++) {
         init.push_back(mdat.mass_wd[i]);
       }
-      for (size_t i=0; i<mdat.id_ms.size(); i++) {
-        init.push_back(mdat.mass_ms[i]);
+      for (size_t i=0; i<mdat.id_hms.size(); i++) {
+        init.push_back(mdat.mass_hms[i]);
+      }
+      for (size_t i=0; i<mdat.id_lms.size(); i++) {
+        init.push_back(mdat.mass_lms[i]);
       }
     }
     

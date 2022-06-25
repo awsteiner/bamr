@@ -230,57 +230,61 @@ void mass_data::load_data() {
   mass_wd.push_back(2.14); uplim_wd.push_back(0.20); 
   lowlim_wd.push_back(0.18);
 
-  /* Data from NS-MS (some from X-ray/Optical, all with symmetric 
-  68% limits) [source: Alsing et al. 2018] */
-  name_ms.push_back("4U1700-377"); id_ms.push_back("4U1700");
-  mass_ms.push_back(1.96); lim_ms.push_back(0.19); 
+  /* Data from NS-MS (2 types of X-ray/optical binaries: HMXB
+  and LMXB (includes QLMXBs), all with symmetric 68% limits) 
+  [source: Alsing et al. 2018] */
+  
+  // High Mass X-ray Binaries (HMXBs)
+  name_hms.push_back("4U1700-377"); id_hms.push_back("4U1700");
+  mass_hms.push_back(1.96); lim_hms.push_back(0.19); 
 
-  name_ms.push_back("Cyg X-2"); id_ms.push_back("CygX2");
-  mass_ms.push_back(1.71); lim_ms.push_back(0.21); 
+  name_hms.push_back("SMC X-1"); id_hms.push_back("SMCX1");
+  mass_hms.push_back(1.21); lim_hms.push_back(0.12); 
+  
+  name_hms.push_back("Cen X-3"); id_hms.push_back("CenX3");
+  mass_hms.push_back(1.57); lim_hms.push_back(0.16); 
 
-  name_ms.push_back("SMC X-1"); id_ms.push_back("SMCX1");
-  mass_ms.push_back(1.21); lim_ms.push_back(0.12); 
+  name_hms.push_back("OAO 1657-415"); id_hms.push_back("OAO1657");
+  mass_hms.push_back(1.74); lim_hms.push_back(0.3);  
   
-  name_ms.push_back("Cen X-3"); id_ms.push_back("CenX3");
-  mass_ms.push_back(1.57); lim_ms.push_back(0.16); 
+  name_hms.push_back("J013236.7+303228"); id_hms.push_back("J013236");
+  mass_hms.push_back(2.0); lim_hms.push_back(0.4);  
   
-  name_ms.push_back("XTE J2123-058"); id_ms.push_back("XTEJ2123");
-  mass_ms.push_back(1.53); lim_ms.push_back(0.42); 
+  name_hms.push_back("Vela X-1"); id_hms.push_back("VelaX1");
+  mass_hms.push_back(2.12); lim_hms.push_back(0.16); 
   
-  name_ms.push_back("4U 1822-371"); id_ms.push_back("4U1822");
-  mass_ms.push_back(1.96); lim_ms.push_back(0.36); 
+  name_hms.push_back("4U1538-522"); id_hms.push_back("4U1538");
+  mass_hms.push_back(1.02); lim_hms.push_back(0.17); 
   
-  name_ms.push_back("OAO 1657-415"); id_ms.push_back("OAO1657");
-  mass_ms.push_back(1.74); lim_ms.push_back(0.3);  
+  name_hms.push_back("LMC X-4"); id_hms.push_back("LMCX4");
+  mass_hms.push_back(1.57); lim_hms.push_back(0.11);
   
-  name_ms.push_back("J013236.7+303228"); id_ms.push_back("J013236");
-  mass_ms.push_back(2.0); lim_ms.push_back(0.4);  
+  name_hms.push_back("EXO 1722-363"); id_hms.push_back("EXO1722");
+  mass_hms.push_back(1.91); lim_hms.push_back(0.45); 
   
-  name_ms.push_back("Vela X-1"); id_ms.push_back("VelaX1");
-  mass_ms.push_back(2.12); lim_ms.push_back(0.16); 
+  name_hms.push_back("SAX J1802.7-2017"); id_hms.push_back("SAXJ1802");
+  mass_hms.push_back(1.57); lim_hms.push_back(0.25); 
   
-  name_ms.push_back("4U1538-522"); id_ms.push_back("4U1538");
-  mass_ms.push_back(1.02); lim_ms.push_back(0.17); 
+  name_hms.push_back("XTE J1855-026"); id_hms.push_back("XTEJ1855");
+  mass_hms.push_back(1.41); lim_hms.push_back(0.24); 
+
+  // Low Mass X-ray Binaries (LMXBs)
+  name_lms.push_back("Cyg X-2"); id_lms.push_back("CygX2");
+  mass_lms.push_back(1.71); lim_lms.push_back(0.21); 
   
-  name_ms.push_back("LMC X-4"); id_ms.push_back("LMCX4");
-  mass_ms.push_back(1.57); lim_ms.push_back(0.11); 
+  name_lms.push_back("XTE J2123-058"); id_lms.push_back("XTEJ2123");
+  mass_lms.push_back(1.53); lim_lms.push_back(0.42); 
   
-  name_ms.push_back("Her X-1"); id_ms.push_back("HerX1");
-  mass_ms.push_back(1.073); lim_ms.push_back(0.36); 
+  name_lms.push_back("4U 1822-371"); id_lms.push_back("4U1822");
+  mass_lms.push_back(1.96); lim_lms.push_back(0.36); 
   
-  name_ms.push_back("2S 0921-630"); id_ms.push_back("2S0921");
-  mass_ms.push_back(1.44); lim_ms.push_back(0.1);  
+  name_lms.push_back("Her X-1"); id_lms.push_back("HerX1");
+  mass_lms.push_back(1.073); lim_lms.push_back(0.36); 
   
-  name_ms.push_back("EXO 1722-363"); id_ms.push_back("EXO1722");
-  mass_ms.push_back(1.91); lim_ms.push_back(0.45); 
-  
-  name_ms.push_back("SAX J1802.7-2017"); id_ms.push_back("SAXJ1802");
-  mass_ms.push_back(1.57); lim_ms.push_back(0.25); 
-  
-  name_ms.push_back("XTE J1855-026"); id_ms.push_back("XTEJ1855");
-  mass_ms.push_back(1.41); lim_ms.push_back(0.24); 
+  name_lms.push_back("2S 0921-630"); id_lms.push_back("2S0921");
+  mass_lms.push_back(1.44); lim_lms.push_back(0.1);  
   
   // Count the total number of stars in all populations
-  this->n_stars = id_ns.size() + id_wd.size() + id_ms.size();
-
+  this->n_stars = id_ns.size() + id_wd.size() 
+      + id_hms.size() + id_lms.size();
 }

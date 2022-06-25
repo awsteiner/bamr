@@ -24,22 +24,26 @@ struct mass_data {
   // std::string to store the full names of stars
   vector<string> name_ns;
   vector<string> name_wd;
-  vector<string> name_ms;
+  vector<string> name_lms;
+  vector<string> name_hms;
 
   // std::string to store the shortened names of stars
   vector<string> id_ns;
   vector<string> id_wd;
-  vector<string> id_ms;
+  vector<string> id_lms;
+  vector<string> id_hms;
 
   // std::vector to store the measured NS mass
   vector<double> mass_ns;
   vector<double> mass_wd;
-  vector<double> mass_ms;
+  vector<double> mass_lms;
+  vector<double> mass_hms;
 
   // std::vector to store +68% central limits of NS masses
   vector<double> uplim_ns;
   vector<double> uplim_wd;
-  vector<double> lim_ms; // Symmetric 68% limits for NS-MS
+  vector<double> lim_lms; // Symmetric 68% limits for NS-MS
+  vector<double> lim_hms;
 
   // std::vector to store -68% central limits of NS masses
   vector<double> lowlim_ns;
@@ -50,7 +54,6 @@ struct mass_data {
 
   // Function to load population mass data
   void load_data();
-
 };
 
 class likelihood {
@@ -121,8 +124,11 @@ class likelihood {
   // Likelihood function for NS-WD
   double get_weight_wd(const ubvector &, vec_index &, int &);
     
-  // Likelihood function for NS-MS
-  double get_weight_ms(const ubvector &, vec_index &, int &);
+  // Likelihood function for NS-MS/HMXB
+  double get_weight_hms(const ubvector &, vec_index &, int &);
+
+  // Likelihood function for NS-MS/LMXB
+  double get_weight_lms(const ubvector &, vec_index &, int &);
     
   /* Combined likelihood function for all stars, except 
   GW170817, QLMXBs, PREs, and NICER */
