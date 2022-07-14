@@ -5,12 +5,12 @@ test.o
 data_temp
 err.out
 process
-bamr_nompi
 .cli_hist
 *~
 *.o
 .svn/*
 bamr
+bamr_nompi
 doc/.svn/*
 doc/html/
 doc/bamr.tag
@@ -19,4 +19,3 @@ data/.svn/*
 data/*/.svn/*
 old_rel/.svn/*
 .vscode/
-out/*
