@@ -202,4 +202,3 @@ aws_np4:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc > out/aws_np4.out 2>&1 &
-
