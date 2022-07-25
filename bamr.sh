@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-	mpirun -np 2 ./bamr -threads 2 -set aff_inv 0 -set couple_threads 0 \
+	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set use_population 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
