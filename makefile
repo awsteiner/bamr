@@ -492,13 +492,9 @@ test_crustL_nompi: bamr_nompi
 
 update-tags:
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
 
 doc: empty
 	cd doc; cp ~/o2scl/doc/o2scl/o2scl.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/part/o2scl_part.tag .
-	cd doc; cp ~/o2scl/doc/o2scl/eos/o2scl_eos.tag .
 	git rev-parse HEAD | awk \
 		'{print "`" $$1 " <http://github.com/awsteiner/bamr/tree/" $$1 ">`_"}' \
 		 > sphinx/commit.rst

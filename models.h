@@ -1115,6 +1115,58 @@ namespace bamr {
     
   };
   
+  /** \brief Desc
+   */
+  class new_lines : public qmc_threep {
+
+  public:
+
+    /** \brief Typedef for uBlas vectors
+     */
+    typedef boost::numeric::ublas::vector<double> ubvector;
+    
+    /** \brief Typedef for uBlas matrices
+     */
+    typedef boost::numeric::ublas::matrix<double> ubmatrix;
+    
+    /** \brief Probability distribution for neutron matter
+	parameters
+    */
+    o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
+
+    new_lines(std::shared_ptr<const settings> s,
+              std::shared_ptr<const ns_data> n);
+    
+    /// Parameter for transition density
+    o2scl::cli::parameter_double p_nb_trans;
+
+    /** \brief Set parameter information
+     */
+    virtual void get_param_info(std::vector<std::string> &names,
+				std::vector<std::string> &units,
+				std::vector<double> &low,
+                                std::vector<double> &high);
+
+    /** \brief Specify the initial point
+     */
+    virtual void initial_point(std::vector<double> &params);
+
+    /** \brief Setup model parameters */
+    virtual void setup_params(o2scl::cli &cl);
+
+    /** \brief Remove model parameters */
+    virtual void remove_params(o2scl::cli &cl);
+    
+    /** \brief Copy model parameters */
+    virtual void copy_params(model &m);
+
+    /** \brief Desc
+     */
+    void compute_eos(const ubvector &params, int &ret,
+		     std::ofstream &scr_out, model_data &dat);
+    
+  };
+  
 }
 
 #endif

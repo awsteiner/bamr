@@ -807,6 +807,8 @@ int mcmc_bamr::mcmc_init() {
           this->table->set_unit("dpdM","Msun*fm^4");
         } else if (model_type==((string)"new_poly")) {
           this->table->set_unit("dpdM","Msun");
+        } else if (model_type==((string)"new_lines")) {
+          this->table->set_unit("dpdM","Msun");
         }
       }
       this->table->new_column("P_max");
@@ -1058,6 +1060,12 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   } else if (sv[1]==((string)"new_poly")) {
     for(size_t i=0;i<n_threads;i++) {
       std::shared_ptr<model> mnew(new new_poly(set,nsd));
+      bc_arr[i]->mod=mnew;
+      bc_arr[i]->model_type=sv[1];
+    }
+  } else if (sv[1]==((string)"new_lines")) {
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new new_lines(set,nsd));
       bc_arr[i]->mod=mnew;
       bc_arr[i]->model_type=sv[1];
     }
