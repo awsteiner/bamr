@@ -526,7 +526,7 @@ np_nompi:
 		-set prefix out/np \
 		-set max_time 172800 \
 		-set max_iters 100 \
-		-set n_walk 1 -set step_fac 1000.0 \
+		-set n_walk 1 -set step_fac 2000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
