@@ -525,7 +525,8 @@ np_nompi:
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_time 172800 \
-		-set n_walk 1 -set step_fac 4000.0 \
+		-set max_iters 100 \
+		-set n_walk 1 -set step_fac 1000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
@@ -645,5 +646,6 @@ np:
 		-mcmc 
 #> out/np.out 2>&1 &
 
-include makefile.anik
-include makefile.aws
+#include makefile.anik
+#include makefile.aws
+#include makefile.o2plot
