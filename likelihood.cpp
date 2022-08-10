@@ -256,6 +256,8 @@ double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
 
 void likelihood::get_params() {
 
+  /* Note: md.load_data() must be called before calling this function */
+
   // double 🐖=1.0;
   
   // Fill names and units of distribution parameters

@@ -386,7 +386,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return iret;
       }
 
-      for (int i=0; i<4; i++) pop_weights[4] += pop_weights[i];
+      pop_weights[4] = pop_weights[0] + pop_weights[1] + pop_weights[2]
+        + pop_weights[3];
+
       log_wgt += pop_weights[4];
       
       if (iret==0) {
