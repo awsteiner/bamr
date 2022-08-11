@@ -70,7 +70,7 @@ double likelihood::get_scale(double l, double u) {
      and verbose=2 requires a keypress between iterations. */
   solver.verbose=0;
   
-  solver.solve_bkt(x1, x2, f2);
+  solver.solve_bkt(x1, x2, f2); 
   
   // Obtain and summarize test results
   // t.report();

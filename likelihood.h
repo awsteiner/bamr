@@ -99,7 +99,7 @@ class likelihood {
   double asym_norm(double, double, double);
 
   // The function to solve f(x)=0 [see refs/calc.pdf]
-    double f_to_solve(double, double &, double &);
+  double f_to_solve(double, double &, double &);
     
   /* Derivative of the function to solve f'(x)
   (for use with root_stef only) */

@@ -26,7 +26,7 @@
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
 
-#include "likelihood.h"
+//#include "likelihood.h"
 
 using namespace std;
 using namespace o2scl;
@@ -228,7 +228,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
     
     if (set->use_population) {
-      std::cout << "XZ: " << pop_weights.size() << std::endl;
+      // std::cout << "XZ: " << pop_weights.size() << std::endl;
       for (size_t i=0; i<pop_weights.size(); i++) {
         line.push_back(pop_weights[i]);
       }
@@ -363,8 +363,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       likelihood &like = nsd->pop_like;
 
-      std::cout << "XY: " << pop_weights.size() << endl;
+      // std::cout << "XY: " << pop_weights.size() << endl;
       if (pop_weights.size()==0) pop_weights.resize(5); 
+      
       pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
@@ -392,8 +393,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       log_wgt += pop_weights[4];
       
       if (iret==0) {
-        cout << "Final pop result: ";
-        vector_out(cout, pop_weights, true);
+        /* cout << "Final pop result: ";
+        vector_out(cout, pop_weights, true); */
+        cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
+          << ", HM: " << pop_weights[2] << ", LM: " << pop_weights[3]
+          << ", All: " << pop_weights[4] << endl;
       }
 
     }
