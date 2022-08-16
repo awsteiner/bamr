@@ -208,7 +208,7 @@ aws_np_nompi:
 		-set use_population 0 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
-		-set max_iters 10 \
+		-set max_iters 20 \
 		-set n_walk 1 -set step_fac 4000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
@@ -267,12 +267,10 @@ aws_np_nompi:
 #> out/np.out 2>&1 &
 
 aws_np_nompi_mvsr:
-	o2graph -set verbose 3 \
-		-plotv "hdf5:out/np_0_out:markov_chain_0:*:R_*" \
+	o2graph -plotv "hdf5:out/np_0_out:markov_chain_0:*:R_*" \
 		"grid:0.2,3.0,(3.0-0.2)/99" -show
 
 aws_np_nompi_eos:
-	o2graph -set verbose 3 \
-		-plotv "grid:0.3,10.0,(10.0-0.3)/99" \
+	o2graph -plotv "grid:0.3,10.0,(10.0-0.3)/99" \
 		"hdf5:out/np_0_out:markov_chain_0:*:P_*" \
 		 -show
