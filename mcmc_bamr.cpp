@@ -762,8 +762,6 @@ int mcmc_bamr::mcmc_init() {
         this->table->new_column(((string)"P_")+o2scl::itos(i));
         this->table->set_unit(((string)"P_")+o2scl::itos(i),
                               "1/fm^4");
-      }
-      for(int i=0;i<set->grid_size;i++) {
         this->table->new_column(((string)"cs2_")+o2scl::itos(i));
       }
     }

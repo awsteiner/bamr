@@ -122,7 +122,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
     for(int i=0;i<set->grid_size;i++) {
       line.push_back(dat.gridt.get("R",i));
-      line.push_back(dat.gridt.get("PM",i));
+      if (m.has_eos) {
+        line.push_back(dat.gridt.get("PM",i));
+      }
     }
     
     if (m.has_eos) {
