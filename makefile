@@ -526,12 +526,12 @@ np_nompi:
 		-set prefix out/np \
 		-set max_time 172800 \
 		-set max_iters 1000 \
-		-set n_walk 315 -set step_fac 2.0 \
+		-set n_walk 315 -set step_fac 100.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 60 -set verbose 1 \
-		-set mcmc_verbose 3 -add-data-alt 6304 \
+		-set file_update_time 600 -set verbose 1 \
+		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
 		like 0.7 rescaled \
@@ -646,7 +646,7 @@ np:
 		-set inc_ligo 1 \
 		-mcmc 
 #> out/np.out 2>&1 &
-include makefile.old
+#include makefile.old
 #include makefile.anik
 #include makefile.aws
 #include makefile.o2plot
