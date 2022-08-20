@@ -1089,15 +1089,32 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
     return 2;
   }
       
-  model &m=*(bc_arr[0]->mod);
-  size_t np=m.n_eos_params+nsd->n_sources;
-  
+  size_t np;
+  size_t n_ligo_pars=3;
+  size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
+  size_t n_sources = nsd->n_sources;
+  size_t n_pop_pars = nsd->pop_like.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
+
   if (pos!=std::string::npos) {
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
-  this->initial_points_file_last(fname,np);
+
+  if (set->inc_ligo && set->use_population) {
+    np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
+  }
+  else if (set->inc_ligo && !set->use_population) {
+    np = n_eos_pars + n_ligo_pars + n_sources;
+  }
+  else if (!set->inc_ligo && set->use_population) {
+    np = n_eos_pars + n_sources + n_pop_pars;
+  }
+  else {
+    np = n_eos_pars + n_sources;
+  }
+
+  this->initial_points_file_last(fname, np);
   
   return 0;
 }
@@ -1115,15 +1132,32 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
     return 2;
   }
   
-  model &m=*(bc_arr[0]->mod);
-  size_t np=m.n_eos_params+nsd->n_sources;
-  
+  size_t np;
+  size_t n_ligo_pars=3;
+  size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
+  size_t n_sources = nsd->n_sources;
+  size_t n_pop_pars = nsd->pop_like.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
+  
   if (pos!=std::string::npos) {
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
-  this->initial_points_file_best(fname,np);
+
+  if (set->inc_ligo && set->use_population) {
+    np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
+  }
+  else if (set->inc_ligo && !set->use_population) {
+    np = n_eos_pars + n_ligo_pars + n_sources;
+  }
+  else if (!set->inc_ligo && set->use_population) {
+    np = n_eos_pars + n_sources + n_pop_pars;
+  }
+  else {
+    np = n_eos_pars + n_sources;
+  }
+
+  this->initial_points_file_best(fname, np);
   
   return 0;
 }
@@ -1285,7 +1319,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       init.push_back(-0.7);
       init.push_back(0.0);
       // NS-WD
-      init.push_back(1.8);
+      init.push_back(1.7);
       init.push_back(-0.5);
       init.push_back(0.0);
       // NS-MS/HMXB
@@ -1357,9 +1391,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         cout << j << " " << names[j] << " " << units[j] << " "
              << low[j] << " " << high[j] << endl;
       }
-      exit(-1);
     }
-    
   }
 
   if (set->emu_aws) {

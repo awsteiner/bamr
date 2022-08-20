@@ -520,18 +520,18 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib *.png
 
 np_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 0 \
+	./bamr_nompi -threads 1 -set aff_inv 1 -set couple_threads 0 \
+		-set use_population 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_time 172800 \
 		-set max_iters 1000 \
-		-set n_walk 1 -set step_fac 2000.0 \
+		-set n_walk 315 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 10 -set verbose 2 \
-		-set mcmc_verbose 2 -add-data-alt 6304 \
+		-set file_update_time 60 -set verbose 1 \
+		-set mcmc_verbose 3 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
 		like 0.7 rescaled \
@@ -580,6 +580,7 @@ np_nompi:
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
+		-initial-point-best guess \
 		-mcmc
 #> out/np.out 2>&1 &
 
