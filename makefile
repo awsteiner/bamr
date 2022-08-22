@@ -520,12 +520,12 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib *.png
 
 np_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 1 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set use_population 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
-		-set max_iters 10000 \
-		-set n_walk 315 -set step_fac 100.0 \
+		-set max_iters 10 \
+		-set n_walk 1 -set step_fac 10000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
@@ -579,7 +579,6 @@ np_nompi:
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last guess \
 		-mcmc
 #> out/np.out 2>&1 &
 
@@ -645,7 +644,7 @@ np:
 		-set inc_ligo 1 \
 		-mcmc 
 #> out/np.out 2>&1 &
-#include makefile.old
+
 #include makefile.anik
-#include makefile.aws
+include makefile.aws
 #include makefile.o2plot

@@ -39,13 +39,11 @@ struct mass_data {
   vector<double> mass_lms;
   vector<double> mass_hms;
 
-  // std::vector to store +68% central limits of NS masses
+  // std::vector to store 68% central limits of NS masses
   vector<double> uplim_ns;
   vector<double> uplim_wd;
   vector<double> lim_lms; // Symmetric 68% limits for NS-MS
   vector<double> lim_hms;
-
-  // std::vector to store -68% central limits of NS masses
   vector<double> lowlim_ns;
   vector<double> lowlim_wd;
 
@@ -54,94 +52,106 @@ struct mass_data {
 
   // Function to load population mass data
   void load_data();
+
 };
 
 class likelihood {
   
   public:
 
-  bool debug;
+    bool debug;
   
-  // Constructor to load source data
-  likelihood () {
-    md.load_data();
-    debug=false;
-  }
+    // Constructor to load source data
+    likelihood () {
+      md.load_data();
+      cout << "likelihood: constructor load_data() called" << endl;
+      debug=false;
+    }
 
-  virtual ~likelihood() {
-  } 
+    virtual ~likelihood() {
+    } 
 
-  // Object to load source data from class mass_data
-  mass_data md;
-  
-  /* Tolerance for small weights, below which weights are
-  ignored. This ensures that log-weights do not explode. */
-  const double tol=1.0e-6;
-    
-  // Counts the total number of population parameters 
-  size_t n_params;
+    // Object to load source data from class mass_data
+    mass_data md;
 
-  // Counts the total number of distribution parameters
-  size_t n_dist_pars;
+    /* Tolerance for small weights, below which weights are
+    ignored. This ensures that log-weights do not explode. */
+    const double tol=1.0e-6;
 
-  // Vector to store the names of all population parameters
-  vector<string> par_names;
+    // Counts the total number of population parameters 
+    size_t n_params;
 
-  // Vector to store the units of all population parameters
-  vector<string> par_units;
+    // Counts the total number of distribution parameters
+    size_t n_dist_pars;
 
-  /* Skewed Normal PDF: SN(M_star, mean, width, skewness) 
-  [eq. 13, Kiziltan et al. (2013)] */
-  double skew_norm(double, double, double, double);
+    /* std::vector<string> to store the names and units of 
+    population parameters */
+    vector<string> par_names;
+    vector<string> par_units;
 
-  /* Asymmetric Normal PDF: AN(mass-M_star, asym, scale)
-  [eq. 14, Kiziltan et al. (2013)] */
-  double asym_norm(double, double, double);
+    /* std::vector<double> to store lower and upper limits of 
+    priors for population parameters */
+    vector<double> par_low;
+    vector<double> par_high;
 
-  // The function to solve f(x)=0 [see refs/calc.pdf]
-  double f_to_solve(double, double &, double &);
-    
-  /* Derivative of the function to solve f'(x)
-  (for use with root_stef only) */
-  double df_to_solve(double, double &, double &);
-    
-  /* Solver to calculate scale parameters d for a given 
-  asymmetry parameter c of function asym_norm (AN):
-  get_scale(lowlim, highlim) */
-  double get_scale(double, double);
+    /* Skewed Normal PDF: SN(M_star, mean, width, skewness) 
+    [eq. 13, Kiziltan et al. (2013)] */
+    double skew_norm(double, double, double, double);
 
-  /* Function to fill vectors with names and units of all 
-  population parameter */
-  void get_params();
-    
-  /* Function to fill the pvi object with names of all 
-  population parameter */
-  void set_params(vec_index &);
+    /* Asymmetric Normal PDF: AN(mass-M_star, asym, scale)
+    [eq. 14, Kiziltan et al. (2013)] */
+    double asym_norm(double, double, double);
 
-  // Likelihood function for NS-NS
-  double get_weight_ns(const ubvector &, vec_index &, int &);
-    
-  // Likelihood function for NS-WD
-  double get_weight_wd(const ubvector &, vec_index &, int &);
-    
-  // Likelihood function for NS-MS/HMXB
-  double get_weight_hms(const ubvector &, vec_index &, int &);
+    /* Function to fill vectors with the names and units of 
+    population parameter */
+    void get_params();
 
-  // Likelihood function for NS-MS/LMXB
-  double get_weight_lms(const ubvector &, vec_index &, int &);
-    
-  /* Combined likelihood function for all stars, except 
-  GW170817, QLMXBs, PREs, and NICER */
-  double get_weight(const ubvector &, vec_index &, int &);
+    /* Function to fill the pvi object with names of all 
+    population parameter */
+    void set_params(vec_index &);
 
-  
+    // Likelihood function for NS-NS
+    double get_weight_ns(const ubvector &, vec_index &, int &);
+
+    // Likelihood function for NS-WD
+    double get_weight_wd(const ubvector &, vec_index &, int &);
+
+    // Likelihood function for NS-MS/HMXB
+    double get_weight_hms(const ubvector &, vec_index &, int &);
+
+    // Likelihood function for NS-MS/LMXB
+    double get_weight_lms(const ubvector &, vec_index &, int &);
+
+    /* Combined likelihood function for all stars, except 
+    GW170817, QLMXBs, PREs, and NICER */
+    double get_weight(const ubvector &, vec_index &, int &);
+
+
   private:
 
-  // PDF of standard normal distribution N(0,1)
-  double norm_pdf(double);
+    // PDF of standard normal distribution N(0,1)
+    double norm_pdf(double);
 
-  // CDF of standard N(0,1) in terms of erf(x)
-  double norm_cdf(double);
+    // CDF of standard N(0,1) in terms of erf(x)
+    double norm_cdf(double);
+
+};
+
+class eqn_solver {
+
+  public:
+
+    // The function to solve f(x)=0 [see refs/calc.pdf]
+    double f_to_solve(double, double &, double &);
+
+    /* Derivative of the function to solve f'(x)
+    (for use with root_stef only) */
+    double df_to_solve(double, double &, double &);
+
+    /* Solver to calculate scale parameter d for a given 
+    asymmetry parameter c of function asym_norm (AN):
+    get_scale(lowlim, highlim) */
+    double get_scale(double, double);
 
 };
 
