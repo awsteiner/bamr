@@ -29,55 +29,6 @@ double likelihood::asym_norm(double x, double c, double d) {
 }
 
 
-// This is the function to solve 
-double eqn_solver::f_to_solve(double x, double &l, double &u) {
-  double c = sqrt(u/l);
-  return c*c*erf(u/(sqrt(2.0)*c*x)) - erf(-c*l/(sqrt(2.0)*x))
-    - 0.68*(c*c+1.0);
-}
-
-
-// Derivative of the function to solve 
-double eqn_solver::df_to_solve(double x, double &l, double &u) {
-  double c = sqrt(u/l);
-  double a = sqrt(2.0/M_PI) * c / x / x;
-  return a*l*exp(-pow(u/(sqrt(2.0)*c*x), 2.0))
-    - a*u*exp(-pow(c*l/sqrt(2.0)/x, 2.0));
-}
-
-
-// Solver to calculates parameters d, given c
-double eqn_solver::get_scale(double l, double u) {
-  
-  cout.setf(ios::scientific);
-  
-  // The solver, specifying the function type: funct<double>
-  root_brent_gsl<> solver;
-  
-  /* This is the code that allows specification of class member
-     functions as functions to solve. We need to provide the address of
-     an instantiated object and the address of the member function. */
-  eqn_solver es;
-  funct f = bind(mem_fn<double(double, double &, double &)>
-		  (&eqn_solver::f_to_solve), &es, _1, ref(l), ref(u));
-  
-  /* funct df2 = bind(mem_fn<double(double, double &, double &)>
-     (&likelihood::df_to_solve), &c, _1, ref(l), ref(u)); */
-  
-  // The root is bracketted in [x1, x2]
-  double x1=0.0, x2=1.0;
-  
-  /* The value verbose=1 prints out iteration information
-     and verbose=2 requires a keypress between iterations. */
-  solver.verbose=0;
-  
-  solver.solve_bkt(x1, x2, f); 
-  // cout << "f(x) = " << f(x1) << endl;
-  
-  return x1;
-}
-
-
 // The likelihood function for NS-NS (see refs/method.pdf)
 double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
@@ -261,58 +212,98 @@ double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
 }
 
 
-void likelihood::get_params() {
+void likelihood::get_param_info() {
 
   /* Note: md.load_data() must be called before calling this function */
 
   // double 🐖=1.0;
   
-  // Fill names and units of distribution parameters
+  // Fill names, units, and initial points of distribution parameters
   par_names.push_back("mean_NS");
   par_units.push_back("Msun");
+  par_init.push_back(1.3);
+  
   par_names.push_back("log10_width_NS");
   par_units.push_back("");
+  par_init.push_back(-0.7);
+  
   par_names.push_back("skewness_NS");
   par_units.push_back("");
+  par_init.push_back(0.0);
+  
   par_names.push_back("mean_WD");
   par_units.push_back("Msun");
+  par_init.push_back(1.7);
+  
   par_names.push_back("log10_width_WD");
   par_units.push_back("");
+  par_init.push_back(-0.5);
+  
   par_names.push_back("skewness_WD");
   par_units.push_back("");
+  par_init.push_back(0.0);
+  
   par_names.push_back("mean_HMS");
   par_units.push_back("Msun");
+  par_init.push_back(1.5);
+  
   par_names.push_back("log10_width_HMS");
   par_units.push_back("");
+  par_init.push_back(-0.5);
+  
   par_names.push_back("skewness_HMS");
   par_units.push_back("");
+  par_init.push_back(0.0);
+  
   par_names.push_back("mean_LMS");
   par_units.push_back("Msun");
+  par_init.push_back(1.5);
+  
   par_names.push_back("log10_width_LMS");
   par_units.push_back("");
+  par_init.push_back(-0.5);
+  
   par_names.push_back("skewness_LMS");
   par_units.push_back("");
+  par_init.push_back(0.0);
 
-  n_dist_pars = par_names.size();
-
-  // Fill names and units of mass parameters
+  // Fill names, units, and initial points for mass parameters
   for(size_t i=0; i<md.id_ns.size(); i++) {
     par_names.push_back(string("M_")+md.id_ns[i]);
     par_units.push_back("Msun");
+    par_init.push_back(md.mass_ns[i]);
   }
   for(size_t i=0; i<md.id_wd.size(); i++) {
     par_names.push_back(string("M_")+md.id_wd[i]);
     par_units.push_back("Msun");
+    par_init.push_back(md.mass_wd[i]);
   }
   for(size_t i=0; i<md.id_hms.size(); i++) {
     par_names.push_back(string("M_")+md.id_hms[i]);
     par_units.push_back("Msun");
+    par_init.push_back(md.mass_hms[i]);
   }
   for(size_t i=0; i<md.id_lms.size(); i++) {
     par_names.push_back(string("M_")+md.id_lms[i]);
     par_units.push_back("Msun");
+    par_init.push_back(md.mass_lms[i]);
   }
 
+  // Set priors for distribution parameters
+  for(size_t i=0;i<4;i++) {
+    par_low.push_back(0.5);
+    par_high.push_back(2.5);
+    par_low.push_back(-6.0);
+    par_high.push_back(0.0);
+    par_low.push_back(-1.0);
+    par_high.push_back(1.0);
+  }
+
+  // Set priors for mass parameters
+  for (size_t i=0; i<md.n_stars; i++) {
+    par_low.push_back(1.0);
+    par_high.push_back(2.4);
+  }
   n_params = par_names.size();
 
   return;
@@ -329,34 +320,83 @@ void likelihood::set_params(vec_index &pvi) {
 
   // Fill in NS-NS parameters
   pvi.append("mean_NS");
-  pvi.append("width_NS");
-  pvi.append("asym_NS");
+  pvi.append("log10_width_NS");
+  pvi.append("skewness_NS");
   for(size_t i=0; i<md.id_ns.size(); i++) {
     string mass_par=string("M_")+md.id_ns[i];
     pvi.append(mass_par);
   }
   // Fill in NS-WD parameters
   pvi.append("mean_WD");
-  pvi.append("width_WD");
-  pvi.append("asym_WD");
+  pvi.append("log10_width_WD");
+  pvi.append("skewness_WD");
   for(size_t i=0; i<md.id_wd.size(); i++) {
     string mass_par=string("M_")+md.id_wd[i];
     pvi.append(mass_par);
   }
   // Fill in NS-MS (HMXBs & LMXBs) parameters
   pvi.append("mean_HMS");
-  pvi.append("width_HMS");
-  pvi.append("asym_HMS");
+  pvi.append("log10_width_HMS");
+  pvi.append("skewness_HMS");
   for(size_t i=0; i<md.id_hms.size(); i++) {
     string mass_par=string("M_")+md.id_hms[i];
     pvi.append(mass_par);
   }
   pvi.append("mean_LMS");
-  pvi.append("width_LMS");
-  pvi.append("asym_LMS");
+  pvi.append("log10_width_LMS");
+  pvi.append("skewness_LMS");
   for(size_t i=0; i<md.id_lms.size(); i++) {
     string mass_par=string("M_")+md.id_lms[i];
     pvi.append(mass_par);
   }
   return;
+}
+
+
+// This is the function to solve 
+double eqn_solver::f_to_solve(double x, double &l, double &u) {
+  double c = sqrt(u/l);
+  return c*c*erf(u/(sqrt(2.0)*c*x)) - erf(-c*l/(sqrt(2.0)*x))
+    - 0.68*(c*c+1.0);
+}
+
+
+// Derivative of the function to solve 
+double eqn_solver::df_to_solve(double x, double &l, double &u) {
+  double c = sqrt(u/l);
+  double a = sqrt(2.0/M_PI) * c / x / x;
+  return a*l*exp(-pow(u/(sqrt(2.0)*c*x), 2.0))
+    - a*u*exp(-pow(c*l/sqrt(2.0)/x, 2.0));
+}
+
+
+// Solver to calculates parameters d, given c
+double eqn_solver::get_scale(double l, double u) {
+  
+  cout.setf(ios::scientific);
+  
+  // The solver, specifying the function type: funct<double>
+  root_brent_gsl<> solver;
+  
+  /* This is the code that allows specification of class member
+     functions as functions to solve. We need to provide the address of
+     an instantiated object and the address of the member function. */
+  eqn_solver es;
+  funct f = bind(mem_fn<double(double, double &, double &)>
+		  (&eqn_solver::f_to_solve), &es, _1, ref(l), ref(u));
+  
+  /* funct df2 = bind(mem_fn<double(double, double &, double &)>
+     (&likelihood::df_to_solve), &c, _1, ref(l), ref(u)); */
+  
+  // The root is bracketted in [x1, x2]
+  double x1=0.0, x2=1.0;
+  
+  /* The value verbose=1 prints out iteration information
+     and verbose=2 requires a keypress between iterations. */
+  solver.verbose=0;
+  
+  solver.solve_bkt(x1, x2, f); 
+  // cout << "f(x) = " << f(x1) << endl;
+  
+  return x1;
 }

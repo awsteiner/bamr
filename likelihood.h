@@ -2,15 +2,15 @@
 #define LIKELIHOOD_H
 
 #include <fstream>
-#include <cmath>
-#include <random>
-#include <string>
-#include <o2scl/funct.h>
-#include <o2scl/test_mgr.h>
-#include <o2scl/constants.h>
+//#include <cmath>
+//#include <random>
+//#include <string>
+//#include <o2scl/funct.h>
+//#include <o2scl/test_mgr.h>
+//#include <o2scl/constants.h>
 #include <o2scl/root_brent_gsl.h>
 #include <boost/numeric/ublas/vector.hpp>
-#include <gsl/gsl_math.h>
+//#include <gsl/gsl_math.h>
 
 using namespace std;
 using namespace o2scl;
@@ -64,7 +64,6 @@ class likelihood {
     // Constructor to load source data
     likelihood () {
       md.load_data();
-      cout << "likelihood: constructor load_data() called" << endl;
       debug=false;
     }
 
@@ -93,6 +92,10 @@ class likelihood {
     priors for population parameters */
     vector<double> par_low;
     vector<double> par_high;
+    
+    /* std::vector<double> to store the initial points for 
+    population parameters */
+    vector<double> par_init;
 
     /* Skewed Normal PDF: SN(M_star, mean, width, skewness) 
     [eq. 13, Kiziltan et al. (2013)] */
@@ -104,7 +107,7 @@ class likelihood {
 
     /* Function to fill vectors with the names and units of 
     population parameter */
-    void get_params();
+    void get_param_info();
 
     /* Function to fill the pvi object with names of all 
     population parameter */
