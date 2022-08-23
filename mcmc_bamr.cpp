@@ -638,9 +638,9 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
   
   model &m=*(bc_arr[0]->mod);
   
-  hf.sets_vec("source_names",nsd->source_names);
-  hf.sets_vec("source_fnames",nsd->source_fnames);
-  hf.sets_vec("slice_names",nsd->slice_names);
+  hf.sets_vec_copy("source_names",nsd->source_names);
+  hf.sets_vec_copy("source_fnames",nsd->source_fnames);
+  hf.sets_vec_copy("slice_names",nsd->slice_names);
 
   hf.set_szt("grid_size",set->grid_size);
   hf.set_szt("n_sources",nsd->n_sources);
