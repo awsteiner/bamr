@@ -1,7 +1,0 @@
-log_wgt:
-	o2graph -read out/np_0_out markov_chain_0 -plot1 log_wgt \
-	-xtitle "Steps" -ytitle "$ \log{\mathcal{L}}$" -show & 
-
-log_wgt_pop:
-	o2graph -read out/np_0_out markov_chain_0 -plot1 log_wgt_pop \
-	-xtitle "Steps" -ytitle "$ \log{\mathcal{L}}$" -show & 

@@ -1,0 +1,11 @@
+all: 
+	$(LCXX) $(LCFLAGS) -o like likelihood.cpp $(LIBS)
+
+like:
+	$(LCXX) $(LCFLAGS) -o like likelihood.cpp $(LIBS)
+
+scr:
+	$(CXX) $(LDFLAGS) -o scr_gen script_gen.cpp likelihood.cpp mass_data.cpp $(LIBS)
+
+plot:	
+	gnuplot "likelihood.gnu"

@@ -177,10 +177,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       dat.mvsr=*(ts.get_results());
       double m_max2=dat.mvsr.max("gm");
 
-      //cout << "m_max2: " << m_max << endl;
+      //cout << "m_max2: " << m_max2 << endl;
       
-      if (m_max<set->min_max_mass) {
-        scr_out << "Maximum mass too small: " << m_max << " < "
+      if (m_max2<set->min_max_mass) {
+        scr_out << "Maximum mass too small: " << m_max2 << " < "
                 << set->min_max_mass << "." << std::endl;
         ret=ix_small_max;
         return;
