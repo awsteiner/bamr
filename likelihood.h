@@ -2,15 +2,13 @@
 #define LIKELIHOOD_H
 
 #include <fstream>
-//#include <cmath>
-//#include <random>
-//#include <string>
-//#include <o2scl/funct.h>
-//#include <o2scl/test_mgr.h>
-//#include <o2scl/constants.h>
+#include <cmath>
+#include <string>
+#include <o2scl/funct.h>
+#include <o2scl/constants.h>
 #include <o2scl/root_brent_gsl.h>
 #include <boost/numeric/ublas/vector.hpp>
-//#include <gsl/gsl_math.h>
+#include <gsl/gsl_math.h>
 
 using namespace std;
 using namespace o2scl;
@@ -21,36 +19,36 @@ typedef boost::numeric::ublas::vector<double> ubvector;
 
 struct mass_data {
   
-  // std::string to store the full names of stars
+  /* std::string to store the full names of stars */
   vector<string> name_ns;
   vector<string> name_wd;
   vector<string> name_lms;
-  vector<string> name_hms;
+  // vector<string> name_hms;
 
-  // std::string to store the shortened names of stars
+  /* std::string to store the shortened names of stars */
   vector<string> id_ns;
   vector<string> id_wd;
   vector<string> id_lms;
-  vector<string> id_hms;
+  // vector<string> id_hms;
 
-  // std::vector to store the measured NS mass
+  /* std::vector to store the measured NS mass */
   vector<double> mass_ns;
   vector<double> mass_wd;
   vector<double> mass_lms;
-  vector<double> mass_hms;
+  // vector<double> mass_hms;
 
-  // std::vector to store 68% central limits of NS masses
-  vector<double> uplim_ns;
-  vector<double> uplim_wd;
-  vector<double> lim_lms; // Symmetric 68% limits for NS-MS
-  vector<double> lim_hms;
+  /* std::vector to store 68% central limits of NS masses */
   vector<double> lowlim_ns;
   vector<double> lowlim_wd;
+  vector<double> uplim_ns;
+  vector<double> uplim_wd;
+  vector<double> lim_lms; // Symmetric 68% limits for LMXB
+  // vector<double> lim_hms;
 
-  // Total number of stars in all populations
+  /* Total number of stars in all populations */
   size_t n_stars;
 
-  // Function to load population mass data
+  /* Function to load population mass data */
   void load_data();
 
 };
@@ -61,7 +59,7 @@ class likelihood {
 
     bool debug;
   
-    // Constructor to load source data
+    /* Constructor to load source data */
     likelihood () {
       md.load_data();
       debug=false;
@@ -70,18 +68,15 @@ class likelihood {
     virtual ~likelihood() {
     } 
 
-    // Object to load source data from class mass_data
+    /* Object to load source data from class mass_data */
     mass_data md;
 
     /* Tolerance for small weights, below which weights are
     ignored. This ensures that log-weights do not explode. */
     const double tol=1.0e-6;
 
-    // Counts the total number of population parameters 
+    /* Counts the total number of population parameters */
     size_t n_params;
-
-    // Counts the total number of distribution parameters
-    size_t n_dist_pars;
 
     /* std::vector<string> to store the names and units of 
     population parameters */
@@ -113,16 +108,16 @@ class likelihood {
     population parameter */
     void set_params(vec_index &);
 
-    // Likelihood function for NS-NS
+    /* Likelihood function for NS-NS */
     double get_weight_ns(const ubvector &, vec_index &, int &);
 
-    // Likelihood function for NS-WD
+    /* Likelihood function for NS-WD */
     double get_weight_wd(const ubvector &, vec_index &, int &);
 
-    // Likelihood function for NS-MS/HMXB
+    /* Likelihood function for NS-MS/HMXB */
     double get_weight_hms(const ubvector &, vec_index &, int &);
 
-    // Likelihood function for NS-MS/LMXB
+    /* Likelihood function for NS-MS/LMXB */
     double get_weight_lms(const ubvector &, vec_index &, int &);
 
     /* Combined likelihood function for all stars, except 
@@ -132,10 +127,10 @@ class likelihood {
 
   private:
 
-    // PDF of standard normal distribution N(0,1)
+    /* PDF of standard normal distribution N(0,1) */
     double norm_pdf(double);
 
-    // CDF of standard N(0,1) in terms of erf(x)
+    /* CDF of standard N(0,1) in terms of erf(x) */
     double norm_cdf(double);
 
 };
@@ -144,7 +139,7 @@ class eqn_solver {
 
   public:
 
-    // The function to solve f(x)=0 [see refs/calc.pdf]
+    /* The function to solve f(x)=0 [see refs/calc.pdf] */
     double f_to_solve(double, double &, double &);
 
     /* Derivative of the function to solve f'(x)

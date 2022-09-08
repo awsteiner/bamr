@@ -123,7 +123,7 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
 
 
 // The likelihood function for NS-MS/HMXB
-double likelihood::get_weight_hms(const ubvector &pars, vec_index &pvi,
+/* double likelihood::get_weight_hms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   
   double mean = pars[pvi["mean_HMS"]];
@@ -154,7 +154,7 @@ double likelihood::get_weight_hms(const ubvector &pars, vec_index &pvi,
   }
   if (ret==0) return log_wgt;
   else return 0.0;
-}
+} */
 
 
 // The likelihood function for NS-MS/LMXB 
@@ -201,11 +201,11 @@ double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
   // Calculate log-likelihood for each population
   wgt_ns = get_weight_ns(pars, pvi, ret);
   wgt_wd = get_weight_wd(pars, pvi, ret);
-  wgt_hms = get_weight_hms(pars, pvi, ret);
+  // wgt_hms = get_weight_hms(pars, pvi, ret);
   wgt_lms = get_weight_lms(pars, pvi, ret);
 
   // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt = wgt_ns + wgt_wd + wgt_hms + wgt_lms;
+  wgt = wgt_ns + wgt_wd + wgt_lms; // + wgt_hms
   
   // Return the log-likelihood
   return wgt;
@@ -243,7 +243,7 @@ void likelihood::get_param_info() {
   par_units.push_back("");
   par_init.push_back(0.0);
   
-  par_names.push_back("mean_HMS");
+  /* par_names.push_back("mean_HMS");
   par_units.push_back("Msun");
   par_init.push_back(1.5);
   
@@ -253,7 +253,7 @@ void likelihood::get_param_info() {
   
   par_names.push_back("skewness_HMS");
   par_units.push_back("");
-  par_init.push_back(0.0);
+  par_init.push_back(0.0); */
   
   par_names.push_back("mean_LMS");
   par_units.push_back("Msun");
@@ -278,11 +278,11 @@ void likelihood::get_param_info() {
     par_units.push_back("Msun");
     par_init.push_back(md.mass_wd[i]);
   }
-  for(size_t i=0; i<md.id_hms.size(); i++) {
+  /* for(size_t i=0; i<md.id_hms.size(); i++) {
     par_names.push_back(string("M_")+md.id_hms[i]);
     par_units.push_back("Msun");
     par_init.push_back(md.mass_hms[i]);
-  }
+  } */
   for(size_t i=0; i<md.id_lms.size(); i++) {
     par_names.push_back(string("M_")+md.id_lms[i]);
     par_units.push_back("Msun");
@@ -290,7 +290,7 @@ void likelihood::get_param_info() {
   }
 
   // Set priors for distribution parameters
-  for(size_t i=0;i<4;i++) {
+  for(size_t i=0;i<3;i++) {
     par_low.push_back(0.5);
     par_high.push_back(2.5);
     par_low.push_back(-6.0);
@@ -335,13 +335,13 @@ void likelihood::set_params(vec_index &pvi) {
     pvi.append(mass_par);
   }
   // Fill in NS-MS (HMXBs & LMXBs) parameters
-  pvi.append("mean_HMS");
+  /* pvi.append("mean_HMS");
   pvi.append("log10_width_HMS");
   pvi.append("skewness_HMS");
   for(size_t i=0; i<md.id_hms.size(); i++) {
     string mass_par=string("M_")+md.id_hms[i];
     pvi.append(mass_par);
-  }
+  } */
   pvi.append("mean_LMS");
   pvi.append("log10_width_LMS");
   pvi.append("skewness_LMS");

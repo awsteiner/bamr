@@ -524,7 +524,7 @@ np_nompi:
 		-set use_population 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
-		-set max_iters 10 \
+		-set max_iters 100000 \
 		-set n_walk 315 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
@@ -579,7 +579,7 @@ np_nompi:
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-best guess \
+		-initial-point-last out/guess \
 		-mcmc
 #> out/np.out 2>&1 &
 

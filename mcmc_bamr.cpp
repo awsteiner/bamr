@@ -917,7 +917,7 @@ int mcmc_bamr::mcmc_init() {
   if (set->use_population) {
     this->table->new_column("log_wgt_NS");
     this->table->new_column("log_wgt_WD");
-    this->table->new_column("log_wgt_HMS");
+    // this->table->new_column("log_wgt_HMS");
     this->table->new_column("log_wgt_LMS");
     this->table->new_column("log_wgt_pop");
   }
@@ -1248,7 +1248,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     likelihood &like = nsd->pop_like;
     mass_data &mdat = nsd->pop_mass;
 
-    // Set names, units, and priors for population parameters
+    // Set names, units, low, high for population parameters
     for (size_t i=0; i<like.n_params; i++) {
       names.push_back(like.par_names[i]);
       units.push_back(like.par_units[i]);

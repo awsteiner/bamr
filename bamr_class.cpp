@@ -366,7 +366,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       likelihood &like = nsd->pop_like;
 
       // std::cout << "XY: " << pop_weights.size() << endl;
-      if (pop_weights.size()==0) pop_weights.resize(5); 
+      if (pop_weights.size()==0) pop_weights.resize(4); 
       
       pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
@@ -378,28 +378,28 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         log_wgt=0.0;
         return iret;
       }
-      pop_weights[2] = like.get_weight_hms(pars, pvi, iret);
+      /* pop_weights[2] = like.get_weight_hms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;
-      }
-      pop_weights[3] = like.get_weight_lms(pars, pvi, iret);
+      } */
+      pop_weights[2] = like.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;
       }
 
-      pop_weights[4] = pop_weights[0] + pop_weights[1] + pop_weights[2]
-        + pop_weights[3];
+      pop_weights[3] = pop_weights[0] + pop_weights[1] + pop_weights[2];
 
-      log_wgt += pop_weights[4];
+      log_wgt += pop_weights[3];
       
       if (iret==0) {
         /* cout << "Final pop result: ";
         vector_out(cout, pop_weights, true); */
         cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
-          << ", HM: " << pop_weights[2] << ", LM: " << pop_weights[3]
-          << ", All: " << pop_weights[4] << endl;
+          // << ", HM: " << pop_weights[2] 
+          << ", LM: " << pop_weights[2] << ", All: " 
+          << pop_weights[3] << endl;
       }
 
     }

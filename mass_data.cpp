@@ -235,7 +235,7 @@ void mass_data::load_data() {
   [source: Alsing et al. 2018] */
   
   // High Mass X-ray Binaries (HMXBs)
-  name_hms.push_back("4U1700-377"); id_hms.push_back("4U1700");
+  /* name_hms.push_back("4U1700-377"); id_hms.push_back("4U1700");
   mass_hms.push_back(1.96); lim_hms.push_back(0.19); 
 
   name_hms.push_back("SMC X-1"); id_hms.push_back("SMCX1");
@@ -266,7 +266,7 @@ void mass_data::load_data() {
   mass_hms.push_back(1.57); lim_hms.push_back(0.25); 
   
   name_hms.push_back("XTE J1855-026"); id_hms.push_back("XTEJ1855");
-  mass_hms.push_back(1.41); lim_hms.push_back(0.24); 
+  mass_hms.push_back(1.41); lim_hms.push_back(0.24); */
 
   // Low Mass X-ray Binaries (LMXBs)
   name_lms.push_back("Cyg X-2"); id_lms.push_back("CygX2");
@@ -285,6 +285,6 @@ void mass_data::load_data() {
   mass_lms.push_back(1.44); lim_lms.push_back(0.1);  
   
   // Count the total number of stars in all populations
-  this->n_stars = id_ns.size() + id_wd.size() 
-      + id_hms.size() + id_lms.size();
+  this->n_stars = id_ns.size() + id_wd.size() + id_lms.size();
+  // + id_hms.size()
 }
