@@ -1,5 +1,5 @@
-#ifndef LIKELIHOOD_H
-#define LIKELIHOOD_H
+#ifndef NS_POP_H
+#define NS_POP_H
 
 #include <fstream>
 #include <cmath>
@@ -17,7 +17,7 @@ using namespace std::placeholders;
 
 typedef boost::numeric::ublas::vector<double> ubvector;
 
-struct mass_data {
+struct pop_data {
   
   /* std::string to store the full names of stars */
   vector<string> name_ns;
@@ -53,27 +53,23 @@ struct mass_data {
 
 };
 
-class likelihood {
+class ns_pop {
   
   public:
 
     bool debug;
   
     /* Constructor to load source data */
-    likelihood () {
-      md.load_data();
+    ns_pop() {
+      pd.load_data();
       debug=false;
     }
 
-    virtual ~likelihood() {
+    virtual ~ns_pop() {
     } 
 
-    /* Object to load source data from class mass_data */
-    mass_data md;
-
-    /* Tolerance for small weights, below which weights are
-    ignored. This ensures that log-weights do not explode. */
-    const double tol=1.0e-6;
+    /* Object to load source data from class pop_data */
+    pop_data pd;
 
     /* Counts the total number of population parameters */
     size_t n_params;

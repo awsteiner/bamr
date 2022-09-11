@@ -1,12 +1,12 @@
-#include "likelihood.h"
+#include "ns_pop.h"
 
 using namespace std;
 using namespace o2scl;
 
 int main() {
     ofstream file;
-    likelihood lk;
-    mass_data md;
+    ns_pop nsp;
+    pop_data pd;
     vector<string> eos_pars;
 
     eos_pars.push_back("a");
@@ -22,8 +22,8 @@ int main() {
     eos_pars.push_back("q");
     eos_pars.push_back("z_cdf");
 
-    md.load_data();
-    lk.get_param_info();
+    pd.load_data();
+    nsp.get_param_info();
     
     file.open("o2plot.txt");
 
@@ -34,10 +34,10 @@ int main() {
         << eos_pars[i] << " -xtitle steps -plot1 "
         << eos_pars[i] << " -show &" << endl;
     }
-    for (size_t i=0; i<lk.par_names.size(); i++) {
+    for (size_t i=0; i<nsp.par_names.size(); i++) {
         file << "o2graph -read $file markov_chain_0 -ytitle " 
-        << lk.par_names[i] << " -xtitle steps -plot1 "
-        << lk.par_names[i] << " -show &" << endl;
+        << nsp.par_names[i] << " -xtitle steps -plot1 "
+        << nsp.par_names[i] << " -show &" << endl;
     }
     
     // Histogran plots
@@ -47,10 +47,10 @@ int main() {
             << eos_pars[i] << " -ytitle frequency -to-hist "
             << eos_pars[i] << " $binsz -plot -show &" << endl;
     }
-    for (size_t i=0; i<lk.par_names.size(); i++) {
+    for (size_t i=0; i<nsp.par_names.size(); i++) {
         file << "o2graph -read $file markov_chain_0 -xtitle "
-            << lk.par_names[i] << " -ytitle frequency -to-hist "
-            << lk.par_names[i] << " $binsz -plot -show &" << endl;
+            << nsp.par_names[i] << " -ytitle frequency -to-hist "
+            << nsp.par_names[i] << " $binsz -plot -show &" << endl;
     }
 
     // Likelihood plots
@@ -60,10 +60,10 @@ int main() {
             << eos_pars[i] << " -ytitle log_wgt -scatter " << eos_pars[i] 
             << " log_wgt n log_wgt -show &" << endl;
     }
-    for (size_t i=0; i<lk.par_names.size(); i++) {
+    for (size_t i=0; i<nsp.par_names.size(); i++) {
         file << "o2graph -read $file markov_chain_0 -function 1 n -xtitle "
-            << lk.par_names[i] << " -ytitle log_wgt -scatter " << lk.par_names[i] 
-            << " log_wgt n log_wgt -show &" << endl;
+            << nsp.par_names[i] << " -ytitle log_wgt -scatter " 
+            << nsp.par_names[i] << " log_wgt n log_wgt -show &" << endl;
     }
 
     file.close();

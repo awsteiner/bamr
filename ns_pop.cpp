@@ -1,20 +1,20 @@
-#include "likelihood.h"
+#include "ns_pop.h"
 
 
 // PDF of standard normal distribution N(0,1)
-double likelihood::norm_pdf(double x) {
+double ns_pop::norm_pdf(double x) {
   return exp(-0.5*x*x) / sqrt(2.0*M_PI);
 }
 
 
 // CDF of standard normal N(0,1) in terms of erf(x)
-double likelihood::norm_cdf(double x) {
+double ns_pop::norm_cdf(double x) {
   return 0.5 * (1.0 + erf(x/sqrt(2.0)));
 }
 
 
 // Skewed Normal PDF 
-double likelihood::skew_norm(double x, double mean, double width, 
+double ns_pop::skew_norm(double x, double mean, double width, 
     double skewness) {
   return 2.0 * norm_pdf((x-mean)/width)
     * norm_cdf((x-mean)*skewness/width) / width;
@@ -22,7 +22,7 @@ double likelihood::skew_norm(double x, double mean, double width,
 
 
 // Asymmetric Normal PDF 
-double likelihood::asym_norm(double x, double c, double d) {
+double ns_pop::asym_norm(double x, double c, double d) {
   double a = 2.0 / (d*(c+1.0/c));
   if (x>=0.0) return a * norm_pdf(x/(c*d));
   else return a * norm_pdf(c*x/d);
@@ -30,7 +30,7 @@ double likelihood::asym_norm(double x, double c, double d) {
 
 
 // The likelihood function for NS-NS (see refs/method.pdf)
-double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi,
+double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
 
   double mean = pars[pvi["mean_NS"]];
@@ -44,18 +44,18 @@ double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
-  for (size_t i=0; i<md.id_ns.size(); i++) {
-    mass = md.mass_ns[i]; 
-    uplim = md.uplim_ns[i];
-    lowlim = md.lowlim_ns[i]; 
+  for (size_t i=0; i<pd.id_ns.size(); i++) {
+    mass = pd.mass_ns[i]; 
+    uplim = pd.uplim_ns[i];
+    lowlim = pd.lowlim_ns[i]; 
     asym = sqrt(uplim/lowlim);
     scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+md.id_ns[i]]];
+    M_star = pars[pvi[string("M_")+pd.id_ns[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     
     if (debug) {
-      cout << "NS: " << i << " " << md.id_ns[i] << " "
+      cout << "NS: " << i << " " << pd.id_ns[i] << " "
            << mass << " " << asym << " " << scale << " " << M_star << " "
            << mean << " " << width << " " << skewness << " "
            << wgt_star; 
@@ -75,7 +75,7 @@ double likelihood::get_weight_ns(const ubvector &pars, vec_index &pvi,
 
 
 // The likelihood function for NS-WD (see refs/method.pdf)
-double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
+double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   
   double mean = pars[pvi["mean_WD"]];
@@ -89,18 +89,18 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
-  for (size_t i=0; i<md.id_wd.size(); i++) {
-    mass = md.mass_wd[i]; 
-    uplim = md.uplim_wd[i];
-    lowlim = md.lowlim_wd[i];
+  for (size_t i=0; i<pd.id_wd.size(); i++) {
+    mass = pd.mass_wd[i]; 
+    uplim = pd.uplim_wd[i];
+    lowlim = pd.lowlim_wd[i];
     asym = sqrt(uplim/lowlim);
     scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+md.id_wd[i]]];
+    M_star = pars[pvi[string("M_")+pd.id_wd[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     
     if (debug) {
-      cout << "WD: " << i << " " << md.id_wd[i] << " "
+      cout << "WD: " << i << " " << pd.id_wd[i] << " "
            << mass << " " << asym << " " << scale << " " << M_star << " "
            << mean << " " << width << " " << skewness << " "
            << wgt_star; 
@@ -123,7 +123,7 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
 
 
 // The likelihood function for NS-MS/HMXB
-/* double likelihood::get_weight_hms(const ubvector &pars, vec_index &pvi,
+/* double ns_pop::get_weight_hms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   
   double mean = pars[pvi["mean_HMS"]];
@@ -133,13 +133,13 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
   double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
   eqn_solver es;
 
-  for (size_t i=0; i<md.id_hms.size(); i++) {
-    mass = md.mass_hms[i]; 
-    uplim = md.lim_hms[i];
+  for (size_t i=0; i<pd.id_hms.size(); i++) {
+    mass = pd.mass_hms[i]; 
+    uplim = pd.lim_hms[i];
     lowlim = uplim; // Symmetric 68% limits
     asym = sqrt(uplim/lowlim); 
     scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+md.id_hms[i]]];
+    M_star = pars[pvi[string("M_")+pd.id_hms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     if (wgt_star==0.0) {
@@ -158,7 +158,7 @@ double likelihood::get_weight_wd(const ubvector &pars, vec_index &pvi,
 
 
 // The likelihood function for NS-MS/LMXB 
-double likelihood::get_weight_lms(const ubvector &pars, vec_index &pvi,
+double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   
   double mean = pars[pvi["mean_LMS"]];
@@ -168,13 +168,13 @@ double likelihood::get_weight_lms(const ubvector &pars, vec_index &pvi,
   double M_star, mass, lowlim, uplim, asym, scale, wgt_star, log_wgt=0.0;
   eqn_solver es;
 
-  for (size_t i=0; i<md.id_lms.size(); i++) {
-    mass = md.mass_lms[i]; 
-    uplim = md.lim_lms[i];
+  for (size_t i=0; i<pd.id_lms.size(); i++) {
+    mass = pd.mass_lms[i]; 
+    uplim = pd.lim_lms[i];
     lowlim = uplim; // Symmetric 68% limits
     asym = sqrt(uplim/lowlim); 
     scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+md.id_lms[i]]];
+    M_star = pars[pvi[string("M_")+pd.id_lms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     if (wgt_star==0.0) {
@@ -193,7 +193,7 @@ double likelihood::get_weight_lms(const ubvector &pars, vec_index &pvi,
 
 
 // The combined likelihood function to be calculated
-double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
+double ns_pop::get_weight(const ubvector &pars, vec_index &pvi,
                               int &ret) {
 
   double wgt_ns, wgt_wd, wgt_hms, wgt_lms, wgt; 
@@ -212,9 +212,9 @@ double likelihood::get_weight(const ubvector &pars, vec_index &pvi,
 }
 
 
-void likelihood::get_param_info() {
+void ns_pop::get_param_info() {
 
-  /* Note: md.load_data() must be called before calling this function */
+  /* Note: pd.load_data() must be called before calling this function */
 
   // double 🐖=1.0;
   
@@ -268,25 +268,25 @@ void likelihood::get_param_info() {
   par_init.push_back(0.0);
 
   // Fill names, units, and initial points for mass parameters
-  for(size_t i=0; i<md.id_ns.size(); i++) {
-    par_names.push_back(string("M_")+md.id_ns[i]);
+  for(size_t i=0; i<pd.id_ns.size(); i++) {
+    par_names.push_back(string("M_")+pd.id_ns[i]);
     par_units.push_back("Msun");
-    par_init.push_back(md.mass_ns[i]);
+    par_init.push_back(pd.mass_ns[i]);
   }
-  for(size_t i=0; i<md.id_wd.size(); i++) {
-    par_names.push_back(string("M_")+md.id_wd[i]);
+  for(size_t i=0; i<pd.id_wd.size(); i++) {
+    par_names.push_back(string("M_")+pd.id_wd[i]);
     par_units.push_back("Msun");
-    par_init.push_back(md.mass_wd[i]);
+    par_init.push_back(pd.mass_wd[i]);
   }
-  /* for(size_t i=0; i<md.id_hms.size(); i++) {
-    par_names.push_back(string("M_")+md.id_hms[i]);
+  /* for(size_t i=0; i<pd.id_hms.size(); i++) {
+    par_names.push_back(string("M_")+pd.id_hms[i]);
     par_units.push_back("Msun");
-    par_init.push_back(md.mass_hms[i]);
+    par_init.push_back(pd.mass_hms[i]);
   } */
-  for(size_t i=0; i<md.id_lms.size(); i++) {
-    par_names.push_back(string("M_")+md.id_lms[i]);
+  for(size_t i=0; i<pd.id_lms.size(); i++) {
+    par_names.push_back(string("M_")+pd.id_lms[i]);
     par_units.push_back("Msun");
-    par_init.push_back(md.mass_lms[i]);
+    par_init.push_back(pd.mass_lms[i]);
   }
 
   // Set priors for distribution parameters
@@ -300,7 +300,7 @@ void likelihood::get_param_info() {
   }
 
   // Set priors for mass parameters
-  for (size_t i=0; i<md.n_stars; i++) {
+  for (size_t i=0; i<pd.n_stars; i++) {
     par_low.push_back(1.0);
     par_high.push_back(2.4);
   }
@@ -316,37 +316,37 @@ void likelihood::get_param_info() {
     This function will be called by bamr to fill the \c pvi
     object with the all parameters from the data set.
 */
-void likelihood::set_params(vec_index &pvi) {
+void ns_pop::set_params(vec_index &pvi) {
 
   // Fill in NS-NS parameters
   pvi.append("mean_NS");
   pvi.append("log10_width_NS");
   pvi.append("skewness_NS");
-  for(size_t i=0; i<md.id_ns.size(); i++) {
-    string mass_par=string("M_")+md.id_ns[i];
+  for(size_t i=0; i<pd.id_ns.size(); i++) {
+    string mass_par=string("M_")+pd.id_ns[i];
     pvi.append(mass_par);
   }
   // Fill in NS-WD parameters
   pvi.append("mean_WD");
   pvi.append("log10_width_WD");
   pvi.append("skewness_WD");
-  for(size_t i=0; i<md.id_wd.size(); i++) {
-    string mass_par=string("M_")+md.id_wd[i];
+  for(size_t i=0; i<pd.id_wd.size(); i++) {
+    string mass_par=string("M_")+pd.id_wd[i];
     pvi.append(mass_par);
   }
   // Fill in NS-MS (HMXBs & LMXBs) parameters
   /* pvi.append("mean_HMS");
   pvi.append("log10_width_HMS");
   pvi.append("skewness_HMS");
-  for(size_t i=0; i<md.id_hms.size(); i++) {
-    string mass_par=string("M_")+md.id_hms[i];
+  for(size_t i=0; i<pd.id_hms.size(); i++) {
+    string mass_par=string("M_")+pd.id_hms[i];
     pvi.append(mass_par);
   } */
   pvi.append("mean_LMS");
   pvi.append("log10_width_LMS");
   pvi.append("skewness_LMS");
-  for(size_t i=0; i<md.id_lms.size(); i++) {
-    string mass_par=string("M_")+md.id_lms[i];
+  for(size_t i=0; i<pd.id_lms.size(); i++) {
+    string mass_par=string("M_")+pd.id_lms[i];
     pvi.append(mass_par);
   }
   return;
@@ -386,7 +386,7 @@ double eqn_solver::get_scale(double l, double u) {
 		  (&eqn_solver::f_to_solve), &es, _1, ref(l), ref(u));
   
   /* funct df2 = bind(mem_fn<double(double, double &, double &)>
-     (&likelihood::df_to_solve), &c, _1, ref(l), ref(u)); */
+     (&eqn_solver::df_to_solve), &c, _1, ref(l), ref(u)); */
   
   // The root is bracketted in [x1, x2]
   double x1=0.0, x2=1.0;

@@ -32,7 +32,7 @@
 #include <o2scl/table3d.h>
 
 #include "settings.h"
-#include "likelihood.h"
+#include "ns_pop.h"
 
 namespace bamr {
   
@@ -51,8 +51,8 @@ namespace bamr {
 
     ns_data() {
       n_sources=0;
-      pop_mass.load_data();
-      pop_like.get_param_info();
+      pd.load_data();
+      pop.get_param_info();
     }      
 
     virtual ~ns_data() {
@@ -96,11 +96,11 @@ namespace bamr {
      */
     virtual int add_data_alt(std::vector<std::string> &sv, bool itive_com);
 
-    /// Object to call functions from class likelihood
-    likelihood pop_like;
+    /// Object to call functions from class ns_pop
+    ns_pop pop;
     
-    /// Object to load mass data from struct mass_data
-    mass_data pop_mass;
+    /// Object to load mass data from class pop_data
+    pop_data pd;
 
     /** \brief The LIGO data
      */

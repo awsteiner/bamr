@@ -1,11 +1,11 @@
 all: 
-	$(LCXX) $(LCFLAGS) -o like likelihood.cpp $(LIBS)
+	$(LCXX) $(LCFLAGS) -o pop ns_pop.cpp $(LIBS)
 
-like:
-	$(LCXX) $(LCFLAGS) -o like likelihood.cpp $(LIBS)
+pop:
+	$(LCXX) $(LCFLAGS) -o pop ns_pop.cpp $(LIBS)
 
-scr:
-	$(CXX) $(LDFLAGS) -o scr_gen script_gen.cpp likelihood.cpp mass_data.cpp $(LIBS)
+o2gen:
+	$(CXX) $(LDFLAGS) -o o2gen o2script.cpp ns_pop.cpp pop_data.cpp $(LIBS)
 
 plot:	
-	gnuplot "likelihood.gnu"
+	gnuplot "ns_pop.gnu"

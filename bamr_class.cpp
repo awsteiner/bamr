@@ -26,8 +26,6 @@
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
 
-//#include "likelihood.h"
-
 using namespace std;
 using namespace o2scl;
 // For I/O with HDF files
@@ -363,27 +361,27 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // Calculate likelihood if using mass data from populations
     if (set->use_population) {
       
-      likelihood &like = nsd->pop_like;
+      ns_pop &pop = nsd->pop;
 
       // std::cout << "XY: " << pop_weights.size() << endl;
       if (pop_weights.size()==0) pop_weights.resize(4); 
       
-      pop_weights[0] = like.get_weight_ns(pars, pvi, iret);
+      pop_weights[0] = pop.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;
       }
-      pop_weights[1] = like.get_weight_wd(pars, pvi, iret);
+      pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;
       }
-      /* pop_weights[2] = like.get_weight_hms(pars, pvi, iret);
+      /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;
       } */
-      pop_weights[2] = like.get_weight_lms(pars, pvi, iret);
+      pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
         return iret;

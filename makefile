@@ -98,10 +98,10 @@ LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
 # ----------------------------------------------------------------------
 
 bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o \
-		mass_data.o likelihood.o
+		pop_data.o ns_pop.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr main.o \
 		nstar_cold2.o ns_data.o models.o mcmc_bamr.o bamr_class.o \
-		mass_data.o likelihood.o $(LIBS) 
+		pop_data.o ns_pop.o $(LIBS) 
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -124,11 +124,11 @@ bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
 
-likelihood.o: likelihood.cpp likelihood.h
-	$(MPI_CXX) $(ALL_FLAGS_MPI) -o likelihood.o -c likelihood.cpp
+ns_pop.o: ns_pop.cpp ns_pop.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o ns_pop.o -c ns_pop.cpp
 
-mass_data.o: mass_data.cpp likelihood.h
-	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mass_data.o -c mass_data.cpp
+pop_data.o: pop_data.cpp ns_pop.h
+	$(MPI_CXX) $(ALL_FLAGS_MPI) -o pop_data.o -c pop_data.cpp
 
 # ----------------------------------------------------------------------
 # Help target
@@ -151,11 +151,11 @@ help:
 
 bamr_nompi: bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o
+		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
 		bamr_class_nompi.o models_nompi.o \
 		nstar_cold2_nompi.o main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o mass_data_nompi.o likelihood_nompi.o $(LIBS) 
+		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o $(LIBS) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
@@ -175,11 +175,11 @@ mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 bamr_class_nompi.o: bamr_class.cpp bamr_class.h
 	$(CXX) $(ALL_FLAGS) -o bamr_class_nompi.o -c bamr_class.cpp
 
-likelihood_nompi.o: likelihood.cpp likelihood.h
-	$(CXX) $(ALL_FLAGS) -o likelihood_nompi.o -c likelihood.cpp
+ns_pop_nompi.o: ns_pop.cpp ns_pop.h
+	$(CXX) $(ALL_FLAGS) -o ns_pop_nompi.o -c ns_pop.cpp
 
-mass_data_nompi.o: mass_data.cpp likelihood.h
-	$(CXX) $(ALL_FLAGS) -o mass_data_nompi.o -c mass_data.cpp
+pop_data_nompi.o: pop_data.cpp ns_pop.h
+	$(CXX) $(ALL_FLAGS) -o pop_data_nompi.o -c pop_data.cpp
 
 #bc_wrap_nompi.o: bc_wrap.cpp bc_wrap.h
 #	$(CXX) $(ALL_FLAGS) -o bc_wrap_nompi.o -c bc_wrap.cpp
@@ -520,16 +520,16 @@ clean:
 	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib *.png
 
 np_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 1 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
 		-set use_population 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
-		-set max_iters 100000 \
-		-set n_walk 315 -set step_fac 2.0 \
+		-set max_iters 5 \
+		-set n_walk 1 -set step_fac 10000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 1800 -set verbose 1 \
+		-set file_update_time 10 -set verbose 1 \
 		-set mcmc_verbose 2 -add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
@@ -579,7 +579,6 @@ np_nompi:
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/guess \
 		-mcmc
 #> out/np.out 2>&1 &
 

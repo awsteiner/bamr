@@ -1093,7 +1093,7 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   size_t n_ligo_pars=3;
   size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
   size_t n_sources = nsd->n_sources;
-  size_t n_pop_pars = nsd->pop_like.n_params;
+  size_t n_pop_pars = nsd->pop.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
 
@@ -1136,7 +1136,7 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   size_t n_ligo_pars=3;
   size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
   size_t n_sources = nsd->n_sources;
-  size_t n_pop_pars = nsd->pop_like.n_params;
+  size_t n_pop_pars = nsd->pop.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
   
@@ -1245,15 +1245,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Population parameters
   if (set->use_population) {
     
-    likelihood &like = nsd->pop_like;
-    mass_data &mdat = nsd->pop_mass;
+    ns_pop &pop = nsd->pop;
 
     // Set names, units, low, high for population parameters
-    for (size_t i=0; i<like.n_params; i++) {
-      names.push_back(like.par_names[i]);
-      units.push_back(like.par_units[i]);
-      low.push_back(like.par_low[i]);
-      high.push_back(like.par_high[i]);
+    for (size_t i=0; i<pop.n_params; i++) {
+      names.push_back(pop.par_names[i]);
+      units.push_back(pop.par_units[i]);
+      low.push_back(pop.par_low[i]);
+      high.push_back(pop.par_high[i]);
     }
 
   }
@@ -1296,10 +1295,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Set initial points for the population parameters
     if (set->use_population) {
       
-      likelihood &like = nsd->pop_like;
+      ns_pop &pop = nsd->pop;
 
-      for (size_t i=0; i<like.n_params; i++){
-        init.push_back(like.par_init[i]);
+      for (size_t i=0; i<pop.n_params; i++){
+        init.push_back(pop.par_init[i]);
       }
     }
     

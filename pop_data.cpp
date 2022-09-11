@@ -1,11 +1,11 @@
 /* This file containes NS mass data from all populations with 
 their associated 68% central limits */
 
-#include "likelihood.h"
+#include "ns_pop.h"
 
 using namespace std;
 
-void mass_data::load_data() {
+void pop_data::load_data() {
   
   /* Data from NS-NS/DNS (some with asymmetric 68% limits)
      [source: Alsing et al. 2018] */

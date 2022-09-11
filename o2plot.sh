@@ -1,8 +1,10 @@
 #! /usr/bin/bash
 
 read -p 'Enter filename: [or path/to/file] > ' file
-read -p 'Parameter group: (1) EOS (2) LIGO (3) Population (4) Other > ' pargroup
-if [ $pargroup -eq 3 ]
+is_aff_inv=$(o2graph -read $file aff_inv -o)
+echo -e "aff inv? $is_aff_inv"
+read -p 'Plot by group: (1) EOS (2) LIGO (3) Population (4) P-E/M-R > ' plotgroup
+if [ $plotgroup -eq 3 ]
 then 
     read -p 'Population parameter type: (1) Distribution (2) True Mass > ' partype
     if [ $partype -eq 2 ]
@@ -10,13 +12,21 @@ then
         read -p 'Population type: (1) DNS (2) NSWD (3) HMXB (4) LMXB > ' poptype
     fi
 fi
+if [ $plotgroup -eq 4 ]
+then 
+    echo -e 'Making EOS and M-R plots...'
+    o2graph -xtitle "Energy Density [fm$ ^{-4}$]" -ytitle "Pressure [fm$ ^{-4}$]" -plotv "grid:0.3,10.0,(10.0-0.3)/99" "hdf5:$file:markov_chain_0:*:P_*" marker=. -show &
+    o2graph -xtitle "Radius [km]" -ytitle "M [$ M_\odot$]" -plotv "hdf5:$file:markov_chain_0:*:R_*" "grid:0.2,3.0,(3.0-0.2)/99" marker=. -show &
+    echo 'Done.'
+    exit
+fi 
 read -p 'Plot type: (1) Trace (2) Histogram (3) Likelihood > ' plottype 
 if [ $plottype -eq 2 ]
 then 
     read -p 'Enter bin size > ' binsz
 fi
 
-if [ $pargroup -eq 1 ]
+if [ $plotgroup -eq 1 ]
 then 
     if [ $plottype -eq 1 ]
     then 
@@ -56,11 +66,12 @@ then
         o2graph -read $file markov_chain_0 -function 1 n -xtitle exp3 -ytitle log_wgt -scatter exp3 log_wgt n log_wgt -show &
     else 
         echo -e 'Invalid choice (exit).'
+        exit
     fi 
     echo 'Done.'
 
 
-elif [ $pargroup -eq 2 ] 
+elif [ $plotgroup -eq 2 ] 
 then 
     if [ $plottype -eq 1 ]
     then 
@@ -82,11 +93,12 @@ then
         o2graph -read $file markov_chain_0 -function 1 n -xtitle z_cdf -ytitle log_wgt -scatter z_cdf log_wgt n log_wgt -show &
     else 
         echo -e 'Invalid choice (exit).'
+        exit
     fi 
     echo 'Done.'
 
 
-elif [ $pargroup -eq 3 ] && [ $partype -eq 1 ]
+elif [ $plotgroup -eq 3 ] && [ $partype -eq 1 ]
 then 
     if [ $plottype -eq 1 ]
     then 
@@ -135,11 +147,12 @@ then
         o2graph -read $file markov_chain_0 -function 1 n -xtitle skewness_LMS -ytitle log_wgt -scatter skewness_LMS log_wgt n log_wgt -show &
     else 
         echo -e 'Invalid choice (exit).'
+        exit
     fi 
     echo 'Done.'
 
 
-elif [ $pargroup -eq 3 ] && [ $partype -eq 2 ]
+elif [ $plotgroup -eq 3 ] && [ $partype -eq 2 ]
 then 
     if [ $plottype -eq 1 ]
     then 
@@ -227,6 +240,7 @@ then
             o2graph -read $file markov_chain_0 -ytitle M_2S0921 -xtitle steps -plot1 M_2S0921 -show &
         else 
             echo -e 'Invalid choice (exit).'
+            exit
         fi 
         echo 'Done.'
     
@@ -316,6 +330,7 @@ then
             o2graph -read $file markov_chain_0 -xtitle M_2S0921 -ytitle frequency -to-hist M_2S0921 $binsz -plot -show &
         else 
             echo -e 'Invalid choice (exit).'
+            exit
         fi 
         echo 'Done.'
 
@@ -406,11 +421,14 @@ then
             o2graph -read $file markov_chain_0 -function 1 n -xtitle M_2S0921 -ytitle log_wgt -scatter M_2S0921 log_wgt n log_wgt -show &
         else 
             echo -e 'Invalid choice (exit).'
+            exit
         fi 
         echo 'Done.'
     else 
         echo -e 'Invalid choice (exit).'
+        exit
     fi 
 else 
     echo -e 'Invalid choice (exit).'
+    exit
 fi 
