@@ -521,7 +521,7 @@ clean:
 
 np_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_iters 5 \
@@ -584,7 +584,7 @@ np_nompi:
 
 np:
 	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_time 172800 \

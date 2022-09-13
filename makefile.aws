@@ -1,6 +1,6 @@
 aws_np1:
 	./bamr -threads 2 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np1 \
 		-set max_time 86400 \
@@ -62,7 +62,7 @@ aws_np1:
 
 aws_np2:
 	./bamr -threads 2 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 0 \
+		-set inc_pop 0 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np2 \
 		-set max_time 86400 \
@@ -124,7 +124,7 @@ aws_np2:
 
 aws_np3:
 	./bamr -threads 2 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np3 \
 		-set max_time 86400 \
@@ -143,7 +143,7 @@ aws_np3:
 
 aws_np4:
 	mpirun -np 2 ./bamr -threads 2 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np4 \
 		-set max_time 3600 \
@@ -205,7 +205,7 @@ aws_np4:
 
 aws_np_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-		-set use_population 0 \
+		-set inc_pop 0 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_iters 20 \

@@ -227,7 +227,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
       }
     }
     
-    if (set->use_population) {
+    if (set->inc_pop) {
       // std::cout << "XZ: " << pop_weights.size() << std::endl;
       for (size_t i=0; i<pop_weights.size(); i++) {
         line.push_back(pop_weights[i]);
@@ -359,9 +359,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // Calculate likelihood if using mass data from populations
-    if (set->use_population) {
+    if (set->inc_pop) {
       
       ns_pop &pop = nsd->pop;
+      pop_data &pd = nsd->pd;
 
       // std::cout << "XY: " << pop_weights.size() << endl;
       if (pop_weights.size()==0) pop_weights.resize(4); 
@@ -369,26 +370,37 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_weights[0] = pop.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        return iret;
+        /* iret_old = 1+i, where "i" is the star index */
+        iret = iret-1; // 1 was added to avoid iret=0 when wgt=0 
+        scr_out << "Population NS-NS: Returned zero weight for star "
+                << pars[pvi[string("M_")+pd.id_ns[iret]]] << std::endl;
+        return m.ix_zero_wgt;
       }
       pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        return iret;
+        iret = iret-1;
+        scr_out << "Population NS-WD: Returned zero weight for star "
+                << pars[pvi[string("M_")+pd.id_wd[iret]]] << std::endl;
+        return m.ix_zero_wgt;
       }
       /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        return iret;
+        iret = iret-1;
+        scr_out << "Population HMXB: Returned zero weight for star "
+                << pars[pvi[string("M_")+pd.id_hms[iret]]] << std::endl;
+        return m.ix_zero_wgt;
       } */
       pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        return iret;
+        iret = iret-1;
+        scr_out << "Population LMXB: Returned zero weight for star "
+                << pars[pvi[string("M_")+pd.id_lms[iret]]] << std::endl;
+        return m.ix_zero_wgt;
       }
-
       pop_weights[3] = pop_weights[0] + pop_weights[1] + pop_weights[2];
-
       log_wgt += pop_weights[3];
       
       if (iret==0) {
@@ -909,7 +921,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->source_names[i]
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
-            iret=m.ix_mr_outside;
+            iret=m.ix_mr_outside; // Should have a return statement here?
           }
 	        
           // Include the weight for this source

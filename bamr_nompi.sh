@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 
 	./bamr_nompi -threads 1 -set aff_inv 1 -set couple_threads 0 \
-		-set use_population 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
 		-set max_iters 10000 \

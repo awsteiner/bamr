@@ -81,7 +81,7 @@ namespace bamr {
       emu_post=false;
       //emu_train="";
       mmax_deriv = false;
-      use_population=true;
+      inc_pop=true;
       inc_ligo=true;
     }
     
@@ -116,7 +116,7 @@ namespace bamr {
     o2scl::cli::parameter_string p_data_dir;
     o2scl::cli::parameter_bool p_apply_emu;
     o2scl::cli::parameter_bool p_emu_aws;
-    o2scl::cli::parameter_bool p_use_population;
+    o2scl::cli::parameter_bool p_inc_pop;
     o2scl::cli::parameter_bool p_emu_post;
     o2scl::cli::parameter_bool p_couple_threads;
     o2scl::cli::parameter_string p_emu_train;
@@ -221,7 +221,7 @@ namespace bamr {
     /** \brief If true, include mass data from populations of binary
      neutron stars (default true)
      */
-    bool use_population;
+    bool inc_pop;
 
     /** \brief If true, compute poterior from emulated points
      */
@@ -434,9 +434,9 @@ namespace bamr {
       p_emu_aws.help="Activate emulator (v2)";
       cl.par_list.insert(std::make_pair("emu_aws",&p_emu_aws));
 
-      p_use_population.b=&use_population;
-      p_use_population.help="Use Population";
-      cl.par_list.insert(std::make_pair("use_population",&p_use_population));
+      p_inc_pop.b=&inc_pop;
+      p_inc_pop.help="Use Population";
+      cl.par_list.insert(std::make_pair("inc_pop",&p_inc_pop));
 
       p_emu_post.b=&emu_post;
       p_emu_post.help="Activate emulator";

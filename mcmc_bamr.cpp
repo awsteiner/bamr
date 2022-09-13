@@ -686,7 +686,7 @@ int mcmc_bamr::mcmc_init() {
   // default return values in models.h
   this->ret_value_counts.resize(this->n_threads);
   for(size_t it=0;it<this->n_threads;it++) {
-    this->ret_value_counts[it].resize(21);
+    this->ret_value_counts[it].resize(22);
   }
 
   // Copy parameter values to all of the model objects
@@ -914,7 +914,7 @@ int mcmc_bamr::mcmc_init() {
                               nsd->source_names[i]);
     }
   }
-  if (set->use_population) {
+  if (set->inc_pop) {
     this->table->new_column("log_wgt_NS");
     this->table->new_column("log_wgt_WD");
     // this->table->new_column("log_wgt_HMS");
@@ -1101,13 +1101,13 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
 
-  if (set->inc_ligo && set->use_population) {
+  if (set->inc_ligo && set->inc_pop) {
     np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
   }
-  else if (set->inc_ligo && !set->use_population) {
+  else if (set->inc_ligo && !set->inc_pop) {
     np = n_eos_pars + n_ligo_pars + n_sources;
   }
-  else if (!set->inc_ligo && set->use_population) {
+  else if (!set->inc_ligo && set->inc_pop) {
     np = n_eos_pars + n_sources + n_pop_pars;
   }
   else {
@@ -1144,13 +1144,13 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
 
-  if (set->inc_ligo && set->use_population) {
+  if (set->inc_ligo && set->inc_pop) {
     np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
   }
-  else if (set->inc_ligo && !set->use_population) {
+  else if (set->inc_ligo && !set->inc_pop) {
     np = n_eos_pars + n_ligo_pars + n_sources;
   }
-  else if (!set->inc_ligo && set->use_population) {
+  else if (!set->inc_ligo && set->inc_pop) {
     np = n_eos_pars + n_sources + n_pop_pars;
   }
   else {
@@ -1243,7 +1243,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   
   // Population parameters
-  if (set->use_population) {
+  if (set->inc_pop) {
     
     ns_pop &pop = nsd->pop;
 
@@ -1293,7 +1293,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     */
 
     // Set initial points for the population parameters
-    if (set->use_population) {
+    if (set->inc_pop) {
       
       ns_pop &pop = nsd->pop;
 
