@@ -73,8 +73,8 @@ namespace bamr {
       always emulated.
   */
   class emulator_bamr : public o2scl::emulator_unc<model_data,
-                                                 model_data,
-                                                 ubvector> {
+                                                   model_data,
+                                                   ubvector> {
     
   public:
     
@@ -89,6 +89,8 @@ namespace bamr {
     /** \brief The second internal generic emulator
      */
     o2scl::emulator_interpm_krige_table<std::vector<double>,ubvector> em2;
+    
+    o2scl::emulator_python<std::vector<double>,ubvector> em3;
     
     /* \brief Pointer to the data_eval object for function evaluations
      */
