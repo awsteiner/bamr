@@ -87,6 +87,7 @@ namespace bamr {
     static const int ix_SL_invalid=20;
     static const int ix_infinite=21;
     static const int ix_zero_wgt=22;
+    static const int ix_ligo_masses=23;
     //@}
 
     /// Number of EOS parameters

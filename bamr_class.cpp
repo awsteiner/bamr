@@ -826,7 +826,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             scr_out.unsetf(ios::showpos);
           }
           log_wgt=0.0;
-          iret=m.ix_mr_outside;
+          return m.ix_mr_outside;
         }
       }
 
@@ -921,7 +921,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->source_names[i]
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
-            iret=m.ix_mr_outside; // Should have a return statement here?
+            return m.ix_mr_outside; // Should have a return statement here?
           }
 	        
           // Include the weight for this source
@@ -943,7 +943,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         if (!std::isfinite(log_wgt)) {
           scr_out << "IS weight not finite." << endl;
-          iret=m.ix_mr_outside;
+          return m.ix_mr_outside;
           log_wgt=0.0;
         }
 	      
@@ -980,7 +980,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (m1>Mmax || m2>Mmax || m1<m2) {
         
         log_wgt=0.0;
-        iret=1;
+        return m.ix_ligo_masses;
         
       } else {
         
