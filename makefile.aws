@@ -336,4 +336,4 @@ aws_sep:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-initial-point-best guess \
-		-mcmc
+		-mcmc > aws_sep.out 2>&1 &
