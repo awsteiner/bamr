@@ -634,7 +634,7 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
 void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
-  mcmc_para_new_cli::file_header(hf);
+  mcmc_para_cli::file_header(hf);
   
   model &m=*(bc_arr[0]->mod);
   
@@ -695,7 +695,7 @@ int mcmc_bamr::mcmc_init() {
     m.copy_params(m2);
   }
   
-  mcmc_para_new_cli::mcmc_init();
+  mcmc_para_cli::mcmc_init();
 
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -1199,7 +1199,7 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
        << " is reading previous results from " << fname << " ." << endl;
   hdf_file hf;
   hf.open(fname);
-  mcmc_para_new_table::read_prev_results(hf,np);
+  mcmc_para_table::read_prev_results(hf,np);
   hf.close();
   
 #ifdef BAMR_MPI
@@ -1446,7 +1446,7 @@ int mcmc_bamr::add_data_alt(std::vector<std::string> &sv, bool itive_com) {
 
 void mcmc_bamr::setup_cli_mb() {
 
-  mcmc_para_new_cli::setup_cli(cl);
+  mcmc_para_cli::setup_cli(cl);
 
   set->setup_cli(cl);
   
