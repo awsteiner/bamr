@@ -52,11 +52,6 @@ FFTW_LIB = -lfftw3
 COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
 COMPILER_FLAGS_MPI = -std=c++0x -O3 -Wall -Wno-unused
 
-# In some cases, if o2scl is compiled with OpenMP, then we need
-# to add this flag to libbamr
-
-LIBBAMR_EXTRA = -fopenmp
-
 # ----------------------------------------------------------------------
 # UTK makefile
 # ----------------------------------------------------------------------
@@ -180,47 +175,6 @@ ns_pop_nompi.o: ns_pop.cpp ns_pop.h
 
 pop_data_nompi.o: pop_data.cpp ns_pop.h
 	$(CXX) $(ALL_FLAGS) -o pop_data_nompi.o -c pop_data.cpp
-
-#bc_wrap_nompi.o: bc_wrap.cpp bc_wrap.h
-#	$(CXX) $(ALL_FLAGS) -o bc_wrap_nompi.o -c bc_wrap.cpp
-
-# ----------------------------------------------------------------------
-# Targets for shared library creation for python interface
-# ----------------------------------------------------------------------
-
-nstar_cold2_shared.o: nstar_cold2.cpp nstar_cold2.h
-	$(CXX) $(ALL_FLAGS) -fPIC -o nstar_cold2_shared.o -c nstar_cold2.cpp
-
-models_shared.o: models.cpp models.h
-	$(CXX) $(ALL_FLAGS) -fPIC -o models_shared.o -c models.cpp
-
-ns_data_shared.o: ns_data.cpp ns_data.h
-	$(CXX) $(ALL_FLAGS) -fPIC -o ns_data_shared.o -c ns_data.cpp
-
-mcmc_bamr_shared.o: mcmc_bamr.cpp mcmc_bamr.h
-	$(CXX) $(ALL_FLAGS) -fPIC -o mcmc_bamr_shared.o -c mcmc_bamr.cpp
-
-bamr_class_shared.o: bamr_class.cpp bamr_class.h
-	$(CXX) $(ALL_FLAGS) -fPIC -o bamr_class_shared.o -c bamr_class.cpp
-
-#bc_wrap_shared.o: bc_wrap.cpp bc_wrap.h
-#	$(CXX) $(ALL_FLAGS) -fPIC -o bc_wrap_shared.o -c bc_wrap.cpp
-
-SHARED_FLAG = 
-UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-        SHARED_FLAG += -shared -fPIC -o libbamr.so
-    endif
-    ifeq ($(UNAME_S),Darwin)
-        SHARED_FLAG += -dynamiclib -o libbamr.dylib
-    endif
-
-libbamr: bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
-	models_shared.o mcmc_bamr_shared.o 
-	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) $(SHARED_FLAG) $(LIBBAMR_EXTRA) \
-		bamr_class_shared.o nstar_cold2_shared.o ns_data_shared.o \
-		models_shared.o mcmc_bamr_shared.o \
-		$(LIBS)
 
 # ----------------------------------------------------------------------
 # Targets for process
@@ -517,7 +471,7 @@ test-sync:
 empty: 
 
 clean:
-	rm -f *.o bamr bamr_nompi process libbamr.so libbamr.dylib *.png
+	rm -f *.o bamr bamr_nompi process *.png
 
 np_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \

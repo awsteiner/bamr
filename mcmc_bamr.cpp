@@ -1346,8 +1346,19 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     if (this->verbose>1) {
       cout << "Parameters index, name, unit, low, high: " << endl;
       for(size_t j=0;j<names.size();j++) {
-        cout << j << " " << names[j] << " " << units[j] << " "
-             << low[j] << " " << high[j] << endl;
+        cout.width(3);
+        cout << j << " ";
+        cout.setf(ios::left);
+        cout.width(18);
+        cout << names[j];
+        cout << " ";
+        cout.width(6);
+        cout << units[j] << " ";
+        cout.unsetf(ios::left);
+        cout.setf(ios::showpos);
+        cout << low[j] << " " << initial_points[0][j] << " "
+             << high[j] << endl;
+        cout.unsetf(ios::showpos);
       }
     }
   }
@@ -1425,7 +1436,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   vector_copy(high,high2);
 
   std::vector<model_data> dat_arr(2*this->n_walk*this->n_threads);
-  
+
+  if (verbose>2) {
+    cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
+  }
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
   
   if (set->apply_emu) {
@@ -1471,7 +1485,9 @@ void mcmc_bamr::setup_cli_mb() {
        new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
        cli::comm_option_both},
       {0,"threads","Specify number of OpenMP threads",
-       1,1,"<number>","",
+       1,1,"<number>",((string)"The threads command must be ")+
+       "before any model selection, any changes to the data, and "+
+       "any changes to settings.",
        new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::threads),
        cli::comm_option_both},
       {'a',"add-data","Add data source to the list.",
