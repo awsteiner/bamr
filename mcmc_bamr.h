@@ -38,7 +38,7 @@
 #include <Python.h>
 
 #include <o2scl/hdf_file.h>
-#include <o2scl/mcmc_para_new.h>
+#include <o2scl/mcmc_para.h>
 #include <o2scl/emulator.h>
 
 #ifdef BAMR_READLINE
@@ -195,7 +195,7 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class mcmc_bamr :
-    public o2scl::mcmc_para_new_cli<point_funct,fill_funct,
+    public o2scl::mcmc_para_cli<point_funct,fill_funct,
                                     model_data,ubvector> {
 
   protected:

@@ -1091,9 +1091,9 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
       
   size_t np;
   size_t n_ligo_pars=3;
-  size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
-  size_t n_sources = nsd->n_sources;
-  size_t n_pop_pars = nsd->pop.n_params;
+  size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
+  size_t n_sources=nsd->n_sources;
+  size_t n_pop_pars=nsd->pop.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
 
@@ -1101,20 +1101,21 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
 
+  // Determine the number of parameters according to the
+  // settings
   if (set->inc_ligo && set->inc_pop) {
-    np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
-  }
-  else if (set->inc_ligo && !set->inc_pop) {
-    np = n_eos_pars + n_ligo_pars + n_sources;
-  }
-  else if (!set->inc_ligo && set->inc_pop) {
-    np = n_eos_pars + n_sources + n_pop_pars;
-  }
-  else {
-    np = n_eos_pars + n_sources;
+    np=n_eos_pars+n_ligo_pars+n_sources+n_pop_pars;
+  } else if (set->inc_ligo && !set->inc_pop) {
+    np=n_eos_pars+n_ligo_pars+n_sources;
+  } else if (!set->inc_ligo && set->inc_pop) {
+    np=n_eos_pars+n_sources+n_pop_pars;
+  } else {
+    np=n_eos_pars+n_sources;
   }
 
-  this->initial_points_file_last(fname, np);
+  cout << "mcmc_bamr::initial_point_last set: " << np << " parameters."
+       << endl;
+  this->initial_points_file_last(fname,np);
   
   return 0;
 }
@@ -1134,9 +1135,9 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   
   size_t np;
   size_t n_ligo_pars=3;
-  size_t n_eos_pars = bc_arr[0]->mod->n_eos_params;
-  size_t n_sources = nsd->n_sources;
-  size_t n_pop_pars = nsd->pop.n_params;
+  size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
+  size_t n_sources=nsd->n_sources;
+  size_t n_pop_pars=nsd->pop.n_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
   
@@ -1145,16 +1146,16 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   }
 
   if (set->inc_ligo && set->inc_pop) {
-    np = n_eos_pars + n_ligo_pars + n_sources + n_pop_pars;
+    np=n_eos_pars+n_ligo_pars+n_sources+n_pop_pars;
   }
   else if (set->inc_ligo && !set->inc_pop) {
-    np = n_eos_pars + n_ligo_pars + n_sources;
+    np=n_eos_pars+n_ligo_pars+n_sources;
   }
   else if (!set->inc_ligo && set->inc_pop) {
-    np = n_eos_pars + n_sources + n_pop_pars;
+    np=n_eos_pars+n_sources+n_pop_pars;
   }
   else {
-    np = n_eos_pars + n_sources;
+    np=n_eos_pars+n_sources;
   }
 
   this->initial_points_file_best(fname, np);
@@ -1245,7 +1246,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Population parameters
   if (set->inc_pop) {
     
-    ns_pop &pop = nsd->pop;
+    ns_pop &pop=nsd->pop;
 
     // Set names, units, low, high for population parameters
     for (size_t i=0; i<pop.n_params; i++) {
@@ -1287,15 +1288,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       }
     }
     /* Note:
-       bc_arr[0]->mod->n_eos_params+nsd->n_sources = 23
-       bc_arr[0]->mod->n_eos_params = 12 (9 + 3)
-       nsd->n_sources = 11 
+       bc_arr[0]->mod->n_eos_params+nsd->n_sources=23
+       bc_arr[0]->mod->n_eos_params=12 (9+3)
+       nsd->n_sources=11 
     */
 
     // Set initial points for the population parameters
     if (set->inc_pop) {
       
-      ns_pop &pop = nsd->pop;
+      ns_pop &pop=nsd->pop;
 
       for (size_t i=0; i<pop.n_params; i++){
         init.push_back(pop.par_init[i]);
@@ -1383,7 +1384,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "Applying train function." << endl;
 
     // train the module
-    int pinfo = train(set->emu_train, names);
+    int pinfo=train(set->emu_train, names);
     if(pinfo != 0){
       cout << "Training Failed. " << endl;
       exit(-1);
@@ -1497,12 +1498,22 @@ void mcmc_bamr::setup_cli_mb() {
        (this,&mcmc_bamr::add_data_alt),
        cli::comm_option_both},
       {0,"initial-point-last","Set initial point from file.",1,1,
-       "<filename>","Long. desc.",
+       "<filename>",((string)"Note that this command must be ")+
+       "after the model selection and, after the setting of inc_pop "+
+       " and inc_ligo, "+
+       "and after the specification of the data, so that it can "+
+       "determine the correct number of parameters to obtain from "+
+       "the file.",
        new o2scl::comm_option_mfptr<mcmc_bamr>
        (this,&mcmc_bamr::initial_point_last),
        o2scl::cli::comm_option_both},
       {0,"initial-point-best","Set initial point from file.",1,1,
-       "<filename>","Long. desc.",
+       "<filename>",((string)"Note that this command must be ")+
+       "after the model selection and, after the setting of inc_pop "+
+       " and inc_ligo, "+
+       "and after the specification of the data, so that it can "+
+       "determine the correct number of parameters to obtain from "+
+       "the file.",
        new o2scl::comm_option_mfptr<mcmc_bamr>
        (this,&mcmc_bamr::initial_point_best),
        o2scl::cli::comm_option_both},
