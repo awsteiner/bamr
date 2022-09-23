@@ -70,28 +70,9 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   }
   // 0
   list.push_back("log_wgt");
-  list.push_back("n0");
-  list.push_back("EoA");
-  list.push_back("msom");
-  list.push_back("S");
-  list.push_back("S2");
-  list.push_back("K");
-  list.push_back("L");
-  // 8
-  list.push_back("Mns_max");
-  list.push_back("cs2_max");
-  list.push_back("kfn_min");
-  list.push_back("kfn_max");
-  list.push_back("kfp_min");
-  list.push_back("kfp_max");
-  list.push_back("lw_nuc");
-  list.push_back("lw_prex");
-  list.push_back("lw_qlmxb");
-  list.push_back("lw_ligo");
-  list.push_back("lw_ins");
-  list.push_back("lw_sxrt");
-  // 20
-  list.push_back("R_55");
+  list.push_back("log_wgt_NS");
+  list.push_back("M_max");
+  list.push_back("R_43");
 
   cout << "Training column list (size " << list.size() << "): "; 
   o2scl::vector_out(std::cout,list,true);
@@ -223,31 +204,35 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   table.summary(&std::cout);
 
 #ifdef BAMR_MPI    
-    // Ensure that multiple MPI ranks are not writing to the 
-    // filesystem at the same time
-    int tag=0, buffer=0;
-    if (mpi_size>1 && mpi_rank>=1) {
-      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-               tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-    }
+  // Ensure that multiple MPI ranks are not writing to the 
+  // filesystem at the same time
+  int tag=0, buffer=0;
+  if (mpi_size>1 && mpi_rank>=1) {
+    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+             tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  }
 #endif
-    
-    std::cout << "Rank " << mpi_rank << " writing final training table."
-	      << std::endl;
-    hdf_file hf2;
-    hf2.open_or_create(((string)"train_")+o2scl::itos(mpi_rank)+"_out");
-    hdf_output(hf2,table,"train");
-    hf2.close();
-    
+  
+  std::cout << "Rank " << mpi_rank << " writing final training table."
+            << std::endl;
+  hdf_file hf2;
+  hf2.open_or_create(((string)"train_")+o2scl::itos(mpi_rank)+"_out");
+  hdf_output(hf2,table,"train");
+  hf2.close();
+  
 #ifdef BAMR_MPI
-    // Send a message to the next MPI rank
-    if (mpi_size>1 && mpi_rank<mpi_size-1) {
-      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
-               tag,MPI_COMM_WORLD);
-    }
+  // Send a message to the next MPI rank
+  if (mpi_size>1 && mpi_rank<mpi_size-1) {
+    MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+             tag,MPI_COMM_WORLD);
+  }
 #endif
   
   em1.set(np,nout,0,table,list);
+  
+  // anik.py, class emu, function train
+  
+  //em3.set("anik","emu","train","log_wgt",np,table,list);
 
   cout << "Rank " << mpi_rank << " done setting emulator." << endl;
 
