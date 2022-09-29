@@ -68,9 +68,12 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   for(size_t j=0;j<pvi.size();j++) {
     list.push_back(pvi[j]);
   }
-  // 0
+  // M_i, R_i for n_sources
+  // wgt_i for n_sources
   list.push_back("log_wgt");
   list.push_back("log_wgt_NS");
+  list.push_back("log_wgt_WD");
+  list.push_back("log_wgt_LMS");
   list.push_back("M_max");
   list.push_back("R_43");
 
@@ -232,7 +235,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   
   // anik.py, class emu, function train
   
-  //em3.set("anik","emu","train","log_wgt",np,table,list);
+  // em3.set("anik","emu","train","eval","log_wgt",np,table,list);
 
   cout << "Rank " << mpi_rank << " done setting emulator." << endl;
 

@@ -39,7 +39,8 @@
 
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
-#include <o2scl/emulator.h>
+// #include <o2scl/emulator.h>
+#include "mcmc_emu.h"
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>

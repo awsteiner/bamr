@@ -122,10 +122,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       //cout << "m_max1: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
-	scr_out << "Maximum mass too small: " << m_max << " < "
-		<< set->min_max_mass << "." << std::endl;
-	ret=ix_small_max;
-	return;
+	      scr_out << "Maximum mass too small: " << m_max << " < "
+		            << set->min_max_mass << "." << std::endl;
+	      ret=ix_small_max;
+	      return;
       }
 
       // Find the central energy density of the maximum mass star
@@ -146,13 +146,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
-	if (eost.get("ed",i)<c_ed) {
+	      if (eost.get("ed",i)<c_ed) {
           if (eost.get("cs2",i)>1.0) {
             //cout << eost.get("ed",i) << " " << c_ed << endl;
             ret=ix_acausal;
             return;
           }
-	}
+	      }
       }	
 
       // Now modify the last parameter
@@ -194,7 +194,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Reject the point if the derivative is not finite
       if (isfinite(dpdM)!=1) {
         ret=ix_infinite;
-     	return;
+     	  return;
       } 
 
       eost.add_constant("dpdM",dpdM);
@@ -208,7 +208,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       if (model_type==((string)"new_poly")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          //cout << "trans2, c_ed (2): " << trans2 << " " << c_ed << endl;
+          //cout << "trans2, c_ed (2): " << trans2 << " " 
+          //     << c_ed << endl;
           ret=ix_param_mismatch;
           return;
         }
@@ -229,7 +230,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       }
-
       // End of Sarah's section
     }
     
@@ -242,14 +242,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     for(size_t i=0;(eost.get_nlines()>0 &&
 		    i<eost.get_nlines()-1);i++) {
       if ((!set->use_crust || eost.get("ed",i)>0.6) && 
-	  eost.get("pr",i+1)<eost.get("pr",i)) {
-	scr_out << "Rejected: Pressure decreasing." << std::endl;
-	scr_out << "ed=" << eost.get("ed",i) 
-		<< " pr=" << eost.get("pr",i) << std::endl;
-	scr_out << "ed=" << eost.get("ed",i+1) 
-		<< " pr=" << eost.get("pr",i+1) << std::endl;
-	ret=ix_press_dec;
-	return;
+	      eost.get("pr",i+1)<eost.get("pr",i)) {
+	      scr_out << "Rejected: Pressure decreasing." << std::endl;
+	      scr_out << "ed=" << eost.get("ed",i) 
+		            << " pr=" << eost.get("pr",i) << std::endl;
+	      scr_out << "ed=" << eost.get("ed",i+1) 
+		            << " pr=" << eost.get("pr",i+1) << std::endl;
+	      ret=ix_press_dec;
+	      return;
       }
     }
   }
@@ -271,114 +271,118 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     if (set->compute_cthick && set->baryon_density) {
 
-      // If crust_from_L is true, compute the pressure at the number density
-      // specified by the correlation. Otherwise, just use 0.08
+      // If crust_from_L is true, compute the pressure at the number 
+      // density specified by the correlation. Otherwise, just use 0.08
 
       if (set->crust_from_L) {
 
-	if (set->verbose>=2) {
-	  std::cout << "Starting crust from L." << std::endl;
-	}
+	      if (set->verbose>=2) {
+	        std::cout << "Starting crust from L." << std::endl;
+	      }
 	
-	double asamp, bsamp, csamp;
-	if (false) {
-	  double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
-	  if (f1<=0.0) f1=1.0e-5;
-	  else if (f1>=1.0) f1=1.0-1.0e-5;
-	  asamp=nt_a.invert_cdf(f1);
+	      double asamp, bsamp, csamp;
+	      if (false) {
+	        double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
+	        if (f1<=0.0) f1=1.0e-5;
+	        else if (f1>=1.0) f1=1.0-1.0e-5;
+	        asamp=nt_a.invert_cdf(f1);
 
-	  double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
-	  f2=0.5;
-	  if (f2<=0.0) f2=1.0e-5;
-	  else if (f2>=1.0) f2=1.0-1.0e-5;
-	  bsamp=nt_b.invert_cdf(f2);
+	        double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
+	        f2=0.5;
+	        if (f2<=0.0) f2=1.0e-5;
+	        else if (f2>=1.0) f2=1.0-1.0e-5;
+	        bsamp=nt_b.invert_cdf(f2);
 
-	  double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
-	  if (f3<=0.0) f3=1.0e-5;
-	  else if (f3>=1.0) f3=1.0-1.0e-5;
-	  csamp=nt_c.invert_cdf(f3);
-	} else {
-	  asamp=nt_a.mean();
-	  bsamp=nt_b.mean();
-	  csamp=nt_c.mean();
-	}
+	        double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
+	        if (f3<=0.0) f3=1.0e-5;
+	        else if (f3>=1.0) f3=1.0-1.0e-5;
+	        csamp=nt_c.invert_cdf(f3);
+	      } else {
+	        asamp=nt_a.mean();
+	        bsamp=nt_b.mean();
+	        csamp=nt_c.mean();
+	      }
       
-	double St=eost.get_constant("S")*o2scl_const::hc_mev_fm;
-	double Lt=eost.get_constant("L")*o2scl_const::hc_mev_fm;
-	double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))*(St/30.0);
-
-	if (nt<nt_low || nt>nt_high) {
-	  scr_out << "Transition density, " << nt << ", out of range." << endl;
-	  ret=ix_trans_invalid;
-	  return;
-	}
-	eost.add_constant("nt",nt);
+	      double St=eost.get_constant("S")*o2scl_const::hc_mev_fm;
+	      double Lt=eost.get_constant("L")*o2scl_const::hc_mev_fm;
+	      double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))
+                    *(St/30.0);
+  
+        // If crust_from_L is true and the transition density is 
+        // outside this range, then we reject and go to the next point
+	      if (nt<nt_low || nt>nt_high) {
+	        scr_out << "Transition density, " << nt 
+                  << ", out of range." << endl;
+	        ret=ix_trans_invalid;
+	        return;
+	      }
+	      eost.add_constant("nt",nt);
 	
-	double prt=eost.interp("nb",nt,"pr");
-	eost.add_constant("prt",prt);
+	      double prt=eost.interp("nb",nt,"pr");
+	      eost.add_constant("prt",prt);
 
-	// Add the transition pressure to the tov_solve object
+	      // Add the transition pressure to the tov_solve object
 	
-	if (ts.pr_list.size()>0) {
-	  ts.pr_list.clear();
-	}
-	ts.pr_list.push_back(prt);
+	      if (ts.pr_list.size()>0) {
+	        ts.pr_list.clear();
+	      }
+	      ts.pr_list.push_back(prt);
 
-	// Set the crust and it's transition pressure
+	      // Set the crust and it's transition pressure
       
-	if (eost.get_constant("S")*hc_mev_fm<28.0 || 
-	    eost.get_constant("S")*hc_mev_fm>38.0 || 
-	    eost.get_constant("L")*hc_mev_fm<25.0 ||
-	    eost.get_constant("L")*hc_mev_fm>115.0 ||
-	    eost.get_constant("L")*hc_mev_fm>
-	    eost.get_constant("S")*hc_mev_fm*5.0-65.0) {
-	  scr_out << "S or L out of range" << endl;
-	  ret=ix_SL_invalid;
-	  return;
-	}
+	      if (eost.get_constant("S")*hc_mev_fm<28.0 || 
+	        eost.get_constant("S")*hc_mev_fm>38.0 || 
+	        eost.get_constant("L")*hc_mev_fm<25.0 ||
+	        eost.get_constant("L")*hc_mev_fm>115.0 ||
+	        eost.get_constant("L")*hc_mev_fm>
+	        eost.get_constant("S")*hc_mev_fm*5.0-65.0) {
+	        scr_out << "S or L out of range" << endl;
+	        ret=ix_SL_invalid;
+	        return;
+	      }
       
 	// This function expects its argument in MeV
 #ifdef O2SCL_OPENMP
 #pragma omp critical (bamr_ngl13_eos)
 #endif
-	{
-	  teos.ngl13_low_dens_eos2
-	    (eost.get_constant("S")*hc_mev_fm,
-	     eost.get_constant("L")*hc_mev_fm,nt,"");
-	}
+	      {
+	      teos.ngl13_low_dens_eos2
+	      (eost.get_constant("S")*hc_mev_fm,
+	      eost.get_constant("L")*hc_mev_fm,nt,"");
+	      }
       
-	// Set the transition pressure and width. Note that
-	// the ngl13 EOS is in units of Msun/km^3, so we 
-	// convert prt to those units
-	teos.transition_mode=eos_tov_interp::match_line;
-	teos.set_transition(o2scl_settings.get_convert_units().convert_const
+	      // Set the transition pressure and width. Note that
+	      // the ngl13 EOS is in units of Msun/km^3, so we 
+	      // convert prt to those units
+	      teos.transition_mode=eos_tov_interp::match_line;
+	      teos.set_transition(o2scl_settings.get_convert_units().convert_const
 			    ("1/fm^4","Msun/km^3",prt),1.4);
 
-	if (set->verbose>=2) {
-	  std::cout << "Done with crust from L." << std::endl;
-	}
+	      if (set->verbose>=2) {
+	        std::cout << "Done with crust from L." << std::endl;
+	      }
 	
       } else {
 
-	// Otherwise, if we're not determining the crust from L, then
-	// compute the crust thickness based on a density of 0.08
-	// fm^{-3}
+	      // Otherwise, if we're not determining the crust from L, then
+	      // compute the crust thickness based on a density of 0.08
+	      // fm^{-3}
 
-	double nt=0.08;
-	eost.add_constant("nt",nt);
-	double prt=eost.interp("nb",0.08,"pr");
-	eost.add_constant("prt",prt);
-	if (ts.pr_list.size()>0) {
-	  ts.pr_list.clear();
-	}
-	ts.pr_list.push_back(prt);
+	      double nt=0.08;
+	      eost.add_constant("nt",nt);
+	      double prt=eost.interp("nb",0.08,"pr");
+	      eost.add_constant("prt",prt);
+	      if (ts.pr_list.size()>0) {
+	        ts.pr_list.clear();
+	      }
+	      ts.pr_list.push_back(prt);
 	
       }
     
     } else {
 
       if (ts.pr_list.size()>0) {
-	ts.pr_list.clear();
+	      ts.pr_list.clear();
       }
 
     }
@@ -408,32 +412,31 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // This range corresponds to between about n_B=0.01 and 0.17
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	double ed, nb;
-	teos.ed_nb_from_pr(pr,ed,nb);
-	if (ed_last>1.0e-20 && ed<ed_last) {
-	  scr_out << "Stability problem near crust-core transition."
-		  << std::endl;
-	  if (has_esym) {
-	    scr_out << "S=" << eost.get_constant("S")*hc_mev_fm 
-		    << " L=" << eost.get_constant("L")*hc_mev_fm
-		    << std::endl;
-	  }
-	  scr_out << "Energy decreased with increasing pressure "
-		  << "at pr=" << pr << std::endl;
-	  scr_out << std::endl;
-	  scr_out << "Full EOS near transition: " << std::endl;
-	  scr_out << "pr ed" << std::endl;
-	  for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	    teos.ed_nb_from_pr(pr,ed,nb);
-	    scr_out << pr << " " << ed << std::endl;
-	  }
-	  scr_out << std::endl;
-	  ret=ix_crust_unstable;
-	  return;
-	}
-	ed_last=ed;
+	      double ed, nb;
+	      teos.ed_nb_from_pr(pr,ed,nb);
+	      if (ed_last>1.0e-20 && ed<ed_last) {
+	        scr_out << "Stability problem near crust-core transition."
+		              << std::endl;
+	        if (has_esym) {
+	          scr_out << "S=" << eost.get_constant("S")*hc_mev_fm 
+		                << " L=" << eost.get_constant("L")*hc_mev_fm
+		                << std::endl;
+	        }
+	        scr_out << "Energy decreased with increasing pressure "
+		              << "at pr=" << pr << std::endl;
+	        scr_out << std::endl;
+	        scr_out << "Full EOS near transition: " << std::endl;
+	        scr_out << "pr ed" << std::endl;
+	        for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
+	          teos.ed_nb_from_pr(pr,ed,nb);
+	          scr_out << pr << " " << ed << std::endl;
+	        }
+	        scr_out << std::endl;
+	        ret=ix_crust_unstable;
+	        return;
+	      }
+	      ed_last=ed;
       }
-
       // End of 'if (set->use_crust)'
     }
 
@@ -451,7 +454,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Output the core EOS
       hdf_output(hfde,eost,"eos");
       
-      // Output core and crust EOS as reported by the tov_interp_eos object
+      // Output core and crust EOS as reported by the 
+      // tov_interp_eos object
       o2scl::table_units<> full_eos;
       full_eos.line_of_names("ed pr nb");
       full_eos.set_unit("ed","1/fm^4");
@@ -459,13 +463,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       full_eos.set_unit("nb","1/fm^3");
       for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
 	
-	double ed, nb;
-	teos.get_eden_user(pr,ed,nb);
-	double line[3]={ed,pr,nb};
-	full_eos.line_of_data(3,line);
+	      double ed, nb;
+	      teos.get_eden_user(pr,ed,nb);
+	      double line[3]={ed,pr,nb};
+	      full_eos.line_of_data(3,line);
 	
-	// Choose a slightly more sparse grid at lower pressures
-	if (pr<1.0e-4) pr*=1.2;
+	    // Choose a slightly more sparse grid at lower pressures
+	      if (pr<1.0e-4) pr*=1.2;
       }
       hdf_output(hfde,full_eos,"full_eos");
       
@@ -474,8 +478,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Exit only if debug_star is not also true
       if (!set->debug_star) {
 	
-	std::cout << "Automatically exiting since 'debug_eos' is true."
-		  << std::endl;
+	      std::cout << "Automatically exiting since 'debug_eos' is true."
+		              << std::endl;
 
 #ifdef BAMR_MPI
 	// Ensure all the debug information is output before
@@ -486,7 +490,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	MPI_Finalize();
 #endif
 	
-	exit(0);
+	      exit(0);
       }
       
     }
@@ -538,7 +542,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr.add_constant("M_max",m_max);
     if (m_max<set->min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
-	      << set->min_max_mass << "." << std::endl;
+	            << set->min_max_mass << "." << std::endl;
       ret=ix_small_max;
       return;
     }
@@ -552,7 +556,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     size_t ir=dat.mvsr.get_nlines()-1;
     if ((dat.mvsr)["gm"][ir]<1.0e-10 ||
-	(dat.mvsr)["gm"][ir-1]<1.0e-10) {
+	    (dat.mvsr)["gm"][ir-1]<1.0e-10) {
       scr_out << "TOV failure fix." << std::endl;
       ret=ix_tov_failure;
       return;
@@ -587,20 +591,21 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       max_count++;
     }
     if (dat.mvsr.get("gm",dat.mvsr.get_nlines()-1) >
-	dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) {
+	    dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) {
       max_count++;
     }
     for(size_t i=1;i<dat.mvsr.get_nlines()-1;i++) {
       if (dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i-1) &&
-	  dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
-	max_count++;
+	      dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
+	      max_count++;
       }
     }
     if (max_count>1) {
       scr_out << "Multiple peaks in M vs. R" << endl;
       cout << "Multiple peaks in M vs. R" << endl;
       for(size_t i=0;i<dat.mvsr.get_nlines();i++) {
-	cout << dat.mvsr.get("gm",i) << " " << dat.mvsr.get("r",i) << endl;
+	        cout << dat.mvsr.get("gm",i) << " " 
+               << dat.mvsr.get("r",i) << endl;
       }
     }
     
@@ -614,11 +619,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     if (nsd->n_sources>0) {
       if (dat.sourcet.get_ncolumns()==0) {
-	dat.sourcet.line_of_names("R M wgt atm ce");
-	if (set->baryon_density) {
-	  dat.sourcet.new_column("cnb");
-	}
-	dat.sourcet.set_nlines(nsd->n_sources);
+	      dat.sourcet.line_of_names("R M wgt atm ce");
+	      if (set->baryon_density) {
+	        dat.sourcet.new_column("cnb");
+	      }
+	      dat.sourcet.set_nlines(nsd->n_sources);
       }
     }
     
@@ -667,7 +672,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfds,dat.mvsr,"mvsr");
       hfds.close();
       scr_out << "Automatically exiting since 'debug_star' is true."
-	      << std::endl;
+	            << std::endl;
     }
 
 #ifdef BAMR_MPI
@@ -740,11 +745,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   } else {
     
     for(size_t i=0;i<nsd->n_sources;i++) {
-      if (dat.sourcet.get("R",i)<2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
-	scr_out << "Source " << nsd->source_names[i] << " acausal."
-		<< std::endl;
-	ret=ix_acausal_mr;
-	return;
+      if (dat.sourcet.get("R",i) < 
+        2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
+	      scr_out << "Source " << nsd->source_names[i] << " acausal."
+		            << std::endl;
+	      ret=ix_acausal_mr;
+	      return;
       }
     }
 
