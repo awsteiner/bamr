@@ -137,8 +137,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       if (model_type==((string)"new_poly")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          cout << "trans2, c_ed: " << trans2 << " " << c_ed << endl;
-          ret=ix_param_mismatch;
+          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "trans2, c_ed = " << trans2 << ", " 
+                  << c_ed << ", trans2>c_ed" << std::endl;
+          ret=ix_eos_pars_mismatch;
           return;
         }
       }
@@ -149,13 +151,15 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	      if (eost.get("ed",i)<c_ed) {
           if (eost.get("cs2",i)>1.0) {
             //cout << eost.get("ed",i) << " " << c_ed << endl;
-            ret=ix_acausal;
+            scr_out << "Acausal EOS: cs2_" << i << "=" 
+                    << eost.get("cs2",i) << " > 1" << std::endl;
+            ret=ix_eos_acausal;
             return;
           }
 	      }
       }	
 
-      // Now modify the last parameter
+      // Now modify the last parameter: exp3
       ubvector pars2=pars;
       pars2[this->n_eos_params-1]*=1.001;
 
@@ -193,7 +197,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Reject the point if the derivative is not finite
       if (isfinite(dpdM)!=1) {
-        ret=ix_infinite;
+        scr_out << "Derivative dpdM is infinite." << std::endl;
+        ret=ix_deriv_infinite;
      	  return;
       } 
 
@@ -210,7 +215,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         if (trans2>c_ed) {
           //cout << "trans2, c_ed (2): " << trans2 << " " 
           //     << c_ed << endl;
-          ret=ix_param_mismatch;
+          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "trans2, c_ed = " << trans2 << ", " 
+                  << c_ed << ", trans2>c_ed" << std::endl;
+          ret=ix_eos_pars_mismatch;
           return;
         }
       }
@@ -225,7 +233,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
             << eost.get("cs2",i) << endl;
           */
           if (eost.get("cs2",i)>1.0) {
-            ret=ix_acausal;
+            scr_out << "Acausal EOS: cs2_" << i << "=" 
+                    << eost.get("cs2",i) << " > 1" << std::endl;
+            ret=ix_eos_acausal;
             return;
           }
         }
@@ -248,7 +258,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 		            << " pr=" << eost.get("pr",i) << std::endl;
 	      scr_out << "ed=" << eost.get("ed",i+1) 
 		            << " pr=" << eost.get("pr",i+1) << std::endl;
-	      ret=ix_press_dec;
+	      ret=ix_pressure_decrease;
 	      return;
       }
     }
@@ -737,7 +747,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
                 << " ed_bad=" << (eost)["ed"][i]
                 << " pr_bad=" << (eost)["pr"][i] << std::endl;
         scr_out.precision(6);
-        ret=ix_acausal;
+        ret=ix_eos_acausal;
         return;
       }
     }
@@ -749,7 +759,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
 	      scr_out << "Source " << nsd->source_names[i] << " acausal."
 		            << std::endl;
-	      ret=ix_acausal_mr;
+	      ret=ix_source_acausal;
 	      return;
       }
     }
@@ -887,7 +897,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   
@@ -923,7 +933,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    ret=ix_neg_pressure;
+    ret=ix_pressure_negative;
     return;
   }
 
@@ -987,7 +997,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    ret=ix_neg_pressure;
+    ret=ix_pressure_negative;
     return;
   }
 
@@ -1042,7 +1052,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -1081,7 +1091,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    ret=ix_neg_pressure;
+    ret=ix_pressure_negative;
     return;
   }
 
@@ -1137,7 +1147,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (2)." << endl;
-    ret=ix_neg_pressure;
+    ret=ix_pressure_negative;
     return;
   }
 
@@ -1399,7 +1409,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &ret,
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
 	    << "matching pressure (1)." << endl;
-    ret=ix_neg_pressure;
+    ret=ix_pressure_negative;
     return;
   }
 
@@ -1513,7 +1523,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &ret,
     double dPde=(a2+2.0*a4*musq)/(a2+6.0*a4*musq);
     if (dPde<0.0) {
       scr_out << "Rejected: dPdeps<0.0 in quarks." << endl;
-      ret=ix_acausal;
+      ret=ix_eos_acausal;
       return;
     }
 
@@ -1676,7 +1686,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
     // Check that energy density is increasing
     if (ed<ed_last) {
       scr_out << "Energy density decreasing in quark_star." << std::endl;
-      ret=ix_acausal;
+      ret=ix_eos_acausal;
       return;
     }
 
@@ -1691,7 +1701,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
 	scr_out << "Not absolutely stable." << std::endl;
-	ret=ix_param_mismatch;
+	ret=ix_eos_pars_mismatch;
 	return;
       }
 
@@ -1869,7 +1879,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
   // polytropes
   if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2027,7 +2037,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
 	    << "\n\tL_min: " << Lmin << " L_max: "
 	    << Lmax << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2036,7 +2046,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   if (debug) {
@@ -2090,7 +2100,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2286,7 +2296,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
 	    << "\n\tL_min: " << Lmin << " L_max: "
 	    << Lmax << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2295,7 +2305,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   
@@ -2343,7 +2353,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2518,7 +2528,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
 	    << "\n\tL_min: " << Lmin << " L_max: "
 	    << Lmax << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2527,7 +2537,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
 	    << beta << " out of range." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   
@@ -2541,7 +2551,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -2895,7 +2905,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   
   if (b<0.0 || beta<0.0) {
     scr_out << "parameter values for b and beta are negative" << std::endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   
@@ -2994,7 +3004,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << std::endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << std::endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -3283,7 +3293,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
 
   if (b<0.0 || beta<0.0) {
     scr_out << "Value of b or beta negative." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   
@@ -3372,7 +3382,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -3638,7 +3648,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -3647,7 +3657,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   if (debug) {
@@ -3687,7 +3697,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -3725,7 +3735,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3763,7 +3773,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3810,7 +3820,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     
@@ -3948,7 +3958,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -3957,7 +3967,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
   if (debug) {
@@ -3999,7 +4009,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_param_mismatch;
+    ret=ix_eos_pars_mismatch;
     return;
   }
 
@@ -4042,7 +4052,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4086,7 +4096,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4137,7 +4147,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_param_mismatch;
+      ret=ix_eos_pars_mismatch;
       return;
     }
     

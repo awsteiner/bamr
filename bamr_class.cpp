@@ -374,7 +374,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret = iret-1; // 1 was added to avoid iret=0 when wgt=0 
         scr_out << "Population NS-NS: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_ns[iret]]] << std::endl;
-        return m.ix_zero_wgt;
+        return m.ix_pop_wgt_zero;
       }
       pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
       if (iret!=0) {
@@ -382,7 +382,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret = iret-1;
         scr_out << "Population NS-WD: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_wd[iret]]] << std::endl;
-        return m.ix_zero_wgt;
+        return m.ix_pop_wgt_zero;
       }
       /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
       if (iret!=0) {
@@ -390,7 +390,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret = iret-1;
         scr_out << "Population HMXB: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_hms[iret]]] << std::endl;
-        return m.ix_zero_wgt;
+        return m.ix_pop_wgt_zero;
       } */
       pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
@@ -398,7 +398,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret = iret-1;
         scr_out << "Population LMXB: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_lms[iret]]] << std::endl;
-        return m.ix_zero_wgt;
+        return m.ix_pop_wgt_zero;
       }
       pop_weights[3] = pop_weights[0] + pop_weights[1] + pop_weights[2];
       log_wgt += pop_weights[3];
@@ -980,7 +980,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (m1>Mmax || m2>Mmax || m1<m2) {
         
         log_wgt=0.0;
-        return m.ix_ligo_masses;
+        return m.ix_ligo_mass_invalid;
         
       } else {
         

@@ -68,8 +68,15 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   for(size_t j=0;j<pvi.size();j++) {
     list.push_back(pvi[j]);
   }
-  // M_i, R_i for n_sources
-  // wgt_i for n_sources
+  /* 
+  M_i, R_i, wgt_i for n_sources [2: ix_mr_outside]
+  M_max=dat.mvsr.max("gm") [10: ix_small_max]
+  m_max2 (add col to table) [10: ix_small_max]
+  ed_max (add col to table)
+  cs2_i for i in (0,99) [13: ix_acausal]
+  dpdM [exclude since ix_infinite never happens]
+  ed_last (add col to table) [which one? there are 3 in 3p]
+  */
   list.push_back("log_wgt");
   list.push_back("log_wgt_NS");
   list.push_back("log_wgt_WD");

@@ -67,27 +67,27 @@ namespace bamr {
     //@{
     static const int ix_success=0;
     static const int ix_mr_outside=2;
-    static const int ix_r_outside=3;
-    static const int ix_press_dec=4;
-    static const int ix_nb_problem=5;
-    static const int ix_nb_problem2=6;
+    static const int ix_r_outside=3; // currently unused
+    static const int ix_pressure_decrease=4;
+    static const int ix_nb_problem=5; // currently unused
+    static const int ix_nb_problem2=6; // currently unused
     static const int ix_crust_unstable=7;
     static const int ix_mvsr_failed=8;
     static const int ix_tov_failure=9;
     static const int ix_small_max=10;
     static const int ix_tov_conv=11;
     static const int ix_mvsr_table=12;
-    static const int ix_acausal=13;
-    static const int ix_acausal_mr=14;
-    static const int ix_param_mismatch=15;
-    static const int ix_neg_pressure=16;
+    static const int ix_eos_acausal=13;
+    static const int ix_source_acausal=14;
+    static const int ix_eos_pars_mismatch=15;
+    static const int ix_pressure_negative=16;
     static const int ix_no_eos_table=17;
     static const int ix_eos_solve_failed=18;
     static const int ix_trans_invalid=19;
     static const int ix_SL_invalid=20;
-    static const int ix_infinite=21;
-    static const int ix_zero_wgt=22;
-    static const int ix_ligo_masses=23;
+    static const int ix_deriv_infinite=21;
+    static const int ix_pop_wgt_zero=22;
+    static const int ix_ligo_mass_invalid=23;
     //@}
 
     /// Number of EOS parameters
