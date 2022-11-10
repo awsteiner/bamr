@@ -27,8 +27,8 @@
 		data/shb18/M28_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt M30 \
-		data/shb18/M30_H_syst_wilm.o2 \
-		data/shb18/M30_He_syst_wilm.o2 \
+		data/egz20/M30_echi_H.o2 \
+		data/egz20/M30_echi_He.o2 \
 		like 0.7 rescaled \
 		-add-data-alt wCen \
 		data/shb18/wCen_H_syst_wilm.o2 \
