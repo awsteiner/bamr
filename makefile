@@ -599,5 +599,5 @@ np:
 		-mcmc 
 #> out/np.out 2>&1 &
 
-include makefile.anik
+include makefile.o2
 include makefile.aws

@@ -5,7 +5,8 @@ using namespace o2scl;
 
 int main() {
     ofstream file;
-    ns_pop nsp;
+
+/*  ns_pop nsp;
     pop_data pd;
     vector<string> eos_pars;
 
@@ -64,9 +65,43 @@ int main() {
         file << "o2graph -read $file markov_chain_0 -function 1 n -xtitle "
             << nsp.par_names[i] << " -ytitle log_wgt -scatter " 
             << nsp.par_names[i] << " log_wgt n log_wgt -show &" << endl;
+    }*/
+
+    file.open("o2plot.txt"); 
+    file << "o2 -read pop -function ";
+    double x=0.52;
+    for (int i=0; i<100; i++){
+        file << "\"(1/sqrt(2*3.1416)/width_NS)*exp(-0.5*(("
+            << x << "-mean_NS)/width_NS)^2)*0.5*(1+erf(("
+            << x << "-mean_NS)*(skewness_NS)/width_NS/sqrt(2)))\" "
+            << "SN_NS_" << i << " -function ";
+        x+=0.02;
     }
-
+    x=0.52;
+    for (int i=0; i<100; i++) {
+        file << "\"(1/sqrt(2*3.1416)/width_WD)*exp(-0.5*(("
+            << x << "-mean_WD)/width_WD)^2)*0.5*(1+erf(("
+            << x << "-mean_WD)*(skewness_WD)/width_WD/sqrt(2)))\" "
+            << "SN_WD_" << i << " -function ";
+        x+=0.02;
+    }
+    x=0.52;
+    for (int i=0; i<100; i++) {
+        if (i<99) {
+            file << "\"(1/sqrt(2*3.1416)/width_LMS)*exp(-0.5*(("
+            << x << "-mean_LMS)/width_LMS)^2)*0.5*(1+erf(("
+            << x << "-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2)))\" "
+            << "SN_LMS_" << i << " -function ";
+            x+=0.02;    
+        }
+        else {
+            file << "\"(1/sqrt(2*3.1416)/width_LMS)*exp(-0.5*(("
+            << x << "-mean_LMS)/width_LMS)^2)*0.5*(1+erf(("
+            << x << "-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2)))\" "
+            << "SN_LMS_" << i << " ";
+        }
+    }
+    file << "-internal pd" << endl;
     file.close();
-
     return 0;
 }
