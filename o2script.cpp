@@ -68,40 +68,40 @@ int main() {
     }*/
 
     file.open("o2plot.txt"); 
-    file << "o2 -read pop -function ";
-    double x=0.52;
+    file << "o2 -read pop.o2 -function ";
+    double x=0.03;
     for (int i=0; i<100; i++){
         file << "\"(1/sqrt(2*3.1416)/width_NS)*exp(-0.5*(("
-            << x << "-mean_NS)/width_NS)^2)*0.5*(1+erf(("
+            << x << "-mean_NS)/width_NS)^2)*(1+erf(("
             << x << "-mean_NS)*(skewness_NS)/width_NS/sqrt(2)))\" "
             << "SN_NS_" << i << " -function ";
-        x+=0.02;
+        x+=0.03;
     }
-    x=0.52;
+    x=0.03;
     for (int i=0; i<100; i++) {
         file << "\"(1/sqrt(2*3.1416)/width_WD)*exp(-0.5*(("
-            << x << "-mean_WD)/width_WD)^2)*0.5*(1+erf(("
+            << x << "-mean_WD)/width_WD)^2)*(1+erf(("
             << x << "-mean_WD)*(skewness_WD)/width_WD/sqrt(2)))\" "
             << "SN_WD_" << i << " -function ";
-        x+=0.02;
+        x+=0.03;
     }
-    x=0.52;
+    x=0.03;
     for (int i=0; i<100; i++) {
         if (i<99) {
-            file << "\"(1/sqrt(2*3.1416)/width_LMS)*exp(-0.5*(("
-            << x << "-mean_LMS)/width_LMS)^2)*0.5*(1+erf(("
-            << x << "-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2)))\" "
-            << "SN_LMS_" << i << " -function ";
-            x+=0.02;    
+            file << "\"(1/sqrt(2*3.1416)/width_LM)*exp(-0.5*(("
+            << x << "-mean_LM)/width_LM)^2)*(1+erf(("
+            << x << "-mean_LM)*(skewness_LM)/width_LM/sqrt(2)))\" "
+            << "SN_LM_" << i << " -function ";
+            x+=0.03;    
         }
         else {
-            file << "\"(1/sqrt(2*3.1416)/width_LMS)*exp(-0.5*(("
-            << x << "-mean_LMS)/width_LMS)^2)*0.5*(1+erf(("
-            << x << "-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2)))\" "
-            << "SN_LMS_" << i << " ";
+            file << "\"(1/sqrt(2*3.1416)/width_LM)*exp(-0.5*(("
+            << x << "-mean_LM)/width_LM)^2)*(1+erf(("
+            << x << "-mean_LM)*(skewness_LM)/width_LM/sqrt(2)))\" "
+            << "SN_LM_" << i << " ";
         }
     }
-    file << "-internal pd" << endl;
+    file << "-internal mdist.o2" << endl;
     file.close();
     return 0;
 }

@@ -530,7 +530,7 @@ np_nompi:
 		prob 0.7 table3d \
 		-set apply_intsc 0 \
 		-set cached_intsc 0 \
-		-model new_poly \
+		-model new_line \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc
