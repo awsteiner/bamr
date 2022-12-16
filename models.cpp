@@ -133,7 +133,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	      ret=ix_small_max;
 	      return;
       }
-
+      cout << "model::compute_star(): mmax_deriv line 1" << endl;
       // Find the central energy density of the maximum mass star
       size_t row=dat.mvsr.lookup("gm",m_max);
       double c_ed=dat.mvsr.get("ed",row);
@@ -150,7 +150,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           return;
         }
       }
-      
+      cout << "model::compute_star(): mmax_deriv line 2" << endl;
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
@@ -164,10 +164,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
 	      }
       }	
-
+      cout << "model::compute_star(): mmax_deriv line 3" << endl;
       // Now modify the last parameter: exp3
       ubvector pars2=pars;
-      pars2[this->n_eos_params-1]*=1.001;
+      pars2[this->n_eos_params-1]*=1.01;
 
       // Recompute the EOS
       compute_eos(pars2,ret,scr_out,dat);
@@ -188,26 +188,26 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       double m_max2=dat.mvsr.max("gm");
 
       //cout << "m_max2: " << m_max2 << endl;
-      
+      cout << "model::compute_star(): mmax_deriv line 4" << endl;
       if (m_max2<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max2 << " < "
                 << set->min_max_mass << "." << std::endl;
         ret=ix_small_max;
         return;
       }
-
+      cout << "model::compute_star(): mmax_deriv line 4.1" << endl;
       // Now, compute the derivative
       double dpdM=(pars2[this->n_eos_params-1]-
                    pars[this->n_eos_params-1])/(m_max2-m_max);
       //cout << "dpdM: " << dpdM << endl;
-      
+      cout << "model::compute_star(): mmax_deriv line 4.2" << endl;
       // Reject the point if the derivative is not finite
       if (isfinite(dpdM)!=1) {
         scr_out << "Derivative dpdM is infinite." << std::endl;
         ret=ix_deriv_infinite;
      	  return;
       } 
-
+      cout << "model::compute_star(): mmax_deriv line 5" << endl;
       eost.add_constant("dpdM",dpdM);
 
       // Compute the central energy density
@@ -228,7 +228,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           return;
         }
       }
-      
+      cout << "model::compute_star(): mmax_deriv line 6" << endl;
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
