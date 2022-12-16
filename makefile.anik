@@ -138,7 +138,7 @@ plot-dist:
 	-xtitle "Mass_LM [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_LM" \
 	-save sn_lm.png -show & 
-	
+
 o2-clean:
 	rm -f eos.png mvsr.png sn-ns.png sn-wd.png sn-lm.png \
 	main.o2 eos.o2 mvsr.o2 pop.o2 dist.o2 mdist.o2

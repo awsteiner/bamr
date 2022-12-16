@@ -35,7 +35,7 @@ using namespace o2scl_const;
 using namespace bamr;
 
 model::model(std::shared_ptr<const settings> s,
-	     std::shared_ptr<const ns_data> n) {
+             std::shared_ptr<const ns_data> n) {
 
   cout << "In model::model()" << endl;
   
@@ -89,7 +89,7 @@ model::model(std::shared_ptr<const settings> s,
 }
 
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			 int &ret, model_data &dat,
+                         int &ret, model_data &dat,
                          std::string model_type) {
 
   cout << "In model::compute_star()" << endl;
@@ -123,15 +123,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+
       double m_max=dat.mvsr.max("gm");
       
       //cout << "m_max1: " << m_max << endl;
       
       if (m_max<set->min_max_mass) {
-	      scr_out << "Maximum mass too small: " << m_max << " < "
-		            << set->min_max_mass << "." << std::endl;
-	      ret=ix_small_max;
-	      return;
+        scr_out << "Maximum mass too small: " << m_max << " < "
+                << set->min_max_mass << "." << std::endl;
+        ret=ix_small_max;
+        return;
       }
       cout << "model::compute_star(): mmax_deriv line 1" << endl;
       // Find the central energy density of the maximum mass star
@@ -140,7 +141,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // Ensure that the last polytrope appears in the center
       // of the maximum mass star
-      if (model_type==((string)"new_poly")) {
+      if (model_type==((string)"new_poly") ||
+          model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
           scr_out << "Polytrope beyond central density:" << std::endl;
@@ -154,7 +156,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
-	      if (eost.get("ed",i)<c_ed) {
+        if (eost.get("ed",i)<c_ed) {
           if (eost.get("cs2",i)>1.0) {
             //cout << eost.get("ed",i) << " " << c_ed << endl;
             scr_out << "Acausal EOS: cs2_" << i << "=" 
@@ -162,8 +164,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
             ret=ix_eos_acausal;
             return;
           }
-	      }
-      }	
+        }
+      } 
       cout << "model::compute_star(): mmax_deriv line 3" << endl;
       // Now modify the last parameter: exp3
       ubvector pars2=pars;
@@ -203,9 +205,10 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       cout << "model::compute_star(): mmax_deriv line 4.2" << endl;
       // Reject the point if the derivative is not finite
       if (isfinite(dpdM)!=1) {
-        scr_out << "Derivative dpdM is infinite." << std::endl;
+        scr_out << "Derivative dpdM is infinite: " << m_max << " "
+                << m_max2 << std::endl;
         ret=ix_deriv_infinite;
-     	  return;
+        return;
       } 
       cout << "model::compute_star(): mmax_deriv line 5" << endl;
       eost.add_constant("dpdM",dpdM);
@@ -257,16 +260,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // instead.
   
     for(size_t i=0;(eost.get_nlines()>0 &&
-		    i<eost.get_nlines()-1);i++) {
+                    i<eost.get_nlines()-1);i++) {
       if ((!set->use_crust || eost.get("ed",i)>0.6) && 
-	      eost.get("pr",i+1)<eost.get("pr",i)) {
-	      scr_out << "Rejected: Pressure decreasing." << std::endl;
-	      scr_out << "ed=" << eost.get("ed",i) 
-		            << " pr=" << eost.get("pr",i) << std::endl;
-	      scr_out << "ed=" << eost.get("ed",i+1) 
-		            << " pr=" << eost.get("pr",i+1) << std::endl;
-	      ret=ix_pressure_decrease;
-	      return;
+          eost.get("pr",i+1)<eost.get("pr",i)) {
+        scr_out << "Rejected: Pressure decreasing." << std::endl;
+        scr_out << "ed=" << eost.get("ed",i) 
+                << " pr=" << eost.get("pr",i) << std::endl;
+        scr_out << "ed=" << eost.get("ed",i+1) 
+                << " pr=" << eost.get("pr",i+1) << std::endl;
+        ret=ix_pressure_decrease;
+        return;
       }
     }
     cout << "model::compute_star(): End of has_eos" << endl;
@@ -294,113 +297,113 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       if (set->crust_from_L) {
 
-	      if (set->verbose>=2) {
-	        std::cout << "Starting crust from L." << std::endl;
-	      }
-	
-	      double asamp, bsamp, csamp;
-	      if (false) {
-	        double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
-	        if (f1<=0.0) f1=1.0e-5;
-	        else if (f1>=1.0) f1=1.0-1.0e-5;
-	        asamp=nt_a.invert_cdf(f1);
+        if (set->verbose>=2) {
+          std::cout << "Starting crust from L." << std::endl;
+        }
+        
+        double asamp, bsamp, csamp;
+        if (false) {
+          double f1=pars[0]*1.0e5-floor(pars[0]*1.0e5);
+          if (f1<=0.0) f1=1.0e-5;
+          else if (f1>=1.0) f1=1.0-1.0e-5;
+          asamp=nt_a.invert_cdf(f1);
 
-	        double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
-	        f2=0.5;
-	        if (f2<=0.0) f2=1.0e-5;
-	        else if (f2>=1.0) f2=1.0-1.0e-5;
-	        bsamp=nt_b.invert_cdf(f2);
+          double f2=pars[1]*1.0e5-floor(pars[1]*1.0e5);
+          f2=0.5;
+          if (f2<=0.0) f2=1.0e-5;
+          else if (f2>=1.0) f2=1.0-1.0e-5;
+          bsamp=nt_b.invert_cdf(f2);
 
-	        double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
-	        if (f3<=0.0) f3=1.0e-5;
-	        else if (f3>=1.0) f3=1.0-1.0e-5;
-	        csamp=nt_c.invert_cdf(f3);
-	      } else {
-	        asamp=nt_a.mean();
-	        bsamp=nt_b.mean();
-	        csamp=nt_c.mean();
-	      }
+          double f3=pars[2]*1.0e5-floor(pars[2]*1.0e5);
+          if (f3<=0.0) f3=1.0e-5;
+          else if (f3>=1.0) f3=1.0-1.0e-5;
+          csamp=nt_c.invert_cdf(f3);
+        } else {
+          asamp=nt_a.mean();
+          bsamp=nt_b.mean();
+          csamp=nt_c.mean();
+        }
       
-	      double St=eost.get_constant("S")*o2scl_const::hc_mev_fm;
-	      double Lt=eost.get_constant("L")*o2scl_const::hc_mev_fm;
-	      double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))
-                    *(St/30.0);
+        double St=eost.get_constant("S")*o2scl_const::hc_mev_fm;
+        double Lt=eost.get_constant("L")*o2scl_const::hc_mev_fm;
+        double nt=(asamp+bsamp*(Lt/70.0)+csamp*(Lt*Lt/4900.0))
+          *(St/30.0);
   
         // If crust_from_L is true and the transition density is 
         // outside this range, then we reject and go to the next point
-	      if (nt<nt_low || nt>nt_high) {
-	        scr_out << "Transition density, " << nt 
+        if (nt<nt_low || nt>nt_high) {
+          scr_out << "Transition density, " << nt 
                   << ", out of range." << endl;
-	        ret=ix_trans_invalid;
-	        return;
-	      }
-	      eost.add_constant("nt",nt);
-	
-	      double prt=eost.interp("nb",nt,"pr");
-	      eost.add_constant("prt",prt);
+          ret=ix_trans_invalid;
+          return;
+        }
+        eost.add_constant("nt",nt);
+        
+        double prt=eost.interp("nb",nt,"pr");
+        eost.add_constant("prt",prt);
 
-	      // Add the transition pressure to the tov_solve object
-	
-	      if (ts.pr_list.size()>0) {
-	        ts.pr_list.clear();
-	      }
-	      ts.pr_list.push_back(prt);
+        // Add the transition pressure to the tov_solve object
+        
+        if (ts.pr_list.size()>0) {
+          ts.pr_list.clear();
+        }
+        ts.pr_list.push_back(prt);
 
-	      // Set the crust and it's transition pressure
+        // Set the crust and it's transition pressure
       
-	      if (eost.get_constant("S")*hc_mev_fm<28.0 || 
-	        eost.get_constant("S")*hc_mev_fm>38.0 || 
-	        eost.get_constant("L")*hc_mev_fm<25.0 ||
-	        eost.get_constant("L")*hc_mev_fm>115.0 ||
-	        eost.get_constant("L")*hc_mev_fm>
-	        eost.get_constant("S")*hc_mev_fm*5.0-65.0) {
-	        scr_out << "S or L out of range" << endl;
-	        ret=ix_SL_invalid;
-	        return;
-	      }
+        if (eost.get_constant("S")*hc_mev_fm<28.0 || 
+            eost.get_constant("S")*hc_mev_fm>38.0 || 
+            eost.get_constant("L")*hc_mev_fm<25.0 ||
+            eost.get_constant("L")*hc_mev_fm>115.0 ||
+            eost.get_constant("L")*hc_mev_fm>
+            eost.get_constant("S")*hc_mev_fm*5.0-65.0) {
+          scr_out << "S or L out of range" << endl;
+          ret=ix_SL_invalid;
+          return;
+        }
       
-	// This function expects its argument in MeV
+        // This function expects its argument in MeV
 #ifdef O2SCL_OPENMP
 #pragma omp critical (bamr_ngl13_eos)
 #endif
-	      {
-	      teos.ngl13_low_dens_eos2
-	      (eost.get_constant("S")*hc_mev_fm,
-	      eost.get_constant("L")*hc_mev_fm,nt,"");
-	      }
+        {
+          teos.ngl13_low_dens_eos2
+            (eost.get_constant("S")*hc_mev_fm,
+             eost.get_constant("L")*hc_mev_fm,nt,"");
+        }
       
-	      // Set the transition pressure and width. Note that
-	      // the ngl13 EOS is in units of Msun/km^3, so we 
-	      // convert prt to those units
-	      teos.transition_mode=eos_tov_interp::match_line;
-	      teos.set_transition(o2scl_settings.get_convert_units().convert_const
-			    ("1/fm^4","Msun/km^3",prt),1.4);
+        // Set the transition pressure and width. Note that
+        // the ngl13 EOS is in units of Msun/km^3, so we 
+        // convert prt to those units
+        teos.transition_mode=eos_tov_interp::match_line;
+        teos.set_transition(o2scl_settings.get_convert_units().convert_const
+                            ("1/fm^4","Msun/km^3",prt),1.4);
 
-	      if (set->verbose>=2) {
-	        std::cout << "Done with crust from L." << std::endl;
-	      }
-	
+        if (set->verbose>=2) {
+          std::cout << "Done with crust from L." << std::endl;
+        }
+        
       } else {
 
-	      // Otherwise, if we're not determining the crust from L, then
-	      // compute the crust thickness based on a density of 0.08
-	      // fm^{-3}
+        // Otherwise, if we're not determining the crust from L, then
+        // compute the crust thickness based on a density of 0.08
+        // fm^{-3}
 
-	      double nt=0.08;
-	      eost.add_constant("nt",nt);
-	      double prt=eost.interp("nb",0.08,"pr");
-	      eost.add_constant("prt",prt);
-	      if (ts.pr_list.size()>0) {
-	        ts.pr_list.clear();
-	      }
-	      ts.pr_list.push_back(prt);
-	
+        double nt=0.08;
+        eost.add_constant("nt",nt);
+        double prt=eost.interp("nb",0.08,"pr");
+        eost.add_constant("prt",prt);
+        if (ts.pr_list.size()>0) {
+          ts.pr_list.clear();
+        }
+        ts.pr_list.push_back(prt);
+        
       }
     
     } else {
 
       if (ts.pr_list.size()>0) {
-	      ts.pr_list.clear();
+        ts.pr_list.clear();
       }
 
     }
@@ -430,30 +433,30 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // This range corresponds to between about n_B=0.01 and 0.17
       // fm^{-3}
       for(double pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	      double ed, nb;
-	      teos.ed_nb_from_pr(pr,ed,nb);
-	      if (ed_last>1.0e-20 && ed<ed_last) {
-	        scr_out << "Stability problem near crust-core transition."
-		              << std::endl;
-	        if (has_esym) {
-	          scr_out << "S=" << eost.get_constant("S")*hc_mev_fm 
-		                << " L=" << eost.get_constant("L")*hc_mev_fm
-		                << std::endl;
-	        }
-	        scr_out << "Energy decreased with increasing pressure "
-		              << "at pr=" << pr << std::endl;
-	        scr_out << std::endl;
-	        scr_out << "Full EOS near transition: " << std::endl;
-	        scr_out << "pr ed" << std::endl;
-	        for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
-	          teos.ed_nb_from_pr(pr,ed,nb);
-	          scr_out << pr << " " << ed << std::endl;
-	        }
-	        scr_out << std::endl;
-	        ret=ix_crust_unstable;
-	        return;
-	      }
-	      ed_last=ed;
+        double ed, nb;
+        teos.ed_nb_from_pr(pr,ed,nb);
+        if (ed_last>1.0e-20 && ed<ed_last) {
+          scr_out << "Stability problem near crust-core transition."
+                  << std::endl;
+          if (has_esym) {
+            scr_out << "S=" << eost.get_constant("S")*hc_mev_fm 
+                    << " L=" << eost.get_constant("L")*hc_mev_fm
+                    << std::endl;
+          }
+          scr_out << "Energy decreased with increasing pressure "
+                  << "at pr=" << pr << std::endl;
+          scr_out << std::endl;
+          scr_out << "Full EOS near transition: " << std::endl;
+          scr_out << "pr ed" << std::endl;
+          for(pr=1.0e-4;pr<2.0e-2;pr*=1.1) {
+            teos.ed_nb_from_pr(pr,ed,nb);
+            scr_out << pr << " " << ed << std::endl;
+          }
+          scr_out << std::endl;
+          ret=ix_crust_unstable;
+          return;
+        }
+        ed_last=ed;
       }
       // End of 'if (set->use_crust)'
     }
@@ -480,14 +483,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       full_eos.set_unit("pr","1/fm^4");
       full_eos.set_unit("nb","1/fm^3");
       for(double pr=1.0e-20;pr<10.0;pr*=1.05) {
-	
-	      double ed, nb;
-	      teos.get_eden_user(pr,ed,nb);
-	      double line[3]={ed,pr,nb};
-	      full_eos.line_of_data(3,line);
-	
-	    // Choose a slightly more sparse grid at lower pressures
-	      if (pr<1.0e-4) pr*=1.2;
+        
+        double ed, nb;
+        teos.get_eden_user(pr,ed,nb);
+        double line[3]={ed,pr,nb};
+        full_eos.line_of_data(3,line);
+        
+        // Choose a slightly more sparse grid at lower pressures
+        if (pr<1.0e-4) pr*=1.2;
       }
       hdf_output(hfde,full_eos,"full_eos");
       
@@ -495,20 +498,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Exit only if debug_star is not also true
       if (!set->debug_star) {
-	
-	      std::cout << "Automatically exiting since 'debug_eos' is true."
-		              << std::endl;
+        
+        std::cout << "Automatically exiting since 'debug_eos' is true."
+                  << std::endl;
 
 #ifdef BAMR_MPI
-	// Ensure all the debug information is output before
-	// we call exit();
-	MPI_Barrier(MPI_COMM_WORLD);
-	
-	// Finalize MPI
-	MPI_Finalize();
+        // Ensure all the debug information is output before
+        // we call exit();
+        MPI_Barrier(MPI_COMM_WORLD);
+        
+        // Finalize MPI
+        MPI_Finalize();
 #endif
-	
-	      exit(0);
+        
+        exit(0);
       }
       
     }
@@ -560,7 +563,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr.add_constant("M_max",m_max);
     if (m_max<set->min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
-	            << set->min_max_mass << "." << std::endl;
+              << set->min_max_mass << "." << std::endl;
       ret=ix_small_max;
       return;
     }
@@ -574,7 +577,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     size_t ir=dat.mvsr.get_nlines()-1;
     if ((dat.mvsr)["gm"][ir]<1.0e-10 ||
-	    (dat.mvsr)["gm"][ir-1]<1.0e-10) {
+        (dat.mvsr)["gm"][ir-1]<1.0e-10) {
       scr_out << "TOV failure fix." << std::endl;
       ret=ix_tov_failure;
       return;
@@ -609,21 +612,21 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       max_count++;
     }
     if (dat.mvsr.get("gm",dat.mvsr.get_nlines()-1) >
-	    dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) {
+        dat.mvsr.get("gm",dat.mvsr.get_nlines()-2)) {
       max_count++;
     }
     for(size_t i=1;i<dat.mvsr.get_nlines()-1;i++) {
       if (dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i-1) &&
-	      dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
-	      max_count++;
+          dat.mvsr.get("gm",i)>dat.mvsr.get("gm",i+1)) {
+        max_count++;
       }
     }
     if (max_count>1) {
       scr_out << "Multiple peaks in M vs. R" << endl;
       cout << "Multiple peaks in M vs. R" << endl;
       for(size_t i=0;i<dat.mvsr.get_nlines();i++) {
-	        cout << dat.mvsr.get("gm",i) << " " 
-               << dat.mvsr.get("r",i) << endl;
+        cout << dat.mvsr.get("gm",i) << " " 
+             << dat.mvsr.get("r",i) << endl;
       }
     }
     
@@ -637,11 +640,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     if (nsd->n_sources>0) {
       if (dat.sourcet.get_ncolumns()==0) {
-	      dat.sourcet.line_of_names("R M wgt atm ce");
-	      if (set->baryon_density) {
-	        dat.sourcet.new_column("cnb");
-	      }
-	      dat.sourcet.set_nlines(nsd->n_sources);
+        dat.sourcet.line_of_names("R M wgt atm ce");
+        if (set->baryon_density) {
+          dat.sourcet.new_column("cnb");
+        }
+        dat.sourcet.set_nlines(nsd->n_sources);
       }
     }
     
@@ -671,7 +674,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     for(size_t i=0;i<nsd->n_sources;i++) {
       dat.sourcet.set("M",i,pars[this->n_eos_params+i]);
       dat.sourcet.set("R",i,
-		      dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
+                      dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
     }
     
   }
@@ -690,7 +693,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       hdf_output(hfds,dat.mvsr,"mvsr");
       hfds.close();
       scr_out << "Automatically exiting since 'debug_star' is true."
-	            << std::endl;
+              << std::endl;
     }
 
 #ifdef BAMR_MPI
@@ -764,11 +767,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     for(size_t i=0;i<nsd->n_sources;i++) {
       if (dat.sourcet.get("R",i) < 
-        2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
-	      scr_out << "Source " << nsd->source_names[i] << " acausal."
-		            << std::endl;
-	      ret=ix_source_acausal;
-	      return;
+          2.94*schwarz_km/2.0*dat.sourcet.get("M",i)) {
+        scr_out << "Source " << nsd->source_names[i] << " acausal."
+                << std::endl;
+        ret=ix_source_acausal;
+        return;
       }
     }
 
@@ -827,7 +830,7 @@ void two_polytropes::remove_params(o2scl::cli &cl) {
 }
 
 two_polytropes::two_polytropes(std::shared_ptr<const settings> s,
-			       std::shared_ptr<const ns_data> n) :
+                               std::shared_ptr<const ns_data> n) :
   model(s,n) {
 
   se.kpp=0.0;
@@ -843,8 +846,8 @@ two_polytropes::two_polytropes(std::shared_ptr<const settings> s,
 }
 
 void two_polytropes::get_param_info(std::vector<std::string> &names,
-				    std::vector<std::string> &units,
-				    std::vector<double> &low,
+                                    std::vector<std::string> &units,
+                                    std::vector<double> &low,
                                     std::vector<double> &high) {
 
   names={"comp","kprime","esym","gamma","trans1","index1",
@@ -900,7 +903,7 @@ void two_polytropes::initial_point(std::vector<double> &params) {
 }
 
 void two_polytropes::compute_eos(const ubvector &params, int &ret,
-				 ofstream &scr_out, model_data &dat) {
+                                 ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
   if (params[4]>params[6]) {
@@ -940,7 +943,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
 
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
-	    << "matching pressure (1)." << endl;
+            << "matching pressure (1)." << endl;
     ret=ix_pressure_negative;
     return;
   }
@@ -1004,7 +1007,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
-	    << "matching pressure (2)." << endl;
+            << "matching pressure (2)." << endl;
     ret=ix_pressure_negative;
     return;
   }
@@ -1022,8 +1025,8 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
 }
 
 void alt_polytropes::get_param_info(std::vector<std::string> &names,
-				    std::vector<std::string> &units,
-				    std::vector<double> &low, std::vector<double> &high) {
+                                    std::vector<std::string> &units,
+                                    std::vector<double> &low, std::vector<double> &high) {
 
   two_polytropes::get_param_info(names,units,low,high);
 
@@ -1055,7 +1058,7 @@ void alt_polytropes::initial_point(std::vector<double> &params) {
 }
 
 void alt_polytropes::compute_eos(const ubvector &params, int &ret,
-				 ofstream &scr_out, model_data &dat) {
+                                 ofstream &scr_out, model_data &dat) {
   
   ret=ix_success;
   if (params[4]>params[6]) {
@@ -1098,7 +1101,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
     
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
-	    << "matching pressure (1)." << endl;
+            << "matching pressure (1)." << endl;
     ret=ix_pressure_negative;
     return;
   }
@@ -1154,7 +1157,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
 
   if (coeff2<0.0 || pr2<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
-	    << "matching pressure (2)." << endl;
+            << "matching pressure (2)." << endl;
     ret=ix_pressure_negative;
     return;
   }
@@ -1172,8 +1175,8 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
 }
   
 void fixed_pressure::get_param_info(std::vector<std::string> &names,
-				    std::vector<std::string> &units,
-				    std::vector<double> &low, std::vector<double> &high) {
+                                    std::vector<std::string> &units,
+                                    std::vector<double> &low, std::vector<double> &high) {
 
   two_polytropes::get_param_info(names,units,low,high);
 
@@ -1223,7 +1226,7 @@ void fixed_pressure::initial_point(std::vector<double> &params) {
 }
 
 void fixed_pressure::compute_eos(const ubvector &params, int &ret,
-				 ofstream &scr_out, model_data &dat) {
+                                 ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
 
@@ -1275,12 +1278,12 @@ void fixed_pressure::compute_eos(const ubvector &params, int &ret,
   for(double ed=1.0;ed<2.0-1.0e-4;ed+=0.1) {
     double pr=pr_last+params[4]*(ed-1.0)/(2.0-1.0);
     double nb=nb_last*pow((ed+pr_last+cs2_1*(ed-ed_last))/
-			  (ed_last+pr_last),1.0/(1.0+cs2_1));
+                          (ed_last+pr_last),1.0/(1.0+cs2_1));
     double line[3]={ed,pr,nb};
     dat.eos.line_of_data(3,line);
   }
   double nb2=nb_last*pow((2.0+pr_last+cs2_1*(2.0-ed_last))/
-			 (ed_last+pr_last),1.0/(1.0+cs2_1));
+                         (ed_last+pr_last),1.0/(1.0+cs2_1));
   
   // Add 2nd high-density EOS
   for(double ed=2.0;ed<3.0-1.0e-4;ed+=0.1) {
@@ -1312,8 +1315,8 @@ void fixed_pressure::compute_eos(const ubvector &params, int &ret,
 }
   
 void generic_quarks::get_param_info(std::vector<std::string> &names,
-				    std::vector<std::string> &units,
-				    std::vector<double> &low, std::vector<double> &high) {
+                                    std::vector<std::string> &units,
+                                    std::vector<double> &low, std::vector<double> &high) {
 
   names={"comp","kprime","esym","gamma","trans1","exp1",
     "trans2","a2","a4"};
@@ -1370,7 +1373,7 @@ void generic_quarks::initial_point(std::vector<double> &params) {
 }
 
 void generic_quarks::compute_eos(const ubvector &params, int &ret,
-				 ofstream &scr_out, model_data &dat) {
+                                 ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
 
@@ -1416,7 +1419,7 @@ void generic_quarks::compute_eos(const ubvector &params, int &ret,
   
   if (coeff1<0.0 || pr1<0.0) {
     scr_out << "Rejected: Negative polytrope coefficient or "
-	    << "matching pressure (1)." << endl;
+            << "matching pressure (1)." << endl;
     ret=ix_pressure_negative;
     return;
   }
@@ -1488,9 +1491,9 @@ void generic_quarks::compute_eos(const ubvector &params, int &ret,
       mu_start=sqrt(musq1);
     } else {
       if (musq1>musq2) {
-	mu_start=sqrt(musq1);
+        mu_start=sqrt(musq1);
       } else {
-	mu_start=sqrt(musq2);
+        mu_start=sqrt(musq2);
       }
     }
   } else {
@@ -1575,8 +1578,8 @@ double quark_star::pressure2(double mu) {
 }
 
 void quark_star::get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high) {
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high) {
 
   names={"B","c","Delta","ms"};
 
@@ -1615,7 +1618,7 @@ void quark_star::initial_point(std::vector<double> &params) {
 }
 
 void quark_star::compute_eos(const ubvector &params, int &ret,
-			     std::ofstream &scr_out, model_data &dat) {
+                             std::ofstream &scr_out, model_data &dat) {
   
   ret=ix_success;
 
@@ -1708,17 +1711,17 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
       // Double check that the energy per baryon at zero density
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
-	scr_out << "Not absolutely stable." << std::endl;
-	ret=ix_eos_pars_mismatch;
-	return;
+        scr_out << "Not absolutely stable." << std::endl;
+        ret=ix_eos_pars_mismatch;
+        return;
       }
 
       // Fix the first point at exactly zero pressure
       double line[3]={ed,0.0,nb};
       dat.eos.line_of_data(3,line);
-	
+        
     } else {
-	
+        
       double line[3]={ed,pr,nb};
       dat.eos.line_of_data(3,line);
 
@@ -1779,8 +1782,8 @@ qmc_neut::~qmc_neut() {
 }
 
 void qmc_neut::get_param_info(std::vector<std::string> &names,
-			      std::vector<std::string> &units,
-			      std::vector<double> &low, std::vector<double> &high) {
+                              std::vector<std::string> &units,
+                              std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","b","beta","index1","trans1","index2"};
 
@@ -1825,7 +1828,7 @@ void qmc_neut::initial_point(std::vector<double> &params) {
 }
 
 void qmc_neut::compute_eos(const ubvector &params, int &ret,
-			   ofstream &scr_out, model_data &dat) {
+                           ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
   
@@ -1948,8 +1951,8 @@ qmc_threep::~qmc_threep() {
 }
 
 void qmc_threep::get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high) {
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","index1","trans1","index2","trans2",
     "index3"};
@@ -2006,7 +2009,7 @@ void qmc_threep::initial_point(std::vector<double> &params) {
 }
 
 void qmc_threep::compute_eos(const ubvector &params, int &ret,
-			     ofstream &scr_out, model_data &dat) {
+                             ofstream &scr_out, model_data &dat) {
 
   bool debug=false;
 
@@ -2043,8 +2046,8 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   double Lmax=14.3*Stmp-379.0;
   if (Ltmp<Lmin || Ltmp>Lmax) {
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
-	    << "\n\tL_min: " << Lmin << " L_max: "
-	    << Lmax << endl;
+            << "\n\tL_min: " << Lmin << " L_max: "
+            << Lmax << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2053,7 +2056,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   double beta=(Ltmp/3.0-a*alpha)/b;
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
-	    << beta << " out of range." << endl;
+            << beta << " out of range." << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2128,7 +2131,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     
     if (new_nb) {
       double nb=nb1*pow(ed/ed1,1.0+params[4])/
-	pow((ed+pr)/(ed1+pr1),params[4]);
+        pow((ed+pr)/(ed1+pr1),params[4]);
       double line[3]={ed,pr,nb};
       dat.eos.line_of_data(3,line);
       nb_last=nb;
@@ -2156,7 +2159,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
 
     if (new_nb) {
       double nb=nb2*pow(ed/ed2,1.0+params[6])/
-	pow((ed+pr)/(ed2+pr2),params[6]);
+        pow((ed+pr)/(ed2+pr2),params[6]);
       double line[3]={ed,pr,nb};
       dat.eos.line_of_data(3,line);
       nb_last=nb;
@@ -2184,7 +2187,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
 
     if (new_nb) {
       double nb=nb3*pow(ed/ed3,1.0+params[8])/
-	pow((ed+pr)/(ed3+pr3),params[8]);
+        pow((ed+pr)/(ed3+pr3),params[8]);
       double line[3]={ed,pr,nb};
       dat.eos.line_of_data(3,line);
       nb_last=nb;
@@ -2221,8 +2224,8 @@ qmc_fixp::~qmc_fixp() {
 }
 
 void qmc_fixp::get_param_info(std::vector<std::string> &names,
-			      std::vector<std::string> &units,
-			      std::vector<double> &low, std::vector<double> &high) {
+                              std::vector<std::string> &units,
+                              std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","pres1","pres2","pres3","pres4"};
 
@@ -2279,7 +2282,7 @@ void qmc_fixp::initial_point(std::vector<double> &params) {
 }
 
 void qmc_fixp::compute_eos(const ubvector &params, int &ret,
-			   ofstream &scr_out, model_data &dat) {
+                           ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
   bool debug=false;
@@ -2302,8 +2305,8 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   double Lmax=14.3*Stmp-379.0;
   if (Ltmp<Lmin || Ltmp>Lmax) {
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
-	    << "\n\tL_min: " << Lmin << " L_max: "
-	    << Lmax << endl;
+            << "\n\tL_min: " << Lmin << " L_max: "
+            << Lmax << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2312,7 +2315,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   double beta=(Ltmp/3.0-a*alpha)/b;
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
-	    << beta << " out of range." << endl;
+            << beta << " out of range." << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2325,7 +2328,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     cout.setf(ios::scientific);
     cout << "a,alpha,b,beta: "
-	 << a << " " << alpha << " " << b << " " << beta << endl;
+         << a << " " << alpha << " " << b << " " << beta << endl;
     cout << endl;
     cout << "EOS below saturation:" << endl;
     cout << "ed           pr" << endl;
@@ -2336,14 +2339,14 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
-		  o2scl_settings.get_convert_units().convert_const
-		  ("kg","1/fm",o2scl_mks::mass_neutron));
+                  o2scl_settings.get_convert_units().convert_const
+                  ("kg","1/fm",o2scl_mks::mass_neutron));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     double line[2]={ed,pr};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (4): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 1 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2382,7 +2385,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,pr_trans+params[4]*(ed-ed_trans)/(ed1-ed_trans)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (5): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2399,7 +2402,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,p1+params[5]*(ed-ed1)/(ed2-ed1)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (6): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 3 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2416,7 +2419,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,p2+params[6]*(ed-ed2)/(ed3-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (7): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 4 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2433,7 +2436,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,p3+params[7]*(ed-ed3)/(ed4-ed3)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_fixp (8): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 5 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2441,7 +2444,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   }
   if (debug) {
     cout << "Exiting since debug in qmc_fixp::compute_eos() is true."
-	 << endl;
+         << endl;
     cout << endl;
     exit(0);
   }
@@ -2461,8 +2464,8 @@ qmc_twolines::~qmc_twolines() {
 }
 
 void qmc_twolines::get_param_info(std::vector<std::string> &names,
-				  std::vector<std::string> &units,
-				  std::vector<double> &low, std::vector<double> &high) {
+                                  std::vector<std::string> &units,
+                                  std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","pres1","ed1","pres2","ed2"};
   
@@ -2511,7 +2514,7 @@ void qmc_twolines::initial_point(std::vector<double> &params) {
 }
 
 void qmc_twolines::compute_eos(const ubvector &params, int &ret,
-			       ofstream &scr_out, model_data &dat) {
+                               ofstream &scr_out, model_data &dat) {
 
   ret=ix_success;
   bool debug=false;
@@ -2534,8 +2537,8 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   double Lmax=14.3*Stmp-379.0;
   if (Ltmp<Lmin || Ltmp>Lmax) {
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
-	    << "\n\tL_min: " << Lmin << " L_max: "
-	    << Lmax << endl;
+            << "\n\tL_min: " << Lmin << " L_max: "
+            << Lmax << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2544,7 +2547,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   double beta=(Ltmp/3.0-a*alpha)/b;
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
-	    << beta << " out of range." << endl;
+            << beta << " out of range." << endl;
     ret=ix_eos_pars_mismatch;
     return;
   }
@@ -2575,7 +2578,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
-		  o2scl_settings.get_convert_units().convert_const
+                  o2scl_settings.get_convert_units().convert_const
                   ("kg","1/fm",o2scl_mks::mass_neutron));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
@@ -2584,9 +2587,9 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     } else {
       double line[2]={ed,pr};
       if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
-	cerr << "Problem in qmc_twolines (4): " << line[0] << " "
-	     << line[1] << endl;
-	O2SCL_ERR("EOS problem 1 in qmc_twolines.",o2scl::exc_esanity);
+        cerr << "Problem in qmc_twolines (4): " << line[0] << " "
+             << line[1] << endl;
+        O2SCL_ERR("EOS problem 1 in qmc_twolines.",o2scl::exc_esanity);
       }
       dat.eos.line_of_data(2,line);
       if (debug) cout << ed << " " << pr << endl;
@@ -2616,7 +2619,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,pr_last+params[4]*(ed-ed_last)/(ed2-ed_last)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_twolines (5): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_twolines.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2633,7 +2636,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     double line[2]={ed,p2+params[6]*(ed-ed2)/(10.0-ed2)};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])) {
       cerr << "Problem in qmc_twolines (6): " << line[0] << " "
-	   << line[1] << endl;
+           << line[1] << endl;
       O2SCL_ERR("EOS problem 3 in qmc_twolines.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(2,line);
@@ -2649,7 +2652,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
 }
 
 int eos_had_tews_nuclei::calc_e(o2scl::fermion &n, o2scl::fermion &p,
-				o2scl::thermo &th) {
+                                o2scl::thermo &th) {
   
   n0=0.16;
   double nB=n.n+p.n, xp=p.n/nB, u=nB/n0, delta=1.0-2.0*xp;
@@ -2715,7 +2718,7 @@ int eos_had_tews_nuclei::calc_e(o2scl::fermion &n, o2scl::fermion &p,
 }
 
 tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
-				   std::shared_ptr<const ns_data> n) :
+                                   std::shared_ptr<const ns_data> n) :
   qmc_threep(s,n) {
   this->n_eos_params=12;
 
@@ -2734,7 +2737,7 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
   int tag=0, buffer=0;
   if (mpi_size>1 && mpi_rank>=1) {
     MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+             tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
   }
 #endif
   
@@ -2743,7 +2746,7 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
     ubmatrix chol(4,4), covar_inv(4,4);
     ubvector peak(4);
     double norm;
-	
+        
     o2scl_hdf::hdf_file hf;
     string fname=s->data_dir+"/Psat_gaussian.o2";
     hf.open(fname);
@@ -2759,7 +2762,7 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
   // Load the Skyrme parameterizations
   {
     std::string name;
-	
+        
     o2scl_hdf::hdf_file hf;
     string fname=s->data_dir+"/thetaANL-1002x12.o2";
     hf.open(fname);
@@ -2785,8 +2788,8 @@ tews_threep_ligo::tews_threep_ligo(std::shared_ptr<const settings> s,
 }
     
 void tews_threep_ligo::get_param_info(std::vector<std::string> &names,
-				      std::vector<std::string> &units,
-				      std::vector<double> &low, std::vector<double> &high) {
+                                      std::vector<std::string> &units,
+                                      std::vector<double> &low, std::vector<double> &high) {
 
   names={"a","alpha","param_S","param_L","index1","trans1",
     "index2","trans2","index3","M_chirp_det","eta","z_cdf"};
@@ -2880,7 +2883,7 @@ void tews_threep_ligo::copy_params(model &m) {
 }
 
 void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
-				   std::ofstream &scr_out, model_data &dat) {
+                                   std::ofstream &scr_out, model_data &dat) {
   
   bool debug=false;
       
@@ -2918,13 +2921,13 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   }
   
   ehtn.sk.alt_params_saturation(rho0,EoA/o2scl_const::hc_mev_fm,
-				K/o2scl_const::hc_mev_fm,Ms_star,
-				Stmp/o2scl_const::hc_mev_fm,
-				Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
-				Crdr0/o2scl_const::hc_mev_fm,
-				Crdr1/o2scl_const::hc_mev_fm,
-				CrdJ0/o2scl_const::hc_mev_fm,
-				CrdJ1/o2scl_const::hc_mev_fm);
+                                K/o2scl_const::hc_mev_fm,Ms_star,
+                                Stmp/o2scl_const::hc_mev_fm,
+                                Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
+                                Crdr0/o2scl_const::hc_mev_fm,
+                                Crdr1/o2scl_const::hc_mev_fm,
+                                CrdJ0/o2scl_const::hc_mev_fm,
+                                CrdJ1/o2scl_const::hc_mev_fm);
       
   ehtn.a=a/o2scl_const::hc_mev_fm;
   ehtn.alpha=alpha;
@@ -2946,20 +2949,20 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   cns.pp.n=rho0/2.0;
   ehtn.calc_e(cns.np,cns.pp,th);
   std::cout << EoA << " "
-	    << (th.ed-cns.np.n*cns.np.m-
-		cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
+            << (th.ed-cns.np.n*cns.np.m-
+                cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
   std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
-	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+            << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
   std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
   
   cns.np.n=0.16;
   cns.pp.n=0.0;
   ehtn.calc_e(cns.np,cns.pp,th);
   std::cout << a+b << " "
-	    << (th.ed-cns.np.n*cns.np.m-
-		cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
+            << (th.ed-cns.np.n*cns.np.m-
+                cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
   std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
-	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+            << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
   std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
 
   exit(-1);
@@ -2990,7 +2993,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   while (dat.eos.get("nb",row)>nb_trans-1.0e-6 && row>4) row--;
   if (row<4) {
     O2SCL_ERR("Low-density table disappeared in tews_threep_ligo.",
-	      o2scl::exc_esanity);
+              o2scl::exc_esanity);
   }
   dat.eos.set_nlines(row+1);
   
@@ -3121,7 +3124,7 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
   int tag=0, buffer=0;
   if (mpi_size>1 && mpi_rank>=1) {
     MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+             tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
   }
 #endif
   
@@ -3130,7 +3133,7 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
     ubmatrix chol(4,4), covar_inv(4,4);
     ubvector peak(4);
     double norm;
-	
+        
     o2scl_hdf::hdf_file hf;
     string fname=s->data_dir+"/Psat_gaussian.o2";
     hf.open(fname);
@@ -3146,7 +3149,7 @@ tews_fixp_ligo::tews_fixp_ligo(std::shared_ptr<const settings> s,
   // Load the Skyrme parameterizations
   {
     std::string name;
-	
+        
     o2scl_hdf::hdf_file hf;
     string fname=s->data_dir+"/thetaANL-1002x12.o2";
     hf.open(fname);
@@ -3306,13 +3309,13 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   }
   
   ehtn.sk.alt_params_saturation(rho0,EoA/o2scl_const::hc_mev_fm,
-				K/o2scl_const::hc_mev_fm,Ms_star,
-				Stmp/o2scl_const::hc_mev_fm,
-				Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
-				Crdr0/o2scl_const::hc_mev_fm,
-				Crdr1/o2scl_const::hc_mev_fm,
-				CrdJ0/o2scl_const::hc_mev_fm,
-				CrdJ1/o2scl_const::hc_mev_fm);
+                                K/o2scl_const::hc_mev_fm,Ms_star,
+                                Stmp/o2scl_const::hc_mev_fm,
+                                Ltmp/o2scl_const::hc_mev_fm,1.0/1.249,
+                                Crdr0/o2scl_const::hc_mev_fm,
+                                Crdr1/o2scl_const::hc_mev_fm,
+                                CrdJ0/o2scl_const::hc_mev_fm,
+                                CrdJ1/o2scl_const::hc_mev_fm);
       
   ehtn.a=a/o2scl_const::hc_mev_fm;
   ehtn.alpha=alpha;
@@ -3325,20 +3328,20 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   cns.pp.n=rho0/2.0;
   ehtn.calc_e(cns.np,cns.pp,th);
   std::cout << EoA << " "
-	    << (th.ed-cns.np.n*cns.np.m-
-		cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
+            << (th.ed-cns.np.n*cns.np.m-
+                cns.pp.n*cns.pp.m)/rho0*o2scl_const::hc_mev_fm << std::endl;
   std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
-	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+            << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
   std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
   
   cns.np.n=0.16;
   cns.pp.n=0.0;
   ehtn.calc_e(cns.np,cns.pp,th);
   std::cout << a+b << " "
-	    << (th.ed-cns.np.n*cns.np.m-
-		cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
+            << (th.ed-cns.np.n*cns.np.m-
+                cns.pp.n*cns.pp.m)/0.16*o2scl_const::hc_mev_fm << std::endl;
   std::cout << (cns.np.mu-cns.np.m)*o2scl_const::hc_mev_fm << " "
-	    << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
+            << (cns.pp.mu-cns.pp.m)*o2scl_const::hc_mev_fm << std::endl;
   std::cout << th.pr*o2scl_const::hc_mev_fm << std::endl;
 
   exit(-1);
@@ -3369,7 +3372,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   while (dat.eos.get("nb",row)>nb_trans-1.0e-6 && row>4) row--;
   if (row<4) {
     O2SCL_ERR("Low-density table disappeared in tews_fixp_ligo.",
-	      o2scl::exc_esanity);
+              o2scl::exc_esanity);
   }
   dat.eos.set_nlines(row+1);
   
@@ -3418,11 +3421,11 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
     
     double pr=pr_trans+cs2*(ed-ed_trans);
     double line[3]={ed,pr,nb_trans*pow((ed+pr)/(ed_trans+pr_trans),
-				       1.0/(1.0+cs2))};
+                                       1.0/(1.0+cs2))};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])
-	|| !gsl_finite(line[2])) {
+        || !gsl_finite(line[2])) {
       cerr << "Problem in qmc_fixp (5): " << line[0] << " "
-	   << line[1] << " " << line[2] << endl;
+           << line[1] << " " << line[2] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(3,line);
@@ -3432,7 +3435,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   if (debug) cout << endl;
 
   double nb1=nb_trans*pow((ed1+pr1)/(ed_trans+pr_trans),
-			  1.0/(1.0+cs2));
+                          1.0/(1.0+cs2));
   
   // Add 2nd high-density EOS
   if (debug) {
@@ -3447,9 +3450,9 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
     double pr=pr1+cs2*(ed-ed1);
     double line[3]={ed,pr,nb1*pow((ed+pr)/(ed1+pr1),1.0/(1.0+cs2))};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])
-	|| !gsl_finite(line[2])) {
+        || !gsl_finite(line[2])) {
       cerr << "Problem in qmc_fixp (6): " << line[0] << " "
-	   << line[1] << " " << line[2] << endl;
+           << line[1] << " " << line[2] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(3,line);
@@ -3473,9 +3476,9 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
     double pr=pr2+(ed-ed2)*cs2;
     double line[3]={ed,pr,nb2*pow((ed+pr)/(ed2+pr2),1.0/(1.0+cs2))};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])
-	|| !gsl_finite(line[2])) {
+        || !gsl_finite(line[2])) {
       cerr << "Problem in qmc_fixp (7): " << line[0] << " "
-	   << line[1] << " " << line[2] << endl;
+           << line[1] << " " << line[2] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(3,line);
@@ -3500,9 +3503,9 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
     double line[3]={ed,pr,nb3*pow((ed+pr)/(ed3+pr3),
                                   1.0/(1.0+cs2))};
     if (!gsl_finite(line[0]) || !gsl_finite(line[1])
-	|| !gsl_finite(line[2])) {
+        || !gsl_finite(line[2])) {
       cerr << "Problem in qmc_fixp (5): " << line[0] << " "
-	   << line[1] << " " << line[2] << endl;
+           << line[1] << " " << line[2] << endl;
       O2SCL_ERR("EOS problem 2 in qmc_fixp.",o2scl::exc_esanity);
     }
     dat.eos.line_of_data(3,line);
@@ -3521,7 +3524,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
     hf.close();
 
     cout << "Exiting since debug in tews_fixp_ligo::compute_eos() is true."
-	 << endl;
+         << endl;
     cout << endl;
     exit(0);
   }
@@ -3908,7 +3911,7 @@ void new_lines::initial_point(std::vector<double> &params) {
   params[4]=0.9;
   params[5]=1.66;
   params[6]=0.9;
-  params[7]=4.0;
+  params[7]=3.5;
   params[8]=0.9;
 
   return;

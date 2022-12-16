@@ -92,7 +92,7 @@ void bamr_class::setup_filters() {
 }
 
 int bamr_class::fill(const ubvector &pars, double weight, 
-		     std::vector<double> &line, model_data &dat) {
+                     std::vector<double> &line, model_data &dat) {
 
   if (set->apply_emu) {
     return 0;
@@ -239,9 +239,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
 }
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			      double &log_wgt, model_data &dat) {
+                              double &log_wgt, model_data &dat) {
 
-	cout << "In bamr_class::compute_point()" << endl;
+  cout << "In bamr_class::compute_point()" << endl;
 
   log_wgt=0.0;
 
@@ -387,13 +387,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_pop_wgt_zero;
       }
       /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
-      if (iret!=0) {
-        log_wgt=0.0;
-        iret = iret-1;
-        scr_out << "Population HMXB: Returned zero weight for star "
-                << pars[pvi[string("M_")+pd.id_hms[iret]]] << std::endl;
-        return m.ix_pop_wgt_zero;
-      } */
+         if (iret!=0) {
+         log_wgt=0.0;
+         iret = iret-1;
+         scr_out << "Population HMXB: Returned zero weight for star "
+         << pars[pvi[string("M_")+pd.id_hms[iret]]] << std::endl;
+         return m.ix_pop_wgt_zero;
+         } */
       pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
@@ -407,11 +407,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       if (iret==0) {
         /* cout << "Final pop result: ";
-        vector_out(cout, pop_weights, true); */
+           vector_out(cout, pop_weights, true); */
         cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
           // << ", HM: " << pop_weights[2] 
-          << ", LM: " << pop_weights[2] << ", All: " 
-          << pop_weights[3] << endl;
+             << ", LM: " << pop_weights[2] << ", All: " 
+             << pop_weights[3] << endl;
       }
 
     }
@@ -419,7 +419,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // ----------------------------------------------------------------
     // Exit early if the mass and radius for any of the masses or radii
     // are out of range
-	  
+          
     for(size_t i=0;i<nsd->n_sources;i++) {
       double mass=dat.sourcet.get("M",i);
       double rad=dat.sourcet.get("R",i);
@@ -453,10 +453,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // -----------------------------------------------
     // Determine the atm parameter
-	  
+          
     
     for (size_t i=0;i<nsd->n_sources;i++) {
-	    
+            
       // Determine H or He from mass parameter
       double mf;
       if (set->inc_ligo) {
@@ -476,20 +476,20 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       // -----------------------------------------------
       // Compute the weights for each source
-	    
+            
       dat.mvsr.set_interp_type(o2scl::itp_linear);
-	    
+            
       double m_max_current=dat.mvsr.max("gm");
-	    
+            
       if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
-	    
+            
       for(size_t i=0;i<nsd->n_sources;i++) {
-	      
+              
         double mass=dat.sourcet.get("M",i);
         double rad=dat.sourcet.get("R",i);
         bool atm=false;
         if (dat.sourcet.get("atm",i)>0.5) atm=true;
-	      
+              
         // Double check that current M and R is in the range of
         // the provided input data
         if (rad<nsd->source_tables[i].get_x_data()[0] ||
@@ -498,18 +498,18 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             mass<nsd->source_tables[i].get_y_data()[0] ||
             mass>nsd->source_tables[i].get_y_data()
             [nsd->source_tables[i].get_ny()-1]) {
-		
+                
           dat.sourcet.set("wgt",i,0.0);
-		
+                
         } else {
-		
+                
           // If M and R are in range, compute the weight
-		
+                
           if (nsd->source_fnames_alt.size()>0) {
-		  
+                  
             // Compute alternate probability from an insignificant bit
             // in the mass 
-		  
+                  
             if (atm==false) {
               dat.sourcet.set("wgt",i,
                               nsd->source_tables[i].interp
@@ -519,21 +519,21 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                               nsd->source_tables_alt[i].interp
                               (rad,mass,nsd->slice_names[i]));
             }
-		  
+                  
           } else {
             dat.sourcet.set("wgt",i,
                             nsd->source_tables[i].interp
                             (rad,mass,nsd->slice_names[i]));
           }
-		
+                
           // If the weight is lower than the threshold, set it equal
           // to the threshold
           if (dat.sourcet.get("wgt",i)<set->input_dist_thresh) {
             dat.sourcet.set("wgt",i,set->input_dist_thresh);
           }
-		
+                
         }
-	      
+              
         // If the data gives a zero weight, just return a factor
         // of 1e8 smaller than the peak value
         if (dat.sourcet.get("wgt",i)<=0.0) {
@@ -542,7 +542,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                           (nsd->source_tables[i].get_slice
                            (nsd->slice_names[i]))/1.0e8);
         }
-	      
+              
         // If the weight is zero, then return failure
         if (dat.sourcet.get("wgt",i)<=0.0) {
           scr_out << "Weight zero for source " << i << " "
@@ -551,29 +551,29 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << " with atm=" << atm << endl;
           return m.ix_mr_outside;
         }
-	      
+              
         // Include the weight for this source
         log_wgt+=log(dat.sourcet.get("wgt",i));
 
         // Update each weight into output table
         dat.eos.add_constant(((std::string)"log_wgt_")+nsd->source_names[i]
-          ,log(dat.sourcet.get("wgt",i)));
-	      
+                             ,log(dat.sourcet.get("wgt",i)));
+              
         if (set->verbose>=2) {
           scr_out.width(10);
           scr_out << nsd->source_names[i] << " "
                   << mass << " " 
                   << rad << " " << dat.sourcet.get("wgt",i) << std::endl;
         }
-	      
+              
         // Go to the next source
       }
 
       if (set->debug_star) scr_out << std::endl;
-	    
+            
       // -----------------------------------------------
       // Exit if the current maximum mass is too large
-	    
+            
       if (m_max_current>set->exit_mass) {
         scr_out.setf(ios::scientific);
         scr_out << "Exiting because maximum mass (" << m_max_current 
@@ -585,11 +585,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         scr_out.precision(6);
         exit(0);
       }
-	    
+            
       if (set->verbose>=2) {
         cout << "End model::compute_point()." << endl;
       }
-	    
+            
       if (iret!=m.ix_success) {
         // We shouldn't be returning a non-zero value if success is
         // non-zero, so we double check this here
@@ -597,7 +597,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   o2scl::exc_esanity);
       }
 
-	    
+            
     } else {
 
       // Apply intrinsic scatter
@@ -612,7 +612,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         bool atm=false;
         if (dat.sourcet.get("atm",i)>0.5) atm=true;
-	      
+              
         int ithread=0;
 #ifdef O2SCL_OPENMP      
         ithread=omp_get_thread_num();
@@ -625,9 +625,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         bool make_tensor_files=false;
         if (make_tensor_files) {
           // Create the tensor files for 'cached_intsc'
-	        
+                
           for (size_t iik=0;iik<2;iik++) {
-	          
+                  
             tensor_grid3<> tg3;
             size_t sz[3]={in[i].get_nx(),in[i].get_ny(),21};
             tg3.resize(3,sz);
@@ -642,21 +642,21 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               gp.push_back(iix);
             }
             tg3.set_grid_packed(gp);
-	          
+                  
             size_t iiz=0;
-	          
+                  
 #ifdef BAMR_FFTW3
             for (double iix=-2.0;iix<2.01;iix+=0.2) {
-	            
+                    
               double intrsc=pow(10.0,iix);
               double dx = in[i].get_grid_x(1)-in[i].get_grid_x(0);
               double dy = in[i].get_grid_y(1)-in[i].get_grid_y(0);
-	            
+                    
               // radius direction
               double sigx = intrsc/dx*5.0;
               // mass direction
               double sigy = intrsc/dy*1.4;  
-	            
+                    
               cout << "Filtering " << nsd->source_names[i]
                    << " log10(intsig): "
                    << pars[i+mod->n_eos_params+nsd->n_sources]
@@ -666,26 +666,26 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               // Set kernel
               flt[fix]->init_gaussian_kernel(sigx,sigy);
               flt[fix]->fft_kernel(); 
-	            
+                    
               // Set input image
               if (iik==0) {
                 flt[fix]->set_image(in[i],nsd->slice_names[i]);
               } else {
                 flt[fix]->set_image(in_alt[i],nsd->slice_names[i]);
               }
-	            
+                    
               // Convolve
               flt[fix]->fft_image_forward();
               flt[fix]->apply_kernel();
               flt[fix]->fft_image_backward();
-	            
+                    
               // Read image back
               if (iik==0) {
                 flt[fix]->get_image(out[fix],nsd->slice_names[i]);
               } else {
                 flt[fix]->get_image(out_alt[fix],nsd->slice_names[i]);
               }
-	            
+                    
               if (iik==0) {
                 ubmatrix &outs=out[fix].get_slice(nsd->slice_names[i]);
                 cout << "outs: " << intrsc << " " << iik << " "
@@ -709,7 +709,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               iiz++;
             }
 #endif
-		  
+                  
             hdf_file hfx;
             string fnamex=set->data_dir+"/cache/tg_"+o2scl::szttos(i)+
               "_"+o2scl::szttos(iik);
@@ -717,13 +717,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             hdf_output(hfx,tg3,"tg");
             hfx.close();
           }
-	        
+                
           if (i==nsd->n_sources-1) {
             exit(-1);
           }
           // End of 'if (make_tensor_files)'
         }
-	     
+             
         // Calculate 2D intrinsic scatter
         // value is normalized with (12km / 1.5Msun)
         // NOTE: implicitly assumes uniform grid
@@ -749,19 +749,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           // Set kernel
           flt[fix]->init_gaussian_kernel(sigx,sigy);
           flt[fix]->fft_kernel(); 
-	        
+                
           // Set input image
           if (atm==false) {
             flt[fix]->set_image(in[i],nsd->slice_names[i]);
           } else {
             flt[fix]->set_image(in_alt[i],nsd->slice_names[i]);
           }
-	        
+                
           // Convolve
           flt[fix]->fft_image_forward();
           flt[fix]->apply_kernel();
           flt[fix]->fft_image_backward();
-	        
+                
           // Read image back
           if (atm==false) {
             flt[fix]->get_image(out[fix],nsd->slice_names[i]);
@@ -790,7 +790,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               }
             }
           }
-	      
+              
           // End of 'if (cached_intsc==false)'
         }
 #endif
@@ -799,13 +799,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
       for(size_t i=0;i<nsd->n_sources;i++) {
-	      
+              
         double mass=dat.sourcet.get("M",i);
         double rad=dat.sourcet.get("R",i);
-	      
+              
         if (mass<set->in_m_min || mass>set->in_m_max || 
             rad<set->in_r_min || rad>set->in_r_max) {
-		
+                
           scr_out << "Rejected: Mass or radius outside range." << std::endl;
           scr_out << "M limits: " << set->in_m_min << " "
                   << set->in_m_max << std::endl;
@@ -833,24 +833,24 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
       if (iret==0) {
-	      
+              
         log_wgt=0.0;
-	      
+              
         dat.mvsr.set_interp_type(o2scl::itp_linear);
         double m_max_current=dat.mvsr.max("gm");
-	      
+              
         // -----------------------------------------------
         // Compute the weights for each source
-	      
+              
         if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
-	      
+              
         for(size_t i=0;i<nsd->n_sources;i++) {
 
           double mass=dat.sourcet.get("M",i);
           double rad=dat.sourcet.get("R",i);
           bool atm=false;
           if (dat.sourcet.get("atm",i)>0.5) atm=true;
-		
+                
           int ithread=0;
 #ifdef O2SCL_OPENMP      
           ithread=omp_get_thread_num();
@@ -859,7 +859,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           }
 #endif
           int fix=ithread*nsd->n_sources+i;
-	        
+                
           // Double check that current M and R is in the range of
           // the provided input data
           if (rad<out[fix].get_x_data()[0] ||
@@ -868,7 +868,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               mass>out[fix].get_y_data()[out[fix].get_ny()-1]) {
 
             dat.sourcet.set("wgt",i,0.0);
-	          
+                  
           } else {
 
             if (atm==false) {
@@ -887,7 +887,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             } else {
               if (set->cached_intsc) {
                 ubvector iu(3);
-		      
+                      
                 iu[0]=rad;
                 iu[1]=mass;
                 iu[2]=pars[i+mod->n_eos_params+nsd->n_sources];
@@ -899,15 +899,15 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                                 (rad,mass,nsd->slice_names[i]));
               }
             }
-	          
+                  
             // If the weight is lower than the threshold, set it equal
             // to the threshold
             if (dat.sourcet.get("wgt",i)<set->input_dist_thresh) {
               dat.sourcet.set("wgt",i,set->input_dist_thresh);
             }
-	          
+                  
           }
-	        
+                
           // If the data gives a zero weight, just return a factor
           // of 1e8 smaller than the peak value
           if (dat.sourcet.get("wgt",i)<=0.0) {
@@ -916,7 +916,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                             o2scl::matrix_max_value<ubmatrix,double>
                             (out[fix].get_slice(nsd->slice_names[i]))/1.0e8);
           }
-		
+                
           // If the weight is zero, then return failure
           if (dat.sourcet.get("wgt",i)<=0.0) {
             scr_out << "Weight zero for source " << i << " "
@@ -925,21 +925,21 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << rad << " with atm=" << atm << endl;
             return m.ix_mr_outside; // Should have a return statement here?
           }
-	        
+                
           // Include the weight for this source
           log_wgt+=log(dat.sourcet.get("wgt",i));
 
-        // Update each weight into output table
-        dat.eos.add_constant(((std::string)"log_wgt_")+nsd->source_names[i]
-          ,log(dat.sourcet.get("wgt",i)));
-	        
+          // Update each weight into output table
+          dat.eos.add_constant(((std::string)"log_wgt_")+nsd->source_names[i]
+                               ,log(dat.sourcet.get("wgt",i)));
+                
           if (set->verbose>=2) {
             scr_out.width(10);
             scr_out << nsd->source_names[i] << " "
                     << mass << " " 
                     << rad << " " << dat.sourcet.get("wgt",i) << std::endl;
           }
-	        
+                
           // Go to the next source
         }
 
@@ -948,9 +948,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return m.ix_mr_outside;
           log_wgt=0.0;
         }
-	      
+              
       }
-	    
+            
       if (set->debug_star) scr_out << std::endl;
 
       // End of 'if (apply_intsc)'
@@ -1125,7 +1125,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 
     size_t n_params=pars.size();
-	  
+          
     double nbmax2=0.0, emax=0.0, pmax=0.0, nbmax=0.0, mmax=0.0, rmax=0.0;
 
     if (m.has_eos) {
@@ -1147,12 +1147,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         // The highest baryon density in the EOS table
         nbmax2=dat.eos.max("nb");
-	      
+              
         // The central baryon density in the maximum mass configuration
         nbmax=dat.mvsr.get_constant("nb_max");
-	      
+              
         dat.mvsr.add_constant("nb_max",nbmax);
-	      
+              
       }
 
     } else {
@@ -1160,7 +1160,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // high up we should go for the radius grid 
       mmax=3.0;
     }
-	  
+          
     if (m.has_eos) {
       for(int i=0;i<set->grid_size;i++) {
         double eval=m.e_grid[i];
@@ -1233,7 +1233,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
     }
-	  
+          
     if (set->compute_cthick) {
       for(int i=0;i<set->grid_size;i++) {
         double mval=m.m_grid[i];
@@ -1247,13 +1247,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
     }
-	  
+          
     if (set->addl_quants) {
       for(int i=0;i<set->grid_size;i++) {
         double mval=m.m_grid[i];
 
         if (mval<mmax) {
-		
+                
           // Baryonic mass
           double bm=dat.mvsr.interp("gm",mval,"bm");
           dat.gridt.set("MB",i,bm);
@@ -1277,16 +1277,16 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           double b2=-16.3071;
           double b3=3.36972;
           double b4=-0.26105;
-	    
+            
           double li=log(I_bar);
           double li2=li*li;
           double li3=li*li2;
           double li4=li*li3;
-		
+                
           double Lambda_bar=exp(b0+b1*li+b2*li2+b3*li3+b4*li4);
 
           dat.gridt.set("Lambda_bar",i,Lambda_bar);
-		
+                
         } else {
 
           dat.gridt.set("MB",i,0.0);
@@ -1294,13 +1294,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           dat.gridt.set("I",i,0.0);
           dat.gridt.set("I_bar",i,0.0);
           dat.gridt.set("Lambda_bar",i,0.0);
-		
+                
         }
       }
-	  
+          
     }
   }
-	cout << "End of bamr_class::compute_point()" << endl;
+  cout << "End of bamr_class::compute_point()" << endl;
   return iret;
 }
 

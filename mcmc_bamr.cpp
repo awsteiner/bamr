@@ -69,13 +69,13 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
     list.push_back(pvi[j]);
   }
   /* 
-  M_i, R_i, wgt_i for n_sources [2: ix_mr_outside]
-  M_max=dat.mvsr.max("gm") [10: ix_small_max]
-  m_max2 (add col to table) [10: ix_small_max]
-  ed_max (add col to table)
-  cs2_i for i in (0,99) [13: ix_acausal]
-  dpdM [exclude since ix_infinite never happens]
-  ed_last (add col to table) [which one? there are 3 in 3p]
+     M_i, R_i, wgt_i for n_sources [2: ix_mr_outside]
+     M_max=dat.mvsr.max("gm") [10: ix_small_max]
+     m_max2 (add col to table) [10: ix_small_max]
+     ed_max (add col to table)
+     cs2_i for i in (0,99) [13: ix_acausal]
+     dpdM [exclude since ix_infinite never happens]
+     ed_last (add col to table) [which one? there are 3 in 3p]
   */
   list.push_back("log_wgt");
   list.push_back("log_wgt_NS");
@@ -116,7 +116,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
     hdf_input(hf,tab_k);
     hf.close();
     cout << "Rank " << mpi_rank << ": table has "
-	 << tab_k.get_nlines() << " lines." << endl;
+         << tab_k.get_nlines() << " lines." << endl;
     
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -140,7 +140,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
     if (tab_k.is_column("emulated")) {
       if (tab_k.is_column("mult")) {
         tab_k.delete_rows_func(((string)"emulated>0.5 || ")+
-                                "log_wgt<(-700) || abs(mult)<0.5");
+                               "log_wgt<(-700) || abs(mult)<0.5");
       } else {
         tab_k.delete_rows_func("emulated>0.5 || log_wgt<(-700)");
       }
@@ -152,7 +152,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
       }
     }
     cout << "Rank " << mpi_rank << ": table now has "
-	 << tab_k.get_nlines() << " lines." << endl;
+         << tab_k.get_nlines() << " lines." << endl;
 
     // Add this table to the combined table
     for(size_t i=0;i<tab_k.get_nlines();i++) {
@@ -178,8 +178,8 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
     
     if (i%500==499) {
       std::cout << "Rank " << mpi_rank
-		<< " progress: i+1= " << i+1 << " of "
-		<< table.get_nlines() << endl;
+                << " progress: i+1= " << i+1 << " of "
+                << table.get_nlines() << endl;
     }
     // Check for duplicates
     for(size_t j=i+1;j<table.get_nlines();j++) {
@@ -195,14 +195,14 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
       }
       if (match==true) {
         row_list.push_back(j);
-	if (false) {
-	  std::cout << "Match between rows " << i << " and " << j
-		    << " " << table.get(list[0],i)
-		    << " " << table.get(list[0],j)
-		    << " " << table.get(list[1],i)
-		    << " " << table.get(list[1],j)
-		    << std::endl;
-	}
+        if (false) {
+          std::cout << "Match between rows " << i << " and " << j
+                    << " " << table.get(list[0],i)
+                    << " " << table.get(list[0],j)
+                    << " " << table.get(list[1],i)
+                    << " " << table.get(list[1],j)
+                    << std::endl;
+        }
       }
     }
   }
@@ -250,7 +250,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
 }
   
 int emulator_bamr::eval(size_t n, const ubvector &p, double &log_wgt,
-                      model_data &dat) {
+                        model_data &dat) {
 
   if (false) {
     std::cout << "p: ";
@@ -273,17 +273,17 @@ int emulator_bamr::eval(size_t n, const ubvector &p, double &log_wgt,
   /*
   // Clear the dat array
   for(size_t i=0;i<ndat;i++) {
-    dat[i]=0.0;
+  dat[i]=0.0;
   }
     
   // Translate the emulated data into the 'dat' array used
   // by the data_eval point function. Skip k=0 because
   // it's already stored in log_wgt
   for(size_t k=1;k<nout;k++) {
-    if (false) {
-      std::cout << "Mapping: " << k << " " << list[np+k] << std::endl;
-    }
-    dat[dvi[list[np+k]]]=x[k];
+  if (false) {
+  std::cout << "Mapping: " << k << " " << list[np+k] << std::endl;
+  }
+  dat[dvi[list[np+k]]]=x[k];
   }
 
   dat[dvi["emulated"]]=1.0;
@@ -330,8 +330,8 @@ int emulator_bamr::eval(size_t n, const ubvector &p, double &log_wgt,
 }
 
 int emulator_bamr::eval_unc(size_t n, const ubvector &p, double &log_wgt,
-                          double &lw_unc, model_data &dat,
-                          model_data &dat_unc) {
+                            double &lw_unc, model_data &dat,
+                            model_data &dat_unc) {
   return eval(n,p,log_wgt,dat);
 }
 
@@ -372,7 +372,7 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
   train_tParam_Names=PyList_New(names.size());
   for(size_t i=0; i<names.size(); i++){
     PyList_SetItem(train_tParam_Names, i, 
-		   PyUnicode_FromString(names[i].c_str()));
+                   PyUnicode_FromString(names[i].c_str()));
   }
 
   // Python class object
@@ -397,9 +397,9 @@ int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
 
   // Python arguments for the modGpr::modTrain() function
   train_pArgs = PyTuple_Pack(4, 
-			     PyUnicode_FromString(train_file.c_str()),
-			     train_tParam_Names, train_tParam_Names,
-			     addtl_sources);
+                             PyUnicode_FromString(train_file.c_str()),
+                             train_tParam_Names, train_tParam_Names,
+                             addtl_sources);
 
   train_trainMthd = PyObject_GetAttrString(train_instance, "modTrain");
   
@@ -602,7 +602,7 @@ int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
   if (sv.size()==1) {
     cerr << "Number of threads not specified in 'threads'." << endl;
-    return 1;							       
+    return 1;                                                          
   }
 
   if (model_type.length()>0) {
@@ -669,7 +669,7 @@ int mcmc_bamr::mcmc_init() {
 
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank
-	      << ") Start mcmc_bamr::mcmc_init()." << std::endl;
+              << ") Start mcmc_bamr::mcmc_init()." << std::endl;
   }
 
   if (bc_arr.size()<1) {
@@ -698,28 +698,28 @@ int mcmc_bamr::mcmc_init() {
   // Does inc_baryon_mass also need baryon_density?
   if (set->inc_baryon_mass && !set->baryon_density) {
     scr_out << "Cannot use inc_baryon_mass=true with "
-	    << "baryon_density=false." << endl;
+            << "baryon_density=false." << endl;
     return exc_efailed;
   }
   if (set->compute_cthick && (!set->baryon_density || !set->use_crust)) {
     scr_out << "Cannot use compute_cthick=true with "
-	    << "baryon_density=false or use_crust=false." << endl;
+            << "baryon_density=false or use_crust=false." << endl;
     return exc_efailed;
   }
   if (set->crust_from_L && (!m.has_esym || !set->use_crust ||
-			    !set->baryon_density)) {
+                            !set->baryon_density)) {
     scr_out << "crust_from_L: " << set->crust_from_L << std::endl;
     scr_out << "has_esym: " << m.has_esym << std::endl;
     scr_out << "use_crust: " << set->use_crust << std::endl;
     scr_out << "baryon_density: " << set->baryon_density << std::endl;
     scr_out << "Cannot use crust_from_L=true with a model which does not "
-	    << "provide S and L\nor with use_crust=false or with "
-	    << "baryon_density=false." << endl;
+            << "provide S and L\nor with use_crust=false or with "
+            << "baryon_density=false." << endl;
     return exc_efailed;
   }
   if (set->addl_quants && !set->inc_baryon_mass) {
     scr_out << "Cannot do additional quantities without including "
-	    << "baryon mass." << endl;
+            << "baryon mass." << endl;
     return exc_efailed;
   }
 
@@ -949,21 +949,21 @@ int mcmc_bamr::mcmc_init() {
       bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
       hdf_file hfx;
       for(size_t ii=0;ii<nsd->n_sources;ii++) {
-	string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
-	hfx.open(fname);
-	hdf_input(hfx,bc.fft_data[ii*2],"tg");
-	hfx.close();
-	fname=((string)"data/cache/tg_")+szttos(ii)+"_1";
-	hfx.open(fname);
-	hdf_input(hfx,bc.fft_data[ii*2+1],"tg");
-	hfx.close();
+        string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
+        hfx.open(fname);
+        hdf_input(hfx,bc.fft_data[ii*2],"tg");
+        hfx.close();
+        fname=((string)"data/cache/tg_")+szttos(ii)+"_1";
+        hfx.open(fname);
+        hdf_input(hfx,bc.fft_data[ii*2+1],"tg");
+        hfx.close();
       }
     }
   }
 
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank
-	      << ") End mcmc_bamr::mcmc_init()." << std::endl;
+              << ") End mcmc_bamr::mcmc_init()." << std::endl;
   }
 
   return 0;
@@ -1072,7 +1072,7 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
 }
 
 int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
-				  bool itive_com) {
+                                  bool itive_com) {
 
   if (sv.size()<2) {
     cerr << "Need a filename for initial_point_last()." << endl;
@@ -1116,7 +1116,7 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
 }
 
 int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
-				  bool itive_com) {
+                                  bool itive_com) {
   
   if (sv.size()<2) {
     cerr << "Need a filename for initial_point_best()." << endl;
@@ -1159,7 +1159,7 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
 }
 
 int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
-				    bool itive_com) {
+                                    bool itive_com) {
 
   O2SCL_ERR("Not implemented yet.",o2scl::exc_eunimpl);
   
@@ -1182,7 +1182,7 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
   int tag=0, buffer=0;
   if (mpi_size>1 && mpi_rank>=1) {
     MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-	     tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+             tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
   }
 #endif
   
@@ -1201,7 +1201,7 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
 #ifdef BAMR_MPI
   if (mpi_size>1 && mpi_rank<mpi_size-1) {
     MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
-	     tag,MPI_COMM_WORLD);
+             tag,MPI_COMM_WORLD);
   }
 #endif
 
@@ -1381,7 +1381,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
     ffa[i]=std::bind
       (std::mem_fn<int(const ubvector &,double,vector<double> &,
-		       model_data &)>
+                       model_data &)>
        (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }

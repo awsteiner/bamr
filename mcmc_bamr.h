@@ -61,10 +61,10 @@ namespace bamr {
   typedef boost::numeric::ublas::vector<double> ubvector;
   
   typedef std::function<int(size_t,const ubvector &, double &,
-			    model_data &)> point_funct;
+                            model_data &)> point_funct;
   
   typedef std::function<int(const ubvector &,double,
-			    std::vector<double> &,model_data &)> fill_funct;
+                            std::vector<double> &,model_data &)> fill_funct;
   
   /** \brief A specialized emulator for this code
       
@@ -197,7 +197,7 @@ namespace bamr {
   */
   class mcmc_bamr :
     public o2scl::mcmc_para_cli<point_funct,fill_funct,
-                                    model_data,ubvector> {
+                                model_data,ubvector> {
 
   protected:
 
@@ -229,7 +229,7 @@ namespace bamr {
         using parameter names listed in \c names.
         
         This is called in mcmc_bamr::mcmc_func().
-     */
+    */
     int train(std::string file_name, std::vector<std::string> &names);
 
     /** \brief Calculate posteriors from the emulated points.
@@ -238,7 +238,7 @@ namespace bamr {
                            bool itive_com);
     
     virtual int emu_train2(std::vector<std::string> &sv,
-                          bool itive_com);
+                           bool itive_com);
 
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
@@ -247,24 +247,24 @@ namespace bamr {
     vec_index pvi;
     
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP
-	thread)
+        thread)
 
-	This is currently a pointer because it makes it a lot easier
-	to replace these pointers with children. A shared_ptr might be
-	better, but I've had problems implementing vector<shared_ptr>
-	correctly.
-     */
+        This is currently a pointer because it makes it a lot easier
+        to replace these pointers with children. A shared_ptr might be
+        better, but I've had problems implementing vector<shared_ptr>
+        correctly.
+    */
     std::vector<bamr_class *> bc_arr;
     
     std::vector<emulator_bamr> eb_arr;
 
     /** \brief The \ref bamr::settings object 
-	(shared by instances of \ref bamr_class)
+        (shared by instances of \ref bamr_class)
     */
     std::shared_ptr<settings> set;
 
     /** \brief The \ref bamr::ns_data object
-	(shared by instances of \ref bamr_class)
+        (shared by instances of \ref bamr_class)
     */
     std::shared_ptr<ns_data> nsd;
 
@@ -281,9 +281,9 @@ namespace bamr {
     
     /** \brief Make any necessary preparations for the mcmc() function
 
-	This is called by \ref mcmc(). If the return value is non-zero
-	then it is assumed that the calculation fails and mcmc()
-	returns.
+        This is called by \ref mcmc(). If the return value is non-zero
+        then it is assumed that the calculation fails and mcmc()
+        returns.
     */
     virtual int mcmc_init();
 
@@ -304,21 +304,21 @@ namespace bamr {
     virtual int threads(std::vector<std::string> &sv, bool itive_com);
 
     /** \brief Use the last point in a specifed file for the 
-	initial point
-     */
+        initial point
+    */
     virtual int initial_point_last(std::vector<std::string> &sv,
-				   bool itive_com);
+                                   bool itive_com);
     
     /** \brief Use the highest likelihood point in the specified file
-	for the initial point
-     */
+        for the initial point
+    */
     virtual int initial_point_best(std::vector<std::string> &sv,
-				   bool itive_com);
+                                   bool itive_com);
     
     /** \brief Read previous results from a file
      */
     virtual int read_prev_results_mb(std::vector<std::string> &sv,
-				     bool itive_com);
+                                     bool itive_com);
     
   public:
 
@@ -331,7 +331,7 @@ namespace bamr {
 #endif
     
     /** \brief Create a \ref mcmc_bamr object 
-    */
+     */
     mcmc_bamr();
     
     virtual ~mcmc_bamr() {
@@ -339,8 +339,8 @@ namespace bamr {
     
     /** \brief Set up the 'cli' object
 
-	This function adds three commands (mcmc, model, add-data) and
-	the 'set' parameters.
+        This function adds three commands (mcmc, model, add-data) and
+        the 'set' parameters.
     */
     virtual void setup_cli_mb();
     

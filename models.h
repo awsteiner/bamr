@@ -96,9 +96,9 @@ namespace bamr {
   protected:
     
     /** \brief TOV solver
-	
-	The value of \ref o2scl::nstar_cold::nb_start is set to
-	0.01 by the constructor
+        
+        The value of \ref o2scl::nstar_cold::nb_start is set to
+        0.01 by the constructor
     */
     nstar_cold2 cns;
 
@@ -121,10 +121,10 @@ namespace bamr {
     std::shared_ptr<const ns_data> nsd;
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &pars, int &success,
-			     std::ofstream &scr_out, model_data &dat) {
+                             std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
@@ -133,7 +133,7 @@ namespace bamr {
     /** \brief Tabulate EOS and then use in cold_nstar
      */
     virtual void compute_star(const ubvector &pars, std::ofstream &scr_out, 
-			      int &success, model_data &dat,
+                              int &success, model_data &dat,
                               std::string model_type);
     
     /// True if the model has an EOS
@@ -156,14 +156,14 @@ namespace bamr {
     double nt_high;
 
     model(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n);
+          std::shared_ptr<const ns_data> n);
 
     virtual ~model() {}
 
     /** \brief Compute the mass-radius relation
      */
     virtual void compute_mr(const ubvector &pars, int &success,
-			    std::ofstream &scr_out, model_data &dat) {
+                            std::ofstream &scr_out, model_data &dat) {
       return;
     }
 
@@ -176,8 +176,8 @@ namespace bamr {
     /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high) {
       return;
     }
@@ -290,22 +290,22 @@ namespace bamr {
 
     /// Create a model object
     two_polytropes(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n);
+          std::shared_ptr<const ns_data> n);
 
     virtual ~two_polytropes() {}
 
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -343,7 +343,7 @@ namespace bamr {
   public:
 
   alt_polytropes(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
+          std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~alt_polytropes() {}
@@ -351,15 +351,15 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -411,7 +411,7 @@ namespace bamr {
   public:
 
   fixed_pressure(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
+          std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~fixed_pressure() {}
@@ -419,14 +419,14 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -508,7 +508,7 @@ namespace bamr {
   public:
   
   generic_quarks(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
+          std::shared_ptr<const ns_data> n) : two_polytropes(s,n) {
     }
     
     virtual ~generic_quarks() {}
@@ -516,14 +516,14 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -555,7 +555,7 @@ namespace bamr {
     double B;
 
     /** \brief The paramter controlling non-perturbative corrections 
-	to \f$ \mu^4 \f$
+        to \f$ \mu^4 \f$
     */
     double c;
 
@@ -572,7 +572,7 @@ namespace bamr {
     o2scl::root_brent_gsl<> grb;
     
   quark_star(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n) : model(s,n) {
+          std::shared_ptr<const ns_data> n) : model(s,n) {
     }
 
     virtual ~quark_star() {}
@@ -586,14 +586,14 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high);
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -610,7 +610,7 @@ namespace bamr {
       simulations in [Gandolfi12mm]_ . 
       \endverbatim
 
-      The parameterization is	
+      The parameterization is   
       \f[
       E_{\mathrm{neut}} = a \left( \frac{n_B}{n_0} \right)^{\alpha}
       + b \left( \frac{n_B}{n_0} \right)^{\beta}
@@ -655,7 +655,7 @@ namespace bamr {
   public:
   
     qmc_neut(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n);
+          std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_neut();
     
@@ -684,14 +684,14 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
         \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -769,15 +769,15 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -838,7 +838,7 @@ namespace bamr {
   public:
   
     qmc_fixp(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n);
+          std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_fixp();
 
@@ -854,21 +854,21 @@ namespace bamr {
     double nb0;
 
     /** \brief Transition baryon density (default 0.16, different 
-	than \ref bamr::qmc_neut)
+        than \ref bamr::qmc_neut)
     */
     double nb_trans;
 
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low, std::vector<double> &high);
+                                std::vector<std::string> &units,
+                                std::vector<double> &low, std::vector<double> &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -894,7 +894,7 @@ namespace bamr {
   public:
   
     qmc_twolines(std::shared_ptr<const settings> s,
-	  std::shared_ptr<const ns_data> n);
+          std::shared_ptr<const ns_data> n);
     
     virtual ~qmc_twolines();
 
@@ -907,15 +907,15 @@ namespace bamr {
     /** \brief Set parameter information [pure virtual]
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
     
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual void compute_eos(const ubvector &e, int &success,
-			     std::ofstream &scr_out, model_data &dat);
+                             std::ofstream &scr_out, model_data &dat);
 
     /** \brief Function to compute the initial guess
      */
@@ -941,7 +941,7 @@ namespace bamr {
     /** \brief Desc
      */
     virtual int calc_e(o2scl::fermion &n, o2scl::fermion &p,
-		       o2scl::thermo &th);
+                       o2scl::thermo &th);
     
   };
 
@@ -960,7 +960,7 @@ namespace bamr {
     typedef boost::numeric::ublas::matrix<double> ubmatrix;
     
     /** \brief Probability distribution for neutron matter
-	parameters
+        parameters
     */
     o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
 
@@ -973,7 +973,7 @@ namespace bamr {
     eos_had_tews_nuclei ehtn;
     
     tews_threep_ligo(std::shared_ptr<const settings> s,
-		     std::shared_ptr<const ns_data> n);
+                     std::shared_ptr<const ns_data> n);
     
     /// Parameter for transition density
     o2scl::cli::parameter_double p_nb_trans;
@@ -981,8 +981,8 @@ namespace bamr {
     /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Specify the initial point
@@ -1001,7 +1001,7 @@ namespace bamr {
     /** \brief Desc
      */
     void compute_eos(const ubvector &params, int &ret,
-		     std::ofstream &scr_out, model_data &dat);
+                     std::ofstream &scr_out, model_data &dat);
     
   };
   
@@ -1020,7 +1020,7 @@ namespace bamr {
     typedef boost::numeric::ublas::matrix<double> ubmatrix;
     
     /** \brief Probability distribution for neutron matter
-	parameters
+        parameters
     */
     o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
 
@@ -1033,7 +1033,7 @@ namespace bamr {
     eos_had_tews_nuclei ehtn;
     
     tews_fixp_ligo(std::shared_ptr<const settings> s,
-		     std::shared_ptr<const ns_data> n);
+                     std::shared_ptr<const ns_data> n);
     
     /// Parameter for transition density
     o2scl::cli::parameter_double p_nb_trans;
@@ -1041,8 +1041,8 @@ namespace bamr {
     /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Specify the initial point
@@ -1061,7 +1061,7 @@ namespace bamr {
     /** \brief Desc
      */
     void compute_eos(const ubvector &params, int &ret,
-		     std::ofstream &scr_out, model_data &dat);
+                     std::ofstream &scr_out, model_data &dat);
     
   };
 
@@ -1080,12 +1080,12 @@ namespace bamr {
     typedef boost::numeric::ublas::matrix<double> ubmatrix;
     
     /** \brief Probability distribution for neutron matter
-	parameters
+        parameters
     */
     o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
 
     new_poly(std::shared_ptr<const settings> s,
-		     std::shared_ptr<const ns_data> n);
+                     std::shared_ptr<const ns_data> n);
     
     /// Parameter for transition density
     o2scl::cli::parameter_double p_nb_trans;
@@ -1093,8 +1093,8 @@ namespace bamr {
     /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Specify the initial point
@@ -1113,7 +1113,7 @@ namespace bamr {
     /** \brief Desc
      */
     void compute_eos(const ubvector &params, int &ret,
-		     std::ofstream &scr_out, model_data &dat);
+                     std::ofstream &scr_out, model_data &dat);
     
   };
   
@@ -1132,7 +1132,7 @@ namespace bamr {
     typedef boost::numeric::ublas::matrix<double> ubmatrix;
     
     /** \brief Probability distribution for neutron matter
-	parameters
+        parameters
     */
     o2scl::prob_dens_mdim_gaussian<ubvector> pdmg;
 
@@ -1145,8 +1145,8 @@ namespace bamr {
     /** \brief Set parameter information
      */
     virtual void get_param_info(std::vector<std::string> &names,
-				std::vector<std::string> &units,
-				std::vector<double> &low,
+                                std::vector<std::string> &units,
+                                std::vector<double> &low,
                                 std::vector<double> &high);
 
     /** \brief Specify the initial point
@@ -1165,7 +1165,7 @@ namespace bamr {
     /** \brief Desc
      */
     void compute_eos(const ubvector &params, int &ret,
-		     std::ofstream &scr_out, model_data &dat);
+                     std::ofstream &scr_out, model_data &dat);
     
   };
   

@@ -533,7 +533,6 @@ np_nompi:
 		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-set debug_eos 1 \
 		-mcmc
 #> out/np.out 2>&1 &
 

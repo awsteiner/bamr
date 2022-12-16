@@ -52,10 +52,10 @@ namespace bamr {
   typedef boost::numeric::ublas::vector<double> ubvector;
   
   typedef std::function<int(size_t,const ubvector &, double &,
-			    model_data &)> point_funct;
+                            model_data &)> point_funct;
   
   typedef std::function<int(const ubvector &,double,
-			    std::vector<double> &,model_data &)> fill_funct;
+                            std::vector<double> &,model_data &)> fill_funct;
 
   /** \brief Compute neutron star structure for each MCMC point
 
@@ -137,9 +137,9 @@ namespace bamr {
     std::shared_ptr<ns_data> nsd;
     
     /** \brief Pointer to settings object
-	
-	AWS: 4/5/2020 changed from "const settings" to "settings"
-	to enable the python interface
+        
+        AWS: 4/5/2020 changed from "const settings" to "settings"
+        to enable the python interface
     */
     std::shared_ptr<settings> set;
     
@@ -165,16 +165,16 @@ namespace bamr {
     }
 
     /** \brief Compute the EOS corresponding to parameters in 
-	\c e and put output in \c tab_eos
+        \c e and put output in \c tab_eos
     */
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
-			      double &log_wgt, model_data &dat);
+                              double &log_wgt, model_data &dat);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
-	current Monte Carlo point
+        current Monte Carlo point
     */
     virtual int fill(const ubvector &pars, double weight, 
-		     std::vector<double> &line, model_data &dat);
+                     std::vector<double> &line, model_data &dat);
     
   };
 
