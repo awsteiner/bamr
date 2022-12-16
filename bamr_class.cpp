@@ -241,6 +241,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
 			      double &log_wgt, model_data &dat) {
 
+	cout << "In bamr_class::compute_point()" << endl;
+
   log_wgt=0.0;
 
   int iret;
@@ -1298,6 +1300,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 	  
     }
   }
+	cout << "End of bamr_class::compute_point()" << endl;
   return iret;
 }
 

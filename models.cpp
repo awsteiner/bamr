@@ -36,6 +36,9 @@ using namespace bamr;
 
 model::model(std::shared_ptr<const settings> s,
 	     std::shared_ptr<const ns_data> n) {
+
+  cout << "In model::model()" << endl;
+  
   set=s;
   nsd=n;
   
@@ -82,12 +85,14 @@ model::model(std::shared_ptr<const settings> s,
   } else {
     teos.no_low_dens_eos();
   }
-  
+  cout << "End of model::model()" << endl;
 }
 
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
 			 int &ret, model_data &dat,
                          std::string model_type) {
+
+  cout << "In model::compute_star()" << endl;
 
   ret=ix_success;
 
@@ -98,12 +103,13 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // ---------------------------------------------------------------
     // Compute the EOS
-
+    cout << "model::compute_star(): In has_eos" << endl;
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
     // Sarah's section
     if (set->mmax_deriv==true) {
+      cout << "model::compute_star(): In (has_eos) mmax_deriv" << endl;
       
       eost.set_interp_type(o2scl::itp_linear);
       eost.set_unit("ed","1/fm^4");
@@ -240,6 +246,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       }
+      cout << "model::compute_star(): End of (has_eos) mmax_deriv" << endl;
       // End of Sarah's section
     }
     
@@ -262,6 +269,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 	      return;
       }
     }
+    cout << "model::compute_star(): End of has_eos" << endl;
   }
 
   // ---------------------------------------------------------------
@@ -790,7 +798,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   if (set->verbose>=2) {
     cout << "End model::compute_star()." << endl;
   }
-
+  cout << "End of model::compute_star()" << endl;
   return;
 }
 
@@ -3834,6 +3842,9 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
 new_lines::new_lines(std::shared_ptr<const settings> s,
                      std::shared_ptr<const ns_data> n) :
   qmc_threep(s,n) {
+
+  cout << "In new_lines::new_lines()" << endl;
+
   this->n_eos_params=9;
 
   cns.err_nonconv=false;
@@ -3846,6 +3857,8 @@ void new_lines::get_param_info(std::vector<std::string> &names,
                                std::vector<std::string> &units,
                                std::vector<double> &low,
                                std::vector<double> &high) {
+
+  cout << "In new_lines::get_param_info()" << endl;
 
   names={"a","alpha","param_S","param_L","csq1","trans1",
     "csq2","trans2","csq3"};
@@ -3883,7 +3896,9 @@ void new_lines::get_param_info(std::vector<std::string> &names,
 }
     
 void new_lines::initial_point(std::vector<double> &params) {
-      
+
+  cout << "In new_lines::initial_point()" << endl;    
+  
   params.resize(9);
 
   params[0]=12.7;
@@ -3900,6 +3915,9 @@ void new_lines::initial_point(std::vector<double> &params) {
 }
 
 void new_lines::setup_params(o2scl::cli &cl) {
+
+  cout << "In new_lines::setup_params()" << endl;
+
   p_nb_trans.d=&nb_trans;
   p_nb_trans.help="Transition from neutron matter to linear EOS.";
   cl.par_list.insert(std::make_pair("nb_trans",&p_nb_trans));
@@ -3908,6 +3926,9 @@ void new_lines::setup_params(o2scl::cli &cl) {
 }
 
 void new_lines::remove_params(o2scl::cli &cl) {
+
+  cout << "In new_lines::remove_params()" << endl;
+
   size_t i=cl.par_list.erase("nb_trans");
   if (i!=1) {
     O2SCL_ERR("Failed to erase parameter 'nb_trans'.",o2scl::exc_esanity);
@@ -3919,6 +3940,9 @@ void new_lines::copy_params(model &m) {
   // Dynamic casts to references throw exceptions when they fail
   // while dynamic casts to pointers return null pointers when
   // they fail.
+
+  cout << "In new_lines::copy_params()" << endl;
+
   new_lines &tp=dynamic_cast<new_lines &>(m);
   nb_trans=tp.nb_trans;
   return;
@@ -3927,6 +3951,8 @@ void new_lines::copy_params(model &m) {
 void new_lines::compute_eos(const ubvector &params, int &ret,
                             std::ofstream &scr_out, model_data &dat) {
   
+  cout << "In new_lines::compute_eos()" << endl;
+
   bool debug=false;
 
   ret=ix_success;
@@ -3973,7 +3999,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     scr_out << "b=" << b << " beta=" << beta << endl;
   }
-  
+
   dat.eos.add_constant("S",Stmp/hc_mev_fm);
   dat.eos.add_constant("L",Ltmp/hc_mev_fm);
 
@@ -4044,7 +4070,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     cout << "First line: " << const1 << endl;
   }
-  
+
   for(double ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
     double pr=etl1.pr_from_ed(ed);
     double nb=etl1.nb_from_ed(ed);
@@ -4131,7 +4157,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (debug) {
     cout << "Third line: " << const3 << endl;
   }
-  
+
   // We compute to energy densities slightly higher than 10
   // because the energy grid ends at 10 and it makes sure
   // we're not extrapolating
@@ -4154,6 +4180,8 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   }
 
   if (debug) exit(-1);
+
+  cout << "End of new_lines::compute_eos()" << endl;
 
   return;
 }

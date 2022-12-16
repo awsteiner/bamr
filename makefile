@@ -530,7 +530,7 @@ np_nompi:
 		prob 0.7 table3d \
 		-set apply_intsc 0 \
 		-set cached_intsc 0 \
-		-model new_line \
+		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc
@@ -599,5 +599,5 @@ np:
 		-mcmc 
 #> out/np.out 2>&1 &
 
-include makefile.o2
+include makefile.anik
 include makefile.aws
