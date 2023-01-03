@@ -4,16 +4,6 @@ INDEX = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
 	60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 \
 	80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99
 
-MASS = 0.03 0.06 0.09 0.12 0.15 0.18 0.21 0.24 0.27 0.3 0.33 \
-	0.36 0.39 0.42 0.45 0.48 0.51 0.54 0.57 0.6 0.63 0.66 0.69 \
-	0.72 0.75 0.78 0.81 0.84 0.87 0.9 0.93 0.96 0.99 1.02 1.05 \
-	1.08 1.11 1.14 1.17 1.2 1.23 1.26 1.29 1.32 1.35 1.38 1.41 \
-	1.44 1.47 1.5 1.53 1.56 1.59 1.62 1.65 1.68 1.71 1.74 1.77 \
-	1.8 1.83 1.86 1.89 1.92 1.95 1.98 2.01 2.04 2.07 2.1 2.13 \
-	2.16 2.19 2.22 2.25 2.28 2.31 2.34 2.37 2.4 2.43 2.46 2.49 \
-	2.52 2.55 2.58 2.61 2.64 2.67 2.7 2.73 2.76 2.79 2.82 2.85 \
-	2.88 2.91 2.94 2.97 3 
-
 #testx:
 #	$(foreach num,$(MASS),echo $(num) ; )
 
@@ -77,21 +67,28 @@ file-pop:
 	mean_LM width_LM skewness_LM mult \
 	-internal pop.o2
 
-#file-dist:
-#	o2graph -read pop.o2 markov_chain_0 \
-	$(foreach m,$(MASS),-function "1/sqrt(2*3.1416)/width_NS" cf \
-	-function "exp(-0.5*(($m-mean_NS)/width_NS)^2)" pdf \
-	-function "1+erf(($m-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_NS_$m) \
-	-select ":SN_NS_*" -internal dist.o2
+file-dist:
+	acol -read pop.o2 markov_chain_0 \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
+	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_NS_$i) \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_WD" cf \
+	-function "exp(-0.5*(($i*0.03-mean_WD)/width_WD)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_WD)*(skewness_WD)/width_WD/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_WD_$i) \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_LM" cf \
+	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_LM_$i) \
+	-select ":SN_*" -set obj_name gm_sn -internal dist.o2	
 
-YLOW = 0.16 #0.04, 0.08, 0.12, 0.16
+YLOW = 0.0 #0.04, 0.08, 0.12, 0.16
 XBIN = 99 #30
 YBIN = 99 #40
 
-
 file-cdist:
-	o2graph -read dist.o2 gm_sn -ser-hist-t3d \
+	acol -read dist.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
 	"SN_NS_*" prob_ns -type -list \
@@ -140,5 +137,5 @@ plot-dist:
 	-save sn_lm.png -show & 
 
 o2-clean:
-	rm -f eos.png mvsr.png sn-ns.png sn-wd.png sn-lm.png \
+	rm -f eos.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
 	main.o2 eos.o2 mvsr.o2 pop.o2 dist.o2 mdist.o2
