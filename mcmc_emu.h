@@ -182,10 +182,12 @@ namespace o2scl {
   public:
     
     /// The internal interpolation object
-    interpm_krige_optim
+    /*
+      interpm_krige_optim
     <ubvector,mat_x_t,mat_x_row_t,
      mat_y_t,mat_y_row_t,ubmatrix,
      o2scl_linalg::matrix_invert_det_cholesky<ubmatrix> > iko;
+    */
 
     /** \brief Create an emulator
      */
@@ -215,7 +217,7 @@ namespace o2scl {
       mvt_x.set(t,col_list_x);
       mvt_y.set(t,col_list_y);
       
-      iko.set_data(2,1,8,mvt_x,mvt_y);
+      //iko.set_data(2,1,8,mvt_x,mvt_y);
 
       return;
     }
