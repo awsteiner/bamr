@@ -728,13 +728,15 @@ int mcmc_bamr::mcmc_init() {
     // -----------------------------------------------------------
     // Add columns to table
 
+    /* These columns are redundant because the output table also 
+    contains log_wgt_sources */
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
       if (!set->norm_max) {
         this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
                               "1/km/Msun");
       }
-    }
+    } 
   
     // It is important here that all of these columns which store values
     // over a grid are either always positive or always negative,
@@ -1293,7 +1295,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       ns_pop &pop=nsd->pop;
 
-      for (size_t i=0; i<pop.n_params; i++){
+      for (size_t i=0; i<pop.n_params; i++) {
         init.push_back(pop.par_init[i]);
       }
     }

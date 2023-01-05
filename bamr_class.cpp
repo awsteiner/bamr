@@ -98,9 +98,12 @@ int bamr_class::fill(const ubvector &pars, double weight,
     return 0;
   } else {
 
+    /* These columns are redundant because the output table also 
+    contains log_wgt_sources */
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("wgt",i));
-    }
+    } 
+
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("R",i));
     }
