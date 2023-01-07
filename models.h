@@ -88,6 +88,7 @@ namespace bamr {
     static const int ix_deriv_infinite=21;
     static const int ix_pop_wgt_zero=22;
     static const int ix_ligo_mass_invalid=23;
+    static const int ix_gm_exceeds_mmax=24;
     //@}
 
     /// Number of EOS parameters

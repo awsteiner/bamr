@@ -606,7 +606,7 @@ npoly:
 		-set couple_threads 1 -set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/mt \
-		-set max_iters 100000 \
+		-set max_iters 5 \
 		-set n_walk 100 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
@@ -665,12 +665,12 @@ npoly:
 		-mcmc
 #> out/np.out 2>&1 &
 
-nline_nompi:
+nlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 \
 		-set couple_threads 0 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np \
+		-set prefix out/nl \
 		-set max_iters 5 \
 		-set n_walk 1 -set step_fac 4000.0 \
 		-set norm_max 0 -set addl_quants 1 \
@@ -729,12 +729,12 @@ nline_nompi:
 		-mcmc
 #> out/nl.out 2>&1 &
 
-nline_mpi:
+nlines_mpi:
 	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 \
 		-set couple_threads 0 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np \
+		-set prefix out/nl \
 		-set max_iters 5 \
 		-set n_walk 1 -set step_fac 4000.0 \
 		-set norm_max 0 -set addl_quants 1 \
@@ -793,11 +793,11 @@ nline_mpi:
 		-mcmc 
 #> out/nl.out 2>&1 &
 
-nline:
+nlines:
 	./bamr -threads 3 -set aff_inv 1 \
 		-set couple_threads 1 -set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/mt \
+		-set prefix out/nl \
 		-set max_iters 5 \
 		-set n_walk 100 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 \

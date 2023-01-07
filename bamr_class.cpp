@@ -145,6 +145,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.mvsr.get_constant("M_max"));
       if (set->mmax_deriv) {
         line.push_back(dat.eos.get_constant("dpdM"));
+        line.push_back(dat.m_max2);
       }
       line.push_back(dat.mvsr.get_constant("P_max"));
       line.push_back(dat.mvsr.get_constant("e_max"));
@@ -244,7 +245,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat) {
 
-  cout << "In bamr_class::compute_point()" << endl;
+  // cout << "In bamr_class::compute_point()" << endl;
 
   log_wgt=0.0;
 
@@ -376,18 +377,28 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (iret!=0) {
         log_wgt=0.0;
         /* iret_old = 1+i, where "i" is the star index */
-        iret = iret-1; // 1 was added to avoid iret=0 when wgt=0 
+        iret = iret-30; // 1 was added to avoid iret=0 when wgt=0 
         scr_out << "Population NS-NS: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_ns[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
       }
+      for (size_t i=0; i<pd.id_ns.size(); i++) {
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[iret]]]){
+          return m.ix_gm_exceeds_mmax;
+        }
+      }
       pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        iret = iret-1;
+        iret = iret-60;
         scr_out << "Population NS-WD: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_wd[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
+      }
+      for (size_t i=0; i<pd.id_wd.size(); i++) {
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[iret]]]){
+          return m.ix_gm_exceeds_mmax;
+        }
       }
       /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
          if (iret!=0) {
@@ -400,7 +411,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        iret = iret-1;
+        iret = iret-90;
         scr_out << "Population LMXB: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_lms[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
@@ -416,7 +427,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
              << ", LM: " << pop_weights[2] << ", All: " 
              << pop_weights[3] << endl;
       }
-
+      for (size_t i=0; i<pd.id_lms.size(); i++) {
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_lms[iret]]]){
+          return m.ix_gm_exceeds_mmax;
+        }
+      }
     }
 
     // ----------------------------------------------------------------
@@ -1303,7 +1318,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           
     }
   }
-  cout << "End of bamr_class::compute_point()" << endl;
+  // cout << "End of bamr_class::compute_point()" << endl;
   return iret;
 }
 

@@ -59,6 +59,7 @@ namespace bamr {
 
     /// Grid quantities
     o2scl::table_units<> gridt;
+    double m_max2;
 
     model_data() {
     }
@@ -76,10 +77,10 @@ namespace bamr {
      */
     model_data &operator=(const model_data &md) {
       if (this!=&md) {
-	mvsr=md.mvsr;
-	eos=md.eos;
-	gridt=md.gridt;
-	sourcet=md.sourcet;
+	      mvsr=md.mvsr;
+	      eos=md.eos;
+	      gridt=md.gridt;
+	      sourcet=md.sourcet;
       }
       return *this;
     }

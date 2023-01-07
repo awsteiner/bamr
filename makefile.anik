@@ -30,9 +30,54 @@ plot-eos:
 	-den-plot prob pcm=True,cmap=YlGnBu \
 	-read eos.o2 c68 -plot lw=1,color=purple \
 	-read eos.o2 c95 -plot lw=1,color=orange \
-	-xtitle "$$ {\varepsilon}~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-ytitle "$$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-xtitle "Energy Density, $$ {\varepsilon}~[\mathrm{MeV/fm}^3] $$" \
+	-ytitle "Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-save eos.png -show &
+
+file-eoa:
+	acol -read main.o2 markov_chain_0 -select ":EoA_*" \
+	-set obj_name nb_ea -internal eoa.o2 \
+	-read eoa.o2 nb_ea -ser-hist-t3d \
+	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
+	"grid:0.0,2.5,(2.5-0.0)/99" auto ea \
+	"EoA_*" prob -type -list \
+	-set obj_name nb_ea_3d -internal eoa.o2 \
+	-to-hist-2d prob \
+	-contours frac 0.68 eoa.o2 c68 \
+	-contours frac 0.95 eoa.o2 c95 \
+	-contours frac 0.99 eoa.o2 c99
+
+plot-eoa:
+	o2graph -read eoa.o2 nb_ea_3d -set colbar 1 \
+	-den-plot prob cmap=YlGnBu \
+	-read eoa.o2 c68 -plot lw=1,color=purple \
+	-read eoa.o2 c95 -plot lw=1,color=orange \
+	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
+	-ytitle "Energy/Nucleon, $$ E/A~[\mathrm{MeV}] $$" \
+	-save eoa.png -show &
+
+file-pnb:
+	acol -read main.o2 markov_chain_0 \
+	$(foreach i,$(INDEX),-function Pnb_$i*197.33 Pnb_hc_$i) \
+	-select ":Pnb_hc_*" -set obj_name nb_pr -internal pnb.o2 \
+	-read pnb.o2 nb_pr -ser-hist-t3d \
+	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
+	"grid:1.0,2.0e3,(2.0e3)^(1/99),log" auto pr \
+	"Pnb_hc_*" prob -type -list \
+	-set obj_name nb_pr_3d -internal pnb.o2 \
+	-to-hist-2d prob \
+	-contours frac 0.68 pnb.o2 c68 \
+	-contours frac 0.95 pnb.o2 c95 \
+	-contours frac 0.99 pnb.o2 c99
+
+plot-pnb:
+	o2graph -read pnb.o2 nb_pr_3d -set logy 1 -set colbar 1 \
+	-den-plot prob pcm=True,cmap=YlGnBu \
+	-read pnb.o2 c68 -plot lw=1,color=purple \
+	-read pnb.o2 c95 -plot lw=1,color=orange \
+	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
+	-ytitle "Pressure, $$ P~[\mathrm{MeV/fm}^3] $$" \
+	-save pnb.png -show &
 
 file-mvsr:
 	acol -read main.o2 markov_chain_0 -delete-col R_max \
@@ -56,19 +101,16 @@ plot-mvsr:
 	-ytitle "$$ M~[\mathrm{M}_\odot] $$" \
 	-save mvsr.png -show &
 
-file-pop:
+file-nsp:
 	acol -read main.o2 markov_chain_0 \
-	-function "10^log10_width_NS" width_NS -delete-col log10_width_NS \
-	-function "10^log10_width_WD" width_WD -delete-col log10_width_WD \
-	-function "mean_LMS" mean_LM -delete-col mean_LMS \
-	-function "skewness_LMS" skewness_LM -delete-col skewness_LMS \
-	-function "10^log10_width_LMS" width_LM -delete-col log10_width_LMS \
+	-function "10^log10_width_NS" width_NS \
+	-function "10^log10_width_WD" width_WD \
+	-function "10^log10_width_LMS" width_LM \
+	-function "mean_LMS" mean_LM -function "skewness_LMS" skewness_LM \
 	-select mean_NS width_NS skewness_NS mean_WD width_WD skewness_WD \
 	mean_LM width_LM skewness_LM mult \
-	-internal pop.o2
-
-file-dist:
-	acol -read pop.o2 markov_chain_0 \
+	-set obj_name dist_pars -internal nsp.o2 
+	acol -read nsp.o2 dist_pars \
 	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
 	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
@@ -81,14 +123,15 @@ file-dist:
 	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
 	-function "cf*pdf*cdf" SN_LM_$i) \
-	-select ":SN_*" -set obj_name gm_sn -internal dist.o2	
+	-select mult ":SN_*" -set obj_name gm_sn -internal nsp.o2	
 
-YLOW = 0.0 #0.04, 0.08, 0.12, 0.16
-XBIN = 99 #30
-YBIN = 99 #40
+#0.04, 0.08, 0.12, 0.16
+YLOW = 0.00
+XBIN = 99
+YBIN = 99
 
-file-cdist:
-	acol -read dist.o2 gm_sn -ser-hist-t3d \
+file-dist:
+	acol -read nsp.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
 	"SN_NS_*" prob_ns -type -list \
@@ -96,7 +139,7 @@ file-cdist:
 	-to-hist-2d prob_ns \
 	-contours frac 0.68 dist.o2 c68_ns \
 	-contours frac 0.95 dist.o2 c95_ns \
-	-read dist.o2 gm_sn -ser-hist-t3d \
+	-read nsp.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
 	"SN_WD_*" prob_wd -type -list \
@@ -104,7 +147,7 @@ file-cdist:
 	-to-hist-2d prob_wd \
 	-contours frac 0.68 dist.o2 c68_wd \
 	-contours frac 0.95 dist.o2 c95_wd \
-	-read dist.o2 gm_sn -ser-hist-t3d \
+	-read nsp.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
 	"SN_LM_*" prob_lm -type -list \
@@ -136,6 +179,18 @@ plot-dist:
 	-ytitle "Distribution SN_LM" \
 	-save sn_lm.png -show & 
 
+file-all:
+	make file-main
+	make file-eos
+	make file-mvsr
+	make file-nsp
+	make file-dist
+
+plot-all:
+	make plot-eos
+	make plot-mvsr
+	make plot-dist
+
 o2-clean:
-	rm -f eos.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
-	main.o2 eos.o2 mvsr.o2 pop.o2 dist.o2 mdist.o2
+	rm -f eos.png eoa.png pnb.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
+	main.o2 eos.o2 eoa.o2 pnb.o2 mvsr.o2 nsp.o2 dist.o2 

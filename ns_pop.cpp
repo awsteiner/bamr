@@ -66,7 +66,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     if (wgt_star<=0.0) {
       /* Record index i (via ret) for bookkeeping (scr_out): 
       1 is added to avoid ret=0 when wgt_star=0 */
-      ret = 1+i; 
+      ret = 30+i; 
       return 0.0;
     }
     log_wgt += log(wgt_star); 
@@ -111,7 +111,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
            << skew_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
-      ret = 1+i;
+      ret = 60+i;
       return 0.0;
     }
     log_wgt += log(wgt_star); 
@@ -199,7 +199,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
            << skew_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
-      ret = 1+i;
+      ret = 90+i;
       return 0.0;
     }
     log_wgt += log(wgt_star); 

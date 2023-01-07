@@ -37,7 +37,7 @@ using namespace bamr;
 model::model(std::shared_ptr<const settings> s,
              std::shared_ptr<const ns_data> n) {
 
-  cout << "In model::model()" << endl;
+  // cout << "In model::model()" << endl;
   
   set=s;
   nsd=n;
@@ -85,14 +85,14 @@ model::model(std::shared_ptr<const settings> s,
   } else {
     teos.no_low_dens_eos();
   }
-  cout << "End of model::model()" << endl;
+  // cout << "End of model::model()" << endl;
 }
 
 void model::compute_star(const ubvector &pars, std::ofstream &scr_out, 
                          int &ret, model_data &dat,
                          std::string model_type) {
 
-  cout << "In model::compute_star()" << endl;
+  // cout << "In model::compute_star()" << endl;
 
   ret=ix_success;
 
@@ -103,13 +103,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     // ---------------------------------------------------------------
     // Compute the EOS
-    cout << "model::compute_star(): In has_eos" << endl;
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
     // Sarah's section
     if (set->mmax_deriv==true) {
-      cout << "model::compute_star(): In (has_eos) mmax_deriv" << endl;
       
       eost.set_interp_type(o2scl::itp_linear);
       eost.set_unit("ed","1/fm^4");
@@ -134,7 +132,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_small_max;
         return;
       }
-      cout << "model::compute_star(): mmax_deriv line 1" << endl;
       // Find the central energy density of the maximum mass star
       size_t row=dat.mvsr.lookup("gm",m_max);
       double c_ed=dat.mvsr.get("ed",row);
@@ -152,7 +149,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           return;
         }
       }
-      cout << "model::compute_star(): mmax_deriv line 2" << endl;
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
@@ -166,7 +162,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       } 
-      cout << "model::compute_star(): mmax_deriv line 3" << endl;
       // Now modify the last parameter: exp3
       ubvector pars2=pars;
       pars2[this->n_eos_params-1]*=1.01;
@@ -188,21 +183,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
       double m_max2=dat.mvsr.max("gm");
-
+      dat.m_max2=m_max2;
+      
       //cout << "m_max2: " << m_max2 << endl;
-      cout << "model::compute_star(): mmax_deriv line 4" << endl;
       if (m_max2<set->min_max_mass) {
         scr_out << "Maximum mass too small: " << m_max2 << " < "
                 << set->min_max_mass << "." << std::endl;
         ret=ix_small_max;
         return;
       }
-      cout << "model::compute_star(): mmax_deriv line 4.1" << endl;
       // Now, compute the derivative
       double dpdM=(pars2[this->n_eos_params-1]-
                    pars[this->n_eos_params-1])/(m_max2-m_max);
       //cout << "dpdM: " << dpdM << endl;
-      cout << "model::compute_star(): mmax_deriv line 4.2" << endl;
       // Reject the point if the derivative is not finite
       if (isfinite(dpdM)!=1) {
         scr_out << "Derivative dpdM is infinite: " << m_max << " "
@@ -210,7 +203,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_deriv_infinite;
         return;
       } 
-      cout << "model::compute_star(): mmax_deriv line 5" << endl;
       eost.add_constant("dpdM",dpdM);
 
       // Compute the central energy density
@@ -219,7 +211,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
       // Ensure that the last polytrope appears in the center
       // of the maximum mass star
-      if (model_type==((string)"new_poly")) {
+      if (model_type==((string)"new_poly") ||
+          model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
           //cout << "trans2, c_ed (2): " << trans2 << " " 
@@ -231,7 +224,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           return;
         }
       }
-      cout << "model::compute_star(): mmax_deriv line 6" << endl;
       // Check that the speed of sound is less than 1
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
@@ -249,7 +241,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       }
-      cout << "model::compute_star(): End of (has_eos) mmax_deriv" << endl;
       // End of Sarah's section
     }
     
@@ -272,7 +263,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         return;
       }
     }
-    cout << "model::compute_star(): End of has_eos" << endl;
   }
 
   // ---------------------------------------------------------------
@@ -801,7 +791,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   if (set->verbose>=2) {
     cout << "End model::compute_star()." << endl;
   }
-  cout << "End of model::compute_star()" << endl;
   return;
 }
 
@@ -3846,7 +3835,7 @@ new_lines::new_lines(std::shared_ptr<const settings> s,
                      std::shared_ptr<const ns_data> n) :
   qmc_threep(s,n) {
 
-  cout << "In new_lines::new_lines()" << endl;
+  // cout << "In new_lines::new_lines()" << endl;
 
   this->n_eos_params=9;
 
@@ -3861,7 +3850,7 @@ void new_lines::get_param_info(std::vector<std::string> &names,
                                std::vector<double> &low,
                                std::vector<double> &high) {
 
-  cout << "In new_lines::get_param_info()" << endl;
+  // cout << "In new_lines::get_param_info()" << endl;
 
   names={"a","alpha","param_S","param_L","csq1","trans1",
     "csq2","trans2","csq3"};
@@ -3900,7 +3889,7 @@ void new_lines::get_param_info(std::vector<std::string> &names,
     
 void new_lines::initial_point(std::vector<double> &params) {
 
-  cout << "In new_lines::initial_point()" << endl;    
+  // cout << "In new_lines::initial_point()" << endl;    
   
   params.resize(9);
 
@@ -3919,7 +3908,7 @@ void new_lines::initial_point(std::vector<double> &params) {
 
 void new_lines::setup_params(o2scl::cli &cl) {
 
-  cout << "In new_lines::setup_params()" << endl;
+  // cout << "In new_lines::setup_params()" << endl;
 
   p_nb_trans.d=&nb_trans;
   p_nb_trans.help="Transition from neutron matter to linear EOS.";
@@ -3930,7 +3919,7 @@ void new_lines::setup_params(o2scl::cli &cl) {
 
 void new_lines::remove_params(o2scl::cli &cl) {
 
-  cout << "In new_lines::remove_params()" << endl;
+  // cout << "In new_lines::remove_params()" << endl;
 
   size_t i=cl.par_list.erase("nb_trans");
   if (i!=1) {
@@ -3944,7 +3933,7 @@ void new_lines::copy_params(model &m) {
   // while dynamic casts to pointers return null pointers when
   // they fail.
 
-  cout << "In new_lines::copy_params()" << endl;
+  // cout << "In new_lines::copy_params()" << endl;
 
   new_lines &tp=dynamic_cast<new_lines &>(m);
   nb_trans=tp.nb_trans;
@@ -3954,7 +3943,7 @@ void new_lines::copy_params(model &m) {
 void new_lines::compute_eos(const ubvector &params, int &ret,
                             std::ofstream &scr_out, model_data &dat) {
   
-  cout << "In new_lines::compute_eos()" << endl;
+  // cout << "In new_lines::compute_eos()" << endl;
 
   bool debug=false;
 
@@ -4184,7 +4173,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
 
   if (debug) exit(-1);
 
-  cout << "End of new_lines::compute_eos()" << endl;
+  // cout << "End of new_lines::compute_eos()" << endl;
 
   return;
 }
