@@ -916,7 +916,6 @@ int mcmc_bamr::mcmc_init() {
   if (set->inc_pop) {
     this->table->new_column("log_wgt_NS");
     this->table->new_column("log_wgt_WD");
-    // this->table->new_column("log_wgt_HMS");
     this->table->new_column("log_wgt_LMS");
     this->table->new_column("log_wgt_pop");
   }

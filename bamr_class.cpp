@@ -376,17 +376,22 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_weights[0] = pop.get_weight_ns(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        /* iret_old = 1+i, where "i" is the star index */
-        iret = iret-30; // 1 was added to avoid iret=0 when wgt=0 
+        /* iret_old = 30+i, where "i" is the star index
+        30 was added to avoid iret=0 when wgt=0 for NS-NS */
+        iret = iret-30; 
         scr_out << "Population NS-NS: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_ns[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_ns.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[iret]]]){
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[i]]]){
+          scr_out << "Population NS-NS: Gravitational mass beyond M_max "
+                << "for star " << pars[pvi[string("M_")+pd.id_ns[i]]] 
+                << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
+
       pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
@@ -396,26 +401,31 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_wd.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[iret]]]){
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[i]]]){
+          scr_out << "Population NS-WD: Gravitational mass beyond M_max "
+                << "for star " << pars[pvi[string("M_")+pd.id_wd[i]]] 
+                << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
-      /* pop_weights[2] = pop.get_weight_hms(pars, pvi, iret);
-         if (iret!=0) {
-         log_wgt=0.0;
-         iret = iret-1;
-         scr_out << "Population HMXB: Returned zero weight for star "
-         << pars[pvi[string("M_")+pd.id_hms[iret]]] << std::endl;
-         return m.ix_pop_wgt_zero;
-         } */
+
       pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
       if (iret!=0) {
         log_wgt=0.0;
-        iret = iret-90;
+        iret = iret-100;
         scr_out << "Population LMXB: Returned zero weight for star "
                 << pars[pvi[string("M_")+pd.id_lms[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
       }
+      for (size_t i=0; i<pd.id_lms.size(); i++) {
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_lms[i]]]){
+          scr_out << "Population LMXB: Gravitational mass beyond M_max "
+                << "for star " << pars[pvi[string("M_")+pd.id_lms[i]]] 
+                << std::endl;
+          return m.ix_gm_exceeds_mmax;
+        }
+      }
+
       pop_weights[3] = pop_weights[0] + pop_weights[1] + pop_weights[2];
       log_wgt += pop_weights[3];
       
@@ -423,14 +433,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         /* cout << "Final pop result: ";
            vector_out(cout, pop_weights, true); */
         cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
-          // << ", HM: " << pop_weights[2] 
              << ", LM: " << pop_weights[2] << ", All: " 
              << pop_weights[3] << endl;
-      }
-      for (size_t i=0; i<pd.id_lms.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_lms[iret]]]){
-          return m.ix_gm_exceeds_mmax;
-        }
       }
     }
 

@@ -502,8 +502,8 @@ npoly_nompi:
 		data/shb18/M28_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt M30 \
-		data/shb18/M30_H_syst_wilm.o2 \
-		data/shb18/M30_He_syst_wilm.o2 \
+		data/egz20/M30_echi_H.o2 \
+		data/egz20/M30_echi_He.o2 \
 		like 0.7 rescaled \
 		-add-data-alt wCen \
 		data/shb18/wCen_H_syst_wilm.o2 \
@@ -566,8 +566,8 @@ npoly_mpi:
 		data/shb18/M28_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt M30 \
-		data/shb18/M30_H_syst_wilm.o2 \
-		data/shb18/M30_He_syst_wilm.o2 \
+		data/egz20/M30_echi_H.o2 \
+		data/egz20/M30_echi_He.o2 \
 		like 0.7 rescaled \
 		-add-data-alt wCen \
 		data/shb18/wCen_H_syst_wilm.o2 \
@@ -671,7 +671,7 @@ nlines_nompi:
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/nl \
-		-set max_iters 20000 \
+		-set max_iters 100 \
 		-set n_walk 1 -set step_fac 10000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
@@ -694,8 +694,8 @@ nlines_nompi:
 		data/shb18/M28_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt M30 \
-		data/shb18/M30_H_syst_wilm.o2 \
-		data/shb18/M30_He_syst_wilm.o2 \
+		data/egz20/M30_echi_H.o2 \
+		data/egz20/M30_echi_He.o2 \
 		like 0.7 rescaled \
 		-add-data-alt wCen \
 		data/shb18/wCen_H_syst_wilm.o2 \
@@ -758,8 +758,8 @@ nlines_mpi:
 		data/shb18/M28_He_syst_wilm.o2 \
 		like 0.7 rescaled \
 		-add-data-alt M30 \
-		data/shb18/M30_H_syst_wilm.o2 \
-		data/shb18/M30_He_syst_wilm.o2 \
+		data/egz20/M30_echi_H.o2 \
+		data/egz20/M30_echi_He.o2 \
 		like 0.7 rescaled \
 		-add-data-alt wCen \
 		data/shb18/wCen_H_syst_wilm.o2 \

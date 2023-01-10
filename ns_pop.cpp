@@ -65,7 +65,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     }
     if (wgt_star<=0.0) {
       /* Record index i (via ret) for bookkeeping (scr_out): 
-      1 is added to avoid ret=0 when wgt_star=0 */
+      30 is added to avoid ret=0 when wgt_star=0 */
       ret = 30+i; 
       return 0.0;
     }
@@ -121,50 +121,6 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
 }
 
 
-// The likelihood function for NS-MS/HMXB
-/* double ns_pop::get_weight_hms(const ubvector &pars, vec_index &pvi,
-                                 int &ret) {
-  ret=0;
-  double mean = pars[pvi["mean_HMS"]];
-  double log10_width = pars[pvi["log10_width_HMS"]];
-  double width = pow(10.0, log10_width);
-  double skewness = pars[pvi["skewness_HMS"]];
-  double M_star, mass, lowlim, uplim, asym, scale, wgt_star; 
-  double log_wgt=0.0;
-  eqn_solver es;
-
-  if (debug) {
-    cout << "index name mass(data) asym scale M_star(param) "
-         << "mean width skewness wgt AN SN" << endl;
-  }
-  for (size_t i=0; i<pd.id_hms.size(); i++) {
-    mass = pd.mass_hms[i]; 
-    uplim = pd.lim_hms[i];
-    lowlim = uplim; // Symmetric 68% limits
-    asym = sqrt(uplim/lowlim); 
-    scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+pd.id_hms[i]]];
-    wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skew_norm(M_star, mean, width, skewness);
-    if (debug) {
-      cout << "HMXB: " << i << " " << pd.id_hms[i] << " "
-           << mass << " " << asym << " " << scale << " " 
-           << M_star << " " << mean << " " << width << " " 
-           << skewness << " " << wgt_star; 
-      cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skew_norm(M_star, mean, width, skewness) << endl;
-    }
-    if (wgt_star<=0.0) {
-      ret = 1+i;
-      break;
-    }
-    log_wgt += log(wgt_star); 
-  }
-  if (debug) cout << "HMXB: " << log_wgt << endl;
-  return log_wgt;
-} */
-
-
 // The likelihood function for NS-MS/LMXB 
 double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
@@ -190,6 +146,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
     M_star = pars[pvi[string("M_")+pd.id_lms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
+    
     if (debug) {
       cout << "LMXB: " << i << " " << pd.id_lms[i] << " "
            << mass << " " << asym << " " << scale << " " 
@@ -199,7 +156,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
            << skew_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
-      ret = 90+i;
+      ret = 100+i;
       return 0.0;
     }
     log_wgt += log(wgt_star); 

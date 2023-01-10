@@ -286,5 +286,5 @@ void pop_data::load_data() {
   
   // Count the total number of stars in all populations
   this->n_stars = id_ns.size() + id_wd.size() + id_lms.size();
-  // + id_hms.size()
+  // Currently, 59 = 22 + 32 + 5
 }
