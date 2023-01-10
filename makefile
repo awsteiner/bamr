@@ -671,8 +671,8 @@ nlines_nompi:
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/nl \
-		-set max_iters 5 \
-		-set n_walk 1 -set step_fac 4000.0 \
+		-set max_iters 20000 \
+		-set n_walk 1 -set step_fac 10000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 -set compute_cthick 1 \
@@ -798,7 +798,7 @@ nlines:
 		-set couple_threads 1 -set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/nl \
-		-set max_iters 5 \
+		-set max_iters 100000 \
 		-set n_walk 100 -set step_fac 2.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
