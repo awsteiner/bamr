@@ -384,10 +384,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_ns.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[i]]]){
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[i]]]) {
           scr_out << "Population NS-NS: Gravitational mass beyond M_max "
-                << "for star " << pars[pvi[string("M_")+pd.id_ns[i]]] 
-                << std::endl;
+                  << "for star " << pars[pvi[string("M_")+pd.id_ns[i]]] 
+                  << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
@@ -400,8 +400,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 << pars[pvi[string("M_")+pd.id_wd[iret]]] << std::endl;
         return m.ix_pop_wgt_zero;
       }
+      
       for (size_t i=0; i<pd.id_wd.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[i]]]){
+        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[i]]]) {
           scr_out << "Population NS-WD: Gravitational mass beyond M_max "
                 << "for star " << pars[pvi[string("M_")+pd.id_wd[i]]] 
                 << std::endl;
