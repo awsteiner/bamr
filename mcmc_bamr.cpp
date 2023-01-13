@@ -781,7 +781,7 @@ int mcmc_bamr::mcmc_init() {
                                 "1/fm^4");
           this->table->new_column(((string)"EoA_")+o2scl::itos(i));
           this->table->set_unit(((string)"EoA_")+o2scl::itos(i),
-                                "MeV");
+                                "1/fm");
         }
       }
       if (m.has_esym) {

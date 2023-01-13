@@ -26,7 +26,7 @@ file-eos:
 	-contours frac 0.99 eos.o2 c99
 
 plot-eos:
-	o2graph -read eos.o2 ed_pr_3d -set logy 1 -set colbar 1 \
+	o2graph -read eos.o2 ed_pr_3d -set logy 0 -set colbar 1 \
 	-den-plot prob pcm=True,cmap=YlGnBu \
 	-read eos.o2 c68 -plot lw=1,color=purple \
 	-read eos.o2 c95 -plot lw=1,color=orange \
