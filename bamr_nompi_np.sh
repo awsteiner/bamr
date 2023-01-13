@@ -1,16 +1,22 @@
 #! /usr/bin/bash
 
-	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 -set couple_threads 0 \
+	./bamr_nompi -threads 1 -set aff_inv 0 \
+		-set couple_threads 0 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/np \
-		-set max_time 172800 \
-		-set n_walk 1 -set step_fac 4000.0 \
-		-set norm_max 0 -set addl_quants 1 \
+		-set max_iters 20000 \
+		-set n_walk 1 \
+		-set step_fac 10000.0 \
+		-set norm_max 0 \
+		-set addl_quants 1 \
 		-set inc_baryon_mass 1 \
-		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 10 -set verbose 1 \
-		-set mcmc_verbose 1 -add-data-alt 6304 \
+		-set crust_from_L 0 \
+		-set compute_cthick 1 \
+		-set file_update_time 3600 \
+		-set verbose 1 \
+		-set mcmc_verbose 2 \
+		-add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
 		like 0.7 rescaled \
@@ -59,4 +65,4 @@
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-mcmc 
+		-mcmc
