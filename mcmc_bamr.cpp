@@ -681,6 +681,7 @@ int mcmc_bamr::mcmc_init() {
   // default return values in models.h
   this->ret_value_counts.resize(this->n_threads);
   for(size_t it=0;it<this->n_threads;it++) {
+    // The size must be at least (total # of error codes + 1)
     this->ret_value_counts[it].resize(25);
   }
 

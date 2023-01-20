@@ -379,15 +379,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         /* iret_old = 30+i, where "i" is the star index
         30 was added to avoid iret=0 when wgt=0 for NS-NS */
         iret = iret-30; 
-        scr_out << "Population NS-NS: Returned zero weight for star "
-                << pars[pvi[string("M_")+pd.id_ns[iret]]] << std::endl;
+        scr_out << "NS-NS: Returned zero weight for star "
+                << pd.id_ns[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_ns.size(); i++) {
         if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[i]]]) {
-          scr_out << "Population NS-NS: Gravitational mass beyond M_max "
-                  << "for star " << pars[pvi[string("M_")+pd.id_ns[i]]] 
-                  << std::endl;
+          scr_out << "NS-NS: Gravitational mass beyond M_max "
+                  << "for star " << pd.id_ns[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
@@ -396,16 +395,15 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (iret!=0) {
         log_wgt=0.0;
         iret = iret-60;
-        scr_out << "Population NS-WD: Returned zero weight for star "
-                << pars[pvi[string("M_")+pd.id_wd[iret]]] << std::endl;
+        scr_out << "NS-WD: Returned zero weight for star "
+                << pd.id_wd[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       
       for (size_t i=0; i<pd.id_wd.size(); i++) {
         if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[i]]]) {
-          scr_out << "Population NS-WD: Gravitational mass beyond M_max "
-                << "for star " << pars[pvi[string("M_")+pd.id_wd[i]]] 
-                << std::endl;
+          scr_out << "NS-WD: Gravitational mass beyond M_max "
+                << "for star " << pd.id_wd[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
@@ -414,15 +412,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (iret!=0) {
         log_wgt=0.0;
         iret = iret-100;
-        scr_out << "Population LMXB: Returned zero weight for star "
-                << pars[pvi[string("M_")+pd.id_lms[iret]]] << std::endl;
+        scr_out << "LMXB: Returned zero weight for star "
+                << pd.id_lms[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_lms.size(); i++) {
         if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_lms[i]]]){
-          scr_out << "Population LMXB: Gravitational mass beyond M_max "
-                << "for star " << pars[pvi[string("M_")+pd.id_lms[i]]] 
-                << std::endl;
+          scr_out << "LMXB: Gravitational mass beyond M_max "
+                  << "for star " << pd.id_lms[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
