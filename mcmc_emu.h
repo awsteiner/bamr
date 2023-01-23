@@ -22,8 +22,6 @@
 */
 /** \file emulator.h
  */
-// #ifndef O2SCL_EMULATOR_H
-// #define O2SCL_EMULATOR_H
 #ifndef MCMC_EMU_H
 #define MCMC_EMU_H
 
@@ -40,13 +38,12 @@
 
 namespace o2scl {
   
-  typedef boost::numeric::ublas::vector<double> ubvector;
-  typedef boost::numeric::ublas::matrix<double> ubmatrix;
-  
   /** \brief Emulator base class
    */
-  template<class data_t, class vec_t=ubvector> class emulator_base {
-    
+  template<class data_t,
+           class vec_t=boost::numeric::ublas::vector<double>>
+  class emulator_base {    
+
   protected:
     
   public:
@@ -62,8 +59,8 @@ namespace o2scl {
   /** \brief Emulator with uncertainty base class
    */
   template<class data_t, class data_unc_t,
-           class vec_t=ubvector> class emulator_unc : public
-  emulator_base<data_t,vec_t> {
+           class vec_t=boost::numeric::ublas::vector<double>>
+  class emulator_unc : public emulator_base<data_t,vec_t> {
     
   public:
     
@@ -80,7 +77,7 @@ namespace o2scl {
              data_t &dat) {
       double log_wgt_unc;
       // This assignment effectively allocates memory for
-      // dat_unc object using a copy constructor
+      // a new dat_unc object using a copy constructor
       data_unc_t dat_unc=dat;
       return eval_unc(n,p,log_wgt,log_wgt_unc,dat,dat_unc);
     }
@@ -95,7 +92,8 @@ namespace o2scl {
       
       This class is experimental.
   */
-  template<class vec2_t=ubvector, class vec_t=ubvector>
+  template<class vec2_t=boost::numeric::ublas::vector<double>,
+           class vec_t=boost::numeric::ublas::vector<double>>
   class emulator_interpm_idw_table :
     public emulator_unc<vec2_t,vec2_t,vec_t> {
 
@@ -156,7 +154,11 @@ namespace o2scl {
 
       This class is experimental.
    */
-  template<class vec2_t=ubvector, class vec_t=ubvector>
+  template<class vec2_t=boost::numeric::ublas::vector<double>,
+           class vec_t=boost::numeric::ublas::vector<double>,
+           class mat_t=boost::numeric::ublas::matrix<double>,
+           class mat_inv_t=o2scl_linalg::matrix_invert_det_cholesky<
+             boost::numeric::ublas::matrix<double> >>
   class emulator_interpm_krige_table :
     public emulator_unc<vec2_t,vec2_t,vec_t> {
 
@@ -172,22 +174,15 @@ namespace o2scl {
     /// The view of the user-specified table
     matrix_view_table_transpose<> cmvtt;
 
+    /// Index of the "log weight" in the MCMC data vector
     size_t ix;
-
-    std::vector<std::string> col_list_x;
-    std::vector<std::string> col_list_y;
-    matrix_view_table<> mvt_x;
-    matrix_view_table_transpose<> mvt_y;
     
   public:
     
     /// The internal interpolation object
-    /*
-      interpm_krige_optim
+    /* interpm_krige_optim
     <ubvector,mat_x_t,mat_x_row_t,
-     mat_y_t,mat_y_row_t,ubmatrix,
-     o2scl_linalg::matrix_invert_det_cholesky<ubmatrix> > iko;
-    */
+     mat_y_t,mat_y_row_t,mat_t,mat_inv_t> iko; */
 
     /** \brief Create an emulator
      */
@@ -208,16 +203,21 @@ namespace o2scl {
 
       ix=ix_log_wgt;
 
-      col_list_x.clear();
-      col_list_y.clear();
+      std::vector<std::string> col_list_x;
+      std::vector<std::string> col_list_y;
+
       for(size_t j=0;j<list.size();j++) {
         if (j<np) col_list_x.push_back(list[j]);
         else col_list_y.push_back(list[j]);
       }
+
+      matrix_view_table<> mvt_x;
+      matrix_view_table_transpose<> mvt_y;
+
       mvt_x.set(t,col_list_x);
       mvt_y.set(t,col_list_y);
       
-      //iko.set_data(2,1,8,mvt_x,mvt_y);
+      // iko.set_data(np,n_out,t.get_nlines(),mvt_x,mvt_y,true);
 
       return;
     }
@@ -228,7 +228,8 @@ namespace o2scl {
     virtual int eval_unc(size_t n, const vec_t &p, double &log_wgt,
                  double &log_wgt_unc, vec2_t &dat, vec2_t &dat_unc) {
       
-      //iko.eval_err<vec_t,vec2_t,vec2_t>(p,dat,dat_unc);
+      iko.eval(p,dat);
+      iko.sigma(p,dat_unc);
       log_wgt=dat[ix];
       log_wgt_unc=dat_unc[ix];
       return 0;
