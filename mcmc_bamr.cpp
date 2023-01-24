@@ -77,12 +77,105 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
      dpdM [exclude since ix_infinite never happens]
      ed_last (add col to table) [which one? there are 3 in NP]
   */
+  list.push_back("a");
+  list.push_back("alpha");
+  list.push_back("param_S");
+  list.push_back("param_L");
+  list.push_back("exp1");
+  list.push_back("trans1");
+  list.push_back("exp2");
+  list.push_back("trans2");
+  list.push_back("exp3");
+  list.push_back("M_chirp_det");
+  list.push_back("q");
+  list.push_back("z_cdf");
+  list.push_back("mf_6304");
+  list.push_back("mf_6397");
+  list.push_back("mf_M13");
+  list.push_back("mf_M28");
+  list.push_back("mf_M30");
+  list.push_back("mf_wCen");
+  list.push_back("mf_X7");
+  list.push_back("mf_1810b");
+  list.push_back("mf_1724b");
+  list.push_back("mf_1702");
+  list.push_back("mf_0030");
+  list.push_back("mean_NS");
+  list.push_back("log10_width_NS");
+  list.push_back("skewness_NS");
+  list.push_back("mean_WD");
+  list.push_back("log10_width_WD");
+  list.push_back("skewness_WD");
+  list.push_back("mean_LMS");
+  list.push_back("log10_width_LMS");
+  list.push_back("skewness_LMS");
+  list.push_back("M_J0453p");
+  list.push_back("M_J0453c");
+  list.push_back("M_J1906p");
+  list.push_back("M_J1906c");
+  list.push_back("M_B1534p");
+  list.push_back("M_B1534c");
+  list.push_back("M_B1913p");
+  list.push_back("M_B1913c");
+  list.push_back("M_B2127p");
+  list.push_back("M_B2127c");
+  list.push_back("M_J0737A");
+  list.push_back("M_J0737B");
+  list.push_back("M_J1756p");
+  list.push_back("M_J1756c");
+  list.push_back("M_J1807p");
+  list.push_back("M_J1807c");
+  list.push_back("M_J1518p");
+  list.push_back("M_J1518c");
+  list.push_back("M_J1811p");
+  list.push_back("M_J1811c");
+  list.push_back("M_J1829p");
+  list.push_back("M_J1829c");
+  list.push_back("M_J2045");
+  list.push_back("M_J2053");
+  list.push_back("M_J1713");
+  list.push_back("M_B1855");
+  list.push_back("M_J0751");
+  list.push_back("M_J1141");
+  list.push_back("M_J1738");
+  list.push_back("M_J1614");
+  list.push_back("M_J0348");
+  list.push_back("M_J2222");
+  list.push_back("M_J2234");
+  list.push_back("M_J1949");
+  list.push_back("M_J1012");
+  list.push_back("M_J0437");
+  list.push_back("M_J1909");
+  list.push_back("M_J1802");
+  list.push_back("M_J1911");
+  list.push_back("M_J2043");
+  list.push_back("M_J0337");
+  list.push_back("M_J1946");
+  list.push_back("M_J1918");
+  list.push_back("M_J1600");
+  list.push_back("M_J0621");
+  list.push_back("M_B2303");
+  list.push_back("M_J0024");
+  list.push_back("M_J0514");
+  list.push_back("M_B1516");
+  list.push_back("M_J1748I");
+  list.push_back("M_J1748J");
+  list.push_back("M_B1802");
+  list.push_back("M_B1911");
+  list.push_back("M_J0740");
+  list.push_back("M_CygX2");
+  list.push_back("M_XTEJ2123");
+  list.push_back("M_4U1822");
+  list.push_back("M_HerX1");
+  list.push_back("M_2S0921");
+  
   list.push_back("log_wgt");
-  list.push_back("log_wgt_NS");
-  list.push_back("log_wgt_WD");
-  list.push_back("log_wgt_LMS");
-  list.push_back("M_max");
-  list.push_back("R_43");
+  
+  // list.push_back("log_wgt_NS");
+  // list.push_back("log_wgt_WD");
+  // list.push_back("log_wgt_LMS");
+  // list.push_back("M_max");
+  // list.push_back("R_43");
 
   cout << "Training column list (size " << list.size() << "): "; 
   o2scl::vector_out(std::cout,list,true);
@@ -240,7 +333,7 @@ void emulator_bamr::train(o2scl::table_units<> &tab_train,
   
   em1.set(np,nout,0,table,list);
   
-  // anik.py, class emu, function train
+  // module (*.py), class_name (emu), train_func, point_func, n_pars, file
   
   // em3.set("anik","emu","train","eval","log_wgt",np,table,list);
 
