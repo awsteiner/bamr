@@ -575,6 +575,29 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         // Include the weight for this source
         log_wgt+=log(dat.sourcet.get("wgt",i));
 
+        /* If population is included, calculate the skewed normal (SN) 
+        PDF for the sources: QLMXBs, PREs, and NICER */
+        if (set->inc_pop) {
+          ns_pop &pop = nsd->pop;
+          double mean = pars[pvi["mean_LMS"]];
+          double width = pow(10.0, pars[pvi["log10_width_LMS"]]);
+          double skewness = pars[pvi["skewness_LMS"]];
+          
+          double mf;
+          if (set->inc_ligo) mf=pars[i+mod->n_eos_params+3];
+          else mf=pars[i+mod->n_eos_params];
+          
+          double m_src = 1.0+mf*(dat.mvsr.max("gm")-1.0);
+          
+          cout << "m_src=" << m_src << endl;
+          
+          double sn_src=pop.skew_norm(m_src, mean, width, skewness);
+          log_wgt += log(sn_src);
+          
+          /* cout << "sn_src=" << sn_src << "\t log(sn_src)=" 
+               << log(sn_src) << endl; */
+        }
+
         // Update each weight into output table
         dat.eos.add_constant(((std::string)"log_wgt_")+nsd->source_names[i]
                              ,log(dat.sourcet.get("wgt",i)));
@@ -1095,15 +1118,31 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               prob=-800.0;
             }
           }
-          prob_data=prob;
-          
+          prob_data=prob;          
         }
-
         dat.eos.add_constant("ligo_prob",prob_data);
         log_wgt+=(prob_data);
       }
-      
       // End of section for additional LIGO constraints
+
+      /* If population is included, calculate the skewed normal (SN) 
+      PDF for the GW170817 stars */
+      if (set->inc_pop) {
+        ns_pop &pop = nsd->pop;
+        double mean = pars[pvi["mean_NS"]];
+        double width = pow(10.0, pars[pvi["log10_width_NS"]]);
+        double skewness = pars[pvi["skewness_NS"]];
+        double sn_m1 = pop.skew_norm(m1, mean, width, skewness);
+        double sn_m2 = pop.skew_norm(m2, mean, width, skewness);
+
+        cout << "m1=" << m1 << "\t m2=" << m2 << endl;
+
+        double sn_ligo = sn_m1*sn_m2;
+        log_wgt += log(sn_ligo);
+        
+        /* cout << "sn_ligo=" << sn_ligo << "\t log(sn_ligo)=" 
+               << log(sn_ligo) << endl; */
+      }
     }
 
 

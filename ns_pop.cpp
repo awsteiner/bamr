@@ -311,14 +311,7 @@ void ns_pop::set_params(vec_index &pvi) {
     string mass_par=string("M_")+pd.id_wd[i];
     pvi.append(mass_par);
   }
-  // Fill in NS-MS (HMXBs & LMXBs) parameters
-  /* pvi.append("mean_HMS");
-  pvi.append("log10_width_HMS");
-  pvi.append("skewness_HMS");
-  for(size_t i=0; i<pd.id_hms.size(); i++) {
-    string mass_par=string("M_")+pd.id_hms[i];
-    pvi.append(mass_par);
-  } */
+  // Fill in LMXB parameters
   pvi.append("mean_LMS");
   pvi.append("log10_width_LMS");
   pvi.append("skewness_LMS");

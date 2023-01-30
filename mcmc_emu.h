@@ -228,11 +228,11 @@ namespace o2scl {
     virtual int eval_unc(size_t n, const vec_t &p, double &log_wgt,
                  double &log_wgt_unc, vec2_t &dat, vec2_t &dat_unc) {
       
-      iko.eval(p,dat);
-      iko.sigma(p,dat_unc);
+      /* iko.eval(p,dat);
+      iko.sigma(p,dat_unc); */
       log_wgt=dat[ix];
-      log_wgt_unc=dat_unc[ix];
-      return 0;
+      log_wgt_unc=dat_unc[ix]; 
+      return 0; 
     }
     
   };
