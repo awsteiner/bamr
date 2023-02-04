@@ -588,8 +588,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           else mf=pars[i+mod->n_eos_params];
           
           double m_src = 1.0+mf*(dat.mvsr.max("gm")-1.0);
-          
-          cout << "m_src=" << m_src << endl;
+
+	  // AWS, 2/3/23, commented this extra output out
+          //cout << "m_src=" << m_src << endl;
           
           double sn_src=pop.skew_norm(m_src, mean, width, skewness);
           log_wgt += log(sn_src);

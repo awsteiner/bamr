@@ -4001,6 +4001,11 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   double trans2=params[7];
   double csq3=params[8];
 
+  if (debug) {
+    cout << "Parameters: ";
+    vector_out(cout,params,true);
+  }
+
   eos_tov_linear etl1, etl2, etl3;
   
   double ed_last=0.0, pr_last=0.0, nb_last=0.0;
@@ -4033,6 +4038,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
 
   if (debug) {
     cout << "Crust-core: " << endl;
+    cout << "ed           pr           nb" << endl;
     for(size_t j=0;j<dat.eos.get_nlines();j++) {
       cout << dat.eos.get("ed",j) << " ";
       cout << dat.eos.get("pr",j) << " ";
@@ -4061,6 +4067,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   // Add first line to table
   if (debug) {
     cout << "First line: " << const1 << endl;
+    cout << "ed           pr           nb" << endl;
   }
 
   for(double ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
@@ -4103,6 +4110,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   // Add second line to table
   if (debug) {
     cout << "Second line: " << const2 << endl;
+    cout << "ed           pr           nb" << endl;
   }
   
   delta_ed=(trans2-trans1)/20.01;
@@ -4148,6 +4156,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   delta_ed=(10.0-trans2)/20.01;
   if (debug) {
     cout << "Third line: " << const3 << endl;
+    cout << "ed           pr           nb" << endl;
   }
 
   // We compute to energy densities slightly higher than 10
@@ -4171,7 +4180,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
     
   }
 
-  if (debug) exit(-1);
+  //if (debug) exit(-1);
 
   // cout << "End of new_lines::compute_eos()" << endl;
 
