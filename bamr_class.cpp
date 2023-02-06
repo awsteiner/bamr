@@ -582,21 +582,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           double mean = pars[pvi["mean_LMS"]];
           double width = pow(10.0, pars[pvi["log10_width_LMS"]]);
           double skewness = pars[pvi["skewness_LMS"]];
-          
+
           double mf;
           if (set->inc_ligo) mf=pars[i+mod->n_eos_params+3];
           else mf=pars[i+mod->n_eos_params];
           
           double m_src = 1.0+mf*(dat.mvsr.max("gm")-1.0);
-
-	  // AWS, 2/3/23, commented this extra output out
-          //cout << "m_src=" << m_src << endl;
-          
           double sn_src=pop.skew_norm(m_src, mean, width, skewness);
           log_wgt += log(sn_src);
-          
-          /* cout << "sn_src=" << sn_src << "\t log(sn_src)=" 
-               << log(sn_src) << endl; */
         }
 
         // Update each weight into output table
@@ -1135,14 +1128,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         double skewness = pars[pvi["skewness_NS"]];
         double sn_m1 = pop.skew_norm(m1, mean, width, skewness);
         double sn_m2 = pop.skew_norm(m2, mean, width, skewness);
-
-        cout << "m1=" << m1 << "\t m2=" << m2 << endl;
-
         double sn_ligo = sn_m1*sn_m2;
         log_wgt += log(sn_ligo);
-        
-        /* cout << "sn_ligo=" << sn_ligo << "\t log(sn_ligo)=" 
-               << log(sn_ligo) << endl; */
       }
     }
 

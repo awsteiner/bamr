@@ -41,7 +41,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
   double log_wgt=0.0;
   eqn_solver es;
   
-  if (debug) {
+  if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
@@ -55,7 +55,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     
-    if (debug) {
+    if (this->debug) {
       cout << "NS: " << i << " " << pd.id_ns[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
@@ -71,7 +71,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     }
     log_wgt += log(wgt_star); 
   }
-  if (debug) cout << "NS: log_wgt = " << log_wgt << endl;
+  if (this->debug) cout << "NS: log_wgt = " << log_wgt << endl;
   return log_wgt;
 }
 
@@ -88,7 +88,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
   double log_wgt=0.0;
   eqn_solver es;
 
-  if (debug) {
+  if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
@@ -102,7 +102,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     
-    if (debug) {
+    if (this->debug) {
       cout << "WD: " << i << " " << pd.id_wd[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
@@ -116,7 +116,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     }
     log_wgt += log(wgt_star); 
   }
-  if (debug) cout << "WD: " << log_wgt << endl;
+  if (this->debug) cout << "WD: " << log_wgt << endl;
   return log_wgt;
 }
 
@@ -133,7 +133,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
   double log_wgt=0.0;
   eqn_solver es;
 
-  if (debug) {
+  if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
@@ -147,7 +147,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
     wgt_star = asym_norm(mass-M_star, asym, scale) 
       * skew_norm(M_star, mean, width, skewness);
     
-    if (debug) {
+    if (this->debug) {
       cout << "LMXB: " << i << " " << pd.id_lms[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
@@ -161,7 +161,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
     }
     log_wgt += log(wgt_star); 
   }
-  if (debug) {
+  if (this->debug) {
     cout << "LMXB: " << log_wgt << endl;
     exit(-1);
   }

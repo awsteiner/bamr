@@ -672,7 +672,7 @@ nlines_nompi:
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/nl \
-		-set max_iters 20000 \
+		-set max_iters 1 \
 		-set n_walk 1 -set step_fac 10000.0 \
 		-set norm_max 0 -set addl_quants 1 \
 		-set inc_baryon_mass 1 \
@@ -855,7 +855,7 @@ nlines:
 		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/init_last17 \
+		-initial-point-last out/nl_out3 \
 		-mcmc
 #> out/nl.out 2>&1 &
 
