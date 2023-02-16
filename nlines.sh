@@ -4,7 +4,7 @@
 		-set couple_threads 1 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np \
+		-set prefix out/nlines \
 		-set max_iters 100000 \
 		-set n_walk 100 \
 		-set step_fac 2.0 \
@@ -13,7 +13,7 @@
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 \
 		-set compute_cthick 1 \
-		-set file_update_time 3600 \
+		-set file_update_time 600 \
 		-set verbose 1 \
 		-set mcmc_verbose 2 \
 		-add-data-alt 6304 \
@@ -62,8 +62,8 @@
 		prob 0.7 table3d \
 		-set apply_intsc 0 \
 		-set cached_intsc 0 \
-		-model new_poly \
+		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-best out/np_0 \
+		-initial-point-best out/nl_0 \
 		-mcmc

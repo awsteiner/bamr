@@ -478,13 +478,17 @@ npoly_nompi:
 		-set couple_threads 0 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np \
+		-set prefix out/npoly \
 		-set max_iters 20000 \
-		-set n_walk 1 -set step_fac 10000.0 \
-		-set norm_max 0 -set addl_quants 1 \
+		-set n_walk 1 \
+		-set step_fac 10000.0 \
+		-set norm_max 0 \
+		-set addl_quants 1 \
 		-set inc_baryon_mass 1 \
-		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 3600 -set verbose 1 \
+		-set crust_from_L 0 \
+		-set compute_cthick 1 \
+		-set file_update_time 300 \
+		-set verbose 1 \
 		-set mcmc_verbose 2 \
 		-add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
@@ -536,7 +540,7 @@ npoly_nompi:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc
-#> out/np.out 2>&1 &
+#> out/npoly.out 2>&1 &
 
 npoly_mpi:
 	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 \
@@ -600,7 +604,7 @@ npoly_mpi:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc 
-#> out/np.out 2>&1 &
+#> out/npoly.out 2>&1 &
 
 npoly:
 	./bamr -threads 3 -set aff_inv 1 \
@@ -664,20 +668,24 @@ npoly:
 		-set inc_ligo 1 \
 		-initial-point-last out/init_last17 \
 		-mcmc
-#> out/np.out 2>&1 &
+#> out/npoly.out 2>&1 &
 
 nlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 \
 		-set couple_threads 0 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/nl \
-		-set max_iters 1 \
-		-set n_walk 1 -set step_fac 10000.0 \
-		-set norm_max 0 -set addl_quants 1 \
+		-set prefix out/nlines \
+		-set max_iters 20000 \
+		-set n_walk 1 \
+		-set step_fac 10000.0 \
+		-set norm_max 0 \
+		-set addl_quants 1 \
 		-set inc_baryon_mass 1 \
-		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 3600 -set verbose 1 \
+		-set crust_from_L 0 \
+		-set compute_cthick 1 \
+		-set file_update_time 300 \
+		-set verbose 1 \
 		-set mcmc_verbose 2 \
 		-add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
@@ -729,7 +737,7 @@ nlines_nompi:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc
-#> out/nl.out 2>&1 &
+#> out/nlines.out 2>&1 &
 
 nlines_mpi:
 	mpirun -np 3 ./bamr -threads 1 -set aff_inv 0 \
@@ -793,20 +801,26 @@ nlines_mpi:
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
 		-mcmc 
-#> out/nl.out 2>&1 &
+#> out/nlines.out 2>&1 &
 
 nlines:
 	./bamr -threads 3 -set aff_inv 1 \
-		-set couple_threads 1 -set inc_pop 1 \
+		-set couple_threads 1 \
+		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
 		-set prefix out/nl \
-		-set max_iters 100000 \
-		-set n_walk 100 -set step_fac 2.0 \
-		-set norm_max 0 -set addl_quants 1 \
+		-set max_iters 10000 \
+		-set n_walk 100 \
+		-set step_fac 2.0 \
+		-set norm_max 0 \
+		-set addl_quants 1 \
 		-set inc_baryon_mass 1 \
-		-set crust_from_L 0 -set compute_cthick 1 \
-		-set file_update_time 3600 -set verbose 1 \
-		-set mcmc_verbose 2 -add-data-alt 6304 \
+		-set crust_from_L 0 \
+		-set compute_cthick 1 \
+		-set file_update_time 3600 \
+		-set verbose 1 \
+		-set mcmc_verbose 2 \
+		-add-data-alt 6304 \
 		data/shb18/6304_H_nopl_syst_wilm.o2 \
 		data/shb18/6304_He_nopl_syst_wilm.o2 \
 		like 0.7 rescaled \
@@ -855,9 +869,9 @@ nlines:
 		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/nl_out3 \
-		-mcmc
-#> out/nl.out 2>&1 &
+		-initial-point-best out/nl_out0 \
+		-mcmc > out/nl.out 2>&1 &
+#> out/nlines.out 2>&1 &
 
 include makefile.anik
 include makefile.aws

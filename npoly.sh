@@ -1,19 +1,19 @@
 #! /usr/bin/bash
 
-	./bamr_nompi -threads 1 -set aff_inv 0 \
-		-set couple_threads 0 \
+	./bamr -threads 3 -set aff_inv 1 \
+		-set couple_threads 1 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np \
-		-set max_iters 20000 \
-		-set n_walk 1 \
-		-set step_fac 10000.0 \
+		-set prefix out/npoly \
+		-set max_iters 100000 \
+		-set n_walk 100 \
+		-set step_fac 2.0 \
 		-set norm_max 0 \
 		-set addl_quants 1 \
 		-set inc_baryon_mass 1 \
 		-set crust_from_L 0 \
 		-set compute_cthick 1 \
-		-set file_update_time 3600 \
+		-set file_update_time 600 \
 		-set verbose 1 \
 		-set mcmc_verbose 2 \
 		-add-data-alt 6304 \
@@ -65,4 +65,5 @@
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
+		-initial-point-best out/npoly_init \
 		-mcmc

@@ -136,6 +136,19 @@ plot-dist:
 	-ytitle "Distribution SN_LM" \
 	-save sn_lm.png -show & 
 
+plot-scatter:
+	o2graph -read main.o2 markov_chain_0 \
+	-function 1 w -scatter M_max log_wgt w log_wgt \
+	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log_wgt" \
+	-save mmax-wgt.png -show &
+
+plot-hist:
+	o2graph -read main.o2 markov_chain_0 \
+	-to-hist M_max 40 -plot \
+	-xtitle "M_max [$$ M_\odot $$]" -ytitle "Frequency" \
+	-save mmax-hist.png -show &
+
+
 o2-clean:
 	rm -f eos.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
 	main.o2 eos.o2 mvsr.o2 pop.o2 dist.o2 mdist.o2

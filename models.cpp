@@ -3576,15 +3576,15 @@ void new_poly::initial_point(std::vector<double> &params) {
       
   params.resize(9);
 
-  params[0]=12.7;
-  params[1]=0.49;
-  params[2]=32.0;
-  params[3]=55.0;
-  params[4]=4.0;
-  params[5]=1.66;
-  params[6]=1.515;
-  params[7]=4.0;
-  params[8]=2.054;
+  params[0]=12.7;  // a
+  params[1]=0.49;  // alpha
+  params[2]=32.0;  // param_S
+  params[3]=55.0;  // param_L
+  params[4]=4.0;   // exp1
+  params[5]=1.66;  // trans1
+  params[6]=1.515; // exp2
+  params[7]=4.0;   // trans2
+  params[8]=2.054; // exp3
 
   return;
 }
@@ -3893,15 +3893,15 @@ void new_lines::initial_point(std::vector<double> &params) {
   
   params.resize(9);
 
-  params[0]=12.7;
-  params[1]=0.49;
-  params[2]=32.0;
-  params[3]=55.0;
-  params[4]=0.9;
-  params[5]=1.66;
-  params[6]=0.9;
-  params[7]=3.5;
-  params[8]=0.9;
+  params[0]=12.7; // a
+  params[1]=0.49; // alpha
+  params[2]=32.0; // param_S
+  params[3]=55.0; // param_L
+  params[4]=0.9;  // csq1
+  params[5]=1.66; // trans1
+  params[6]=0.9;  // csq2
+  params[7]=3.5;  // trans2
+  params[8]=0.9;  // csq3
 
   return;
 }
