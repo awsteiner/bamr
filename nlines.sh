@@ -65,5 +65,5 @@
 		-model new_lines \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/nl6t4 \
+		-initial-point-last out/nl6t5 \
 		-mcmc

@@ -81,6 +81,7 @@ namespace bamr {
       emu_post=false;
       //emu_train="";
       mmax_deriv = false;
+      model_dpdm = false;
       inc_pop=true;
       inc_ligo=true;
     }
@@ -121,6 +122,7 @@ namespace bamr {
     o2scl::cli::parameter_bool p_couple_threads;
     o2scl::cli::parameter_string p_emu_train;
     o2scl::cli::parameter_bool p_mmax_deriv;
+    o2scl::cli::parameter_bool p_model_dpdm;
     o2scl::cli::parameter_bool p_inc_ligo;
     //@}
 
@@ -232,6 +234,8 @@ namespace bamr {
     std::string emu_train;
     
     bool mmax_deriv;
+
+    bool model_dpdm;
 
     bool couple_threads;
     //@}
@@ -446,6 +450,10 @@ namespace bamr {
       p_mmax_deriv.b=&mmax_deriv;
       p_mmax_deriv.help="help";
       cl.par_list.insert(std::make_pair("mmax_deriv",&p_mmax_deriv));
+
+      p_model_dpdm.b=&model_dpdm;
+      p_model_dpdm.help="help";
+      cl.par_list.insert(std::make_pair("model_dpdm",&p_model_dpdm));
 
       p_emu_train.str=&emu_train;
       p_emu_train.help="help";

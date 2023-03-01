@@ -65,5 +65,5 @@
 		-model new_poly \
 		-set mmax_deriv 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/np6t4 \
+		-initial-point-last out/np6t5 \
 		-mcmc
