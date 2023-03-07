@@ -32,7 +32,7 @@ plot-eos:
 	-read eos.o2 c95 -plot lw=1,color=orange \
 	-xtitle "$$ {\varepsilon}~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-ytitle "$$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-save eos.png -show &
+	-save figs/eos.png -show &
 
 file-mvsr:
 	acol -read main.o2 markov_chain_0 -delete-col R_max \
@@ -54,7 +54,7 @@ plot-mvsr:
 	-read mvsr.o2 c95 -plot lw=1,color=orange \
 	-xtitle "$$ R~[\mathrm{km}] $$" \
 	-ytitle "$$ M~[\mathrm{M}_\odot] $$" \
-	-save mvsr.png -show &
+	-save figs/mvsr.png -show &
 
 file-pop:
 	acol -read main.o2 markov_chain_0 \
@@ -120,35 +120,51 @@ plot-dist:
 	-read dist.o2 c95_ns -plot lw=1,color=orange \
 	-xtitle "Mass_NS [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_NS" \
-	-save sn_ns.png -show & 
+	-save figs/sn_ns.png -show & 
 	o2graph -read dist.o2 sn_wd -set colbar 1 \
 	-den-plot prob_wd cmap=YlGnBu \
 	-read dist.o2 c68_wd -plot lw=1,color=purple \
 	-read dist.o2 c95_wd -plot lw=1,color=orange \
 	-xtitle "Mass_WD [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_WD" \
-	-save sn_wd.png -show & 
+	-save figs/sn_wd.png -show & 
 	o2graph -read dist.o2 sn_lm -set colbar 1 \
 	-den-plot prob_lm cmap=YlGnBu \
 	-read dist.o2 c68_lm -plot lw=1,color=purple \
 	-read dist.o2 c95_lm -plot lw=1,color=orange \
 	-xtitle "Mass_LM [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_LM" \
-	-save sn_lm.png -show & 
+	-save figs/sn_lm.png -show & 
 
-plot-scatter:
+plot-trc-mmax:
+	o2graph -read main.o2 markov_chain_0 \
+	-xtitle "Steps" -ytitle "M_max" -plot1 M_max \
+	-save figs/mmax-trc.png -show &
+
+plot-trc-dpdm:
+	o2graph -read main.o2 markov_chain_0 \
+	-function "log(dpdM)" log_dpdm \
+	-xtitle "Steps" -ytitle "log(dp/dM)" -plot1 log_dpdm \
+	-save figs/dpdm-trc.png -show &
+
+plot-scat-mmax:
 	o2graph -read main.o2 markov_chain_0 \
 	-function 1 w -scatter M_max log_wgt w log_wgt \
 	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log_wgt" \
-	-save mmax-wgt.png -show &
+	-save figs/mmax-wgt.png -show &
 
-plot-hist:
+plot-scat-dpdm-mmax:
+	o2graph -read main.o2 markov_chain_0 \
+	-function "log(dpdM)" log_dpdm \
+	-function 1 w -scatter M_max log_dpdm w log_wgt \
+	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log(dpdM)" \
+	-save figs/dpdm-mmax.png -show &
+
+plot-hist-mmax:
 	o2graph -read main.o2 markov_chain_0 \
 	-to-hist M_max 40 -plot \
 	-xtitle "M_max [$$ M_\odot $$]" -ytitle "Frequency" \
-	-save mmax-hist.png -show &
-
+	-save figs/mmax-hist.png -show &
 
 o2-clean:
-	rm -f eos.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
-	main.o2 eos.o2 mvsr.o2 pop.o2 dist.o2 mdist.o2
+	rm -f figs/*.png files/*.o2 

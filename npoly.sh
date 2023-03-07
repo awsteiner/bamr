@@ -1,10 +1,11 @@
 #! /usr/bin/bash
 
+#mpoly:
 	./bamr -threads 6 -set aff_inv 1 \
 		-set couple_threads 1 \
 		-set inc_pop 1 \
 		-set min_max_mass 2.0 \
-		-set prefix out/np6t \
+		-set prefix out/mpoly \
 		-set max_iters 100000 \
 		-set n_walk 50 \
 		-set step_fac 2.0 \
@@ -64,6 +65,7 @@
 		-set cached_intsc 0 \
 		-model new_poly \
 		-set mmax_deriv 1 \
+		-set model_dpdm 1 \
 		-set inc_ligo 1 \
-		-initial-point-last out/np6t5 \
+		-initial-point-last out/mpoly_3 \
 		-mcmc
