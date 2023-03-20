@@ -203,6 +203,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ret=ix_deriv_infinite;
         return;
       } 
+
+      /*
+      if (dpdM>0) {
+        if (m_max2>m_max) cout << "m_max2>m_max: OK" << endl;
+        else cout << "m_max2<m_max: exp3_2<exp3!" << endl;
+      }
+      else if (dpdM==0) cout << "dpdM=0: exp3_2=exp3!" << endl;
+      else cout << "dpdM<0: log(dpdM) explodes!" << endl;
+      */
+
       eost.add_constant("dpdM",dpdM);
 
       // Compute the central energy density

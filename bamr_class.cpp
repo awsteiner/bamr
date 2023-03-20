@@ -364,6 +364,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       return iret;
     }
 
+    // If likelihood is also a function of M_max, multiply by dpdM
+    if (set->mmax_deriv && set->model_dpdm) {
+      log_wgt+=log(dat.eos.get_constant("dpdM"));
+    }
+
     // Calculate likelihood if using mass data from populations
     if (set->inc_pop) {
       
