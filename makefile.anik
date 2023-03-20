@@ -1,14 +1,12 @@
+
 INDEX = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
 	20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 \
 	40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 \
 	60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 \
 	80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99
 
-#testx:
-#	$(foreach num,$(MASS),echo $(num) ; )
-
 file-main:
-	acol -read out markov_chain_0 -select-rows "mult>0.5" \
+	acol -read out.o2 markov_chain_0 -select-rows "mult>0.5" \
 	-internal main.o2
 
 file-eos:
@@ -33,6 +31,51 @@ plot-eos:
 	-xtitle "$$ {\varepsilon}~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-ytitle "$$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-save eos.png -show &
+
+file-eoa:
+	acol -read main.o2 markov_chain_0 -select ":EoA_*" \
+	-set obj_name nb_ea -internal eoa.o2 \
+	-read eoa.o2 nb_ea -ser-hist-t3d \
+	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
+	"grid:0.0,2.5,(2.5-0.0)/99" auto ea \
+	"EoA_*" prob -type -list \
+	-set obj_name nb_ea_3d -internal eoa.o2 \
+	-to-hist-2d prob \
+	-contours frac 0.68 eoa.o2 c68 \
+	-contours frac 0.95 eoa.o2 c95 \
+	-contours frac 0.99 eoa.o2 c99
+
+plot-eoa:
+	o2graph -read eoa.o2 nb_ea_3d -set colbar 1 \
+	-den-plot prob cmap=YlGnBu \
+	-read eoa.o2 c68 -plot lw=1,color=purple \
+	-read eoa.o2 c95 -plot lw=1,color=orange \
+	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
+	-ytitle "Energy/Nucleon, $$ E/A~[\mathrm{MeV}] $$" \
+	-save eoa.png -show &
+
+file-pnb:
+	acol -read main.o2 markov_chain_0 \
+	$(foreach i,$(INDEX),-function Pnb_$i*197.33 Pnb_hc_$i) \
+	-select ":Pnb_hc_*" -set obj_name nb_pr -internal pnb.o2 \
+	-read pnb.o2 nb_pr -ser-hist-t3d \
+	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
+	"grid:1.0,2.0e3,(2.0e3)^(1/99),log" auto pr \
+	"Pnb_hc_*" prob -type -list \
+	-set obj_name nb_pr_3d -internal pnb.o2 \
+	-to-hist-2d prob \
+	-contours frac 0.68 pnb.o2 c68 \
+	-contours frac 0.95 pnb.o2 c95 \
+	-contours frac 0.99 pnb.o2 c99
+
+plot-pnb:
+	o2graph -read pnb.o2 nb_pr_3d -set logy 1 -set colbar 1 \
+	-den-plot prob pcm=True,cmap=YlGnBu \
+	-read pnb.o2 c68 -plot lw=1,color=purple \
+	-read pnb.o2 c95 -plot lw=1,color=orange \
+	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
+	-ytitle "Pressure, $$ P~[\mathrm{MeV/fm}^3] $$" \
+	-save pnb.png -show &
 
 file-mvsr:
 	acol -read main.o2 markov_chain_0 -delete-col R_max \
@@ -83,30 +126,28 @@ file-dist:
 	-function "cf*pdf*cdf" SN_LM_$i) \
 	-select ":SN_*" -set obj_name gm_sn -internal dist.o2	
 
-YLOW = 0.0 #0.04, 0.08, 0.12, 0.16
-XBIN = 99 #30
-YBIN = 99 #40
+YLOW = 0.08 #0.04, 0.08, 0.12, 0.16
 
 file-cdist:
 	acol -read dist.o2 gm_sn -ser-hist-t3d \
-	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
-	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
+	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
+	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_NS_*" prob_ns -type -list \
 	-set obj_name sn_ns -internal dist.o2 \
 	-to-hist-2d prob_ns \
 	-contours frac 0.68 dist.o2 c68_ns \
 	-contours frac 0.95 dist.o2 c95_ns \
 	-read dist.o2 gm_sn -ser-hist-t3d \
-	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
-	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
+	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
+	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_WD_*" prob_wd -type -list \
 	-set obj_name sn_wd -internal dist.o2 \
 	-to-hist-2d prob_wd \
 	-contours frac 0.68 dist.o2 c68_wd \
 	-contours frac 0.95 dist.o2 c95_wd \
 	-read dist.o2 gm_sn -ser-hist-t3d \
-	"grid:0.0,3.0,(3.0-0.0)/$(XBIN)" x gm \
-	"grid:$(YLOW),4.0,(4.0-$(YLOW))/$(YBIN)" auto sn \
+	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
+	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_LM_*" prob_lm -type -list \
 	-set obj_name sn_lm -internal dist.o2 \
 	-to-hist-2d prob_lm \
@@ -135,19 +176,6 @@ plot-dist:
 	-xtitle "Mass_LM [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_LM" \
 	-save sn_lm.png -show & 
-
-plot-scatter:
-	o2graph -read main.o2 markov_chain_0 \
-	-function 1 w -scatter M_max log_wgt w log_wgt \
-	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log_wgt" \
-	-save mmax-wgt.png -show &
-
-plot-hist:
-	o2graph -read main.o2 markov_chain_0 \
-	-to-hist M_max 40 -plot \
-	-xtitle "M_max [$$ M_\odot $$]" -ytitle "Frequency" \
-	-save mmax-hist.png -show &
-
 
 o2-clean:
 	rm -f eos.png mvsr.png sn_ns.png sn_wd.png sn_lm.png \
