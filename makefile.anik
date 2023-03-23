@@ -6,101 +6,101 @@ INDEX = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
 	80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99
 
 file-main:
-	acol -read out.o2 markov_chain_0 -select-rows "mult>0.5" \
-	-internal main.o2
+	acol -read tmp/out.o2 markov_chain_0 -select-rows "mult>0.5" \
+	-internal tmp/main.o2
 
 file-eos:
-	acol -read main.o2 markov_chain_0 \
+	acol -read tmp/main.o2 markov_chain_0 \
 	$(foreach i,$(INDEX),-function P_$i*197.33 Phc_$i) \
-	-set obj_name ed_pr -select ":Phc_*" -internal eos.o2 \
-	-read eos.o2 ed_pr -ser-hist-t3d \
+	-set obj_name ed_pr -select ":Phc_*" -internal tmp/eos.o2 \
+	-read tmp/eos.o2 ed_pr -ser-hist-t3d \
 	"grid:0.3*197.33,10.0*197.33,(10.0-0.3)/99*197.33" x ed \
 	"grid:1.0,2.0e3,(2.0e3)^(1/99),log" auto pr \
 	"Phc_*" prob -type -list \
-	-set obj_name ed_pr_3d -internal eos.o2 \
+	-set obj_name ed_pr_3d -internal tmp/eos.o2 \
 	-to-hist-2d prob \
-	-contours frac 0.68 eos.o2 c68 \
-	-contours frac 0.95 eos.o2 c95 \
-	-contours frac 0.99 eos.o2 c99
+	-contours frac 0.68 tmp/eos.o2 c68 \
+	-contours frac 0.95 tmp/eos.o2 c95 \
+	-contours frac 0.99 tmp/eos.o2 c99
 
 plot-eos:
-	o2graph -read eos.o2 ed_pr_3d -set logy 1 -set colbar 1 \
+	o2graph -read tmp/eos.o2 ed_pr_3d -set logy 1 -set colbar 1 \
 	-den-plot prob pcm=True,cmap=YlGnBu \
-	-read eos.o2 c68 -plot lw=1,color=purple \
-	-read eos.o2 c95 -plot lw=1,color=orange \
+	-read tmp/eos.o2 c68 -plot lw=1,color=purple \
+	-read tmp/eos.o2 c95 -plot lw=1,color=orange \
 	-xtitle "$$ {\varepsilon}~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-ytitle "$$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
 	-save figs/eos.png -show &
 
 file-eoa:
 	acol -read main.o2 markov_chain_0 -select ":EoA_*" \
-	-set obj_name nb_ea -internal eoa.o2 \
-	-read eoa.o2 nb_ea -ser-hist-t3d \
+	-set obj_name nb_ea -internal tmp/eoa.o2 \
+	-read tmp/eoa.o2 nb_ea -ser-hist-t3d \
 	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
 	"grid:0.0,2.5,(2.5-0.0)/99" auto ea \
 	"EoA_*" prob -type -list \
-	-set obj_name nb_ea_3d -internal eoa.o2 \
+	-set obj_name nb_ea_3d -internal tmp/eoa.o2 \
 	-to-hist-2d prob \
-	-contours frac 0.68 eoa.o2 c68 \
-	-contours frac 0.95 eoa.o2 c95 \
-	-contours frac 0.99 eoa.o2 c99
+	-contours frac 0.68 tmp/eoa.o2 c68 \
+	-contours frac 0.95 tmp/eoa.o2 c95 \
+	-contours frac 0.99 tmp/eoa.o2 c99
 
 plot-eoa:
-	o2graph -read eoa.o2 nb_ea_3d -set colbar 1 \
+	o2graph -read tmp/eoa.o2 nb_ea_3d -set colbar 1 \
 	-den-plot prob cmap=YlGnBu \
-	-read eoa.o2 c68 -plot lw=1,color=purple \
-	-read eoa.o2 c95 -plot lw=1,color=orange \
+	-read tmp/eoa.o2 c68 -plot lw=1,color=purple \
+	-read tmp/eoa.o2 c95 -plot lw=1,color=orange \
 	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
 	-ytitle "Energy/Nucleon, $$ E/A~[\mathrm{MeV}] $$" \
-	-save eoa.png -show &
+	-save figs/eoa.png -show &
 
 file-pnb:
-	acol -read main.o2 markov_chain_0 \
+	acol -read tmp/main.o2 markov_chain_0 \
 	$(foreach i,$(INDEX),-function Pnb_$i*197.33 Pnb_hc_$i) \
-	-select ":Pnb_hc_*" -set obj_name nb_pr -internal pnb.o2 \
-	-read pnb.o2 nb_pr -ser-hist-t3d \
+	-select ":Pnb_hc_*" -set obj_name nb_pr -internal tmp/pnb.o2 \
+	-read tmp/pnb.o2 nb_pr -ser-hist-t3d \
 	"grid:0.04,1.24,(1.24-0.04)/99" x nb \
 	"grid:1.0,2.0e3,(2.0e3)^(1/99),log" auto pr \
 	"Pnb_hc_*" prob -type -list \
-	-set obj_name nb_pr_3d -internal pnb.o2 \
+	-set obj_name nb_pr_3d -internal tmp/pnb.o2 \
 	-to-hist-2d prob \
-	-contours frac 0.68 pnb.o2 c68 \
-	-contours frac 0.95 pnb.o2 c95 \
-	-contours frac 0.99 pnb.o2 c99
+	-contours frac 0.68 tmp/pnb.o2 c68 \
+	-contours frac 0.95 tmp/pnb.o2 c95 \
+	-contours frac 0.99 tmp/pnb.o2 c99
 
 plot-pnb:
-	o2graph -read pnb.o2 nb_pr_3d -set logy 1 -set colbar 1 \
+	o2graph -read tmp/pnb.o2 nb_pr_3d -set logy 1 -set colbar 1 \
 	-den-plot prob pcm=True,cmap=YlGnBu \
-	-read pnb.o2 c68 -plot lw=1,color=purple \
-	-read pnb.o2 c95 -plot lw=1,color=orange \
+	-read tmp/pnb.o2 c68 -plot lw=1,color=purple \
+	-read tmp/pnb.o2 c95 -plot lw=1,color=orange \
 	-xtitle "Baryon Density, $$ n_b~[\mathrm{fm}^{-3}] $$" \
 	-ytitle "Pressure, $$ P~[\mathrm{MeV/fm}^3] $$" \
-	-save pnb.png -show &
+	-save figs/pnb.png -show &
 
 file-mvsr:
-	acol -read main.o2 markov_chain_0 -delete-col R_max \
-	-set obj_name gm_r -select ":R_*" -internal mvsr.o2 \
-	-read mvsr.o2 gm_r -ser-hist-t3d \
+	acol -read tmp/main.o2 markov_chain_0 -delete-col R_max \
+	-set obj_name gm_r -select ":R_*" -internal tmp/mvsr.o2 \
+	-read tmp/mvsr.o2 gm_r -ser-hist-t3d \
 	"grid:0.2,3.0,(3.0-0.2)/99" y gm \
 	"grid:9,15,6/100" auto r \
 	"R_*" prob -type -list \
-	-set obj_name gm_r_3d -internal mvsr.o2 \
+	-set obj_name gm_r_3d -internal tmp/mvsr.o2 \
 	-to-hist-2d prob \
-	-contours frac 0.68 mvsr.o2 c68 \
-	-contours frac 0.95 mvsr.o2 c95 \
-	-contours frac 0.99 mvsr.o2 c99 	 
+	-contours frac 0.68 tmp/mvsr.o2 c68 \
+	-contours frac 0.95 tmp/mvsr.o2 c95 \
+	-contours frac 0.99 tmp/mvsr.o2 c99 	 
 
 plot-mvsr:
-	o2graph -read mvsr.o2 gm_r_3d -set colbar 1 \
+	o2graph -read tmp/mvsr.o2 gm_r_3d -set colbar 1 \
 	-den-plot prob cmap=YlGnBu \
-	-read mvsr.o2 c68 -plot lw=1,color=purple \
-	-read mvsr.o2 c95 -plot lw=1,color=orange \
+	-read tmp/mvsr.o2 c68 -plot lw=1,color=purple \
+	-read tmp/mvsr.o2 c95 -plot lw=1,color=orange \
 	-xtitle "$$ R~[\mathrm{km}] $$" \
 	-ytitle "$$ M~[\mathrm{M}_\odot] $$" \
 	-save figs/mvsr.png -show &
 
 file-pop:
-	acol -read main.o2 markov_chain_0 \
+	acol -read tmp/main.o2 markov_chain_0 \
 	-function "10^log10_width_NS" width_NS -delete-col log10_width_NS \
 	-function "10^log10_width_WD" width_WD -delete-col log10_width_WD \
 	-function "mean_LMS" mean_LM -delete-col mean_LMS \
@@ -108,10 +108,12 @@ file-pop:
 	-function "10^log10_width_LMS" width_LM -delete-col log10_width_LMS \
 	-select mean_NS width_NS skewness_NS mean_WD width_WD skewness_WD \
 	mean_LM width_LM skewness_LM mult \
-	-internal pop.o2
+	-internal tmp/pop.o2
+
+YLOW = 0.08 #0.04, 0.08, 0.12, 0.16
 
 file-dist:
-	acol -read pop.o2 markov_chain_0 \
+	acol -read tmp/pop.o2 markov_chain_0 \
 	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
 	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
@@ -124,91 +126,84 @@ file-dist:
 	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
 	-function "cf*pdf*cdf" SN_LM_$i) \
-	-select ":SN_*" -set obj_name gm_sn -internal dist.o2	
-
-YLOW = 0.08 #0.04, 0.08, 0.12, 0.16
-
-file-cdist:
-	acol -read dist.o2 gm_sn -ser-hist-t3d \
+	-select ":SN_*" -set obj_name gm_sn -internal tmp/dist.o2 &&
+	acol -read tmp/dist.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_NS_*" prob_ns -type -list \
-	-set obj_name sn_ns -internal dist.o2 \
+	-set obj_name sn_ns -internal tmp/dist.o2 \
 	-to-hist-2d prob_ns \
-	-contours frac 0.68 dist.o2 c68_ns \
-	-contours frac 0.95 dist.o2 c95_ns \
-	-read dist.o2 gm_sn -ser-hist-t3d \
+	-contours frac 0.68 tmp/dist.o2 c68_ns \
+	-contours frac 0.95 tmp/dist.o2 c95_ns \
+	-read tmp/dist.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_WD_*" prob_wd -type -list \
-	-set obj_name sn_wd -internal dist.o2 \
+	-set obj_name sn_wd -internal tmp/dist.o2 \
 	-to-hist-2d prob_wd \
-	-contours frac 0.68 dist.o2 c68_wd \
-	-contours frac 0.95 dist.o2 c95_wd \
-	-read dist.o2 gm_sn -ser-hist-t3d \
+	-contours frac 0.68 tmp/dist.o2 c68_wd \
+	-contours frac 0.95 tmp/dist.o2 c95_wd \
+	-read tmp/dist.o2 gm_sn -ser-hist-t3d \
 	"grid:0.0,3.0,(3.0-0.0)/99.0" x gm \
 	"grid:$(YLOW),4.0,(4.0-$(YLOW))/99.0" auto sn \
 	"SN_LM_*" prob_lm -type -list \
-	-set obj_name sn_lm -internal dist.o2 \
+	-set obj_name sn_lm -internal tmp/dist.o2 \
 	-to-hist-2d prob_lm \
-	-contours frac 0.68 dist.o2 c68_lm \
-	-contours frac 0.95 dist.o2 c95_lm 
+	-contours frac 0.68 tmp/dist.o2 c68_lm \
+	-contours frac 0.95 tmp/dist.o2 c95_lm 
 
 plot-dist:
-	o2graph -read dist.o2 sn_ns -set colbar 1 \
+	o2graph -read tmp/dist.o2 sn_ns -set colbar 1 \
 	-den-plot prob_ns cmap=YlGnBu \
-	-read dist.o2 c68_ns -plot lw=1,color=purple \
-	-read dist.o2 c95_ns -plot lw=1,color=orange \
+	-read tmp/dist.o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist.o2 c95_ns -plot lw=1,color=orange \
 	-xtitle "Mass_NS [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_NS" \
 	-save figs/sn_ns.png -show & 
-	o2graph -read dist.o2 sn_wd -set colbar 1 \
+	o2graph -read tmp/dist.o2 sn_wd -set colbar 1 \
 	-den-plot prob_wd cmap=YlGnBu \
-	-read dist.o2 c68_wd -plot lw=1,color=purple \
-	-read dist.o2 c95_wd -plot lw=1,color=orange \
+	-read tmp/dist.o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist.o2 c95_wd -plot lw=1,color=orange \
 	-xtitle "Mass_WD [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_WD" \
 	-save figs/sn_wd.png -show & 
-	o2graph -read dist.o2 sn_lm -set colbar 1 \
+	o2graph -read tmp/dist.o2 sn_lm -set colbar 1 \
 	-den-plot prob_lm cmap=YlGnBu \
-	-read dist.o2 c68_lm -plot lw=1,color=purple \
-	-read dist.o2 c95_lm -plot lw=1,color=orange \
+	-read tmp/dist.o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist.o2 c95_lm -plot lw=1,color=orange \
 	-xtitle "Mass_LM [$$ M_\odot $$]" \
 	-ytitle "Distribution SN_LM" \
 	-save figs/sn_lm.png -show & 
 
-<<<<<<< HEAD
-=======
 plot-trc-mmax:
-	o2graph -read main.o2 markov_chain_0 \
+	o2graph -read tmp/main.o2 markov_chain_0 \
 	-xtitle "Steps" -ytitle "M_max" -plot1 M_max \
 	-save figs/mmax-trc.png -show &
 
 plot-trc-dpdm:
-	o2graph -read main.o2 markov_chain_0 \
+	o2graph -read tmp/main.o2 markov_chain_0 \
 	-function "log(dpdM)" log_dpdm \
 	-xtitle "Steps" -ytitle "log(dp/dM)" -plot1 log_dpdm \
 	-save figs/dpdm-trc.png -show &
 
 plot-scat-mmax:
-	o2graph -read main.o2 markov_chain_0 \
+	o2graph -read tmp/main.o2 markov_chain_0 \
 	-function 1 w -scatter M_max log_wgt w log_wgt \
 	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log_wgt" \
 	-save figs/mmax-wgt.png -show &
 
 plot-scat-dpdm-mmax:
-	o2graph -read main.o2 markov_chain_0 \
+	o2graph -read tmp/main.o2 markov_chain_0 \
 	-function "log(dpdM)" log_dpdm \
 	-function 1 w -scatter M_max log_dpdm w log_wgt \
 	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log(dpdM)" \
 	-save figs/dpdm-mmax.png -show &
 
 plot-hist-mmax:
-	o2graph -read main.o2 markov_chain_0 \
+	o2graph -read tmp/main.o2 markov_chain_0 \
 	-to-hist M_max 40 -plot \
 	-xtitle "M_max [$$ M_\odot $$]" -ytitle "Frequency" \
 	-save figs/mmax-hist.png -show &
 
->>>>>>> 924987fd6d32464924ebeedf89f874d00dc73446
 o2-clean:
-	rm -f figs/*.png files/*.o2 
+	rm -f figs/*.png tmp/*.o2 
