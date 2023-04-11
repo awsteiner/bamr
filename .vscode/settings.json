@@ -1,8 +1,6 @@
 {
     "python.terminal.activateEnvironment": false,
-<<<<<<< HEAD
     "python.defaultInterpreterPath": "/home/anik/mconda3/envs/tfg/bin/python3",
-=======
-    "python.defaultInterpreterPath": "/usr/bin/python3.10"
->>>>>>> 924987fd6d32464924ebeedf89f874d00dc73446
+    "editor.tabCompletion": "on",
+    "editor.tabSize": 2
 }

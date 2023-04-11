@@ -40,7 +40,7 @@
 
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
-#include "emulator_bamr.h"
+// #include "emulator_bamr.h"
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -115,7 +115,7 @@ namespace bamr {
 
     /** \brief Train file name for python emulator
      */
-    std::string emu_train;
+    /*std::string emu_train;
 
     PyObject *train_modFile;
     PyObject *train_tParam_Names;
@@ -138,15 +138,15 @@ namespace bamr {
         
         This is called in mcmc_bamr::mcmc_func().
     */
-    int train(std::string file_name, std::vector<std::string> &names);
+    /*int train(std::string file_name, std::vector<std::string> &names);
 
     /** \brief Calculate posteriors from the emulated points.
      */
-    virtual int emu_points(std::vector<std::string> &sv,
+    /*virtual int emu_points(std::vector<std::string> &sv,
                            bool itive_com);
     
     virtual int emu_train2(std::vector<std::string> &sv,
-                           bool itive_com);
+                           bool itive_com);*/
 
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
@@ -164,7 +164,7 @@ namespace bamr {
     */
     std::vector<bamr_class *> bc_arr;
     
-    std::vector<emulator_bamr> eb_arr;
+    // std::vector<emulator_bamr> eb_arr;
 
     /** \brief The \ref bamr::settings object 
         (shared by instances of \ref bamr_class)

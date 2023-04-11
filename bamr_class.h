@@ -68,7 +68,7 @@ namespace bamr {
   class bamr_class {
 
   public:
-
+    /*
     PyObject *train_modFile;
     PyObject *train_tParam_Names;
     PyObject *train_trainClass;
@@ -96,7 +96,7 @@ namespace bamr {
      */
     //std::string emu_train;    
 
-    bool py_train;
+    //bool py_train;
 
     void setup_filters();
     

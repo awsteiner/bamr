@@ -18,7 +18,7 @@ LIB_DIRS = $(LDFLAGS)
 
 CXXFLAGS = -I/usr/lib/x86_64-linux-gnu/openmpi/include \
 		-I/usr/lib/x86_64-linux-gnu/hdf5/serial/include \
-		-I/usr/include/python3.8 
+		-I/usr/include/python3.8
 
 INC_DIRS = $(CXXFLAGS)
 
@@ -38,14 +38,14 @@ MPI_CXX = mpic++
 
 # Set these two variables to be empty if you do not have GNU readline
 # readline support
-READLINE_VAR = -DBAMR_READLINE
+READLINE_VAR =
 
-READLINE_LIB = -lreadline -lncurses
+READLINE_LIB =
 
 # Set these two variables to be empty if you do not have FFTW3
-FFTW_VAR = -DBAMR_FFTW3
+FFTW_VAR =
 
-FFTW_LIB = -lfftw3
+FFTW_LIB =
 
 # Basic compiler flags with and without MPI
 
@@ -63,7 +63,7 @@ include $(UTKNA_MAKEFILE)
 # UTK configuration
 LIB_DIRS = $(UTKNA_O2SCL_LIBS)
 INC_DIRS = $(UTKNA_O2SCL_INCS)
-CXX = $(UTKNA_CXX) 
+CXX = $(UTKNA_CXX)
 MPI_CXX = $(UTKNA_MPI_CXX)
 BAMR_DIR = $(UTKNA_BAMR_DIR)
 COMPILER_FLAGS = $(UTKNA_CFLAGS)
@@ -92,11 +92,11 @@ LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o emulator_bamr.o \
+bamr: bamr_class.o models.o nstar_cold2.o main.o \
 		mcmc_bamr.o ns_data.o pop_data.o ns_pop.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr \
-		bamr_class.o models.o nstar_cold2.o main.o emulator_bamr.o \
-		mcmc_bamr.o ns_data.o pop_data.o ns_pop.o $(LIBS) 
+		bamr_class.o models.o nstar_cold2.o main.o \
+		mcmc_bamr.o ns_data.o pop_data.o ns_pop.o $(LIBS)
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -116,8 +116,8 @@ bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 #bc_wrap.o: bc_wrap.cpp bc_wrap.h models.o main.o nstar_cold2.o
 #	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bc_wrap.o -c bc_wrap.cpp
 
-emulator_bamr.o: emulator_bamr.cpp emulator_bamr.h
-	$(MPI_CXX) $(ALL_FLAGS_MPI) -o emulator_bamr.o -c emulator_bamr.cpp
+#emulator_bamr.o: emulator_bamr.cpp emulator_bamr.h
+#	$(MPI_CXX) $(ALL_FLAGS_MPI) -o emulator_bamr.o -c emulator_bamr.cpp
 
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
@@ -148,11 +148,11 @@ help:
 # ----------------------------------------------------------------------
 
 bamr_nompi: bamr_class_nompi.o models_nompi.o nstar_cold2_nompi.o \
-		main_nompi.o emulator_bamr_nompi.o mcmc_bamr_nompi.o \
+		main_nompi.o mcmc_bamr_nompi.o \
 		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
 		bamr_class_nompi.o models_nompi.o nstar_cold2_nompi.o \
-		main_nompi.o emulator_bamr_nompi.o mcmc_bamr_nompi.o \
+		main_nompi.o mcmc_bamr_nompi.o \
 		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o $(LIBS) 
 
 main_nompi.o: main.cpp
@@ -167,8 +167,8 @@ models_nompi.o: models.cpp models.h
 ns_data_nompi.o: ns_data.cpp ns_data.h
 	$(CXX) $(ALL_FLAGS) -o ns_data_nompi.o -c ns_data.cpp
 
-emulator_bamr_nompi.o: emulator_bamr.cpp emulator_bamr.h
-	$(CXX) $(ALL_FLAGS) -o emulator_bamr_nompi.o -c emulator_bamr.cpp 
+#emulator_bamr_nompi.o: emulator_bamr.cpp emulator_bamr.h
+#	$(CXX) $(ALL_FLAGS) -o emulator_bamr_nompi.o -c emulator_bamr.cpp 
 
 mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 	$(CXX) $(ALL_FLAGS) -o mcmc_bamr_nompi.o -c mcmc_bamr.cpp

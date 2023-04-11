@@ -252,7 +252,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   int iret;
 
   if (set->apply_emu) {
-
+  /*
     // create vector for emulator prediction
     ubvector test_pars;
     
@@ -274,7 +274,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
          was trained with "atm" columns with the mcmc_params. To 
          emulate a point we need to update the "atm" values.
       */      
-      for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
+      /*for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
         double atm=pars[i]*1.0e8-((double)((int)(pars[i]*1.0e8)));
         if(atm<2/3){
           test_pars[pars.size()] = 0;
@@ -293,7 +293,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     /* 
        As a test, call emu.py:modGpr:show().
     */
-
+	  /*
     if (PyCallable_Check(train_trainMthd)) {
       target_pred=PyObject_CallObject
         (train_trainMthd, 
@@ -351,7 +351,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 
     iret = 0;
-    
+    */
   } else {
 
     // Reference to model object for convenience
