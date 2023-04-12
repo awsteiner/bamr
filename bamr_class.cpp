@@ -252,7 +252,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   int iret;
 
   if (set->apply_emu) {
-  /*
+    
+#ifdef O2SCL_NEVER_DEFINED
+    
     // create vector for emulator prediction
     ubvector test_pars;
     
@@ -274,7 +276,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
          was trained with "atm" columns with the mcmc_params. To 
          emulate a point we need to update the "atm" values.
       */      
-      /*for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
+      for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
         double atm=pars[i]*1.0e8-((double)((int)(pars[i]*1.0e8)));
         if(atm<2/3){
           test_pars[pars.size()] = 0;
@@ -289,18 +291,17 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     for(size_t i=0; i<test_pars.size(); i++){
       PyList_SetItem(test_vals, i, PyFloat_FromDouble(test_pars[i]));
     }
-
+    
     /* 
        As a test, call emu.py:modGpr:show().
     */
-	  /*
     if (PyCallable_Check(train_trainMthd)) {
       target_pred=PyObject_CallObject
         (train_trainMthd, 
          PyTuple_Pack(4,PyUnicode_FromString(set->emu_train.c_str()),
                       train_tParam_Names,test_vals,addtl_sources));
     }
-
+    
     // Finally, set the value of log_wgt equal to the value returned
     // by the python emulator
     
@@ -351,7 +352,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 
     iret = 0;
-    */
+    
+#endif
+
   } else {
 
     // Reference to model object for convenience
