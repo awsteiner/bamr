@@ -42,7 +42,9 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]->nsd=nsd;
 }
 
-/* int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
+#ifdef O2SCL_NEVER_DEFINED
+
+int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
   
   Py_Initialize();
   PyRun_SimpleString("import sys");
@@ -206,7 +208,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
         test_point.sourcet.get_row(i, temp_sourcet_row);
       */
 
-/*
+
       cout << "mvsr table size : " << temp_mvsr_row.size() << endl;
       cout << "eos table size : " << temp_eos_row.size() << endl;
       cout << "gridt table size : " << temp_gridt_row.size() << endl;
@@ -255,7 +257,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
         out_table.new_column(((string)"P_")+o2scl::itos(i));
         }
         */
-        /* set_col=true;
+        set_col=true;
       }
 
       // Interpolate M-R grid
@@ -273,7 +275,7 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
         }
       */    
       // cout << out_table.get_ncolumns() << " " << col_vals.size() << endl;
-      /* out_table.line_of_data(col_vals);
+      out_table.line_of_data(col_vals);
       double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
       cout << "duration : "<< duration << endl;
       if(duration-60.0 > 0.0 && duration-60.0 < 10.0){
@@ -292,7 +294,9 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
   hf_out.close();
   
   return 0;
-} */
+}
+
+#endif
 
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
@@ -953,16 +957,16 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   }
 
-  /* if (set->apply_emu) {
-    
+#ifdef O2SCL_NEVER_DEFINED
+ if (set->apply_emu) {    
     for(size_t i=0;i<nsd->n_sources;i++) {
       names.push_back(((string)"atm_")+o2scl::szttos(i));
       units.push_back("");
       low.push_back(0.0);
       high.push_back(1.0);
     }
-    
-  } */
+  }
+#endif
 
   // Send names and units to o2scl
   set_names_units(names,units);
@@ -1058,21 +1062,27 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
   }
 
-  /* if (set->emu_aws) {
+#ifdef O2SCL_NEVER_DEFINED
+  if (set->emu_aws) {
     if (eb_arr.size()!=n_threads) {
       cerr << "Not enough emulators." << endl;
     }
-  } */
-  
+  }
+#endif  
+
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
-    if (set->emu_aws) { /*
+    if (set->emu_aws) { 
+
+#ifdef O2SCL_NEVER_DEFINED
       pfa[i]=std::bind
         (std::mem_fn<int(size_t n,const ubvector &,double &,model_data &)>
          (&emulator_bamr::eval),eb_arr[i],std::placeholders::_1,
          std::placeholders::_2,std::placeholders::_3,
-         std::placeholders::_4); */
+         std::placeholders::_4);
+#endif
+
     } else {
       pfa[i]=std::bind
         (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
@@ -1085,8 +1095,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        (&bamr_class::fill),bc_arr[i],std::placeholders::_1,
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
-  
-  /*if (set->apply_emu) {
+
+#ifdef O2SCL_NEVER_DEFINED  
+  if (set->apply_emu) {
     cout << "Applying train function." << endl;
 
     // train the module
@@ -1114,7 +1125,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     Py_DECREF(train_modFile);
     Py_DECREF(train_instance);
     Py_DECREF(train_trainClass);
-  }*/
+  }
+#endif
 
   for(size_t j=0;j<names.size();j++) {
     pvi.append(names[j]);
@@ -1136,11 +1148,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
-  
-  /*if (set->apply_emu) {
+
+#ifdef O2SCL_NEVER_DEFINED  
+  if (set->apply_emu) {
     Py_Finalize();
-  }*/
-  
+  }
+#endif
+
   return 0;
 }
 
