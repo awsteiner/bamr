@@ -83,11 +83,11 @@ LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) \
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o \
-	ns_data.o pop_data.o ns_pop.o
+bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o \
+	pop_data.o ns_pop.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr \
-	bamr_class.o models.o nstar_cold2.o main.o \
-	mcmc_bamr.o ns_data.o pop_data.o ns_pop.o $(LIBS)
+	bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o ns_data.o \
+	pop_data.o ns_pop.o $(LIBS)
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
@@ -139,12 +139,12 @@ help:
 # ----------------------------------------------------------------------
 
 bamr_nompi: bamr_class_nompi.o models_nompi.o nstar_cold2_nompi.o \
-		main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o
+	main_nompi.o mcmc_bamr_nompi.o ns_data_nompi.o pop_data_nompi.o \
+	ns_pop_nompi.o
 	$(CXX) $(ALL_FLAGS) $(LIB_DIRS) -o bamr_nompi \
-		bamr_class_nompi.o models_nompi.o nstar_cold2_nompi.o \
-		main_nompi.o mcmc_bamr_nompi.o \
-		ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o $(LIBS) 
+	bamr_class_nompi.o models_nompi.o nstar_cold2_nompi.o main_nompi.o \
+	mcmc_bamr_nompi.o ns_data_nompi.o pop_data_nompi.o ns_pop_nompi.o \
+	$(LIBS) 
 
 main_nompi.o: main.cpp
 	$(CXX) $(ALL_FLAGS) -o main_nompi.o -c main.cpp
