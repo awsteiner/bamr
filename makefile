@@ -22,33 +22,24 @@ CXXFLAGS = -I/usr/lib/x86_64-linux-gnu/openmpi/include \
 
 INC_DIRS = $(CXXFLAGS)
 
-PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.8
+PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.10
 PYTHON_CXXFLAGS = $(SHELL_PYTHON_INCLUDES)
 
 # Generic (no MPI necessary) C++ compiler (e.g. g++)
+CXX = g++
 
-# CXX = g++
-
-# C++ compiler (e.g. mpicxx). By default this is taken from the
-# environment variable CXX.
-
-#MPI_CXX = $(CXX)
-
+# C++ compiler (e.g. mpicxx).
 MPI_CXX = mpic++
 
-# Set these two variables to be empty if you do not have GNU readline
-# readline support
-READLINE_VAR =
+# Set these to be empty if you do not have GNU readline support
+READLINE_VAR = -DBAMR_READLINE
+READLINE_LIB = -lreadline -lncurses
 
-READLINE_LIB =
-
-# Set these two variables to be empty if you do not have FFTW3
-FFTW_VAR =
-
-FFTW_LIB =
+# Set these to be empty if you do not have FFTW3
+FFTW_VAR = -DBAMR_FFTW3
+FFTW_LIB = -lfftw3
 
 # Basic compiler flags with and without MPI
-
 COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
 COMPILER_FLAGS_MPI = -std=c++0x -O3 -Wall -Wno-unused
 
@@ -68,6 +59,7 @@ MPI_CXX = $(UTKNA_MPI_CXX)
 BAMR_DIR = $(UTKNA_BAMR_DIR)
 COMPILER_FLAGS = $(UTKNA_CFLAGS)
 COMPILER_FLAGS_MPI = $(UTKNA_MPI_CFLAGS)
+COMPILER_FLAGS_OPENMP = $(UTKNA_OPENMP_FLAGS)
 PYTHON_INCLUDES = $(UTKNA_PYTHON_INCLUDES)
 PYTHON_LDFLAGS = $(UTKNA_PYTHON_LDFLAGS)
 
@@ -77,26 +69,25 @@ endif
 # Secondary variables
 # ----------------------------------------------------------------------
 
-ALL_FLAGS_MPI = $(COMPILER_MPI_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
-	$(FFTW_VAR) -DBAMR_MPI -DO2SCL_MPI -DO2SCL_OPENMP -fopenmp \
-	$(PYTHON_INCLUDES)
+ALL_FLAGS_MPI = $(COMPILER_FLAGS_MPI) $(INC_DIRS) $(READLINE_VAR) \
+	$(FFTW_VAR) -DBAMR_MPI $(COMPILER_FLAGS_OPENMP) $(PYTHON_INCLUDES)
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
 	$(PYTHON_INCLUDES)
 
-LIBS = $(UTKNA_O2SCL_LIBS) $(PYTHON_LDFLAGS) \
-	-lo2scl -lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm $(READLINE_LIB) \
-	$(FFTW_LIB)
+LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) \
+	-lo2scl -lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm \
+	$(READLINE_LIB) $(FFTW_LIB)
 
 # ----------------------------------------------------------------------
 # Targets for bamr
 # ----------------------------------------------------------------------
 
-bamr: bamr_class.o models.o nstar_cold2.o main.o \
-		mcmc_bamr.o ns_data.o pop_data.o ns_pop.o
+bamr: bamr_class.o models.o nstar_cold2.o main.o mcmc_bamr.o \
+	ns_data.o pop_data.o ns_pop.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) $(LIB_DIRS) -o bamr \
-		bamr_class.o models.o nstar_cold2.o main.o \
-		mcmc_bamr.o ns_data.o pop_data.o ns_pop.o $(LIBS)
+	bamr_class.o models.o nstar_cold2.o main.o \
+	mcmc_bamr.o ns_data.o pop_data.o ns_pop.o $(LIBS)
 
 main.o: main.cpp
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o main.o -c main.cpp
