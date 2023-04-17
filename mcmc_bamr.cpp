@@ -578,7 +578,7 @@ int mcmc_bamr::mcmc_init() {
 
     if (nsd->source_fnames_alt.size()>0) {
       for(size_t i=0;i<nsd->n_sources;i++) {
-        this->table->new_column(((std::string)"atm_")+o2scl::szttos(i));
+        this->table->new_column(((string)"atm_")+nsd->source_names[i]);
       }
     }
 
@@ -610,7 +610,7 @@ int mcmc_bamr::mcmc_init() {
   
   if (nsd->n_sources>0){
     for(size_t i=0;i<nsd->n_sources;i++) {
-      this->table->new_column(((std::string)"log_wgt_")+
+      this->table->new_column(((string)"log_wgt_")+
                               nsd->source_names[i]);
     }
   }

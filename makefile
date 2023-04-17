@@ -503,8 +503,7 @@ npoly_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 0 -mcmc
-#> out/npoly.out 2>&1 &
+	-model new_poly -set model_dpdm 0 -mcmc > out/npoly.out 2>&1 &
 
 mpoly_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -539,8 +538,7 @@ mpoly_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 1 -mcmc
-#> out/mpoly.out 2>&1 &
+	-model new_poly -set model_dpdm 1 -mcmc > out/mpoly.out 2>&1 &
 
 nlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -575,8 +573,7 @@ nlines_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 0 -mcmc
-#> out/nlines.out 2>&1 &
+	-model new_lines -set model_dpdm 0 -mcmc > out/nlines.out 2>&1 &
 
 mlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -611,13 +608,12 @@ mlines_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 -mcmc
-#> out/mlines.out 2>&1 &
+	-model new_lines -set model_dpdm 1 -mcmc > out/mlines.out 2>&1 &
 
 npoly:
-	./bamr -threads 3 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/npoly -set max_iters 100000 -set n_walk 100 \
-	-set step_fac 2.0 -set file_update_time 600 \
+	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
+	-set prefix out/npoly -set max_iters 100 -set n_walk 50 \
+	-set step_fac 2.0 -set file_update_time 300 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -648,13 +644,12 @@ npoly:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 0 \
-	-initial-point-best out/npoly_0 -mcmc
-#> out/npoly.out 2>&1 &
+	-initial-point-best out/npoly_br2 -mcmc > out/npoly.out 2>&1 &
 
 mpoly:
-	./bamr -threads 3 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/mpoly -set max_iters 100000 -set n_walk 100 \
-	-set step_fac 2.0 -set file_update_time 600 \
+	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
+	-set prefix out/mpoly -set max_iters 100 -set n_walk 50 \
+	-set step_fac 2.0 -set file_update_time 300 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -685,13 +680,12 @@ mpoly:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 1 \
-	-initial-point-best out/mpoly_0 -mcmc
-#> out/mpoly.out 2>&1 &
+	-initial-point-best out/mpoly_br2 -mcmc > out/mpoly.out 2>&1 &
 
 nlines:
-	./bamr -threads 3 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/nlines -set max_iters 100000 -set n_walk 100 \
-	-set step_fac 2.0 -set file_update_time 600 \
+	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
+	-set prefix out/nlines -set max_iters 100 -set n_walk 50 \
+	-set step_fac 2.0 -set file_update_time 300 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -722,13 +716,12 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 0 \
-	-initial-point-best out/nlines_0 -mcmc
-#> out/nlines.out 2>&1 &
+	-initial-point-best out/nlines_br2 -mcmc > out/nlines.out 2>&1 &
 
 mlines:
-	./bamr -threads 3 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/mlines -set max_iters 100000 -set n_walk 100 \
-	-set step_fac 2.0 -set file_update_time 600 \
+	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
+	-set prefix out/mlines -set max_iters 100 -set n_walk 50 \
+	-set step_fac 2.0 -set file_update_time 60 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -759,8 +752,7 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 1 \
-	-initial-point-best out/mlines_0 -mcmc
-#> out/mlines.out 2>&1 &
+	-initial-point-best out/mlines_test -mcmc > out/mlines.out 2>&1 &
 
 include makefile.anik
 include makefile.aws
