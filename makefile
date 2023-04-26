@@ -644,7 +644,7 @@ npoly:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 0 \
-	-initial-point-best out/npoly_br2 -mcmc > out/npoly.out 2>&1 &
+	-initial-point-best out/npoly_br -mcmc > out/npoly.out 2>&1 &
 
 mpoly:
 	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
@@ -680,7 +680,7 @@ mpoly:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 1 \
-	-initial-point-best out/mpoly_br2 -mcmc > out/mpoly.out 2>&1 &
+	-initial-point-last out/mpoly_6t50w -mcmc > out/mpoly.out 2>&1 &
 
 nlines:
 	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
@@ -716,7 +716,7 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 0 \
-	-initial-point-best out/nlines_br2 -mcmc > out/nlines.out 2>&1 &
+	-initial-point-best out/nlines_br -mcmc > out/nlines.out 2>&1 &
 
 mlines:
 	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
@@ -752,7 +752,7 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 1 \
-	-initial-point-best out/mlines_test -mcmc > out/mlines.out 2>&1 &
+	-initial-point-last out/mlines_6t50w -mcmc > out/mlines.out 2>&1 &
 
 include makefile.anik
 include makefile.aws
