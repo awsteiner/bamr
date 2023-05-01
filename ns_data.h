@@ -98,6 +98,9 @@ namespace bamr {
 
     /// Object to call functions from class ns_pop
     ns_pop pop;
+
+    /// Object to call functions from class eqn_solver
+    eqn_solver es;
     
     /// Object to load mass data from class pop_data
     pop_data pd;
@@ -105,6 +108,7 @@ namespace bamr {
     /** \brief The LIGO data
      */
     o2scl::tensor_grid<> ligo_data_table;
+    o2scl::table<> ligo_gw19;
     
     /** \brief Desc
      */

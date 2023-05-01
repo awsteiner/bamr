@@ -605,6 +605,8 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("del_Lambdat");    
       this->table->new_column("ligo_prob");
       this->table->new_column("eta");
+      this->table->new_column("m2_gw19");
+      this->table->set_unit("m2_gw19","Msun");
     }
   }
   
@@ -789,7 +791,7 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   }
       
   size_t np;
-  size_t n_ligo_pars=3;
+  size_t n_ligo_pars=4;
   size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
   size_t n_sources=nsd->n_sources;
   size_t n_pop_pars=nsd->pop.n_params;
@@ -833,7 +835,7 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   }
   
   size_t np;
-  size_t n_ligo_pars=3;
+  size_t n_ligo_pars=4;
   size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
   size_t n_sources=nsd->n_sources;
   size_t n_pop_pars=nsd->pop.n_params;

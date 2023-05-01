@@ -137,6 +137,7 @@ class eqn_solver {
 
     /* The function to solve f(x)=0 [see refs/calc.pdf] */
     double f_to_solve(double, double &, double &);
+    double f2_to_solve(double, double &, double &);
 
     /* Derivative of the function to solve f'(x)
     (for use with root_stef only) */
@@ -146,6 +147,10 @@ class eqn_solver {
     asymmetry parameter c of function asym_norm (AN):
     get_scale(lowlim, highlim) */
     double get_scale(double, double);
+
+    /* Solver to calculate mass m2 given chirp mass M_chirp 
+    and mass m1 */
+    double get_m2(double, double);
 
 };
 

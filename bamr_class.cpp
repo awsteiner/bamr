@@ -216,6 +216,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.eos.get_constant("del_Lambdat"));    
       line.push_back(dat.eos.get_constant("ligo_prob"));
       line.push_back(dat.eos.get_constant("eta"));
+      line.push_back(dat.eos.get_constant("m2_gw19"));
     }
     
     if (nsd->n_sources>0) {
@@ -1009,7 +1010,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
     // Section for additional LIGO constraints 
     if (iret==0 && set->inc_ligo) {
-            
+      
+      // Begin GW170817      
       double M_chirp_det=0.0, q=0.0, z_cdf; 
       double M_chirp, z, m1=0.0, m2=0.0;
       M_chirp_det=pars[m.n_eos_params];
@@ -1024,13 +1026,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       double Mmax=dat.mvsr.max("gm");
       
-      if (m1>Mmax || m2>Mmax || m1<m2) {
-        
+      if (m1>Mmax || m2>Mmax || m1<m2) {  
         log_wgt=0.0;
         return m.ix_ligo_mass_invalid;
         
       } else {
-        
         // radii
         double R1=dat.mvsr.interp("gm",m1,"r");
         double R2=dat.mvsr.interp("gm",m2,"r");
@@ -1125,6 +1125,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         dat.eos.add_constant("ligo_prob",prob_data);
         log_wgt+=(prob_data);
       }
+      // End GW170817
+      
+      // Begin GW190425
+      double m1_gw19=0.0, m2_gw19=0.0, q_gw19=0.0;
+
+      // See Table-1 low-spin prior: https://arxiv.org/pdf/2001.01761.pdf
+      double M_chirp=1.44; 
+
+      m1_gw19 = pars[m.n_eos_params+3];
+      m2_gw19 = nsd->solver.get_m2(M_chirp, m1_gw19);
+      dat.eos.add_constant("m2_gw19", m2_gw19);
+      // End GW190425
+
       // End of section for additional LIGO constraints
 
       /* If population is included, calculate the skewed normal (SN) 
