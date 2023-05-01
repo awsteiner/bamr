@@ -100,7 +100,7 @@ namespace bamr {
     ns_pop pop;
 
     /// Object to call functions from class eqn_solver
-    eqn_solver es;
+    eqn_solver solver;
     
     /// Object to load mass data from class pop_data
     pop_data pd;
