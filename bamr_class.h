@@ -156,9 +156,13 @@ namespace bamr {
     /// Vector to store log_weights to be passed to table
     vector<double> pop_weights;
 
+    // Vector to store output quantities for GW190817
+    vector<double> gw19;
+
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
-      pop_weights.resize(4); 
+      pop_weights.resize(4);
+      gw19.resize(2);
     }
 
     // Empty destructor to make sure its virtual

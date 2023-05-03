@@ -98,15 +98,6 @@ void pop_data::load_data() {
   mass_ns.push_back(1.40); uplim_ns.push_back(0.46); 
   lowlim_ns.push_back(0.12);
 
-  // [source: GW190425 Ligo-Virgo]
-  name_ns.push_back("GW190425a"); id_ns.push_back("GW1904a");
-  mass_ns.push_back(1.8); uplim_ns.push_back(0.18); 
-  lowlim_ns.push_back(0.09);
-
-  name_ns.push_back("GW190425b"); id_ns.push_back("GW1904b");
-  mass_ns.push_back(1.62); uplim_ns.push_back(0.08); 
-  lowlim_ns.push_back(0.14);
-
   /* Data from NS-WD (some with asymmetric 68% limits)
      [source: Alsing et al. 2018, Kiziltan et al. 2013] */
   name_wd.push_back("J2045+3633"); id_wd.push_back("J2045");

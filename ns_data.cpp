@@ -53,9 +53,11 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
     hfx.open("data/ligo/gw170817_kde.o2");
     hdf_input(hfx,ligo_data_table,name);
     hfx.close();
+    cout << "In ns_data::load_mc(): if (set->inc_ligo) Begin GW19" << endl;
     hfx.open("data/ligo/190425_mass1.o2");
     hdf_input(hfx,ligo_gw19,name);
     hfx.close();
+    cout << "In ns_data::load_mc(): if (set->inc_ligo) End GW19" << endl;
   }
   
   if (n_sources>0) {

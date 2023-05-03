@@ -503,7 +503,8 @@ npoly_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 0 -mcmc > out/npoly.out 2>&1 &
+	-model new_poly -set model_dpdm 0 -mcmc
+#> out/npoly.out 2>&1 &
 
 mpoly_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -538,7 +539,8 @@ mpoly_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 1 -mcmc > out/mpoly.out 2>&1 &
+	-model new_poly -set model_dpdm 1 -mcmc 
+#> out/mpoly.out 2>&1 &
 
 nlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -573,7 +575,8 @@ nlines_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 0 -mcmc > out/nlines.out 2>&1 &
+	-model new_lines -set model_dpdm 0 -mcmc 
+#> out/nlines.out 2>&1 &
 
 mlines_nompi:
 	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
@@ -608,7 +611,8 @@ mlines_nompi:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 -mcmc > out/mlines.out 2>&1 &
+	-model new_lines -set model_dpdm 1 -mcmc 
+#> out/mlines.out 2>&1 &
 
 npoly:
 	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
