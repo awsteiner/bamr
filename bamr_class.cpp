@@ -1128,28 +1128,52 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // End GW170817
       
       // Begin GW190425
-      double m1_gw19=0.0, m2_gw19=0.0, q_gw19=0.0;
+      double m1_gw19=0.0, m2_gw19=0.0;
 
-      // See Table-1 low-spin prior: https://arxiv.org/pdf/2001.01761.pdf
-      double M_chirp=1.44; 
+      // See Table-1 (low-spin prior): https://arxiv.org/pdf/2001.01761.pdf
+      double M_chirp_gw19=1.44; 
 
       m1_gw19 = pars[m.n_eos_params+3];
-      m2_gw19 = nsd->solver.get_m2(M_chirp, m1_gw19);
+      m2_gw19 = nsd->solver.get_m2(M_chirp_gw19, m1_gw19);
       dat.eos.add_constant("m2_gw19", m2_gw19);
+
+      if (m1_gw19>Mmax || m2_gw19>Mmax || m1_gw19<m2_gw19) {  
+        log_wgt=0.0;
+        return m.ix_ligo_mass_invalid; 
+      } else {
+        double prob=nsd->ligo_gw19.interp("rep", m1_gw19, "wgt");
+        dat.eos.add_constant("ligo_prob_gw19", prob);
+        log_wgt+=log(prob);
+      }
+      double M_chirp_from_m1, M_chirp_from_m2, q_val=0.0;
+      q_val = m1_gw19/m2_gw19;
+      M_chirp_from_m1 = m1_gw19*pow(q_val, 0.6)/pow(1.0+q_val, 0.2);
+      M_chirp_from_m2 = m2_gw19/pow(q_val, 0.4)/pow(1.0+q_val, 0.2);
+      cout << "m1=" << m1_gw19 << ", m2=" << m2_gw19 << ", M_chirp="
+           << M_chirp_from_m1 << endl;
       // End GW190425
 
       // End of section for additional LIGO constraints
 
       /* If population is included, calculate the skewed normal (SN) 
-      PDF for the GW170817 stars */
+      PDF for the GW170817 and GW190425 stars */
       if (set->inc_pop) {
         ns_pop &pop = nsd->pop;
-        double mean = pars[pvi["mean_NS"]];
-        double width = pow(10.0, pars[pvi["log10_width_NS"]]);
-        double skewness = pars[pvi["skewness_NS"]];
-        double sn_m1 = pop.skew_norm(m1, mean, width, skewness);
-        double sn_m2 = pop.skew_norm(m2, mean, width, skewness);
-        double sn_ligo = sn_m1*sn_m2;
+        double mean, width, skewns, sn_m1, sn_m2, sn_ligo;
+        mean = pars[pvi["mean_NS"]];
+        width = pow(10.0, pars[pvi["log10_width_NS"]]);
+        skewns = pars[pvi["skewness_NS"]];
+
+        // GW170817
+        sn_m1 = pop.skew_norm(m1, mean, width, skewns);
+        sn_m2 = pop.skew_norm(m2, mean, width, skewns);
+        sn_ligo = sn_m1*sn_m2;
+        log_wgt += log(sn_ligo);
+
+        // GW190425
+        sn_m1 = pop.skew_norm(m1_gw19, mean, width, skewns);
+        sn_m2 = pop.skew_norm(m2_gw19, mean, width, skewns);
+        sn_ligo = sn_m1*sn_m2;
         log_wgt += log(sn_ligo);
       }
     }

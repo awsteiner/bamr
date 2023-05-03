@@ -607,6 +607,7 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("eta");
       this->table->new_column("m2_gw19");
       this->table->set_unit("m2_gw19","Msun");
+      this->table->new_column("ligo_prob_gw19");
     }
   }
   

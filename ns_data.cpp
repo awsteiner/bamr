@@ -405,15 +405,19 @@ void ns_data::data_params(std::vector<std::string> &names,
     names.push_back("M_chirp_det");
     names.push_back("q");
     names.push_back("z_cdf");
+    names.push_back("m1_gw19");
     units.push_back("Msun");
     units.push_back("");
     units.push_back("");
+    units.push_back("Msun");
     low.push_back(1.1971);
     low.push_back(0.0);
     low.push_back(0.0);
+    low.push_back(0.5);
     high.push_back(1.1979);
     high.push_back(1.0);
     high.push_back(1.0);
+    high.push_back(2.5);
   }
   
   for(size_t i=0;i<n_sources;i++) {
@@ -433,6 +437,7 @@ void ns_data::initial_point(std::shared_ptr<settings> set,
     init.push_back(1.1975);
     init.push_back(0.6);
     init.push_back(0.5);
+    init.push_back(1.82);
   }
   for(size_t i=0;i<n_sources;i++) {
     init.push_back(0.7);
