@@ -1173,8 +1173,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_ligo_mass_invalid; 
       } else {
         
-        if (m1_gw19<ligo_gw19.get("rep",0) ||
-            m1_gw19>ligo_gw19.get("rep",ligo_gw19.get_nlines())) {
+        if (m1_gw19<nsd->ligo_gw19.get("rep",0) ||
+            m1_gw19>nsd->ligo_gw19.get("rep",nsd->ligo_gw19.get_nlines())) {
           return m.ix_ligo_mass_invalid; 
         }
         
