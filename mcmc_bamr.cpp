@@ -605,7 +605,8 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("del_Lambdat");    
       this->table->new_column("ligo_prob");
       this->table->new_column("eta");
-      cout << "In mcmc_bamr::mcmc_init(): if (set->inc_ligo) Begin GW19" << endl;
+      cout << "In mcmc_bamr::mcmc_init(): if (set->inc_ligo) "
+           << "Begin GW19" << endl;
       this->table->new_column("m2_gw19");
       this->table->set_unit("m2_gw19","Msun");
       this->table->new_column("ligo_prob_gw19");

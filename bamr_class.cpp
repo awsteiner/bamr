@@ -449,14 +449,20 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
     }
     cout << "bamr_class::compute_point(): End pop" << endl;
+
     // ----------------------------------------------------------------
     // Exit early if the mass and radius for any of the masses or radii
     // are out of range
-    cout << "bamr_class::compute_point(): Begin sources" << endl;
+    
+    cout << "bamr_class::compute_point(): Begin sources " << nsd->n_sources
+         << endl;
     cout << "bamr_class::compute_point(): Begin m-r range check" << endl;
-    for(size_t i=0;i<nsd->n_sources;i++) {
+    
+    for (size_t i=0;i<nsd->n_sources;i++) {
+
       double mass=dat.sourcet.get("M",i);
       double rad=dat.sourcet.get("R",i);
+
       if (mass<set->in_m_min || mass>set->in_m_max || 
           rad<set->in_r_min || rad>set->in_r_max) {
         cout << "start test" << endl;
@@ -489,7 +495,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_mr_outside;
       }
     }
+    
     cout << "bamr_class::compute_point(): End m-r range check" << endl;
+    
     // -----------------------------------------------
     // Determine the atm parameter
           
@@ -499,7 +507,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // Determine H or He from mass parameter
       double mf;
       if (set->inc_ligo) {
-        mf=pars[i+mod->n_eos_params+3];
+        mf=pars[i+mod->n_eos_params+4];
       } else {
         mf=pars[i+mod->n_eos_params];
       }
@@ -604,7 +612,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           double skewness = pars[pvi["skewness_LMS"]];
 
           double mf;
-          if (set->inc_ligo) mf=pars[i+mod->n_eos_params+3];
+          if (set->inc_ligo) mf=pars[i+mod->n_eos_params+4];
           else mf=pars[i+mod->n_eos_params];
           
           double m_src = 1.0+mf*(dat.mvsr.max("gm")-1.0);
@@ -1018,9 +1026,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     model_type==((string)"tews_fixp_ligo"))) {
       log_wgt+=dat.eos.get_constant("tews");
     }
-    cout << "bamr_class::compute_point(): End sources" << endl;
+
+    cout << "bamr_class::compute_point(): End sources: " << log_wgt << endl;
+    
     // Section for additional LIGO constraints 
     if (iret==0 && set->inc_ligo) {
+      
       cout << "bamr_class::compute_point(): Begin GW17" << endl;
       // Begin GW170817      
       double M_chirp_det=0.0, q=0.0, z_cdf; 
@@ -1134,18 +1145,22 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           prob_data=prob;          
         }
         dat.eos.add_constant("ligo_prob",prob_data);
+        
         log_wgt+=(prob_data);
       }
       // End GW170817
       cout << "bamr_class::compute_point(): End GW17" << endl;
+      
       // Begin GW190425
-      cout << "In bamr_class::compute_point(): if (iret==0 && set->inc_ligo) Begin GW19" << endl;
+      cout << "In bamr_class::compute_point(): if (iret==0 && "
+           << "set->inc_ligo) Begin GW19" << endl;
+      
       double m1_gw19, m2_gw19, prob_gw19;
 
       // See Table-1 (low-spin prior): https://arxiv.org/pdf/2001.01761.pdf
       double M_chirp_gw19=1.44; 
 
-      m1_gw19 = pars[m.n_eos_params+3];
+      m1_gw19 = pars[m.n_eos_params+4];
       m2_gw19 = nsd->solver.get_m2(M_chirp_gw19, m1_gw19);
 
       if (gw19.size()==0) gw19.resize(2); 
