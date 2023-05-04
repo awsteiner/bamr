@@ -465,6 +465,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       if (mass<set->in_m_min || mass>set->in_m_max || 
           rad<set->in_r_min || rad>set->in_r_max) {
+        
         cout << "start test" << endl;
         scr_out << "Rejected: Mass or radius outside range." << std::endl;
         scr_out << "M limits: " << set->in_m_min << " "
@@ -1171,6 +1172,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         log_wgt=0.0;
         return m.ix_ligo_mass_invalid; 
       } else {
+        
+        if (m1_gw19<ligo_gw19.get("rep",0) ||
+            m1_gw19>ligo_gw19.get("rep",ligo_gw19.get_nlines())) {
+          return m.ix_ligo_mass_invalid; 
+        }
+        
         prob_gw19 = nsd->ligo_gw19.interp("rep", m1_gw19, "wgt");
         gw19[1] = prob_gw19;
         log_wgt+=log(prob_gw19);
