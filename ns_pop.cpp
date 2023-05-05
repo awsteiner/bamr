@@ -332,8 +332,8 @@ double eqn_solver::f_to_solve(double x, double &l, double &u) {
 
 // This is the function to solve for m2, given q
 double eqn_solver::f2_to_solve(double x, double &M_chirp, double &m1) {
-  double k = pow(m1/M_chirp, 5);
-  return k*pow(x,3)-x-1.0;
+  double k = pow(m1/M_chirp, 5.0);
+  return k*pow(x,3.0)-x-1.0;
 }
 
 
@@ -390,7 +390,7 @@ double eqn_solver::get_m2(double M_chirp, double m1) {
 		  (&eqn_solver::f2_to_solve), &es, _1, ref(M_chirp), ref(m1));
   
   // The root is bracketted in [x1, x2]
-  double x1=0.0, x2=1.0;
+  double x1=0.0, x2=3.0;
   
   solver.solve_bkt(x1, x2, f); 
   

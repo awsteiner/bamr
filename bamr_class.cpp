@@ -1157,8 +1157,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         
         nsd->gw19_data_table.set_interp_type(o2scl::itp_linear);
         prob_gw19 = nsd->gw19_data_table.interp("rep", m1_gw19, "wgt");
-        ligo_gw19[1] = prob_gw19;
-        log_wgt+=log(prob_gw19);
+        ligo_gw19[1] = log(prob_gw19);
+        log_wgt+=ligo_gw19[1];
       } // End GW190425
 
       // End of section for additional LIGO constraints

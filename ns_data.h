@@ -88,9 +88,9 @@ namespace bamr {
      */
     size_t n_sources;
 
-    /** \brief The number of sources
+    /** \brief The number of LIGO parameters
      */
-    size_t n_ligo_params=4;
+    static const size_t n_ligo_params=4;
 
     /** \brief Add a data distribution to the list
      */
