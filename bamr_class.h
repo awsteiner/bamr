@@ -157,12 +157,12 @@ namespace bamr {
     vector<double> pop_weights;
 
     // Vector to store output quantities for GW190817
-    vector<double> gw19;
+    vector<double> ligo_gw19;
 
     bamr_class() {
       schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
       pop_weights.resize(4);
-      gw19.resize(2);
+      ligo_gw19.resize(2);
     }
 
     // Empty destructor to make sure its virtual

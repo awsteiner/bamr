@@ -14,7 +14,7 @@ double ns_pop::norm_cdf(double x) {
 
 
 // Skewed Normal PDF 
-double ns_pop::skew_norm(double x, double mean, double width, 
+double ns_pop::skewed_norm(double x, double mean, double width, 
     double skewness) {
   return 2.0 * norm_pdf((x-mean)/width)
     * norm_cdf((x-mean)*skewness/width) / width;
@@ -53,7 +53,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     scale = es.get_scale(lowlim, uplim);
     M_star = pars[pvi[string("M_")+pd.id_ns[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skew_norm(M_star, mean, width, skewness);
+      * skewed_norm(M_star, mean, width, skewness);
     
     if (this->debug) {
       cout << "NS: " << i << " " << pd.id_ns[i] << " "
@@ -61,7 +61,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
            << M_star << " " << mean << " " << width << " " 
            << skewness << " " << wgt_star; 
       cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skew_norm(M_star, mean, width, skewness) << endl;
+           << skewed_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
       /* Record index i (via ret) for bookkeeping (scr_out): 
@@ -100,7 +100,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     scale = es.get_scale(lowlim, uplim);
     M_star = pars[pvi[string("M_")+pd.id_wd[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skew_norm(M_star, mean, width, skewness);
+      * skewed_norm(M_star, mean, width, skewness);
     
     if (this->debug) {
       cout << "WD: " << i << " " << pd.id_wd[i] << " "
@@ -108,7 +108,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
            << M_star << " " << mean << " " << width << " " 
            << skewness << " " << wgt_star; 
       cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skew_norm(M_star, mean, width, skewness) << endl;
+           << skewed_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
       ret = 60+i;
@@ -145,7 +145,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
     scale = es.get_scale(lowlim, uplim);
     M_star = pars[pvi[string("M_")+pd.id_lms[i]]];
     wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skew_norm(M_star, mean, width, skewness);
+      * skewed_norm(M_star, mean, width, skewness);
     
     if (this->debug) {
       cout << "LMXB: " << i << " " << pd.id_lms[i] << " "
@@ -153,7 +153,7 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
            << M_star << " " << mean << " " << width << " " 
            << skewness << " " << wgt_star; 
       cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skew_norm(M_star, mean, width, skewness) << endl;
+           << skewed_norm(M_star, mean, width, skewness) << endl;
     }
     if (wgt_star<=0.0) {
       ret = 100+i;
@@ -281,7 +281,7 @@ void ns_pop::get_param_info() {
     par_low.push_back(1.0);
     par_high.push_back(2.5);
   }
-  n_params = par_names.size();
+  n_pop_params = par_names.size();
 
   return;
 }
@@ -390,10 +390,10 @@ double eqn_solver::get_m2(double M_chirp, double m1) {
 		  (&eqn_solver::f2_to_solve), &es, _1, ref(M_chirp), ref(m1));
   
   // The root is bracketted in [x1, x2]
-  double x1=0.0, x2=2.0;
+  double x1=0.0, x2=1.0;
   
   solver.solve_bkt(x1, x2, f); 
-  // cout << "f(x) = " << f(x1) << endl;
   
-  return x1;
+  // Note: x1=q=m2/m1
+  return m1*x1;
 }

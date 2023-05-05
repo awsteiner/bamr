@@ -88,6 +88,10 @@ namespace bamr {
      */
     size_t n_sources;
 
+    /** \brief The number of sources
+     */
+    size_t n_ligo_params=4;
+
     /** \brief Add a data distribution to the list
      */
     virtual int add_data(std::vector<std::string> &sv, bool itive_com);
@@ -107,8 +111,8 @@ namespace bamr {
 
     /** \brief The LIGO data
      */
-    o2scl::tensor_grid<> ligo_data_table;
-    o2scl::table<> ligo_gw19;
+    o2scl::tensor_grid<> gw17_data_table;
+    o2scl::table<> gw19_data_table;
     
     /** \brief Desc
      */

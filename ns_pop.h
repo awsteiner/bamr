@@ -72,7 +72,7 @@ class ns_pop {
     pop_data pd;
 
     /* Counts the total number of population parameters */
-    size_t n_params;
+    size_t n_pop_params;
 
     /* std::vector<string> to store the names and units of 
     population parameters */
@@ -90,7 +90,7 @@ class ns_pop {
 
     /* Skewed Normal PDF: SN(M_star, mean, width, skewness) 
     [eq. 13, Kiziltan et al. (2013)] */
-    double skew_norm(double, double, double, double);
+    double skewed_norm(double, double, double, double);
 
     /* Asymmetric Normal PDF: AN(mass-M_star, asym, scale)
     [eq. 14, Kiziltan et al. (2013)] */

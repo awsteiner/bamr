@@ -583,12 +583,12 @@ int mcmc_bamr::mcmc_init() {
     }
 
     if (set->inc_ligo) {
-      this->table->new_column("M_chirp");
-      this->table->set_unit("M_chirp","Msun");
-      this->table->new_column("m1");
-      this->table->set_unit("m1","Msun");
-      this->table->new_column("m2");
-      this->table->set_unit("m2","Msun");
+      this->table->new_column("M_chirp_gw17");
+      this->table->set_unit("M_chirp_gw17","Msun");
+      this->table->new_column("m1_gw17");
+      this->table->set_unit("m1_gw17","Msun");
+      this->table->new_column("m2_gw17");
+      this->table->set_unit("m2_gw17","Msun");
       this->table->new_column("R1");
       this->table->set_unit("R1","km");
       this->table->new_column("R2");
@@ -603,14 +603,11 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("Lambda2");
       this->table->new_column("Lambdat");
       this->table->new_column("del_Lambdat");    
-      this->table->new_column("ligo_prob");
+      this->table->new_column("prob_gw17");
       this->table->new_column("eta");
-      cout << "In mcmc_bamr::mcmc_init(): if (set->inc_ligo) "
-           << "Begin GW19" << endl;
       this->table->new_column("m2_gw19");
       this->table->set_unit("m2_gw19","Msun");
-      this->table->new_column("ligo_prob_gw19");
-      cout << "In mcmc_bamr::mcmc_init(): if (set->inc_ligo) End GW19" << endl;
+      this->table->new_column("prob_gw19");
     }
   }
   
@@ -795,10 +792,10 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   }
       
   size_t np;
-  size_t n_ligo_pars=4;
+  size_t n_ligo_pars=nsd->n_ligo_params;
   size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
   size_t n_sources=nsd->n_sources;
-  size_t n_pop_pars=nsd->pop.n_params;
+  size_t n_pop_pars=nsd->pop.n_pop_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
 
@@ -839,10 +836,10 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   }
   
   size_t np;
-  size_t n_ligo_pars=4;
+  size_t n_ligo_pars=nsd->n_ligo_params;
   size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
   size_t n_sources=nsd->n_sources;
-  size_t n_pop_pars=nsd->pop.n_params;
+  size_t n_pop_pars=nsd->pop.n_pop_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
   
@@ -954,7 +951,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     ns_pop &pop=nsd->pop;
 
     // Set names, units, low, high for population parameters
-    for (size_t i=0; i<pop.n_params; i++) {
+    for (size_t i=0; i<pop.n_pop_params; i++) {
       names.push_back(pop.par_names[i]);
       units.push_back(pop.par_units[i]);
       low.push_back(pop.par_low[i]);
@@ -1003,7 +1000,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       ns_pop &pop=nsd->pop;
 
-      for (size_t i=0; i<pop.n_params; i++) {
+      for (size_t i=0; i<pop.n_pop_params; i++) {
         init.push_back(pop.par_init[i]);
       }
     }

@@ -51,13 +51,11 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
   if (set->inc_ligo) {
     hdf_file hfx;
     hfx.open("data/ligo/gw170817_kde.o2");
-    hdf_input(hfx,ligo_data_table,name);
+    hdf_input(hfx,gw17_data_table,name);
     hfx.close();
-    cout << "In ns_data::load_mc(): if (set->inc_ligo) Begin GW19" << endl;
     hfx.open("data/ligo/190425_mass1.o2");
-    hdf_input(hfx,ligo_gw19,name);
+    hdf_input(hfx,gw19_data_table,name);
     hfx.close();
-    cout << "In ns_data::load_mc(): if (set->inc_ligo) End GW19" << endl;
   }
   
   if (n_sources>0) {
@@ -355,6 +353,7 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
   source_fnames.push_back(sv[2]);
   slice_names.push_back(sv[3]);
   init_mass_fracs.push_back(o2scl::stod(sv[4]));
+  
   if (sv.size()==6) {
     table_names.push_back(sv[5]);
   } else {
@@ -362,8 +361,6 @@ int ns_data::add_data(std::vector<std::string> &sv, bool itive_com) {
   }
       
   n_sources++;
-
-  cout << "Xere." << endl;
 
   return 0;
 }
