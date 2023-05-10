@@ -1155,7 +1155,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return m.ix_ligo_mass_invalid; 
         }
         
-        prob_gw19 = nsd->gw19_data_table.interp("rep", m1_gw19, "wgt");
+        prob_gw19 = nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
         ligo_gw19[1] = log(prob_gw19);
         log_wgt+=ligo_gw19[1];
       } // End GW190425

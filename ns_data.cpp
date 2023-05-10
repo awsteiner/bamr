@@ -49,7 +49,6 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
   
   // If requested, add the LIGO data
   if (set->inc_ligo) {
-    gw19_data_table.set_interp_type(o2scl::itp_linear);
     hdf_file hfx;
     hfx.open("data/ligo/gw170817_kde.o2");
     hdf_input(hfx,gw17_data_table,name);
@@ -57,6 +56,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
     hfx.open("data/ligo/gw190425_m1.o2");
     hdf_input(hfx,gw19_data_table,name);
     hfx.close();
+    gw19_data_table.set_interp_type(o2scl::itp_linear);
   }
   
   if (n_sources>0) {
