@@ -56,6 +56,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
     hfx.open("data/ligo/gw190425_m1.o2");
     hdf_input(hfx,gw19_data_table,name);
     hfx.close();
+    gw19_data_table.set_interp_type(o2scl::itp_linear);
   }
   
   if (n_sources>0) {
