@@ -174,6 +174,9 @@ namespace bamr {
     */
     virtual int compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat);
+
+    virtual int compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
+                              double &log_wgt, model_data &dat);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point

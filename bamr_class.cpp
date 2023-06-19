@@ -971,7 +971,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->source_names[i]
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
-            return m.ix_mr_outside; // Should have a return statement here?
+            return m.ix_mr_outside;
           }
                 
           // Include the weight for this source
@@ -1409,3 +1409,16 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   return iret;
 }
 
+
+int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
+                              double &log_wgt, model_data &dat) {
+
+int ret=compute_point(pars, scr_out, log_wgt, dat);
+
+if (ret!=0) {
+  log_wgt=-800.0-((double)ret); 
+}
+
+return 0;
+
+}

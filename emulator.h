@@ -1,7 +1,8 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2022, Andrew W. Steiner
+  Copyright (C) 2022-2023, Mahamudul Hasan Anik, Satyajit Roy, and
+  Andrew W. Steiner
   
   This file is part of O2scl.
   
@@ -35,6 +36,7 @@
 
 #include <o2scl/interpm_idw.h>
 #include <o2scl/interpm_krige.h>
+#include <o2scl/vec_stats.h>
 
 namespace o2scl {
   
@@ -126,6 +128,10 @@ namespace o2scl {
      */
     void set(size_t np, size_t n_out, size_t ix_log_wgt,
              table<> &t, std::vector<std::string> list) {
+      if (ix_log_wgt>list.size()-np) {
+        O2SCL_ERR2("Index of log_wgt is too large in ",
+                   "emulator_interpm_idw_table::set().",o2scl::exc_einval);
+      }
       cmvtt.set(t,list);
       ix=ix_log_wgt;
       ii.set_data(np,n_out,t.get_nlines(),cmvtt);
@@ -168,21 +174,22 @@ namespace o2scl {
     typedef boost::numeric::ublas::matrix<double> ubmatrix;
     typedef o2scl::matrix_view_table<> mat_x_t;
     typedef const matrix_row_gen<mat_x_t> mat_x_row_t;
+    typedef const matrix_column_gen<mat_x_t> mat_x_col_t;
     typedef o2scl::matrix_view_table_transpose<> mat_y_t;
     typedef const matrix_row_gen<mat_y_t> mat_y_row_t;
     
-    /// The view of the user-specified table
-    matrix_view_table_transpose<> cmvtt;
-
     /// Index of the "log weight" in the MCMC data vector
     size_t ix;
     
   public:
     
     /// The internal interpolation object
-    /* interpm_krige_optim
-    <ubvector,mat_x_t,mat_x_row_t,
-     mat_y_t,mat_y_row_t,mat_t,mat_inv_t> iko; */
+    interpm_krige_optim
+    <std::vector<mcovar_funct_rbf_noise>,ubvector,mat_x_t,
+     mat_x_row_t,mat_y_t,mat_y_row_t,mat_t,mat_inv_t> iko;
+
+    /// The covariance functions
+    std::vector<mcovar_funct_rbf_noise> mfrn;
 
     /** \brief Create an emulator
      */
@@ -201,7 +208,18 @@ namespace o2scl {
     void set(size_t np, size_t n_out, size_t ix_log_wgt,
              table<> &t, std::vector<std::string> list) {
 
+      if (ix_log_wgt>list.size()-np) {
+        O2SCL_ERR2("Index of log_wgt is too large in ",
+                   "emulator_interpm_idw_table::set().",o2scl::exc_einval);
+      }
+
+      iko.full_min=true;
+      
+      mfrn.resize(n_out);
+      
       ix=ix_log_wgt;
+
+      std::vector<std::vector<std::vector<double>>> param_lists;
 
       std::vector<std::string> col_list_x;
       std::vector<std::string> col_list_y;
@@ -217,7 +235,60 @@ namespace o2scl {
       mvt_x.set(t,col_list_x);
       mvt_y.set(t,col_list_y);
       
-      // iko.set_data(np,n_out,t.get_nlines(),mvt_x,mvt_y,true);
+      std::vector<std::vector<double>> ptemp;
+      
+      for(size_t j=0;j<np;j++) {
+
+        mat_x_col_t xj(mvt_x,j);
+        std::vector<double> xj_sort(t.get_nlines());
+        vector_copy(t.get_nlines(),xj,xj_sort);
+        vector_sort_double(t.get_nlines(),xj_sort);
+        
+        std::vector<double> diffs;
+        o2scl::vector_diffs<std::vector<double>,std::vector<double>>
+          (xj_sort,diffs);
+        double min=vector_min_value<std::vector<double>,double>
+          (diffs.size(),diffs);
+        double max=vector_max_value<std::vector<double>,double>
+          (diffs.size(),diffs);
+        
+        std::vector<double> len_list={min/10.0,max*10.0};
+        ptemp.push_back(len_list);
+      }
+
+      for(size_t iout=0;iout<n_out;iout++) {
+        
+        mat_y_row_t yiout(mvt_y,iout);
+        double min=vector_min_value<mat_y_row_t,double>
+          (t.get_nlines(),yiout);
+        double max=vector_max_value<mat_y_row_t,double>
+          (t.get_nlines(),yiout);
+
+        std::vector<double> l10_list;
+        if (max*min<0.0 || min==0.0) {
+          l10_list={-15,-13,-11,-9};
+        } else {
+          min=fabs(min);
+          max=fabs(max);
+          l10_list.push_back(log10(min/(max/min*1.0e15)));
+          l10_list.push_back(log10(min/(max/min*1.0e11)));
+          l10_list.push_back(log10(min/(max/min*1.0e7)));
+          l10_list.push_back(log10(min/(max/min*1.0e3)));
+          vector_out(std::cout,l10_list,true);
+        }
+        
+        mfrn[iout].len.resize(np);
+        
+        std::vector<std::vector<double>> ptemp2=ptemp;
+        
+        ptemp2.push_back(l10_list);
+        param_lists.push_back(ptemp2);
+        
+      }
+
+      iko.set_covar(mfrn,param_lists);
+      iko.mode=iko.mode_loo_cv_bf;
+      iko.set_data(np,n_out,t.get_nlines(),mvt_x,mvt_y,true);
 
       return;
     }
@@ -228,10 +299,10 @@ namespace o2scl {
     virtual int eval_unc(size_t n, const vec_t &p, double &log_wgt,
                  double &log_wgt_unc, vec2_t &dat, vec2_t &dat_unc) {
       
-      /* iko.eval(p,dat);
-      iko.sigma(p,dat_unc); */
+      iko.eval(p,dat);
+      iko.sigma(p,dat_unc);
       log_wgt=dat[ix];
-      log_wgt_unc=dat_unc[ix]; 
+      log_wgt_unc=abs(dat_unc[ix]);
       return 0; 
     }
     
@@ -264,15 +335,21 @@ namespace o2scl {
     /// Python object for the number of parameters
     PyObject *p_np;
 
+    /// Python object for the index of log weight
+    PyObject *p_ix;
+
     /// The number of parameters
     size_t num_param;
 
-    /// The number of output data points
+    /// The number of output data points (not including log_wgt)
     size_t num_out;
 
     /// If true, then the emulator provides uncertainties (default true)
     bool has_unc;
     
+    /// Index of the "log weight" in the MCMC data vector
+    size_t ix;
+
   public:
     
     /** \brief Create an emulator
@@ -296,19 +373,32 @@ namespace o2scl {
       if (p_modname!=0) {
         if (verbose>0) {
           std::cout << "Executing decrefs." << std::endl;
+          std::cout << "p_modname " << p_modname << std::endl;
         }
         Py_DECREF(p_modname);
+        if (verbose>0) std::cout << "p_module." << p_module << std::endl;
         Py_DECREF(p_module);
+        if (verbose>0) std::cout << "p_class " << p_class << std::endl;
         Py_DECREF(p_class);
+        if (verbose>0) std::cout << "p_instance " << p_instance << std::endl;
         Py_DECREF(p_instance);
+        if (verbose>0) std::cout << "p_point_func "
+                                 << p_point_func << std::endl;
         Py_DECREF(p_point_func);
+        if (verbose>0) std::cout << "p_np " << p_np << std::endl;
         Py_DECREF(p_np);
+        if (verbose>0) std::cout << "p_ix " << p_ix << std::endl;
+        Py_DECREF(p_ix);
         p_modname=0;
         p_module=0;
         p_class=0;
         p_instance=0;
         p_point_func=0;
         p_np=0;
+        p_ix=0;
+        if (verbose>0) {
+          std::cout << "Finished decrefs." << std::endl;
+        }
       }
       return;
     }
@@ -331,19 +421,28 @@ namespace o2scl {
     void set(std::string module, std::string class_name,
              std::string train_func, std::string point_func,
              size_t np, std::string file,
-             std::string log_wgt, std::vector<std::string> list,
+             size_t ix_log_wgt, std::vector<std::string> list,
              bool has_uncerts=true) {
       
       decref();
       
+      ix=ix_log_wgt;
+
       int ret;
       
-      if (verbose>0) {
-        std::cout << "Bookkeeping." << std::endl;
-      }
       num_param=np;
-      num_out=list.size()-np-1;
+      num_out=list.size()-np;
       has_unc=has_uncerts;
+      if (verbose>0) {
+        std::cout << "emulator_python::set():" << std::endl;
+        std::cout << "  " << np << " parameters." << std::endl;
+        std::cout << "  " << num_out << " output quantities." << std::endl;
+        if (has_unc) {
+          std::cout << "  Uncertainties provided." << std::endl;
+        } else {
+          std::cout << "  Uncertainties not provided." << std::endl;
+        }
+      }
 
       if (verbose>0) {
         std::cout << "Getting module name in unicode." << std::endl;
@@ -432,10 +531,19 @@ namespace o2scl {
       }
 
       if (verbose>0) {
+        std::cout << "Loading python index of log weight." << std::endl;
+      }
+      p_ix=PyLong_FromSsize_t(ix);
+      if (p_ix==0) {
+        O2SCL_ERR2("Parameter number object failed in ",
+                   "emulator_python::set().",o2scl::exc_efailed);
+      }
+
+      if (verbose>0) {
         std::cout << "Reformatting list." << std::endl;
       }
-      std::string list_reformat=log_wgt;
-      for(size_t k=0;k<list.size();k++) {
+      std::string list_reformat=list[0];
+      for(size_t k=1;k<list.size();k++) {
         list_reformat+=","+list[k];
       }
 
@@ -451,7 +559,7 @@ namespace o2scl {
       if (verbose>0) {
         std::cout << "Creating python tuple." << std::endl;
       }
-      PyObject *p_args=PyTuple_New(4);
+      PyObject *p_args=PyTuple_New(5);
       
       if (verbose>0) {
         std::cout << "Setting first item." << std::endl;
@@ -474,9 +582,18 @@ namespace o2scl {
       if (verbose>0) {
         std::cout << "Setting third item." << std::endl;
       }
-      ret=PyTuple_SetItem(p_args,2,p_list);
+      ret=PyTuple_SetItem(p_args,2,p_ix);
       if (ret!=0) {
         O2SCL_ERR2("Tuple set 2 failed in ",
+                   "emulator_python::set().",o2scl::exc_efailed);
+      }
+
+      if (verbose>0) {
+        std::cout << "Setting fourth item." << std::endl;
+      }
+      ret=PyTuple_SetItem(p_args,3,p_list);
+      if (ret!=0) {
+        O2SCL_ERR2("Tuple set 3 failed in ",
                    "emulator_python::set().",o2scl::exc_efailed);
       }
 
@@ -488,9 +605,9 @@ namespace o2scl {
         O2SCL_ERR2("Verbose object failed in ",
                    "emulator_python::set().",o2scl::exc_efailed);
       }
-      ret=PyTuple_SetItem(p_args,3,p_verbose);
+      ret=PyTuple_SetItem(p_args,4,p_verbose);
       if (ret!=0) {
-        O2SCL_ERR2("Tuple set 2 failed in ",
+        O2SCL_ERR2("Tuple set 4 failed in ",
                    "emulator_python::set().",o2scl::exc_efailed);
       }
       
@@ -506,9 +623,13 @@ namespace o2scl {
       if (verbose>0) {
         std::cout << "Decref value and result." << std::endl;
       }
+
       Py_DECREF(p_train_func);
-      Py_DECREF(p_file);
-      Py_DECREF(p_list);
+
+      // AWS 3/7/23: once we put the file and list in the args
+      // tuple, then they take over the memory so no need to
+      // call Py_DECREF() for them.
+
       Py_DECREF(p_args);
       Py_DECREF(p_result);
 
@@ -547,6 +668,7 @@ namespace o2scl {
       
       for(size_t i=0;i<n;i++) {
         p_values[i]=PyFloat_FromDouble(p[i]);
+        std::cout << "p[i]: " << p[i] << std::endl;
         if (p_values[i]==0) {
           O2SCL_ERR2("Value creation failed in ",
                      "emulator_python::eval_unc().",o2scl::exc_efailed);
@@ -574,15 +696,20 @@ namespace o2scl {
 
       // Call the python function
       if (verbose>0) {
-        std::cout << "Call python function." << std::endl;
+        std::cout << "Call python point function " << p_args << std::endl;
       }
       PyObject *p_result=PyObject_CallObject(p_point_func,p_args);
       if (p_result==0) {
         O2SCL_ERR2("Function call failed in ",
                    "emulator_python::eval_unc().",o2scl::exc_efailed);
       }
+
+      if (PyList_Check(p_result)==0) {
+        O2SCL_ERR2("Function call did not return a list ",
+                   "emulator_python::eval_unc().",o2scl::exc_efailed);
+      }
       
-      for(size_t i=0;i<num_out+1;i++) {
+      for(size_t i=0;i<num_out;i++) {
         PyObject *p_y_val=PyList_GetItem(p_result,i);
         if (p_y_val==0) {
           O2SCL_ERR2("Failed to get y list value in ",
@@ -593,15 +720,10 @@ namespace o2scl {
         } else {
           dat[i-1]=PyFloat_AsDouble(p_y_val);
         }
-        if (verbose>0) {
-          std::cout << "Decref yval " << i << " of " << p_values.size()
-                    << std::endl;
-        }
-        Py_DECREF(p_y_val);
       }
 
       if (has_unc) {
-        size_t n2=num_out+1;
+        size_t n2=num_out;
         for(size_t i=n2;i<2*n2;i++) {
           PyObject *p_y_val=PyList_GetItem(p_result,i);
           if (p_y_val==0) {
@@ -613,21 +735,9 @@ namespace o2scl {
           } else {
             dat_unc[i-n2-1]=PyFloat_AsDouble(p_y_val);
           }
-          if (verbose>0) {
-            std::cout << "Decref yval " << i << " of " << p_values.size()
-                      << std::endl;
-          }
-          Py_DECREF(p_y_val);
         }
       }
 
-      for(size_t i=0;i<p_values.size();i++) {
-        if (verbose>0) {
-          std::cout << "Decref value " << i << " of " << p_values.size()
-                    << std::endl;
-        }
-        Py_DECREF(p_values[i]);
-      }
       if (verbose>0) {
         std::cout << "Decref list." << std::endl;
       }

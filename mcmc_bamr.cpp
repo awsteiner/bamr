@@ -393,6 +393,9 @@ int mcmc_bamr::mcmc_init() {
   
   mcmc_para_cli::mcmc_init();
 
+  // Enable/diable storing rejected MCMC points
+  this->store_rejects=true;
+
   // -----------------------------------------------------------
   // Make sure the settings are consistent
 
@@ -1089,7 +1092,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     } else {
       pfa[i]=std::bind
         (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
-         (&bamr_class::compute_point),bc_arr[i],std::placeholders::_2,
+         (&bamr_class::compute_point_ext),bc_arr[i],std::placeholders::_2,
          std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
     }
     ffa[i]=std::bind

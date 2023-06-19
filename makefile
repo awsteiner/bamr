@@ -756,7 +756,8 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 1 \
-	-initial-point-last out/ml_br -mcmc > out/mlines.out 2>&1 &
+	-initial-point-last out/ml_pc -mcmc 
+# > out/mlines.out 2>&1 &
 
 include makefile.anik
 include makefile.aws
