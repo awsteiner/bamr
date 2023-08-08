@@ -76,6 +76,7 @@ namespace bamr {
       crust_from_L=false;
       mpi_load_debug=false;
       data_dir="data";
+      use_emulator=false;
       apply_emu=false;
       emu_aws=false;
       emu_post=false;
@@ -115,6 +116,7 @@ namespace bamr {
     o2scl::cli::parameter_double p_m_high;
     o2scl::cli::parameter_double p_mvsr_pr_inc;
     o2scl::cli::parameter_string p_data_dir;
+    o2scl::cli::parameter_bool p_use_emulator;
     o2scl::cli::parameter_bool p_apply_emu;
     o2scl::cli::parameter_bool p_emu_aws;
     o2scl::cli::parameter_bool p_inc_pop;
@@ -217,6 +219,8 @@ namespace bamr {
     /** \brief If true, include emulator from sklearn
      */
     bool apply_emu;
+
+    bool use_emulator;
     
     bool emu_aws;
 

@@ -393,8 +393,10 @@ int mcmc_bamr::mcmc_init() {
   
   mcmc_para_cli::mcmc_init();
 
-  // Enable/diable storing rejected MCMC points
-  this->store_rejects=true;
+  if (set->use_emulator){
+    // Enable/diable storing rejected MCMC points
+    this->store_rejects=true;
+  }
 
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -1079,14 +1081,20 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
-    if (set->emu_aws) { 
+    if (set->use_emulator) { 
+      pfa[i]=std::bind
+        (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
+         (&bamr_class::compute_point_ext),bc_arr[i],std::placeholders::_2,
+         std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
 
 #ifdef O2SCL_NEVER_DEFINED
+    if (set->emu_aws) {
       pfa[i]=std::bind
         (std::mem_fn<int(size_t n,const ubvector &,double &,model_data &)>
          (&emulator_bamr::eval),eb_arr[i],std::placeholders::_1,
          std::placeholders::_2,std::placeholders::_3,
          std::placeholders::_4);
+    }
 #endif
 
     } else {

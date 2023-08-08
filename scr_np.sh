@@ -1,9 +1,9 @@
 #! /usr/bin/bash
 
-# mlines:
-	./bamr -threads 6 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/mlines -set max_iters 100000 -set n_walk 50 \
-	-set step_fac 2.0 -set file_update_time 600 \
+# npoly:
+	./bamr -threads 8 -set aff_inv 1 -set couple_threads 1 \
+	-set prefix out/np -set max_time 172800 -set n_walk 64 \
+	-set step_fac 2.0 -set file_update_time 18000 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -33,5 +33,5 @@
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 \
-	-initial-point-last out/mlines_11 -mcmc
+	-model new_poly -set model_dpdm 0 \
+	-initial-point-last out/np_22 -mcmc
