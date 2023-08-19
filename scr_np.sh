@@ -34,4 +34,4 @@
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 0 \
-	-initial-point-last out/np_22 -mcmc
+	-initial-point-last out/np_26 -mcmc
