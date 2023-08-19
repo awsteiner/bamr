@@ -397,6 +397,10 @@ int mcmc_bamr::mcmc_init() {
     // Enable/diable storing rejected MCMC points
     this->store_rejects=true;
   }
+  else {
+    // Force enable for debugging purpose
+    this->store_rejects=true;
+  }
 
   // -----------------------------------------------------------
   // Make sure the settings are consistent
