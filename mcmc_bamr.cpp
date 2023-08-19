@@ -393,7 +393,7 @@ int mcmc_bamr::mcmc_init() {
   
   mcmc_para_cli::mcmc_init();
 
-  if (set->use_emulator){
+  if (set->use_emulator) {
     // Enable/diable storing rejected MCMC points
     this->store_rejects=true;
   }
