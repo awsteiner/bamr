@@ -4061,7 +4061,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   // The first EOS is P=cs2(ed-ed_last+pr_last/cs2)
   
   // Compute first constant term
-  double const1=ed_last-pr_last/csq2;
+  double const1=ed_last-pr_last/csq1;
   etl1.set_cs2_eps0(csq1,const1);
   // In this case, we're not using a strong phase transition
   // with a gap so the EOS is continuous
@@ -4149,9 +4149,9 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
 
   if (debug) cout << endl;
 
-  // The second EOS is P=cs2(ed-ed_last+pr_last/cs2)
+  // The third EOS is P=cs2(ed-ed_last+pr_last/cs2)
   
-  // Compute second constant term
+  // Compute third constant term
   double const3=ed_last-pr_last/csq3;
   etl3.set_cs2_eps0(csq3,const3);
   // In this case, we're not using a strong phase transition
