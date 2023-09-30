@@ -4250,7 +4250,7 @@ void prx::initial_point(std::vector<double> &params) {
 
   // cout << "In prx::initial_point()" << endl;    
   
-  params.resize(9);
+  params.resize(5);
 
   //params[0]=12.7; // a
   //params[1]=0.49; // alpha

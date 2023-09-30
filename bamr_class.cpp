@@ -1411,14 +1411,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
 
 int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
-                              double &log_wgt, model_data &dat) {
-
-int ret=compute_point(pars, scr_out, log_wgt, dat);
-
-if (ret!=0) {
-  log_wgt=-800.0-((double)ret); 
-}
-
-return 0;
-
+                                  double &log_wgt, model_data &dat) {
+  
+  int ret=compute_point(pars, scr_out, log_wgt, dat);
+  
+  if (ret!=0) {
+    log_wgt=-800.0-((double)ret); 
+  }
+  
+  return 0;
+  
 }
