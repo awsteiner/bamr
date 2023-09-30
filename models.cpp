@@ -49,7 +49,7 @@ model::model(std::shared_ptr<const settings> s,
   ts.set_eos(teos);
       
   has_eos=true;
-  schwarz_km=o2scl_mks::schwarzchild_radius/1.0e3;
+  schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
       
   teos.verbose=0;
 
@@ -1860,7 +1860,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
-           ("kg","1/fm",o2scl_mks::mass_neutron));
+           ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     // Correct the pressure by a factor to correct for
@@ -2083,7 +2083,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     double nb1b=pow(nb1,beta);
     double ene=a*nb1a+b*nb1b;
     ed=nb*(ene/hc_mev_fm+o2scl_settings.get_convert_units().convert_const
-           ("kg","1/fm",o2scl_mks::mass_neutron));
+           ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
     if (new_nb) {
@@ -2339,7 +2339,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
                   o2scl_settings.get_convert_units().convert_const
-                  ("kg","1/fm",o2scl_mks::mass_neutron));
+                  ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
       
     double line[2]={ed,pr};
@@ -2578,7 +2578,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
                   o2scl_settings.get_convert_units().convert_const
-                  ("kg","1/fm",o2scl_mks::mass_neutron));
+                  ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
 
     if (ed>ed1) {
@@ -3692,7 +3692,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
                   o2scl_settings.get_convert_units().convert_const
-                  ("kg","1/fm",o2scl_mks::mass_neutron));
+                  ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
     
     double line[3]={ed,pr,nb};
@@ -4027,7 +4027,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
     double ene=a*nb1a+b*nb1b;
     double ed=nb*(ene/hc_mev_fm+
                   o2scl_settings.get_convert_units().convert_const
-                  ("kg","1/fm",o2scl_mks::mass_neutron));
+                  ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
     double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
     
     double line[3]={ed,pr,nb};
@@ -4193,6 +4193,333 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   //if (debug) exit(-1);
 
   // cout << "End of new_lines::compute_eos()" << endl;
+
+  return;
+}
+
+prx::prx(std::shared_ptr<const settings> s,
+                     std::shared_ptr<const ns_data> n) :
+  qmc_threep(s,n) {
+
+  // cout << "In prx::prx()" << endl;
+
+  this->n_eos_params=5;
+
+  cns.err_nonconv=false;
+  //cns.def_root.err_nonconv=false;
+
+  // We choose a smaller transition density here since we're
+  // fixing matter near saturation
+  nb_trans=0.24;
+}
+    
+void prx::get_param_info(std::vector<std::string> &names,
+                               std::vector<std::string> &units,
+                               std::vector<double> &low,
+                               std::vector<double> &high) {
+
+  // cout << "In prx::get_param_info()" << endl;
+
+  names={"csq1","trans1","csq2","trans2","csq3"};
+
+  units={"","1/fm^4","","1/fm^4",""};
+  
+  low.resize(n_eos_params);
+
+  low[0]=0.0;
+  low[1]=0.75;
+  low[2]=0.0;
+  low[3]=0.75;
+  low[4]=0.0;
+
+  high.resize(n_eos_params);
+
+  high[0]=1.0;
+  high[1]=8.0;
+  high[2]=1.0;
+  high[3]=8.0;
+  high[4]=1.0;
+  
+  // Go to the parent which takes care of the data-related
+  // parameters
+  model::get_param_info(names,units,low,high);
+
+}
+    
+void prx::initial_point(std::vector<double> &params) {
+
+  // cout << "In prx::initial_point()" << endl;    
+  
+  params.resize(9);
+
+  //params[0]=12.7; // a
+  //params[1]=0.49; // alpha
+  //params[2]=32.0; // param_S
+  //params[3]=55.0; // param_L
+  params[0]=0.9;  // csq1
+  params[1]=1.66; // trans1
+  params[2]=0.9;  // csq2
+  params[3]=3.5;  // trans2
+  params[4]=0.9;  // csq3
+
+  return;
+}
+
+void prx::setup_params(o2scl::cli &cl) {
+  return;
+}
+
+void prx::remove_params(o2scl::cli &cl) {
+  return;
+}
+    
+void prx::copy_params(model &m) {
+  return;
+}
+
+void prx::compute_eos(const ubvector &params, int &ret,
+                            std::ofstream &scr_out, model_data &dat) {
+  
+  // cout << "In prx::compute_eos()" << endl;
+
+  bool debug=false;
+
+  ret=ix_success;
+
+  // Start with a fresh table
+  dat.eos.clear();
+  dat.eos.line_of_names("ed pr nb");
+  // We don't need to set units because this is done in
+  // compute_star() above.
+  dat.eos.set_interp_type(itp_linear);
+
+  // Add the QMC calculations over the suggested range, but go a
+  // little bit lower in density to make sure we extend all the way
+  // down to the crust
+
+  double a=13.0;
+  double alpha=0.5;
+  double Stmp=32.8;
+  double Ltmp=50.0;
+  
+  /*
+    This is based on limits from two lines, as in Jim and I's EPJA
+    review. In (S,L) space, the lower line is (29,0) to (35,55),
+    and the upper line is (26.5,0) to (33.5,100)
+  */
+  double Lmin=9.17*Stmp-266.0;
+  double Lmax=14.3*Stmp-379.0;
+  if (Ltmp<Lmin || Ltmp>Lmax) {
+    scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
+            << "\n\tL_min: " << Lmin << " L_max: "
+            << Lmax << endl;
+    ret=ix_eos_pars_mismatch;
+    return;
+  }
+
+  double b=Stmp-16.0-a;
+  double beta=(Ltmp/3.0-a*alpha)/b;
+  if (b<=0.0 || beta<=0.0 || alpha>beta) {
+    scr_out << "Parameter b=" << b << " or beta=" 
+            << beta << " out of range." << endl;
+    ret=ix_eos_pars_mismatch;
+    return;
+  }
+  if (debug) {
+    scr_out << "b=" << b << " beta=" << beta << endl;
+  }
+
+  dat.eos.add_constant("S",Stmp/hc_mev_fm);
+  dat.eos.add_constant("L",Ltmp/hc_mev_fm);
+
+  double csq1=params[0];
+  double trans1=params[1];
+  double csq2=params[2];
+  double trans2=params[3];
+  double csq3=params[4];
+
+  if (debug) {
+    cout << "Parameters: ";
+    vector_out(cout,params,true);
+  }
+
+  eos_tov_linear etl1, etl2, etl3;
+  
+  double ed_last=0.0, pr_last=0.0, nb_last=0.0;
+
+  for(double nb=0.02;nb<nb_trans;nb+=0.01) {
+    double nb1=nb/nb0;
+    double nb1a=pow(nb1,alpha);
+    double nb1b=pow(nb1,beta);
+    double ene=a*nb1a+b*nb1b;
+    double ed=nb*(ene/hc_mev_fm+
+                  o2scl_settings.get_convert_units().convert_const
+                  ("kg","1/fm",o2scl_const::mass_neutron_f<double>()));
+    double pr=nb*(a*alpha*nb1a+b*beta*nb1b)/hc_mev_fm;
+    
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+    
+    ed_last=ed;
+    pr_last=pr;
+    nb_last=nb;
+  }
+
+  // Check that the transition densities are ordered
+  if (ed_last>trans1 || trans1>trans2) {
+    scr_out << "Transition densities misordered." << endl;
+    scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
+    ret=ix_eos_pars_mismatch;
+    return;
+  }
+
+  if (debug) {
+    cout << "Crust-core: " << endl;
+    cout << "ed           pr           nb" << endl;
+    for(size_t j=0;j<dat.eos.get_nlines();j++) {
+      cout << dat.eos.get("ed",j) << " ";
+      cout << dat.eos.get("pr",j) << " ";
+      cout << dat.eos.get("nb",j) << endl;
+    }
+  }
+
+  if (debug) cout << endl;
+
+  // The first EOS is P=cs2(ed-ed_last+pr_last/cs2)
+  
+  // Compute first constant term
+  double const1=ed_last-pr_last/csq1;
+  etl1.set_cs2_eps0(csq1,const1);
+  // In this case, we're not using a strong phase transition
+  // with a gap so the EOS is continuous
+  etl1.set_baryon_density(nb_last,ed_last);
+
+  // Compute stepsize in energy density
+  double delta_ed=(trans1-ed_last)/30.01;
+
+  double ed1=ed_last;
+  double pr1=pr_last;
+  double nb1=nb_last;
+  
+  // Add first line to table
+  if (debug) {
+    cout << "First line: " << const1 << endl;
+    cout << "ed           pr           nb" << endl;
+  }
+
+  for(double ed=ed_last+delta_ed;ed<trans1;ed+=delta_ed) {
+    double pr=etl1.pr_from_ed(ed);
+    double nb=etl1.nb_from_ed(ed);
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_eos_pars_mismatch;
+      return;
+    }
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // The second EOS is P=cs2(ed-ed_last+pr_last/cs2)
+  
+  // Compute second constant term
+  double const2=ed_last-pr_last/csq2;
+  etl2.set_cs2_eps0(csq2,const2);
+  // In this case, we're not using a strong phase transition
+  // with a gap so the EOS is continuous
+  etl2.set_baryon_density(nb_last,ed_last);
+
+  double ed2=ed_last;
+  double pr2=pr_last;
+  double nb2=nb_last;
+  
+  // Add second line to table
+  if (debug) {
+    cout << "Second line: " << const2 << endl;
+    cout << "ed           pr           nb" << endl;
+  }
+  
+  delta_ed=(trans2-trans1)/20.01;
+  
+  for(double ed=trans1;ed<trans2;ed+=delta_ed) {
+    double pr=etl2.pr_from_ed(ed);
+    double nb=etl2.nb_from_ed(ed);
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_eos_pars_mismatch;
+      return;
+    }
+    double line[3]={ed,pr,nb};
+    dat.eos.line_of_data(3,line);
+    
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+
+    nb_last=nb;
+    ed_last=ed;
+    pr_last=pr;
+  }
+
+  if (debug) cout << endl;
+
+  // The third EOS is P=cs2(ed-ed_last+pr_last/cs2)
+  
+  // Compute third constant term
+  double const3=ed_last-pr_last/csq3;
+  etl3.set_cs2_eps0(csq3,const3);
+  // In this case, we're not using a strong phase transition
+  // with a gap so the EOS is continuous
+  etl3.set_baryon_density(nb_last,ed_last);
+
+  double ed3=ed_last;
+  double pr3=pr_last;
+  double nb3=nb_last;
+
+  // Add third line to table
+  delta_ed=(10.0-trans2)/20.01;
+  if (debug) {
+    cout << "Third line: " << const3 << endl;
+    cout << "ed           pr           nb" << endl;
+  }
+
+  // We compute to energy densities slightly higher than 10
+  // because the energy grid ends at 10 and it makes sure
+  // we're not extrapolating
+  for(double ed=trans2;ed<10.5;ed+=delta_ed) {
+    double pr=etl3.pr_from_ed(ed);
+    double nb=etl3.nb_from_ed(ed);
+    double line[3]={ed,pr,nb};
+    if (debug) {
+      cout << ed << " " << pr << " " << nb << endl;
+    }
+    dat.eos.line_of_data(3,line);
+    if (!std::isfinite(ed) ||
+        !std::isfinite(pr) ||
+        !std::isfinite(nb)) {
+      scr_out << "EOS diverged." << endl;
+      ret=ix_eos_pars_mismatch;
+      return;
+    }
+    
+  }
+
+  //if (debug) exit(-1);
+
+  // cout << "End of prx::compute_eos()" << endl;
 
   return;
 }

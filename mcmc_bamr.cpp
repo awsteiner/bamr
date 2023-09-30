@@ -778,6 +778,12 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
       bc_arr[i]->mod=mnew;
       bc_arr[i]->model_type=sv[1];
     }
+  } else if (sv[1]==((string)"prx")) {
+    for(size_t i=0;i<n_threads;i++) {
+      std::shared_ptr<model> mnew(new prx(set,nsd));
+      bc_arr[i]->mod=mnew;
+      bc_arr[i]->model_type=sv[1];
+    }
   } else {
     cerr << "Model unknown." << endl;
     return exc_efailed;
