@@ -39,7 +39,7 @@ void bamr_class::setup_filters() {
 #ifdef BAMR_FFTW3
 
   flt.resize(n_threads*nsd->n_sources);
-  
+
   // Input and output table references for convenience
   std::vector<o2scl::table3d> &in=nsd->source_tables;
   std::vector<o2scl::table3d> &in_alt=nsd->source_tables_alt;

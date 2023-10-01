@@ -164,7 +164,7 @@ void ns_data::load_mc(std::ostream &scr_out, int mpi_size, int mpi_rank,
 #else
     
     for(size_t k=0;k<n_sources;k++) {
-      
+
       hdf_file hf;
       hf.open(source_fnames[k]);
       if (table_names[k].length()>0) {

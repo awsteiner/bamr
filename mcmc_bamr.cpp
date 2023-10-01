@@ -167,7 +167,9 @@ int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
 
   model &m=*(bc_arr[0]->mod);
   bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[0]));
-  bc.setup_filters();
+  if (set->apply_intsc) {
+    bc.setup_filters();
+  }
 
   // Open or create output file
   hdf_file hf_out;
@@ -652,10 +654,12 @@ int mcmc_bamr::mcmc_init() {
 
   // -----------------------------------------------------------
   // Setup filters
-  
+
   for(size_t i=0;i<n_threads;i++) {
     bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-    bc.setup_filters();
+    if (set->apply_intsc) {
+      bc.setup_filters();
+    }
   }
 
   // Read FFT cache

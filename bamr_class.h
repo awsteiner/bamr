@@ -163,6 +163,7 @@ namespace bamr {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
       pop_weights.resize(4);
       ligo_gw19.resize(2);
+      n_threads=1;
     }
 
     // Empty destructor to make sure its virtual
