@@ -569,7 +569,7 @@ prx1:
 		prob 0.7 acol -model prx -mcmc
 
 prx2:
-	mpirun -np 1 --allow-run-as-root \
+	mpirun -np 4 --allow-run-as-root \
 	       ./bamr -set aff_inv 1 -set couple_threads 0 \
 		-set n_walk 20 \
 		-set prefix out/prx2 -set max_time 86400 \
@@ -582,7 +582,5 @@ prx2:
 		-add-data 0740 data/prx/0740_t3d.o2 \
 		prob 0.7 acol -model prx \
 		-initial-point-best out/prx1_0_out \
-		-mcmc
-
-#> out/prx2.scr 2>&1 &
+		-mcmc > out/prx2.scr 2>&1 &
 
