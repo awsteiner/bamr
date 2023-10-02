@@ -636,7 +636,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
             
       if (set->verbose>=2) {
-        cout << "End model::compute_point()." << endl;
+        cout << "End bamr_class::compute_point()." << endl;
       }
             
       if (iret!=m.ix_success) {
