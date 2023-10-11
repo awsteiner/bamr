@@ -142,7 +142,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
           ret=ix_eos_pars_mismatch;
@@ -196,22 +196,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       double dpdM=(pars2[this->n_eos_params-1]-
                    pars[this->n_eos_params-1])/(m_max2-m_max);
       //cout << "dpdM: " << dpdM << endl;
-      // Reject the point if the derivative is not finite
+      
+      // Reject the point if the derivative is not finite or negative
       if (isfinite(dpdM)!=1) {
-        scr_out << "Derivative dpdM is infinite: " << m_max << " "
-                << m_max2 << std::endl;
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", mmax2=" << m_max2 << std::endl;
         ret=ix_deriv_infinite;
         return;
       } 
-
-      /*
-      if (dpdM>0) {
-        if (m_max2>m_max) cout << "m_max2>m_max: OK" << endl;
-        else cout << "m_max2<m_max: exp3_2<exp3!" << endl;
-      }
-      else if (dpdM==0) cout << "dpdM=0: exp3_2=exp3!" << endl;
-      else cout << "dpdM<0: log(dpdM) explodes!" << endl;
-      */
+      if (dpdM<=0.0) {
+        scr_out << "Rejected: log(dp/dM) is undefined: dp/dM="
+                << dpdM << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      } 
 
       eost.add_constant("dpdM",dpdM);
 
@@ -227,7 +225,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         if (trans2>c_ed) {
           //cout << "trans2, c_ed (2): " << trans2 << " " 
           //     << c_ed << endl;
-          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
           ret=ix_eos_pars_mismatch;

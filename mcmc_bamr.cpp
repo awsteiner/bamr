@@ -395,15 +395,10 @@ int mcmc_bamr::mcmc_init() {
   
   mcmc_para_cli::mcmc_init();
 
-  if (set->use_emulator) {
-    // Enable/diable storing rejected MCMC points
-    this->store_rejects=true;
-  }
-  else {
-    // Force enable for debugging purpose
-    this->store_rejects=true;
-  }
-
+  // Enable/diable storing rejected MCMC points
+  if (set->use_emulator) this->store_rejects=true;
+  else this->store_rejects=false;
+  
   // -----------------------------------------------------------
   // Make sure the settings are consistent
 
