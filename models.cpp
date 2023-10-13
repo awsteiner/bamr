@@ -162,14 +162,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       } 
-      // Now modify the last parameter: exp3
+      // Now modify the last parameter: exp3 or csq3
       ubvector pars2=pars;
       pars2[this->n_eos_params-1]*=1.01;
+
+      /* cout << "Last eos param - old value: "
+           << pars[this->n_eos_params-1] << ", new value:"
+           << pars2[this->n_eos_params-1] << endl; */
 
       // Recompute the EOS
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
+      eost.set_interp_type(o2scl::itp_linear);
       eost.set_unit("ed","1/fm^4");
       eost.set_unit("pr","1/fm^4");
       eost.set_unit("nb","1/fm^3");
@@ -200,12 +205,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Reject the point if the derivative is not finite or negative
       if (isfinite(dpdM)!=1) {
         scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
-                << ", mmax2=" << m_max2 << std::endl;
+                << ", m_max2=" << m_max2 << std::endl;
         ret=ix_deriv_infinite;
         return;
       } 
       if (dpdM<=0.0) {
-        scr_out << "Rejected: log(dp/dM) is undefined: dp/dM="
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
                 << dpdM << std::endl;
         ret=ix_deriv_infinite;
         return;
