@@ -100,6 +100,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   table_units<> &eost=dat.eos;
 
   if (has_eos) {
+
+    ts.princ=set->mvsr_pr_inc;
+
+    if (set->addl_quants) {
+      ts.ang_vel=true;
+      ts.calc_gpot=true;
+    } else {
+      ts.ang_vel=false;
+      ts.calc_gpot=false;
+    }
     
     // ---------------------------------------------------------------
     // Compute the EOS
@@ -121,6 +131,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
 
       double m_max=dat.mvsr.max("gm");
       
@@ -187,6 +198,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
       double m_max2=dat.mvsr.max("gm");
       dat.m_max2=m_max2;
       
@@ -523,17 +535,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Solve for M vs. R curve
     
     double m_max=0.0;
-    ts.princ=set->mvsr_pr_inc;
 
-    // Clear old M-R table (new for MCMC para)
-
-    if (set->addl_quants) {
-      ts.ang_vel=true;
-      ts.calc_gpot=true;
-    } else {
-      ts.ang_vel=false;
-      ts.calc_gpot=false;
-    }
     int info=ts.mvsr();
 
     dat.mvsr=*(ts.get_results());
