@@ -100,6 +100,16 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   table_units<> &eost=dat.eos;
 
   if (has_eos) {
+
+    ts.princ=set->mvsr_pr_inc;
+
+    if (set->addl_quants) {
+      ts.ang_vel=true;
+      ts.calc_gpot=true;
+    } else {
+      ts.ang_vel=false;
+      ts.calc_gpot=false;
+    }
     
     // ---------------------------------------------------------------
     // Compute the EOS
@@ -121,6 +131,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
 
       double m_max=dat.mvsr.max("gm");
       
@@ -142,7 +153,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
           ret=ix_eos_pars_mismatch;
@@ -162,14 +173,19 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           }
         }
       } 
-      // Now modify the last parameter: exp3
+      // Now modify the last parameter: exp3 or csq3
       ubvector pars2=pars;
       pars2[this->n_eos_params-1]*=1.01;
+
+      /* cout << "Last eos param - old value: "
+           << pars[this->n_eos_params-1] << ", new value:"
+           << pars2[this->n_eos_params-1] << endl; */
 
       // Recompute the EOS
       compute_eos(pars2,ret,scr_out,dat);
       if (ret!=ix_success) return;
 
+      eost.set_interp_type(o2scl::itp_linear);
       eost.set_unit("ed","1/fm^4");
       eost.set_unit("pr","1/fm^4");
       eost.set_unit("nb","1/fm^3");
@@ -182,6 +198,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       
       // Check the maximum mass
       dat.mvsr=*(ts.get_results());
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
       double m_max2=dat.mvsr.max("gm");
       dat.m_max2=m_max2;
       
@@ -196,22 +213,20 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       double dpdM=(pars2[this->n_eos_params-1]-
                    pars[this->n_eos_params-1])/(m_max2-m_max);
       //cout << "dpdM: " << dpdM << endl;
-      // Reject the point if the derivative is not finite
+      
+      // Reject the point if the derivative is not finite or negative
       if (isfinite(dpdM)!=1) {
-        scr_out << "Derivative dpdM is infinite: " << m_max << " "
-                << m_max2 << std::endl;
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", m_max2=" << m_max2 << std::endl;
         ret=ix_deriv_infinite;
         return;
       } 
-
-      /*
-      if (dpdM>0) {
-        if (m_max2>m_max) cout << "m_max2>m_max: OK" << endl;
-        else cout << "m_max2<m_max: exp3_2<exp3!" << endl;
-      }
-      else if (dpdM==0) cout << "dpdM=0: exp3_2=exp3!" << endl;
-      else cout << "dpdM<0: log(dpdM) explodes!" << endl;
-      */
+      if (dpdM<=0.0) {
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
+                << dpdM << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      } 
 
       eost.add_constant("dpdM",dpdM);
 
@@ -227,7 +242,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         if (trans2>c_ed) {
           //cout << "trans2, c_ed (2): " << trans2 << " " 
           //     << c_ed << endl;
-          scr_out << "Polytrope beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
           ret=ix_eos_pars_mismatch;
@@ -520,17 +535,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Solve for M vs. R curve
     
     double m_max=0.0;
-    ts.princ=set->mvsr_pr_inc;
 
-    // Clear old M-R table (new for MCMC para)
-
-    if (set->addl_quants) {
-      ts.ang_vel=true;
-      ts.calc_gpot=true;
-    } else {
-      ts.ang_vel=false;
-      ts.calc_gpot=false;
-    }
     int info=ts.mvsr();
 
     dat.mvsr=*(ts.get_results());

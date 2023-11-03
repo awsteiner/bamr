@@ -372,65 +372,67 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // Calculate likelihood if using mass data from populations
     if (set->inc_pop) {
       
-      ns_pop &pop = nsd->pop;
-      pop_data &pd = nsd->pd;
+      ns_pop &pop=nsd->pop;
+      pop_data &pd=nsd->pd;
+
+      double M_max=dat.mvsr.max("gm");
 
       // std::cout << "XY: " << pop_weights.size() << endl;
       if (pop_weights.size()==0) pop_weights.resize(4); 
       
-      pop_weights[0] = pop.get_weight_ns(pars, pvi, iret);
+      pop_weights[0]=pop.get_weight_ns(pars,pvi,iret);
       if (iret!=0) {
         log_wgt=0.0;
         /* iret_old = 30+i, where "i" is the star index
         30 was added to avoid iret=0 when wgt=0 for NS-NS */
-        iret = iret-30; 
+        iret=iret-30; 
         scr_out << "NS-NS: Returned zero weight for star "
                 << pd.id_ns[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_ns.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_ns[i]]]) {
+        if (M_max<pars[pvi[string("M_")+pd.id_ns[i]]]) {
           scr_out << "NS-NS: Gravitational mass beyond M_max "
                   << "for star " << pd.id_ns[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
 
-      pop_weights[1] = pop.get_weight_wd(pars, pvi, iret);
+      pop_weights[1]=pop.get_weight_wd(pars,pvi,iret);
       if (iret!=0) {
         log_wgt=0.0;
-        iret = iret-60;
+        iret=iret-60;
         scr_out << "NS-WD: Returned zero weight for star "
                 << pd.id_wd[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       
       for (size_t i=0; i<pd.id_wd.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_wd[i]]]) {
+        if (M_max<pars[pvi[string("M_")+pd.id_wd[i]]]) {
           scr_out << "NS-WD: Gravitational mass beyond M_max "
                 << "for star " << pd.id_wd[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
 
-      pop_weights[2] = pop.get_weight_lms(pars, pvi, iret);
+      pop_weights[2]=pop.get_weight_lms(pars,pvi,iret);
       if (iret!=0) {
         log_wgt=0.0;
-        iret = iret-100;
+        iret=iret-100;
         scr_out << "LMXB: Returned zero weight for star "
                 << pd.id_lms[iret] << std::endl;
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_lms.size(); i++) {
-        if ((dat.mvsr.max("gm")) < pars[pvi[string("M_")+pd.id_lms[i]]]){
+        if (M_max<pars[pvi[string("M_")+pd.id_lms[i]]]){
           scr_out << "LMXB: Gravitational mass beyond M_max "
                   << "for star " << pd.id_lms[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
 
-      pop_weights[3] = pop_weights[0] + pop_weights[1] + pop_weights[2];
-      log_wgt += pop_weights[3];
+      pop_weights[3]=pop_weights[0]+pop_weights[1]+pop_weights[2];
+      log_wgt+=pop_weights[3];
       
       if (iret==0) {
         /* cout << "Final pop result: ";
@@ -590,18 +592,23 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         /* If population is included, calculate the skewed normal (SN) 
         PDF for the sources: QLMXBs, PREs, and NICER */
         if (set->inc_pop) {
-          ns_pop &pop = nsd->pop;
-          double mean = pars[pvi["mean_LMS"]];
-          double width = pow(10.0, pars[pvi["log10_width_LMS"]]);
-          double skewness = pars[pvi["skewness_LMS"]];
+          if (nsd->source_names[i]!=string("0030")) {
+            ns_pop &pop=nsd->pop;
+            double mean=pars[pvi["mean_LMS"]];
+            double width=pow(10.0, pars[pvi["log10_width_LMS"]]);
+            double skewness=pars[pvi["skewness_LMS"]];
 
-          double mf;
-          if (set->inc_ligo) mf=pars[i+mod->n_eos_params+nsd->n_ligo_params];
-          else mf=pars[i+mod->n_eos_params];
+            double mf;
+            if (set->inc_ligo) {
+              mf=pars[i+mod->n_eos_params+nsd->n_ligo_params];
+            } else {
+              mf=pars[i+mod->n_eos_params];
+            }
           
-          double m_src = 1.0+mf*(dat.mvsr.max("gm")-1.0);
-          double sn_src=pop.skewed_norm(m_src, mean, width, skewness);
-          log_wgt += log(sn_src);
+            double m_src=mf*m_max_current;
+            double sn_src=pop.skewed_norm(m_src,mean,width,skewness);
+            log_wgt+=log(sn_src);
+          }
         }
 
         // Update each weight into output table
@@ -1137,12 +1144,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // See Table-1 (low-spin prior): https://arxiv.org/pdf/2001.01761.pdf
       double M_chirp_gw19=1.44; 
 
-      m1_gw19 = pars[m.n_eos_params+3];
-      m2_gw19 = nsd->solver.get_m2(M_chirp_gw19, m1_gw19);
+      m1_gw19=pars[m.n_eos_params+3];
+      m2_gw19=nsd->solver.get_m2(M_chirp_gw19, m1_gw19);
 
       if (ligo_gw19.size()==0) ligo_gw19.resize(2); 
 
-      ligo_gw19[0] = m2_gw19;
+      ligo_gw19[0]=m2_gw19;
 
       if (m1_gw19>Mmax || m2_gw19>Mmax || m1_gw19<m2_gw19) {  
         log_wgt=0.0;
@@ -1161,8 +1168,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return m.ix_ligo_mass_invalid; 
         }
         
-        prob_gw19 = nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
-        ligo_gw19[1] = log(prob_gw19);
+        prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
+        ligo_gw19[1]=log(prob_gw19);
         log_wgt+=ligo_gw19[1];
       } // End GW190425
 
@@ -1173,21 +1180,21 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (set->inc_pop) {
         ns_pop &pop = nsd->pop;
         double mean, width, skewns, sn_m1, sn_m2, sn_ligo;
-        mean = pars[pvi["mean_NS"]];
-        width = pow(10.0, pars[pvi["log10_width_NS"]]);
-        skewns = pars[pvi["skewness_NS"]];
+        mean=pars[pvi["mean_NS"]];
+        width=pow(10.0, pars[pvi["log10_width_NS"]]);
+        skewns=pars[pvi["skewness_NS"]];
 
         // GW170817
-        sn_m1 = pop.skewed_norm(m1, mean, width, skewns);
-        sn_m2 = pop.skewed_norm(m2, mean, width, skewns);
-        sn_ligo = sn_m1*sn_m2;
-        log_wgt += log(sn_ligo);
+        sn_m1=pop.skewed_norm(m1,mean,width,skewns);
+        sn_m2=pop.skewed_norm(m2,mean,width,skewns);
+        sn_ligo=sn_m1*sn_m2;
+        log_wgt+=log(sn_ligo);
 
         // GW190425
-        sn_m1 = pop.skewed_norm(m1_gw19, mean, width, skewns);
-        sn_m2 = pop.skewed_norm(m2_gw19, mean, width, skewns);
-        sn_ligo = sn_m1*sn_m2;
-        log_wgt += log(sn_ligo);
+        sn_m1=pop.skewed_norm(m1_gw19,mean,width,skewns);
+        sn_m2=pop.skewed_norm(m2_gw19,mean,width,skewns);
+        sn_ligo=sn_m1*sn_m2;
+        log_wgt+=log(sn_ligo);
       }
     }
 
