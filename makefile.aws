@@ -581,6 +581,6 @@ prx2:
 		prob 0.7 acol \
 		-add-data 0740 data/prx/0740_t3d.o2 \
 		prob 0.7 acol -model prx \
-		-initial-point-last out/prx2_0_out \
+		-initial-point-last "out/prx2_<rank>_in" \
 		-mcmc > out/prx2.scr 2>&1 &
 
