@@ -52,12 +52,14 @@ IWALK = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 2
 new-file:
 	acol -read mp2_31 markov_chain_0 $(foreach i, $(IWALK),-cat mp2_31) -internal mp3_31
 
+# Base file - create either by concatenating, or copying, or processing raw files
 file-main:
 	acol -read out_$(model) markov_chain_0 -select-rows "mult>0.5" \
 	-internal tmp/tmp_$(model).o2
 	acol -h5-copy tmp/tmp_$(model).o2 tmp/main_$(model).o2
 	rm -f tmp/tmp_$(model).o2
 
+# Requires main_$(model).o2
 file-esmr:
 	acol -read tmp/main_$(model).o2 markov_chain_0 \
 	$(foreach i,$(INDEX),-function P_$i*197.32698 Phc_$i) \
@@ -81,74 +83,7 @@ file-esmr:
 	-contours frac 0.68 tmp/esmr_$(model).o2 c68_mr \
 	-contours frac 0.95 tmp/esmr_$(model).o2 c95_mr
 
-splot-eos:
-	o2graph -subplots 2 1 sharex=True \
-	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
-	-selax 0 -set logy 1 -read tmp/esmr_NL.o2 ed_pr_3d \
-	-den-plot prob pcm=True,cmap=pink_r \
-	-read tmp/esmr_NL.o2 c68_es -plot lw=1,color=purple \
-	-read tmp/esmr_NL.o2 c95_es -plot lw=1,color=orange \
-	-ttext 0.1 0.92 "NL" \
-	-ytitle "Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-selax 1 -set logy 1 -read tmp/esmr_NP.o2 ed_pr_3d \
-	-den-plot prob pcm=True,cmap=pink_r \
-	-read tmp/esmr_NP.o2 c68_es -plot lw=1,color=purple \
-	-read tmp/esmr_NP.o2 c95_es -plot lw=1,color=orange \
-	-xtitle "Energy Density, $$ \epsilon~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-ttext 0.1 0.92 "NP" \
-	-addcbar 0.86 0.12 0.03 0.86 -selax \
-	-save figs/eos_s.png -show &
-
-splot-eos2:
-	o2graph -subplots 2 1 sharex=True \
-	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
-	-selax 0 -set logy 1 -read tmp/esmr_ML.o2 ed_pr_3d \
-	-den-plot prob pcm=True,cmap=pink_r \
-	-read tmp/esmr_ML.o2 c68_es -plot lw=1,color=purple \
-	-read tmp/esmr_ML.o2 c95_es -plot lw=1,color=orange \
-	-ttext 0.1 0.92 "ML" \
-	-ytitle "Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-selax 1 -set logy 1 -read tmp/esmr_MP.o2 ed_pr_3d \
-	-den-plot prob pcm=True,cmap=pink_r \
-	-read tmp/esmr_MP.o2 c68_es -plot lw=1,color=purple \
-	-read tmp/esmr_MP.o2 c95_es -plot lw=1,color=orange \
-	-xtitle "Energy Density, $$ \epsilon~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
-	-ttext 0.1 0.92 "MP" \
-	-addcbar 0.86 0.12 0.03 0.86 -selax \
-	-save figs/eos_s2.png -show &
-
-splot-mvsr:
-	o2graph -subplots 2 1 sharex=True \
-	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
-	-selax 0 -read tmp/esmr_NL.o2 gm_r_3d -den-plot prob cmap=pink_r \
-	-read tmp/esmr_NL.o2 c68_mr -plot lw=1,color=purple \
-	-read tmp/esmr_NL.o2 c95_mr -plot lw=1,color=orange \
-	-ttext 0.1 0.92 "NL" \
-	-ytitle "Mass, $$ M~[\mathrm{M}_\odot] $$" \
-	-selax 1 -read tmp/esmr_NP.o2 gm_r_3d -den-plot prob cmap=pink_r \
-	-read tmp/esmr_NP.o2 c68_mr -plot lw=1,color=purple \
-	-read tmp/esmr_NP.o2 c95_mr -plot lw=1,color=orange \
-	-ttext 0.1 0.92 "NP" \
-	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
-	-addcbar 0.86 0.12 0.03 0.86 -selax \
-	-save figs/mvsr_s.png -show &
-
-splot-mvsr2:
-	o2graph -subplots 2 1 sharex=True \
-	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
-	-selax 0 -read tmp/esmr_ML.o2 gm_r_3d -den-plot prob cmap=pink_r \
-	-read tmp/esmr_ML.o2 c68_mr -plot lw=1,color=purple \
-	-read tmp/esmr_ML.o2 c95_mr -plot lw=1,color=orange \
-	-ttext 0.1 0.92 "ML" \
-	-ytitle "Mass, $$ M~[\mathrm{M}_\odot] $$" \
-	-selax 1 -read tmp/esmr_MP.o2 gm_r_3d -den-plot prob cmap=pink_r \
-	-read tmp/esmr_MP.o2 c68_mr -plot lw=1,color=purple \
-	-read tmp/esmr_MP.o2 c95_mr -plot lw=1,color=orange \
-	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
-	-ttext 0.1 0.92 "MP" \
-	-addcbar 0.86 0.12 0.03 0.86 -selax \
-	-save figs/mvsr_s2.png -show &
-
+# Requires main_$(model).o2
 file-main2:
 	acol -read tmp/main_$(model).o2 markov_chain_0 \
 	-function "10^log10_width_NS" width_NS \
@@ -174,6 +109,177 @@ file-main2:
 	-select ":mean_*" ":width_*" ":skewness_*" ":SN_*" \
 	Phc_23 R_43 R_50 R_53 M_max log_dpdM log_wgt \
 	-internal tmp/main2_$(model).o2
+
+XLO = 0.0
+XHI = 3.0
+YLO = 0.04
+YHI = 4.0
+DX = 99.0
+
+# Requires main2_$(model).o2
+file-dist:
+	acol -read tmp/main2_$(model).o2 markov_chain_0 \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
+	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_NS_$i) \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_WD" cf \
+	-function "exp(-0.5*(($i*0.03-mean_WD)/width_WD)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_WD)*(skewness_WD)/width_WD/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_WD_$i) \
+	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_LM" cf \
+	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
+	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
+	-function "cf*pdf*cdf" SN_LM_$i) \
+	-select ":SN_*" -set obj_name gm_sn -internal tmp/dist_$(model).o2
+	acol -read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
+	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
+	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
+	"SN_NS_*" prob_ns -type -list \
+	-set obj_name sn_ns -internal tmp/dist_$(model).o2 \
+	-to-hist-2d prob_ns \
+	-contours frac 0.68 tmp/dist_$(model).o2 c68_ns \
+	-contours frac 0.95 tmp/dist_$(model).o2 c95_ns \
+	-read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
+	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
+	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
+	"SN_WD_*" prob_wd -type -list \
+	-set obj_name sn_wd -internal tmp/dist_$(model).o2 \
+	-to-hist-2d prob_wd \
+	-contours frac 0.68 tmp/dist_$(model).o2 c68_wd \
+	-contours frac 0.95 tmp/dist_$(model).o2 c95_wd \
+	-read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
+	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
+	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
+	"SN_LM_*" prob_lm -type -list \
+	-set obj_name sn_lm -internal tmp/dist_$(model).o2 \
+	-to-hist-2d prob_lm \
+	-contours frac 0.68 tmp/dist_$(model).o2 c68_lm \
+	-contours frac 0.95 tmp/dist_$(model).o2 c95_lm 
+
+splot-eos1:
+	o2graph -subplots 2 1 sharex=True \
+	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
+	-selax 0 -set logy 1 -read tmp/esmr_NL.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_NL.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_NL.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NL" \
+	-selax 1 -set logy 1 -read tmp/esmr_NP.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_NP.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_NP.o2 c95_es -plot lw=1,color=orange \
+	-xtitle "Energy Density, $$ \epsilon~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad $$ Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-ttext 0.1 0.92 "NP" \
+	-addcbar 0.86 0.12 0.03 0.86 -selax \
+	-save figs/eos_s1.png -show &
+
+splot-eos2:
+	o2graph -subplots 2 1 sharex=True \
+	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
+	-selax 0 -set logy 1 -read tmp/esmr_ML.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_ML.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_ML.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "ML" \
+	-selax 1 -set logy 1 -read tmp/esmr_MP.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_MP.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_MP.o2 c95_es -plot lw=1,color=orange \
+	-xtitle "Energy Density, $$ \epsilon~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad $$ Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-ttext 0.1 0.92 "MP" \
+	-addcbar 0.86 0.12 0.03 0.86 -selax \
+	-save figs/eos_s2.png -show &
+
+splot-eos:
+	o2graph -subplots 4 1 sharex=True \
+	-subadj hspace=0.0,left=0.16,right=0.8,top=0.99,bottom=0.05 \
+	-selax 0 -set logy 1 -read tmp/esmr_NL.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_NL.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_NL.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NL" \
+	-selax 1 -set logy 1 -read tmp/esmr_NP.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_NP.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_NP.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NP" \
+	-selax 2 -set logy 1 -read tmp/esmr_ML.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_ML.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_ML.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "ML" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad \qquad \quad $$ Pressure, $$ P~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-selax 3 -set logy 1 -read tmp/esmr_MP.o2 ed_pr_3d \
+	-den-plot prob pcm=True,cmap=pink_r \
+	-read tmp/esmr_MP.o2 c68_es -plot lw=1,color=purple \
+	-read tmp/esmr_MP.o2 c95_es -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "MP" \
+	-xtitle "Energy Density, $$ \epsilon~[\mathrm{MeV}/\mathrm{fm}^3] $$" \
+	-addcbar 0.82 0.05 0.03 0.94 -selax \
+	-show &
+
+splot-mvsr1:
+	o2graph -subplots 2 1 sharex=True \
+	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
+	-selax 0 -read tmp/esmr_NL.o2 gm_r_3d -den-plot prob cmap=pink_r \
+	-read tmp/esmr_NL.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_NL.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NL" \
+	-selax 1 -read tmp/esmr_NP.o2 gm_r_3d -den-plot prob cmap=pink_r \
+	-read tmp/esmr_NP.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_NP.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NP" \
+	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad \quad $$ Mass, $$ M~[\mathrm{M}_\odot] $$" \
+	-addcbar 0.86 0.12 0.03 0.86 -selax \
+	-save figs/mvsr_s1.png -show &
+
+splot-mvsr2:
+	o2graph -subplots 2 1 sharex=True \
+	-subadj hspace=0.0,left=0.14,right=0.84,top=0.98,bottom=0.12 \
+	-selax 0 -read tmp/esmr_ML.o2 gm_r_3d -den-plot prob cmap=pink_r \
+	-read tmp/esmr_ML.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_ML.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "ML" \
+	-selax 1 -read tmp/esmr_MP.o2 gm_r_3d -den-plot prob cmap=pink_r \
+	-read tmp/esmr_MP.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_MP.o2 c95_mr -plot lw=1,color=orange \
+	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad \quad $$ Mass, $$ M~[\mathrm{M}_\odot] $$" \
+	-ttext 0.1 0.92 "MP" \
+	-addcbar 0.86 0.12 0.03 0.86 -selax \
+	-save figs/mvsr_s2.png -show &
+
+splot-mvsr:
+	o2graph -subplots 4 1 sharex=True \
+	-subadj hspace=0.0,left=0.16,right=0.8,top=0.99,bottom=0.05 \
+	-selax 0 -read tmp/esmr_NL.o2 gm_r_3d \
+	-den-plot prob cmap=pink_r \
+	-read tmp/esmr_NL.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_NL.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NL" \
+	-selax 1 -read tmp/esmr_NP.o2 gm_r_3d \
+	-den-plot prob cmap=pink_r \
+	-read tmp/esmr_NP.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_NP.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "NP" \
+	-selax 2 -read tmp/esmr_ML.o2 gm_r_3d \
+	-den-plot prob cmap=pink_r \
+	-read tmp/esmr_ML.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_ML.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "ML" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad \qquad \quad $$ Mass, $$ M~[\mathrm{M}_\odot] $$" \
+	-selax 3 -read tmp/esmr_MP.o2 gm_r_3d \
+	-den-plot prob cmap=pink_r \
+	-read tmp/esmr_MP.o2 c68_mr -plot lw=1,color=purple \
+	-read tmp/esmr_MP.o2 c95_mr -plot lw=1,color=orange \
+	-ttext 0.1 0.92 "MP" \
+	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
+	-addcbar 0.82 0.05 0.03 0.94 -selax \
+	-show &
 
 plot-hist-mmax:
 	o2graph -read tmp/main2_$(model).o2 markov_chain_0 \
@@ -216,6 +322,42 @@ splot-r-sn:
 	-ttext 0.5 1.1 "$(model): LMXB" \
 	-addcbar 0.82 0.12 0.04 0.82 -selax \
 	-save figs/sn_r_$(model).png -show &
+
+splot-kde-lmxb:
+	o2graph -read tmp/main2_NL.o2 markov_chain_0 \
+	-kde-2d-plot R_53 SN_LM \
+	-ttext 0.1 0.92 "NL" -save figs/scat-r53_NL.pdf -show &
+	o2graph -read tmp/main2_NL.o2 markov_chain_0 \
+	-kde-2d-plot Phc_23 SN_LM \
+	-save figs/scat-p23_NL.pdf -show &
+	o2graph -read tmp/main2_NL.o2 markov_chain_0 \
+	-kde-2d-plot M_max SN_LM \
+	-save figs/scat-mmax_NL.pdf-show &
+	o2graph -read tmp/main2_NP.o2 markov_chain_0 \
+	-kde-2d-plot R_53 SN_LM \
+	-ttext 0.1 0.92 "NP" \
+	-ytitle "$$ \mathcal{P}(M=1.7 M_\odot $$)" -show &
+	o2graph -read tmp/main2_NP.o2 markov_chain_0 \
+	-kde-2d-plot Phc_23 SN_LM -show &
+	o2graph -read tmp/main2_NP.o2 markov_chain_0 \
+	-kde-2d-plot M_max SN_LM -show &	
+	o2graph -read tmp/main2_ML.o2 markov_chain_0 \
+	-kde-2d-plot R_53 SN_LM \
+	-ttext 0.1 0.92 "ML" -show &
+	o2graph -read tmp/main2_ML.o2 markov_chain_0 \
+	-kde-2d-plot Phc_23 SN_LM -show &
+	o2graph -read tmp/main2_ML.o2 markov_chain_0 \
+	-kde-2d-plot M_max SN_LM -show &
+	o2graph -read tmp/main2_MP.o2 markov_chain_0 \
+	-kde-2d-plot R_53 SN_LM \
+	-ttext 0.1 0.92 "MP" \
+	-xtitle "$$ R_{1.7M_\odot} $$ [km]" -show &
+	o2graph -read tmp/main2_MP.o2 markov_chain_0 \
+	-kde-2d-plot Phc_23 SN_LM \
+	-xtitle "$$ P~(\epsilon \approx $$ 500 MeV/fm $$ ^3) $$" -show &
+	o2graph -read tmp/main2_MP.o2 markov_chain_0 \
+	-kde-2d-plot M_max SN_LM \
+	-xtitle "$$ M_\mathrm{max} [M_\odot] $$" -show &
 
 plot-scat-p23-sn:
 	o2graph -read tmp/main2_$(model).o2 markov_chain_0 -function 1 w -set colbar 1 \
@@ -289,53 +431,7 @@ splot-mmax-sn:
 	-addcbar 0.82 0.12 0.04 0.82 -selax \
 	-save figs/scat_sn-p23_$(model).png -show &
 
-XLO = 0.0
-XHI = 3.0
-YLO = 0.04
-YHI = 4.0
-DX = 99.0
-
-file-dist:
-	acol -read tmp/main2_$(model).o2 markov_chain_0 \
-	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
-	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
-	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_NS_$i) \
-	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_WD" cf \
-	-function "exp(-0.5*(($i*0.03-mean_WD)/width_WD)^2)" pdf \
-	-function "1+erf(($i*0.03-mean_WD)*(skewness_WD)/width_WD/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_WD_$i) \
-	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_LM" cf \
-	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
-	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_LM_$i) \
-	-select ":SN_*" -set obj_name gm_sn -internal tmp/dist_$(model).o2
-	acol -read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
-	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
-	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
-	"SN_NS_*" prob_ns -type -list \
-	-set obj_name sn_ns -internal tmp/dist_$(model).o2 \
-	-to-hist-2d prob_ns \
-	-contours frac 0.68 tmp/dist_$(model).o2 c68_ns \
-	-contours frac 0.95 tmp/dist_$(model).o2 c95_ns \
-	-read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
-	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
-	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
-	"SN_WD_*" prob_wd -type -list \
-	-set obj_name sn_wd -internal tmp/dist_$(model).o2 \
-	-to-hist-2d prob_wd \
-	-contours frac 0.68 tmp/dist_$(model).o2 c68_wd \
-	-contours frac 0.95 tmp/dist_$(model).o2 c95_wd \
-	-read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
-	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
-	"grid:$(YLO),$(YHI),($(YHI)-$(YLO))/$(DX)" auto sn \
-	"SN_LM_*" prob_lm -type -list \
-	-set obj_name sn_lm -internal tmp/dist_$(model).o2 \
-	-to-hist-2d prob_lm \
-	-contours frac 0.68 tmp/dist_$(model).o2 c68_lm \
-	-contours frac 0.95 tmp/dist_$(model).o2 c95_lm 
-
-splot-dist:
+splot-dist1:
 	o2graph -subplots 2 3 sharex=True,sharey=True \
 	-subadj hspace=0.0,left=0.05,right=0.93,top=0.95,bottom=0.12 \
 	-selax 0 -read tmp/dist_NL.o2 sn_ns -den-plot prob_ns cmap=pink_r \
@@ -364,7 +460,7 @@ splot-dist:
 	-read tmp/dist_NP.o2 c68_lm -plot lw=1,color=purple \
 	-read tmp/dist_NP.o2 c95_lm -plot lw=1,color=orange \
 	-addcbar 0.94 0.12 0.02 0.83 -selax \
-	-save figs/sn_s.png -show &
+	-save figs/sn_s1.png -show &
 
 splot-dist2:
 	o2graph -subplots 2 3 sharex=True,sharey=True \
@@ -396,6 +492,58 @@ splot-dist2:
 	-read tmp/dist_MP.o2 c95_lm -plot lw=1,color=orange \
 	-addcbar 0.94 0.12 0.02 0.83 -selax \
 	-save figs/sn_s2.png -show &
+
+splot-dist:
+	o2graph -subplots 4 3 sharex=True,sharey=True \
+	-subadj hspace=0.0,left=0.06,right=0.92,top=0.98,bottom=0.05 \
+	-selax 0 -read tmp/dist_NL.o2 sn_ns -den-plot prob_ns cmap=pink_r \
+	-read tmp/dist_NL.o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist_NL.o2 c95_ns -plot lw=1,color=orange \
+	-ttext 0.2 0.92 "NL" \
+	-ttext 0.5 1.05 "DNS" \
+	-selax 1 -read tmp/dist_NL.o2 sn_wd -den-plot prob_wd cmap=pink_r \
+	-read tmp/dist_NL.o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist_NL.o2 c95_wd -plot lw=1,color=orange \
+	-ttext 0.5 1.05 "NS-WD" \
+	-selax 2 -read tmp/dist_NL.o2 sn_lm -den-plot prob_lm cmap=pink_r \
+	-read tmp/dist_NL.o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist_NL.o2 c95_lm -plot lw=1,color=orange \
+	-ttext 0.5 1.05 "LMXB" \
+	-selax 3 -read tmp/dist_NP.o2 sn_ns -den-plot prob_ns cmap=pink_r \
+	-read tmp/dist_NP.o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist_NP.o2 c95_ns -plot lw=1,color=orange \
+	-ttext 0.2 0.92 "NP" \
+	-selax 4 -read tmp/dist_NP.o2 sn_wd -den-plot prob_wd cmap=pink_r \
+	-read tmp/dist_NP.o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist_NP.o2 c95_wd -plot lw=1,color=orange \
+	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
+	-selax 5 -read tmp/dist_NP.o2 sn_lm -den-plot prob_lm cmap=pink_r \
+	-read tmp/dist_NP.o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist_NP.o2 c95_lm -plot lw=1,color=orange \
+	-selax 6 -read tmp/dist_ML.o2 sn_ns -den-plot prob_ns cmap=pink_r \
+	-read tmp/dist_ML.o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist_ML.o2 c95_ns -plot lw=1,color=orange \
+	-ttext 0.2 0.92 "ML" \
+	-ytitle ".$$ \qquad \qquad \qquad \qquad \qquad \qquad \quad $$ Probability Density, $$ \mathcal{P}(M) $$" \
+	-selax 7 -read tmp/dist_ML.o2 sn_wd -den-plot prob_wd cmap=pink_r \
+	-read tmp/dist_ML.o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist_ML.o2 c95_wd -plot lw=1,color=orange \
+	-selax 8 -read tmp/dist_ML.o2 sn_lm -den-plot prob_lm cmap=pink_r \
+	-read tmp/dist_ML.o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist_ML.o2 c95_lm -plot lw=1,color=orange \
+	-selax 9 -read tmp/dist_MP.o2 sn_ns -den-plot prob_ns cmap=pink_r \
+	-read tmp/dist_MP.o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist_MP.o2 c95_ns -plot lw=1,color=orange \
+	-ttext 0.2 0.92 "MP" \
+	-selax 10 -read tmp/dist_MP.o2 sn_wd -den-plot prob_wd cmap=pink_r \
+	-read tmp/dist_MP.o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist_MP.o2 c95_wd -plot lw=1,color=orange \
+	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
+	-selax 11 -read tmp/dist_MP.o2 sn_lm -den-plot prob_lm cmap=pink_r \
+	-read tmp/dist_MP.o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist_MP.o2 c95_lm -plot lw=1,color=orange \
+	-addcbar 0.93 0.05 0.02 0.93 -selax \
+	-save figs/sn_s.png -show &
 
 plot-dist:
 	o2graph -read tmp/dist_$(model).o2 sn_ns -set colbar 1 \
@@ -516,7 +664,7 @@ plot-pnb:
 	-ttext 0.5 0.96 "$(model): $(title)" \
 	-save figs/pnb_$(model).png -show &
 
-plot2-pnb:
+plot-pnb2:
 	o2graph -plotv "grid:0.04,1.24,(1.24-0.04)/99.0" \
 	"hdf5:tmp/pnb_ML.o2:nb_pr:0-99:Pnb_hc_*" \
 	-xtitle "Baryon Density, $ n_b~[\mathrm{fm}^{-3}] $" \
@@ -681,6 +829,14 @@ plot-kde-csq:
 	-xtitle "csq1-csq2" -ytitle "Density" -ttext 0.5 0.97 "ML: 33-34 vs 35-36" -save csq_ml.png -show &
 	o2graph -read nl334 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq -read nl356 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq \
 	-xtitle "csq1-csq2" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save csq_nl.png -show &
+
+plot-r43-lambda43:
+	o2graph -read np_43_tmp markov_chain_0 -index \
+	i=1; while [[$$i -le 8034]]; do \
+		-select-rows "N==$$i" \
+		-scatter R_43 lambda_43; \
+		i=$$((i+1)); \
+	done
 	
 
 file-eos-all:
@@ -732,10 +888,15 @@ plot-mvsr-all:
 	make model="NP" plot-mvsr
 
 file-all:
-	make file-main && \
-	make file-esmr && \
-	make file-main2 && \
-	make file-dist
+	make model="ML" file-esmr && make model="MP" file-esmr && make model="NL" file-esmr && make model="NP" file-esmr && \
+	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
+	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
+
+file-dist-all:
+	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
+
+plot-dist-all:
+	make model="ML" plot-dist && make model="MP" plot-dist && make model="NL" plot-dist && make model="NP" plot-dist
 
 plot-all:
 	make plot-eos && \
