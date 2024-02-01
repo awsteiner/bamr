@@ -830,83 +830,57 @@ plot-kde-csq:
 	o2graph -read nl334 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq -read nl356 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq \
 	-xtitle "csq1-csq2" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save csq_nl.png -show &
 
-plot-r43-lambda43:
-	o2graph -read np_43_tmp markov_chain_0 -index \
-	i=1; while [[$$i -le 8034]]; do \
-		-select-rows "N==$$i" \
-		-scatter R_43 lambda_43; \
-		i=$$((i+1)); \
-	done
-	
-
-file-eos-all:
-	make model="ML" file-eos && \
-	make model="MP" file-eos && \
-	make model="NL" file-eos && \
-	make model="NP" file-eos
-
-file-eoa-all:
-	make model="ML" file-eoa && \
-	make model="MP" file-eoa && \
-	make model="NL" file-eoa && \
-	make model="NP" file-eoa
-
-file-pnb-all:
-	make model="ML" file-pnb && \
-	make model="MP" file-pnb && \
-	make model="NL" file-pnb && \
-	make model="NP" file-pnb
-
-file-mvsr-all:
-	make model="ML" file-mvsr && \
-	make model="MP" file-mvsr && \
-	make model="NL" file-mvsr && \
-	make model="NP" file-mvsr
-
-plot-eos-all:
-	make model="ML" plot-eos && \
-	make model="MP" plot-eos && \
-	make model="NL" plot-eos && \
-	make model="NP" plot-eos
-
-plot-eoa-all:
-	make model="ML" plot-eoa && \
-	make model="MP" plot-eoa && \
-	make model="NL" plot-eoa && \
-	make model="NP" plot-eoa
-
-plot-pnb-all:
-	make model="ML" plot-pnb && \
-	make model="MP" plot-pnb && \
-	make model="NL" plot-pnb && \
-	make model="NP" plot-pnb
-
-plot-mvsr-all:
-	make model="ML" plot-mvsr && \
-	make model="MP" plot-mvsr && \
-	make model="NL" plot-mvsr && \
-	make model="NP" plot-mvsr
-
 file-all:
 	make model="ML" file-esmr && make model="MP" file-esmr && make model="NL" file-esmr && make model="NP" file-esmr && \
 	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
 	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
 
-file-dist-all:
-	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
+mod = ml mp nl np
 
-plot-dist-all:
-	make model="ML" plot-dist && make model="MP" plot-dist && make model="NL" plot-dist && make model="NP" plot-dist
+rank = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 
-plot-all:
-	make plot-eos && \
-	make plot-mvsr && \
-	make plot-dist && \
-	make plot-trc && \
-	make plot-trc-mmax && \
-	make plot-scat-mmax && \
-	make plot-scat-dpdm-mmax && \
-	make plot-scat-dpdm-r43
+rank2 = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+
+scp-down:
+	scp manik@br2:/ocean/projects/phy230011p/shared/bamr/out/*_out .
+
+file-mult:
+	$(foreach m,$(mod),$(foreach r,$(rank),acol -read $(m)_$(r)_out markov_chain_0 -select-rows "mult>0.5" -internal $(m)_$(r)_out))
+
+file-hcp:
+	$(foreach m,$(mod), \
+		$(foreach r,$(rank), \
+			acol -h5-copy $(ifeq ($(m),ml), \ 
+				$(m)_$(r)_out $(m)_54a$(r), \
+				$(m)_$(r)_out $(m)_46a$(r) \
+			) \
+		) \
+	)
+
+file-con:
+	$(foreach m,$(mod), \
+		acol -read $(ifeq ($(m),ml), \
+			$(m)_54a0 $(foreach r,$(rank2), -cat $(m)_54a$(r)) -internal $(m)_54, \
+			$(m)_46a0 $(foreach r,$(rank2), -cat $(m)_46a$(r)) -internal $(m)_46 \
+		) \
+	)
+
+file-cp:
+	$(foreach m,$(mod), \
+		$(foreach r,$(rank), \
+			cp $(ifeq ($(m),ml), \
+				$(m)_54a$(r) $(m)_54a$(r+16), \
+				$(m)_46a$(r) $(m)_46a$(r+16)
+			) \
+		) \
+	)
+
+scp-up:
+	scp ml_54a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp *_46a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+
+file-rm:
+	rm -f *_out 
 
 clean:
 	rm -f figs/*.png tmp/*.o2 
