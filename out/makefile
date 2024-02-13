@@ -1,53 +1,11 @@
 
 model =
-
 title =
 
-INDEX = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
-	20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 \
-	40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 \
-	60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 \
-	80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99
-
-INDEX2 = 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 \
-	76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 \
-	103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 \
-	124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 \
-	145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 \
-	166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 \
-	187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 \
-	208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 \
-	229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 \
-
-THREAD = 0 
-
-WALKER = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 \
-	20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 \
-	40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 \
-	60 61 62 63
-
-IWALK = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 \
-		31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 \
-		61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 \
-		91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 \
-		116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 \
-		139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 \
-		162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 \
-		185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 \
-		208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 \
-		231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 \
-		254 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 271 272 273 274 275 276 \
-		277 278 279 280 281 282 283 284 285 286 287 288 289 290 291 292 293 294 295 296 297 298 299 \
-		300 301 302 303 304 305 306 307 308 309 310 311 312 313 314 315 316 317 318 319 320 321 322 \
-		323 324 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339 340 341 342 343 344 345 \
-		346 347 348 349 350 351 352 353 354 355 356 357 358 359 360 361 362 363 364 365 366 367 368 \
-		369 370 371 372 373 374 375 376 377 378 379 380 381 382 383 384 385 386 387 388 389 390 391 \
-		392 393 394 395 396 397 398 399 400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 \
-		415 416 417 418 419 420 421 422 423 424 425 426 427 428 429 430 431 432 433 434 435 436 437 \
-		438 439 440 441 442 443 444 445 446 447 448 449 450 451 452 453 454 455 456 457 458 459 460 \
-		461 462 463 464 465 466 467 468 469 470 471 472 473 474 475 476 477 478 479 480 481 482 483 \
-		484 485 486 487 488 489 490 491 492 493 494 495 496 497 498 499 500 501 502 503 504 505 506 \
-		507 508 509 510
+INDEX = $(shell seq 0 99)
+THREAD = $(shell seq 0 7)
+WALKER = $(shell seq 0 63)
+IWALK = $(shell seq 0 511)
 
 new-file:
 	acol -read mp2_31 markov_chain_0 $(foreach i, $(IWALK),-cat mp2_31) -internal mp3_31
@@ -122,15 +80,15 @@ file-dist:
 	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_NS" cf \
 	-function "exp(-0.5*(($i*0.03-mean_NS)/width_NS)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_NS_$i) \
+	-function "if($i*0.03<=M_max,cf*pdf*cdf,0.0)" SN_NS_$i) \
 	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_WD" cf \
 	-function "exp(-0.5*(($i*0.03-mean_WD)/width_WD)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_WD)*(skewness_WD)/width_WD/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_WD_$i) \
+	-function "if($i*0.03<=M_max,cf*pdf*cdf,0.0)" SN_WD_$i) \
 	$(foreach i,$(INDEX),-function "1/sqrt(2*3.1416)/width_LM" cf \
 	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
-	-function "cf*pdf*cdf" SN_LM_$i) \
+	-function "if($i*0.03<=M_max,cf*pdf*cdf,0.0)" SN_LM_$i) \
 	-select ":SN_*" -set obj_name gm_sn -internal tmp/dist_$(model).o2
 	acol -read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
 	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
@@ -156,6 +114,32 @@ file-dist:
 	-to-hist-2d prob_lm \
 	-contours frac 0.68 tmp/dist_$(model).o2 c68_lm \
 	-contours frac 0.95 tmp/dist_$(model).o2 c95_lm 
+
+plot-dist:
+	o2graph -read tmp/dist_$(model).o2 sn_ns -set colbar 1 \
+	-den-plot prob_ns cmap=pink_r \
+	-read tmp/dist_$(model).o2 c68_ns -plot lw=1,color=purple \
+	-read tmp/dist_$(model).o2 c95_ns -plot lw=1,color=orange \
+	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
+	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
+	-ttext 0.5 0.96 "$(model): DNS" \
+	-save figs/sn_ns_$(model).png -show & 
+	o2graph -read tmp/dist_$(model).o2 sn_wd -set colbar 1 \
+	-den-plot prob_wd cmap=pink_r \
+	-read tmp/dist_$(model).o2 c68_wd -plot lw=1,color=purple \
+	-read tmp/dist_$(model).o2 c95_wd -plot lw=1,color=orange \
+	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
+	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
+	-ttext 0.5 0.96 "$(model): NS-WD" \
+	-save figs/sn_wd_$(model).png -show & 
+	o2graph -read tmp/dist_$(model).o2 sn_lm -set colbar 1 \
+	-den-plot prob_lm cmap=pink_r \
+	-read tmp/dist_$(model).o2 c68_lm -plot lw=1,color=purple \
+	-read tmp/dist_$(model).o2 c95_lm -plot lw=1,color=orange \
+	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
+	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
+	-ttext 0.5 0.96 "$(model): LMXB" \
+	-save figs/sn_lm_$(model).png -show & 
 
 splot-eos1:
 	o2graph -subplots 2 1 sharex=True \
@@ -545,32 +529,6 @@ splot-dist:
 	-addcbar 0.93 0.05 0.02 0.93 -selax \
 	-save figs/sn_s.png -show &
 
-plot-dist:
-	o2graph -read tmp/dist_$(model).o2 sn_ns -set colbar 1 \
-	-den-plot prob_ns cmap=pink_r \
-	-read tmp/dist_$(model).o2 c68_ns -plot lw=1,color=purple \
-	-read tmp/dist_$(model).o2 c95_ns -plot lw=1,color=orange \
-	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
-	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
-	-ttext 0.5 0.96 "$(model): DNS" \
-	-save figs/sn_ns_$(model).png -show & 
-	o2graph -read tmp/dist_$(model).o2 sn_wd -set colbar 1 \
-	-den-plot prob_wd cmap=pink_r \
-	-read tmp/dist_$(model).o2 c68_wd -plot lw=1,color=purple \
-	-read tmp/dist_$(model).o2 c95_wd -plot lw=1,color=orange \
-	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
-	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
-	-ttext 0.5 0.96 "$(model): NS-WD" \
-	-save figs/sn_wd_$(model).png -show & 
-	o2graph -read tmp/dist_$(model).o2 sn_lm -set colbar 1 \
-	-den-plot prob_lm cmap=pink_r \
-	-read tmp/dist_$(model).o2 c68_lm -plot lw=1,color=purple \
-	-read tmp/dist_$(model).o2 c95_lm -plot lw=1,color=orange \
-	-xtitle "Mass, $$ M $$ [$$ M_\odot $$]" \
-	-ytitle "Mass Distribution, $$ \mathcal{P} $$" \
-	-ttext 0.5 0.96 "$(model): LMXB" \
-	-save figs/sn_lm_$(model).png -show & 
-
 file-eos:
 	acol -read tmp/main_$(model).o2 markov_chain_0 \
 	$(foreach i,$(INDEX),-function P_$i*197.32698 Phc_$i) \
@@ -713,174 +671,77 @@ plot-trc-dpdm:
 	-average-rows log_dpdm 512 -plot1 log_dpdm \
 	-save figs/trc_dpdm_$(model).png -show &
 
-plot-scat-mmax-wgt:
-	o2graph -read tmp/main_$(model).o2 markov_chain_0 \
-	-function 1 w -scatter M_max log_wgt w log_wgt \
-	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log_wgt" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/scat_mmax-wgt_$(model).png -show &
-
-plot-scat-dpdm-mmax:
-	o2graph -read tmp/main_$(model).o2 markov_chain_0 \
-	-function "log(dpdM)" log_dpdm -set colbar 1 \
-	-function 1 w -scatter M_max log_dpdm w log_wgt \
-	-xtitle "M_max [$$ M_\odot $$]" -ytitle "log(dpdM)" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/scat_dpdm-mmax_$(model).png -show &
-
-plot-scat-dpdm-poly:
-	o2graph -read tmp/main_$(model).o2 markov_chain_0 \
-	-function "log(dpdM)" log_dpdm -set colbar 1 \
-	-function 1 w -scatter exp3 log_dpdm w log_wgt \
-	-xtitle "exp3" -ytitle "log(dp/dM)" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/scat_dpdm-poly_$(model).png -show &
-
-plot-scat-dpdm-line:
-	o2graph -read tmp/main_$(model).o2 markov_chain_0 \
-	-function "log(dpdM)" log_dpdm -set colbar 1 \
-	-function 1 w -scatter csq3 log_dpdm w log_wgt \
-	-xtitle "csq3" -ytitle "log(dp/dM)" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/scat_dpdm-line_$(model).png -show &
-
-plot-scat-dpdm-r43:
-	o2graph -read tmp/main_$(model).o2 markov_chain_0 \
-	-function "log(dpdM)" log_dpdm -set colbar 1 \
-	-function 1 w -scatter R_43 log_dpdm w log_wgt \
-	-xtitle "R_43 [km]" -ytitle "log(dpdM)" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/scat_dpdm-r43_$(model).png -show &
-
 plot-acor-a:
 	o2graph $(foreach i, $(THREAD),$(foreach j,$(WALKER), \
 	-read tmp/main_$(model).o2 markov_chain_0 \
 	-select-rows "thread==$i && walker==$j" \
 	-autocorr store,default a -plot 0)) \
 	-xtitle "Autocorr. Length" -ytitle "Autocorr. Coeff." \
-	-ttext 0.5 0.96 "$(model): $(title)" -save figs/a-acor_$(model).png -show &
-
-plot-kde-r43:
-	o2graph -read mp334 markov_chain_0 -kde-plot R_43 -read mp356 markov_chain_0 -kde-plot R_43 \
-	-xtitle "R_43" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save r43_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot R_43 -read nl356 markov_chain_0 -kde-plot R_43 \
-	-xtitle "R_43" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save r43_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot R_43 -read np356 markov_chain_0 -kde-plot R_43 \
-	-xtitle "R_43" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save r43_np.png -show &
-
-plot-kde-mmax:
-	o2graph -read mp334 markov_chain_0 -kde-plot M_max -read mp356 markov_chain_0 -kde-plot M_max \
-	-xtitle "M_max" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save mmax_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot M_max -read nl356 markov_chain_0 -kde-plot M_max \
-	-xtitle "M_max" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save mmax_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot M_max -read np356 markov_chain_0 -kde-plot M_max \
-	-xtitle "M_max" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save mmax_np.png -show &
-
-plot-kde-a:
-	o2graph -read mp334 markov_chain_0 -kde-plot a -read mp356 markov_chain_0 -kde-plot a \
-	-xtitle "a" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save a_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot a -read nl356 markov_chain_0 -kde-plot a \
-	-xtitle "a" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save a_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot a -read np356 markov_chain_0 -kde-plot a \
-	-xtitle "a" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save a_np.png -show &
-
-plot-kde-q:
-	o2graph -read mp334 markov_chain_0 -kde-plot q -read mp356 markov_chain_0 -kde-plot q \
-	-xtitle "q" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save q_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot q -read nl356 markov_chain_0 -kde-plot q \
-	-xtitle "q" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save q_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot q -read np356 markov_chain_0 -kde-plot q \
-	-xtitle "q" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save q_np.png -show &
-
-plot-kde-m1gw19:
-	o2graph -read mp334 markov_chain_0 -kde-plot m1_gw19 -read mp356 markov_chain_0 -kde-plot m1_gw19 \
-	-xtitle "m1_gw19" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save m1gw19_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot m1_gw19 -read nl356 markov_chain_0 -kde-plot m1_gw19 \
-	-xtitle "m1_gw19" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save m1gw19_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot m1_gw19 -read np356 markov_chain_0 -kde-plot m1_gw19 \
-	-xtitle "m1_gw19" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save m1gw19_np.png -show &
-
-plot-kde-wgt:
-	o2graph -read mp334 markov_chain_0 -kde-plot log_wgt -read mp356 markov_chain_0 -kde-plot log_wgt \
-	-xtitle "log_wgt" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save wgt_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot log_wgt -read nl356 markov_chain_0 -kde-plot log_wgt \
-	-xtitle "log_wgt" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save wgt_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot log_wgt -read np356 markov_chain_0 -kde-plot log_wgt \
-	-xtitle "log_wgt" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save wgt_np.png -show &
-
-plot-kde-mean:
-	o2graph -read mp334 markov_chain_0 -kde-plot mean_NS -read mp356 markov_chain_0 -kde-plot mean_NS \
-	-xtitle "mean_NS" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save mean_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -kde-plot mean_NS -read nl356 markov_chain_0 -kde-plot mean_NS \
-	-xtitle "mean_NS" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save mean_nl.png -show &
-	o2graph -read np334 markov_chain_0 -kde-plot mean_NS -read np356 markov_chain_0 -kde-plot mean_NS \
-	-xtitle "mean_NS" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save mean_np.png -show &
-
-plot-kde-dpdm:
-	o2graph -read mp334 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm -read mp356 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm \
-	-xtitle "log(dp/dM)" -ytitle "Density" -ttext 0.5 0.97 "MP: 33-34 vs 35-36" -save dpdm_mp.png -show &
-	o2graph -read nl334 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm -read nl356 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm \
-	-xtitle "log(dp/dM)" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save dpdm_nl.png -show &
-	o2graph -read np334 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm -read np356 markov_chain_0 -function "log(dpdM)" log_dpdm -kde-plot log_dpdm \
-	-xtitle "log(dp/dM)" -ytitle "Density" -ttext 0.5 0.97 "NP: 33-34 vs 35-36" -save dpdm_np.png -show &
-
-plot-kde-csq:
-	o2graph -read ml334 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq -read ml356 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq \
-	-xtitle "csq1-csq2" -ytitle "Density" -ttext 0.5 0.97 "ML: 33-34 vs 35-36" -save csq_ml.png -show &
-	o2graph -read nl334 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq -read nl356 markov_chain_0 -function "csq1-csq2" dcsq -kde-plot dcsq \
-	-xtitle "csq1-csq2" -ytitle "Density" -ttext 0.5 0.97 "NL: 33-34 vs 35-36" -save csq_nl.png -show &
-
+	-ttext 0.5 0.96 "$(model): $(title)" \
+	-save figs/a-acor_$(model).png -show &
+	
 file-all:
 	make model="ML" file-esmr && make model="MP" file-esmr && make model="NL" file-esmr && make model="NP" file-esmr && \
 	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
 	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
 
-mod = ml mp nl np
+models = ml mp nl np
+rank = $(shell seq 0 15)
+rank2 = $(shell seq 1 15)
 
-rank = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-
-rank2 = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-
-scp-down:
+scp-down-br2:
 	scp manik@br2:/ocean/projects/phy230011p/shared/bamr/out/*_out .
 
 file-mult:
-	$(foreach m,$(mod),$(foreach r,$(rank),acol -read $(m)_$(r)_out markov_chain_0 -select-rows "mult>0.5" -internal $(m)_$(r)_out))
+	$(foreach m,$(models),\
+		$(foreach r,$(rank),\
+			acol -read $(m)_$(r)_out -select-rows "mult>0.5" -internal $(m)_$(r)_out;\
+		)\
+	)
 
 file-hcp:
-	$(foreach m,$(mod), \
-		$(foreach r,$(rank), \
-			acol -h5-copy $(ifeq ($(m),ml), \ 
-				$(m)_$(r)_out $(m)_54a$(r), \
-				$(m)_$(r)_out $(m)_46a$(r) \
-			) \
-		) \
+	$(foreach m,$(models),\
+		$(foreach r,$(rank),\
+			$(if $(filter $(m),ml),\
+				acol -h5-copy $(m)_$(r)_out $(m)_58a$(r);,\
+				acol -h5-copy $(m)_$(r)_out $(m)_50a$(r);\
+			)\
+		)\
 	)
 
 file-con:
-	$(foreach m,$(mod), \
-		acol -read $(ifeq ($(m),ml), \
-			$(m)_54a0 $(foreach r,$(rank2), -cat $(m)_54a$(r)) -internal $(m)_54, \
-			$(m)_46a0 $(foreach r,$(rank2), -cat $(m)_46a$(r)) -internal $(m)_46 \
-		) \
+	$(foreach m,$(models),\
+		$(if $(filter $(m),ml),\
+			acol -read $(m)_58a0 $(foreach r,$(rank2),-cat $(m)_58a$(r)) -internal $(m)_58;,\
+			acol -read $(m)_50a0 $(foreach r,$(rank2),-cat $(m)_50a$(r)) -internal $(m)_50;\
+		)\
 	)
 
-file-cp:
-	$(foreach m,$(mod), \
-		$(foreach r,$(rank), \
-			cp $(ifeq ($(m),ml), \
-				$(m)_54a$(r) $(m)_54a$(r+16), \
-				$(m)_46a$(r) $(m)_46a$(r+16)
-			) \
-		) \
-	)
+scp-up-br2:
+	scp ml_58a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp mp_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp nl_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp np_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
 
-scp-up:
-	scp ml_54a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	scp *_46a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+scp-up-iso:
+	scp ml_58a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r58_16n_8c_72h/.
+	scp mp_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
+	scp nl_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
+	scp np_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
+
+ML = $(shell seq 32 58)
+MP = $(shell seq 33 50)
+NL = $(shell seq 29 50)
+NP = $(shell seq 31 50)
+
+file-nlines:
+	acol -read ml_31 markov_chain_0 $(foreach i,$(ML),-cat ml_$i) -nlines
+	acol -read mp_32 markov_chain_0 $(foreach i,$(MP),-cat mp_$i) -nlines
+	acol -read nl_28 markov_chain_0 $(foreach i,$(NL),-cat nl_$i) -nlines
+	acol -read np_30 markov_chain_0 $(foreach i,$(NP),-cat np_$i) -nlines
 
 file-rm:
-	rm -f *_out 
+	rm -f *_out ml_58a* mp_50a* nl_50a* np_50a*
 
 clean:
-	rm -f figs/*.png tmp/*.o2 
+	rm -f figs/*.png figs/*.pdf tmp/*.o2 
