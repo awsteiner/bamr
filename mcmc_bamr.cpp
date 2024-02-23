@@ -1172,6 +1172,19 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 
+  // If using HMC, set the step size for each parameter
+  if (this->hmc) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> unif(0.1, 1.0);
+    
+    this->step_vec.resize(names.size());
+    
+    for (size_t i=0; i<names.size(); i++) {
+      this->step_vec[i]=unif(gen)/(high[i]-low[i]);
+    }
+  }
+
 #ifdef O2SCL_NEVER_DEFINED  
   if (set->apply_emu) {
     Py_Finalize();
