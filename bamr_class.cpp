@@ -434,13 +434,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_weights[3]=pop_weights[0]+pop_weights[1]+pop_weights[2];
       log_wgt+=pop_weights[3];
       
-      if (iret==0) {
-        /* cout << "Final pop result: ";
-           vector_out(cout, pop_weights, true); */
+      /*if (iret==0) {
+        cout << "Final pop result: ";
+        vector_out(cout, pop_weights, true);
         cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
              << ", LM: " << pop_weights[2] << ", All: " 
              << pop_weights[3] << endl;
-      }
+      } */
     }
 
     // ----------------------------------------------------------------
@@ -1412,6 +1412,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           
     }
   }
+
+  if (iret==0) {
+    cout << "bamr_class::compute_point() returned log_wgt=" 
+         << log_wgt << endl;  
+  }
+  
   // cout << "End of bamr_class::compute_point()" << endl;
   return iret;
 }
