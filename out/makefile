@@ -685,7 +685,10 @@ file-all:
 	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
 	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
 
-models = ml mp nl np
+models = ml mp 
+
+#nl np
+
 rank = $(shell seq 0 15)
 rank2 = $(shell seq 1 15)
 
@@ -703,8 +706,8 @@ file-hcp:
 	$(foreach m,$(models),\
 		$(foreach r,$(rank),\
 			$(if $(filter $(m),ml),\
-				acol -h5-copy $(m)_$(r)_out $(m)_58a$(r);,\
-				acol -h5-copy $(m)_$(r)_out $(m)_50a$(r);\
+				acol -h5-copy $(m)_$(r)_out $(m)_59a$(r);,\
+				acol -h5-copy $(m)_$(r)_out $(m)_51a$(r);\
 			)\
 		)\
 	)
@@ -712,22 +715,24 @@ file-hcp:
 file-con:
 	$(foreach m,$(models),\
 		$(if $(filter $(m),ml),\
-			acol -read $(m)_58a0 $(foreach r,$(rank2),-cat $(m)_58a$(r)) -internal $(m)_58;,\
-			acol -read $(m)_50a0 $(foreach r,$(rank2),-cat $(m)_50a$(r)) -internal $(m)_50;\
+			acol -read $(m)_59a0 $(foreach r,$(rank2),-cat $(m)_59a$(r)) -internal $(m)_59;,\
+			acol -read $(m)_51a0 $(foreach r,$(rank2),-cat $(m)_51a$(r)) -internal $(m)_51;\
 		)\
 	)
 
 scp-up-br2:
-	scp ml_58a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	scp mp_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	scp nl_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	scp np_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp ml_59a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	scp mp_51a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+	
+#scp nl_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+#scp np_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
 
 scp-up-iso:
-	scp ml_58a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r58_16n_8c_72h/.
-	scp mp_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
-	scp nl_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
-	scp np_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
+	scp ml_59a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r59_16n_8c_72h/.
+	scp mp_51a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r51_16n_8c_72h/.
+
+#scp nl_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
+#scp np_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
 
 ML = $(shell seq 32 58)
 MP = $(shell seq 33 50)
