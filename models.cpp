@@ -156,7 +156,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_eos_pars_mismatch;
+          ret=ix_trans2_outside;
           return;
         }
       }
@@ -245,7 +245,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           scr_out << "Polytrope/line beyond central density:" << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_eos_pars_mismatch;
+          ret=ix_trans2_outside;
           return;
         }
       }
@@ -912,7 +912,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
   
@@ -1067,7 +1067,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -1716,7 +1716,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
         scr_out << "Not absolutely stable." << std::endl;
-        ret=ix_eos_pars_mismatch;
+        ret=ix_ed_pr_nb_invalid;
         return;
       }
 
@@ -1894,7 +1894,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
   // polytropes
   if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_ed_pr_nb_invalid;
     return;
   }
 
@@ -2052,7 +2052,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2061,7 +2061,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -2115,7 +2115,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2311,7 +2311,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2320,7 +2320,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -2368,7 +2368,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2543,7 +2543,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2552,7 +2552,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -2566,7 +2566,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2920,7 +2920,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   
   if (b<0.0 || beta<0.0) {
     scr_out << "parameter values for b and beta are negative" << std::endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -3019,7 +3019,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << std::endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << std::endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3308,7 +3308,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
 
   if (b<0.0 || beta<0.0) {
     scr_out << "Value of b or beta negative." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -3397,7 +3397,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3663,7 +3663,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -3672,7 +3672,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -3712,7 +3712,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3750,7 +3750,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3788,7 +3788,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3835,7 +3835,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     
@@ -3991,7 +3991,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -4000,7 +4000,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -4047,7 +4047,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -4092,7 +4092,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4137,7 +4137,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4189,7 +4189,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     
@@ -4318,7 +4318,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -4327,7 +4327,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -4374,7 +4374,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -4419,7 +4419,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4464,7 +4464,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4516,7 +4516,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     

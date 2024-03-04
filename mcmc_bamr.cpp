@@ -384,7 +384,7 @@ int mcmc_bamr::mcmc_init() {
   this->ret_value_counts.resize(this->n_threads);
   for(size_t it=0;it<this->n_threads;it++) {
     // The size must be at least (total # of error codes + 1)
-    this->ret_value_counts[it].resize(25);
+    this->ret_value_counts[it].resize(29);
   }
 
   // Copy parameter values to all of the model objects

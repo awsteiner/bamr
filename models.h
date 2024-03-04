@@ -65,30 +65,36 @@ namespace bamr {
 
     /// \name Return codes for each point
     //@{
+    // Note: When adding new return codes, respect
+    // this format: "ix_what_iswrong"
     static const int ix_success=0;
-    static const int ix_mr_outside=2;
-    static const int ix_r_outside=3; // currently unused
+    static const int ix_mr_outside=2; // monitored
+    static const int ix_r_outside=3;
     static const int ix_pressure_decrease=4;
-    static const int ix_nb_problem=5; // currently unused
-    static const int ix_nb_problem2=6; // currently unused
+    static const int ix_nb_problem=5;
+    static const int ix_nb_problem2=6;
     static const int ix_crust_unstable=7;
     static const int ix_mvsr_failed=8;
     static const int ix_tov_failure=9;
-    static const int ix_small_max=10;
+    static const int ix_small_max=10; // monitored
     static const int ix_tov_conv=11;
     static const int ix_mvsr_table=12;
-    static const int ix_eos_acausal=13;
+    static const int ix_eos_acausal=13; // monitored
     static const int ix_source_acausal=14;
-    static const int ix_eos_pars_mismatch=15;
-    static const int ix_pressure_negative=16;
-    static const int ix_no_eos_table=17;
-    static const int ix_eos_solve_failed=18;
-    static const int ix_trans_invalid=19;
-    static const int ix_SL_invalid=20;
-    static const int ix_deriv_infinite=21;
-    static const int ix_pop_wgt_zero=22;
-    static const int ix_ligo_mass_invalid=23;
-    static const int ix_gm_exceeds_mmax=24;
+    static const int ix_L_outside=15; // monitored
+    static const int ix_trans_misordered=16; // monitored
+    static const int ix_trans2_outside=17; // monitored
+    static const int ix_b_beta_invalid=18;
+    static const int ix_ed_pr_nb_invalid=19;
+    static const int ix_pressure_negative=20;
+    static const int ix_no_eos_table=21;
+    static const int ix_eos_solve_failed=22;
+    static const int ix_trans_invalid=23;
+    static const int ix_SL_invalid=24;
+    static const int ix_deriv_infinite=25; // monitored
+    static const int ix_pop_wgt_zero=26;
+    static const int ix_ligo_gm_invalid=27; // monitored
+    static const int ix_gm_exceeds_mmax=28; // monitored
     //@}
 
     /// Number of EOS parameters

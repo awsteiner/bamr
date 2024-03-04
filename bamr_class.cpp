@@ -1037,7 +1037,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       if (m1>Mmax || m2>Mmax || m1<m2) {  
         log_wgt=0.0;
-        return m.ix_ligo_mass_invalid;
+        return m.ix_ligo_gm_invalid;
         
       } else {
         // radii
@@ -1155,7 +1155,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         log_wgt=0.0;
         scr_out << "GW190425 invalid mass: m1=" << m1_gw19 << ", m2=" 
                 << m2_gw19 << ", Mmax=" << Mmax << endl;
-        return m.ix_ligo_mass_invalid; 
+        return m.ix_ligo_gm_invalid; 
       } else {
         
         if (m1_gw19<nsd->gw19_data_table.get("rep",0) ||
@@ -1165,7 +1165,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << ", m1_low=" << nsd->gw19_data_table.get("rep",0) 
                   << ", m1_high=" << nsd->gw19_data_table.get("rep",
                   nsd->gw19_data_table.get_nlines()-1) << endl;
-          return m.ix_ligo_mass_invalid; 
+          return m.ix_ligo_gm_invalid; 
         }
         
         prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
