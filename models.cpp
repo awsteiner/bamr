@@ -116,159 +116,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
-    // Sarah's section
-    if (set->mmax_deriv==true) {
-      
-      eost.set_interp_type(o2scl::itp_linear);
-      eost.set_unit("ed","1/fm^4");
-      eost.set_unit("pr","1/fm^4");
-      eost.set_unit("nb","1/fm^3");
-
-      teos.read_table(eost,"ed","pr","nb");
-      
-      // First TOV solve here
-      ts.mvsr();
-      
-      // Check the maximum mass
-      dat.mvsr=*(ts.get_results());
-      dat.mvsr.set_interp_type(o2scl::itp_linear);
-
-      double m_max=dat.mvsr.max("gm");
-      
-      //cout << "m_max1: " << m_max << endl;
-      
-      if (m_max<set->min_max_mass) {
-        scr_out << "Maximum mass too small: " << m_max << " < "
-                << set->min_max_mass << "." << std::endl;
-        ret=ix_small_max;
-        return;
-      }
-      // Find the central energy density of the maximum mass star
-      size_t row=dat.mvsr.lookup("gm",m_max);
-      double c_ed=dat.mvsr.get("ed",row);
-
-      // Ensure that the last polytrope appears in the center
-      // of the maximum mass star
-      if (model_type==((string)"new_poly") ||
-          model_type==((string)"new_lines")) {
-        double trans2=pars[7];
-        if (trans2>c_ed) {
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
-          scr_out << "trans2, c_ed = " << trans2 << ", " 
-                  << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_trans2_outside;
-          return;
-        }
-      }
-      // Check that the speed of sound is less than 1
-      eost.deriv("ed","pr","cs2");
-      for (size_t i=0;i<eost.get_nlines();i++) {
-        if (eost.get("ed",i)<c_ed) {
-          if (eost.get("cs2",i)>1.0) {
-            //cout << eost.get("ed",i) << " " << c_ed << endl;
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
-                    << eost.get("cs2",i) << " > 1" << std::endl;
-            ret=ix_eos_acausal;
-            return;
-          }
-        }
-      } 
-      // Now modify the last parameter: exp3 or csq3
-      ubvector pars2=pars;
-      pars2[this->n_eos_params-1]*=1.01;
-
-      /* cout << "Last eos param - old value: "
-           << pars[this->n_eos_params-1] << ", new value:"
-           << pars2[this->n_eos_params-1] << endl; */
-
-      // Recompute the EOS
-      compute_eos(pars2,ret,scr_out,dat);
-      if (ret!=ix_success) return;
-
-      eost.set_interp_type(o2scl::itp_linear);
-      eost.set_unit("ed","1/fm^4");
-      eost.set_unit("pr","1/fm^4");
-      eost.set_unit("nb","1/fm^3");
-      
-      // Call read_table()
-      teos.read_table(eost,"ed","pr","nb");
-      
-      // Second TOV solve here
-      ts.mvsr();
-      
-      // Check the maximum mass
-      dat.mvsr=*(ts.get_results());
-      dat.mvsr.set_interp_type(o2scl::itp_linear);
-      double m_max2=dat.mvsr.max("gm");
-      dat.m_max2=m_max2;
-      
-      //cout << "m_max2: " << m_max2 << endl;
-      if (m_max2<set->min_max_mass) {
-        scr_out << "Maximum mass too small: " << m_max2 << " < "
-                << set->min_max_mass << "." << std::endl;
-        ret=ix_small_max;
-        return;
-      }
-      // Now, compute the derivative
-      double dpdM=(pars2[this->n_eos_params-1]-
-                   pars[this->n_eos_params-1])/(m_max2-m_max);
-      //cout << "dpdM: " << dpdM << endl;
-      
-      // Reject the point if the derivative is not finite or negative
-      if (isfinite(dpdM)!=1) {
-        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
-                << ", m_max2=" << m_max2 << std::endl;
-        ret=ix_deriv_infinite;
-        return;
-      } 
-      if (dpdM<=0.0) {
-        scr_out << "Rejected: dp/dM is negative: dp/dM="
-                << dpdM << std::endl;
-        ret=ix_deriv_infinite;
-        return;
-      } 
-
-      eost.add_constant("dpdM",dpdM);
-
-      // Compute the central energy density
-      row=dat.mvsr.lookup("gm",m_max);
-      c_ed=dat.mvsr.get("ed",row);
-
-      // Ensure that the last polytrope appears in the center
-      // of the maximum mass star
-      if (model_type==((string)"new_poly") ||
-          model_type==((string)"new_lines")) {
-        double trans2=pars[7];
-        if (trans2>c_ed) {
-          //cout << "trans2, c_ed (2): " << trans2 << " " 
-          //     << c_ed << endl;
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
-          scr_out << "trans2, c_ed = " << trans2 << ", " 
-                  << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_trans2_outside;
-          return;
-        }
-      }
-      // Check that the speed of sound is less than 1
-      eost.deriv("ed","pr","cs2");
-      for (size_t i=0;i<eost.get_nlines();i++) {
-        if (eost.get("ed",i)<c_ed) {
-          /*
-            cout << i << " " << eost.get("ed",i) << " "
-            << c_ed << " "
-            << eost.get("cs2",i) << endl;
-          */
-          if (eost.get("cs2",i)>1.0) {
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
-                    << eost.get("cs2",i) << " > 1" << std::endl;
-            ret=ix_eos_acausal;
-            return;
-          }
-        }
-      }
-      // End of Sarah's section
-    }
-    
     // ---------------------------------------------------------------
     // Check that pressure is increasing. If we're using a crust EOS,
     // choose 0.6 as an arbitrary low-density cutoff which corresponds
@@ -566,6 +413,11 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     m_max=dat.mvsr.max("gm");
     dat.mvsr.add_constant("M_max",m_max);
+
+    cout.precision(10);
+    cout << "m_max=" << m_max << endl;
+    cout.precision(6);
+
     if (m_max<set->min_max_mass) {
       scr_out << "Maximum mass too small: " << m_max << " < "
               << set->min_max_mass << "." << std::endl;
@@ -802,6 +654,138 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr.add_constant("gm_nb5",dat.mvsr.interp("ed",ed5,"gm"));
     dat.mvsr.add_constant("r_nb5",dat.mvsr.interp("ed",ed5,"r"));
   }
+
+  // ---------------------------------------------------------------
+  if (has_eos) {
+    
+    // Sarah's section
+    if (set->mmax_deriv==true) {
+      
+      // Get the maximum mass computed earlier
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
+      double m_max=dat.mvsr.max("gm");
+      
+      // Find the central energy density of the maximum mass star
+      size_t row=dat.mvsr.lookup("gm",m_max);
+      double c_ed=dat.mvsr.get("ed",row);
+
+      // Ensure that the last polytrope appears in the center
+      // of the maximum mass star
+      if (model_type==((string)"new_poly") ||
+          model_type==((string)"new_lines")) {
+        
+        double trans2=pars[7];
+        
+        if (trans2>c_ed) {
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
+          scr_out << "trans2, c_ed = " << trans2 << ", " 
+                  << c_ed << ", trans2>c_ed" << std::endl;
+          ret=ix_trans2_outside;
+          return;
+        }
+      }
+
+      // Now modify the last EoS parameter: exp3 or csq3
+      ubvector pars2=pars;
+      pars2[this->n_eos_params-1]*=1.01;
+
+      // Recompute the EOS
+      compute_eos(pars2,ret,scr_out,dat);
+      if (ret!=ix_success) return;
+
+      // Read the EOS into the tov_eos object
+      eost.set_interp_type(o2scl::itp_linear);
+      eost.set_unit("ed","1/fm^4");
+      eost.set_unit("pr","1/fm^4");
+      teos.read_table(eost,"ed","pr");
+      
+      // Second TOV solve here
+      int info=ts.mvsr();
+      
+      if (info!=0) {
+        scr_out << "M vs. R failed: info=" << info << std::endl;
+        ret=ix_mvsr_failed;
+        return;
+      }
+
+      // Check the maximum mass
+      dat.mvsr=*(ts.get_results());
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
+      double m_max2=dat.mvsr.max("gm");
+      dat.m_max2=m_max2;
+
+      cout.precision(10);
+      cout << "m_max2=" << m_max2 << endl;
+      cout.precision(6);
+      
+      if (m_max2<set->min_max_mass) {
+        scr_out << "Maximum mass too small: " << m_max2 << " < "
+                << set->min_max_mass << "." << std::endl;
+        ret=ix_small_max;
+        return;
+      }
+
+      // Now, compute the derivative
+      double dpdM=(pars2[this->n_eos_params-1]-
+                   pars[this->n_eos_params-1])/(m_max2-m_max);
+      
+      // Reject the point if the derivative is not finite or negative
+      if (isfinite(dpdM)!=true) {
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", m_max2=" << m_max2 << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      } 
+
+      if (dpdM<=0.0) {
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
+                << dpdM << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      } 
+
+      eost.add_constant("dpdM",dpdM);
+
+      // Compute the central energy density
+      row=dat.mvsr.lookup("gm",m_max);
+      c_ed=dat.mvsr.get("ed",row);
+
+      // Ensure that the last polytrope appears in the center
+      // of the maximum mass star
+      if (model_type==((string)"new_poly") ||
+          model_type==((string)"new_lines")) {
+        
+        double trans2=pars[7];
+        
+        if (trans2>c_ed) {
+          scr_out << "Polytrope/line beyond central density:" << std::endl;
+          scr_out << "trans2, c_ed = " << trans2 << ", " 
+                  << c_ed << ", trans2>c_ed" << std::endl;
+          ret=ix_trans2_outside;
+          return;
+        }
+      }
+
+      // Check that the speed of sound is less than 1
+      eost.deriv("ed","pr","cs2");
+      
+      for (size_t i=0;i<eost.get_nlines();i++) {
+        if (eost.get("ed",i)<c_ed) {
+          /*
+            cout << i << " " << eost.get("ed",i) << " "
+            << c_ed << " "
+            << eost.get("cs2",i) << endl;
+          */
+          if (eost.get("cs2",i)>1.0) {
+            scr_out << "Acausal EOS: cs2_" << i << "=" 
+                    << eost.get("cs2",i) << " > 1" << std::endl;
+            ret=ix_eos_acausal;
+            return;
+          }
+        }
+      }
+    } // End of Sarah's section
+  } // End of has_eos
 
   if (set->verbose>=2) {
     cout << "End model::compute_star()." << endl;
