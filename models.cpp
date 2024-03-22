@@ -762,6 +762,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
+    // AWS, 3/22/24: I think this check is already taken care of
+    // above, because c_ed and ed_max are the same. We'll leave it
+    // in for now just in case and possibly remove it later. 
     for(size_t i=0;i<eost.get_nlines();i++) {
       if (eost.get("ed",i)<ed_max && eost["cs2"][i]>1.0) {
         scr_out.precision(4);
