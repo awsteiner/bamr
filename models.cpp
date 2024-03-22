@@ -96,7 +96,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   ret=ix_success;
 
-  // Call read_table()
   table_units<> &eost=dat.eos;
 
   if (has_eos) {
@@ -139,13 +138,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Solve the TOV eq. for the modified EoS
       int info=ts.mvsr();
       if (info!=0) {
-        scr_out << "M vs. R failed: info=" << info << std::endl;
+        scr_out << "M vs. R failed (Sarah's section): info="
+                << info << std::endl;
         ret=ix_mvsr_failed;
         return;
       }
       
-      // Get the M vs. R table 
-      // This overwrites the dat.mvsr object
+      // Get the M vs. R table. This code overwrites the dat.mvsr
+      // object.
       dat.mvsr=*(ts.get_results());
 
       // Set the dat.mvsr interpolation type
@@ -163,7 +163,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Add 'M_max2' to the output table
       dat.m_max2=m_max2;
 
-      // Compute the central energy density
+      // Compute the central energy density of the maximum mass star
       size_t row=dat.mvsr.lookup("gm",m_max2);
       double c_ed=dat.mvsr.get("ed",row);
 
@@ -173,7 +173,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density (2):"
+                  << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
           ret=ix_trans2_outside;
@@ -196,8 +197,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     } // End of Sarah's section part 1 of 2
 
-    // Compute the original EOS
-    // Note: This clears the dat.eos object 
+    // Compute the original EOS. Note: this clears the dat.eos object
     compute_eos(pars,ret,scr_out,dat);
     if (ret!=ix_success) return;
     
@@ -224,7 +224,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
-  // Note: baron_density=false in the current version
   if (has_eos && set->baryon_density && !eost.is_column("nb")) {
     O2SCL_ERR2("Setting baryon_density is true but EOS does not ",
                "have a column \"nb\".",o2scl::exc_einval);
@@ -240,8 +239,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Note: baron_density=false in the current version
     if (set->compute_cthick && set->baryon_density) {
 
-      // If crust_from_L is true, compute the pressure at the number 
-      // density specified by the correlation. Otherwise, just use 0.08
+      // If crust_from_L is true, compute the pressure at the number
+      // density specified by the correlation. Otherwise, just use
+      // 0.08 fm^{-3}.
 
       // Note: crust_from_L=false in the current version
       if (set->crust_from_L) {
@@ -338,7 +338,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
         // Otherwise, if we're not determining the crust from L, then
         // compute the crust thickness based on a density of 0.08
-        // fm^{-3}
+        // fm^{-3}.
 
         double nt=0.08;
         eost.add_constant("nt",nt);
@@ -483,8 +483,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       return;
     }
 
-    // Get the M vs. R table 
-    // This overwrites the dat.mvsr object
+    // Get the M vs. R table. This overwrites the dat.mvsr object.
     dat.mvsr=*(ts.get_results());
 
     if (set->verbose>=2) {
@@ -497,7 +496,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Add baryon density to M vs. R table if it's not already there
     
-    // Note: baron_density=false in the current version
     if (set->baryon_density && !set->inc_baryon_mass) {
       dat.mvsr.add_col_from_table(eost,"pr","nb","pr");
       dat.mvsr.set_unit("nb","1/fm^3");
@@ -519,43 +517,42 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Add 'M_max' to the output table
     dat.mvsr.add_constant("M_max",m_max);
-
+    
+    // Find the central energy density of the maximum mass star.
+    size_t row=dat.mvsr.lookup("gm",m_max);
+    double c_ed=dat.mvsr.get("ed",row);
+    
+    // Ensure that the last polytrope appears in the center
+    // of the maximum mass star.
+    if (model_type==((string)"new_poly") ||
+        model_type==((string)"new_lines")) {
+      double trans2=pars[7];
+      if (trans2>c_ed) {
+        scr_out << "Polytrope/line beyond central density:" << std::endl;
+        scr_out << "trans2, c_ed = " << trans2 << ", " 
+                << c_ed << ", trans2>c_ed" << std::endl;
+        ret=ix_trans2_outside;
+        return;
+      }
+    }
+    
+    // Check that the speed of sound is less than 1
+    eost.deriv("ed","pr","cs2");
+    for (size_t i=0;i<eost.get_nlines();i++) {
+      if (eost.get("ed",i)<c_ed) {
+        if (eost.get("cs2",i)>1.0) {
+          scr_out << "Acausal EOS: cs2_" << i << "=" 
+                  << eost.get("cs2",i) << " > 1" << std::endl;
+          ret=ix_eos_acausal;
+          return;
+        }
+      }
+    }
+    
     // ---------------------------------------------------------------
     // Sarah's section part 2 of 2
 
     if (set->mmax_deriv) {
-
-      // Find the central energy density of the maximum mass star
-      size_t row=dat.mvsr.lookup("gm",m_max);
-      double c_ed=dat.mvsr.get("ed",row);
-
-      // Ensure that the last polytrope appears in the center
-      // of the maximum mass star
-      if (model_type==((string)"new_poly") ||
-          model_type==((string)"new_lines")) {
-        double trans2=pars[7];
-        if (trans2>c_ed) {
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
-          scr_out << "trans2, c_ed = " << trans2 << ", " 
-                  << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_trans2_outside;
-          return;
-        }
-      }
-
-      // Check that the speed of sound is less than 1
-      eost.deriv("ed","pr","cs2");
-      for (size_t i=0;i<eost.get_nlines();i++) {
-        if (eost.get("ed",i)<c_ed) {
-          if (eost.get("cs2",i)>1.0) {
-            //cout << eost.get("ed",i) << " " << c_ed << endl;
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
-                    << eost.get("cs2",i) << " > 1" << std::endl;
-            ret=ix_eos_acausal;
-            return;
-          }
-        }
-      }
 
       // Now, compute the derivative
       double dpdM=(pars[this->n_eos_params-1]*1.01-
@@ -611,7 +608,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Compute the central baryon density in the maximum mass star
 
-    // Note: baron_density=false in the current version
     if (set->baryon_density) {
       double nb_max=dat.mvsr.get("nb",ix_max);
       dat.mvsr.add_constant("nb_max",nb_max);
@@ -665,7 +661,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd->n_sources;i++) {
       if (set->inc_ligo) {
-        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+nsd->n_ligo_params]);
+        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+
+                                         nsd->n_ligo_params]);
         dat.sourcet.set("R",i,
                         dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
       } else {
