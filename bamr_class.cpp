@@ -360,7 +360,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
     // Compute the M vs R curve and return a non-zero value if it failed
     m.compute_star(pars,scr_out,iret,dat,model_type);
-    if (iret!=0) {
+    
+    if (iret!=m.ix_success) {
+      cout << "model::compute_star() returned failure:"
+           << " ix_return=" << iret << endl;
       log_wgt=0.0;
       return iret;
     }
@@ -381,17 +384,23 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (pop_weights.size()==0) pop_weights.resize(4); 
       
       pop_weights[0]=pop.get_weight_ns(pars,pvi,iret);
-      if (iret!=0) {
-        log_wgt=0.0;
+      
+      if (iret!=m.ix_success) {
         /* iret_old = 30+i, where "i" is the star index
         30 was added to avoid iret=0 when wgt=0 for NS-NS */
-        iret=iret-30; 
+        cout << "ns_pop::weight_ns() returned failure:"
+             << " ix_return=" << m.ix_pop_wgt_zero << endl;
+        iret=iret-30;
         scr_out << "NS-NS: Returned zero weight for star "
                 << pd.id_ns[iret] << std::endl;
+        log_wgt=0.0;
         return m.ix_pop_wgt_zero;
       }
+
       for (size_t i=0; i<pd.id_ns.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_ns[i]]]) {
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "NS-NS: Gravitational mass beyond M_max "
                   << "for star " << pd.id_ns[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
@@ -399,7 +408,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
       pop_weights[1]=pop.get_weight_wd(pars,pvi,iret);
-      if (iret!=0) {
+      if (iret!=m.ix_success) {
+        cout << "ns_pop::weight_wd() returned failure:"
+             << " ix_return=" << m.ix_pop_wgt_zero << endl;
         log_wgt=0.0;
         iret=iret-60;
         scr_out << "NS-WD: Returned zero weight for star "
@@ -409,6 +420,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       for (size_t i=0; i<pd.id_wd.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_wd[i]]]) {
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "NS-WD: Gravitational mass beyond M_max "
                 << "for star " << pd.id_wd[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
@@ -416,7 +429,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
       pop_weights[2]=pop.get_weight_lms(pars,pvi,iret);
-      if (iret!=0) {
+      if (iret!=m.ix_success) {
+        cout << "ns_pop::weight_lm() returned failure:"
+             << " ix_return=" << m.ix_pop_wgt_zero << endl;
         log_wgt=0.0;
         iret=iret-100;
         scr_out << "LMXB: Returned zero weight for star "
@@ -424,7 +439,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return m.ix_pop_wgt_zero;
       }
       for (size_t i=0; i<pd.id_lms.size(); i++) {
-        if (M_max<pars[pvi[string("M_")+pd.id_lms[i]]]){
+        if (M_max<pars[pvi[string("M_")+pd.id_lms[i]]]) {
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "LMXB: Gravitational mass beyond M_max "
                   << "for star " << pd.id_lms[i] << std::endl;
           return m.ix_gm_exceeds_mmax;
@@ -434,13 +451,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_weights[3]=pop_weights[0]+pop_weights[1]+pop_weights[2];
       log_wgt+=pop_weights[3];
       
-      if (iret==0) {
-        /* cout << "Final pop result: ";
-           vector_out(cout, pop_weights, true); */
-        cout << "NS: " << pop_weights[0] << ", WD: " << pop_weights[1]
-             << ", LM: " << pop_weights[2] << ", All: " 
-             << pop_weights[3] << endl;
-      }
+      /* cout << "Final pop result: ";
+        vector_out(cout, pop_weights, true); */
     }
 
     // ----------------------------------------------------------------
@@ -454,7 +466,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       if (mass<set->in_m_min || mass>set->in_m_max || 
           rad<set->in_r_min || rad>set->in_r_max) {
-        
         scr_out << "Rejected: Mass or radius outside range." << std::endl;
         scr_out << "M limits: " << set->in_m_min << " "
                 << set->in_m_max << std::endl;
@@ -481,6 +492,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out.precision(6);
           scr_out.unsetf(ios::showpos);
         }
+        cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << m.ix_mr_outside << endl;
         log_wgt=0.0;
         return m.ix_mr_outside;
       }
@@ -1412,7 +1425,15 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           
     }
   }
-  // cout << "End of bamr_class::compute_point()" << endl;
+
+  if (iret==0) {
+    cout << "bamr_class::compute_point() returned success:"
+         << " log_wgt=" << log_wgt << endl;
+  } else {
+    cout << "bamr_class::compute_point() returned failure:"
+         << " ix_ret=" << iret << endl;
+  }
+
   return iret;
 }
 
