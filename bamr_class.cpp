@@ -366,7 +366,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     m.compute_star(pars,scr_out,iret,dat,model_type);
     
     if (iret!=m.ix_success) {
-      cout << "model::compute_star() returned failure:"
+      cout << "models::compute_star() returned failure:"
            << " ix_return=" << iret << endl;
       log_wgt=0.0;
       return iret;
