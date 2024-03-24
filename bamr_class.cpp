@@ -233,11 +233,11 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
     
     if (set->inc_pop) {
-      // std::cout << "XZ: " << pop_weights.size() << std::endl;
       for (size_t i=0; i<pop_weights.size(); i++) {
         line.push_back(pop_weights[i]);
       }
     }
+    
     return o2scl::success;
   }  
   
@@ -245,6 +245,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat) {
+  
+  if (set->verbose>=2) {
+    cout << "Begin bamr_class::compute_point()" << endl;
+  }
 
   log_wgt=0.0;
 
@@ -372,6 +376,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (set->mmax_deriv && set->model_dpdm) {
       log_wgt+=log(dat.eos.get_constant("dpdM"));
     }
+
     // Calculate likelihood if using mass data from populations
     if (set->inc_pop) {
       
@@ -388,63 +393,73 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (iret!=m.ix_success) {
         /* iret_old = 30+i, where "i" is the star index
         30 was added to avoid iret=0 when wgt=0 for NS-NS */
-        cout << "ns_pop::weight_ns() returned failure:"
-             << " ix_return=" << m.ix_pop_wgt_zero << endl;
+        log_wgt=0.0;
         iret=iret-30;
         scr_out << "NS-NS: Returned zero weight for star "
                 << pd.id_ns[iret] << std::endl;
-        log_wgt=0.0;
-        return m.ix_pop_wgt_zero;
+        iret=m.ix_pop_wgt_zero;
+        cout << "ns_pop::weight_ns() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret;
       }
 
       for (size_t i=0; i<pd.id_ns.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_ns[i]]]) {
-          cout << "bamr_class::compute_point() returned failure:"
-               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "NS-NS: Gravitational mass beyond M_max "
                   << "for star " << pd.id_ns[i] << std::endl;
-          return m.ix_gm_exceeds_mmax;
+          log_wgt=0.0;
+          iret=m.ix_gm_exceeds_mmax;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
         }
       }
 
       pop_weights[1]=pop.get_weight_wd(pars,pvi,iret);
       if (iret!=m.ix_success) {
-        cout << "ns_pop::weight_wd() returned failure:"
-             << " ix_return=" << m.ix_pop_wgt_zero << endl;
         log_wgt=0.0;
         iret=iret-60;
         scr_out << "NS-WD: Returned zero weight for star "
                 << pd.id_wd[iret] << std::endl;
-        return m.ix_pop_wgt_zero;
+        iret=m.ix_pop_wgt_zero;
+        cout << "ns_pop::weight_wd() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret;
       }
       
       for (size_t i=0; i<pd.id_wd.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_wd[i]]]) {
-          cout << "bamr_class::compute_point() returned failure:"
-               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "NS-WD: Gravitational mass beyond M_max "
                 << "for star " << pd.id_wd[i] << std::endl;
-          return m.ix_gm_exceeds_mmax;
+          log_wgt=0.0;
+          iret=m.ix_gm_exceeds_mmax;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
         }
       }
 
       pop_weights[2]=pop.get_weight_lms(pars,pvi,iret);
       if (iret!=m.ix_success) {
-        cout << "ns_pop::weight_lm() returned failure:"
-             << " ix_return=" << m.ix_pop_wgt_zero << endl;
         log_wgt=0.0;
         iret=iret-100;
         scr_out << "LMXB: Returned zero weight for star "
                 << pd.id_lms[iret] << std::endl;
-        return m.ix_pop_wgt_zero;
+        iret=m.ix_pop_wgt_zero;
+        cout << "ns_pop::weight_lm() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret;
       }
+
       for (size_t i=0; i<pd.id_lms.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_lms[i]]]) {
-          cout << "bamr_class::compute_point() returned failure:"
-               << " ix_return=" << m.ix_gm_exceeds_mmax << endl;
           scr_out << "LMXB: Gravitational mass beyond M_max "
                   << "for star " << pd.id_lms[i] << std::endl;
-          return m.ix_gm_exceeds_mmax;
+          log_wgt=0.0;
+          iret=m.ix_gm_exceeds_mmax;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
         }
       }
 
@@ -492,10 +507,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out.precision(6);
           scr_out.unsetf(ios::showpos);
         }
-        cout << "bamr_class::compute_point() returned failure:"
-             << " ix_return=" << m.ix_mr_outside << endl;
+
         log_wgt=0.0;
-        return m.ix_mr_outside;
+        iret=m.ix_mr_outside;
+        cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret;
       }
     }
     
@@ -596,7 +613,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << nsd->source_names[i] << " with mass " << mass
                   << " and radius " << rad
                   << " with atm=" << atm << endl;
-          return m.ix_mr_outside;
+          iret=m.ix_mr_outside;
+          cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+          return iret;
         }
               
         // Include the weight for this source
@@ -652,11 +672,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         vector_out(scr_out,pars);
         scr_out << " " << log_wgt << std::endl;
         scr_out.precision(6);
+        cout << "bamr_class::compute_point() exited:"
+             << " M_max > exit_mass" << endl;
         exit(0);
-      }
-            
-      if (set->verbose>=2) {
-        cout << "End bamr_class::compute_point()." << endl;
       }
             
       if (iret!=m.ix_success) {
@@ -896,7 +914,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             scr_out.unsetf(ios::showpos);
           }
           log_wgt=0.0;
-          return m.ix_mr_outside;
+          iret=m.ix_mr_outside;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
         }
       }
 
@@ -991,7 +1012,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->source_names[i]
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
-            return m.ix_mr_outside;
+            iret=m.ix_mr_outside;
+            cout << "bamr_class::compute_point() returned failure:"
+                 << " ix_return=" << iret << endl;
+            return iret;
           }
                 
           // Include the weight for this source
@@ -1013,16 +1037,18 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         if (!std::isfinite(log_wgt)) {
           scr_out << "IS weight not finite." << endl;
-          return m.ix_mr_outside;
           log_wgt=0.0;
+          iret=m.ix_mr_outside;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
         }
               
       }
             
       if (set->debug_star) scr_out << std::endl;
 
-      // End of 'if (apply_intsc)'
-    }
+    } // End of 'if (apply_intsc)'
     
     // Add Tews et al. probability to the log likelihood
     if (iret==0 && (model_type==((string)"tews_threep_ligo") ||
@@ -1048,9 +1074,15 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       double Mmax=dat.mvsr.max("gm");
       
-      if (m1>Mmax || m2>Mmax || m1<m2) {  
+      if (m1>Mmax || m2>Mmax || m1<m2) {
+        scr_out << "GW170817: Invalid masses: m1=" << m1 
+                << ", m2 " << m2 << ", M_max=" << Mmax 
+                << std::endl;
         log_wgt=0.0;
-        return m.ix_ligo_gm_invalid;
+        iret=m.ix_ligo_gm_invalid;
+        cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret;
         
       } else {
         // radii
@@ -1117,41 +1149,43 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         // Add the LIGO log-likelihood
         double prob_data=-800.0;
 
-        // Check the gw17_data_table for new or old data
-        if (true) {
-                
-          ubvector lin_v(3);
-          lin_v[0]=M_chirp_det;
-          lin_v[1]=q;
-          lin_v[2]=Lambdat;
-
-          double prob=nsd->gw17_data_table.interp_linear(lin_v);
-          // If the point is outside of the range specified
-          // in the data file, give it a very small probability
-          for(size_t jj=0;jj<3;jj++) {
-            if (lin_v[jj]<nsd->gw17_data_table.get_grid(jj,0) ||
-                lin_v[jj]>nsd->gw17_data_table.get_grid
-                (jj,nsd->gw17_data_table.get_size(jj)-1)) {
-              scr_out << "LIGO quantity " << jj
-                      << " out of range: " << endl;
-              size_t n_ligo=nsd->gw17_data_table.get_size(jj);
-              scr_out << lin_v[jj] << " "
-                      << nsd->gw17_data_table.get_grid(jj,0) << " "
-                      << nsd->gw17_data_table.get_grid(jj,n_ligo-1) 
-                      << endl;
-              prob=-800.0;
-            }
-          }
-          prob_data=prob;          
-        }
-        dat.eos.add_constant("prob_gw17",prob_data);
+        // Check the gw17_data_table for new or old data   
+        ubvector lin_v(3);
+        lin_v[0]=M_chirp_det;
+        lin_v[1]=q;
+        lin_v[2]=Lambdat;
         
+        double prob=nsd->gw17_data_table.interp_linear(lin_v);
+        
+        // If the point is outside of the range specified
+        // in the data file, reject the point
+        for(size_t jj=0;jj<3;jj++) {
+          if (lin_v[jj]<nsd->gw17_data_table.get_grid(jj,0) ||
+              lin_v[jj]>nsd->gw17_data_table.get_grid
+              (jj,nsd->gw17_data_table.get_size(jj)-1)) {
+            log_wgt=0.0;
+            scr_out << "LIGO quantity " << jj
+                    << " out of range: " << endl;
+            size_t n_ligo=nsd->gw17_data_table.get_size(jj);
+            scr_out << lin_v[jj] << " "
+                    << nsd->gw17_data_table.get_grid(jj,0) << " "
+                    << nsd->gw17_data_table.get_grid(jj,n_ligo-1) 
+                    << endl;
+            iret=m.ix_ligo_pars_outside;
+            cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+            return iret;
+          }
+        }
+        
+        prob_data=prob;          
+        dat.eos.add_constant("prob_gw17",prob_data); 
         log_wgt+=(prob_data);
-      }
+      
+      } 
       // End GW170817
       
       // Begin GW190425
-      
       double m1_gw19, m2_gw19, prob_gw19;
 
       // See Table-1 (low-spin prior): https://arxiv.org/pdf/2001.01761.pdf
@@ -1164,32 +1198,42 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       ligo_gw19[0]=m2_gw19;
 
+      // Check if m2 < m1 < M_max
       if (m1_gw19>Mmax || m2_gw19>Mmax || m1_gw19<m2_gw19) {  
         log_wgt=0.0;
         scr_out << "GW190425 invalid mass: m1=" << m1_gw19 << ", m2=" 
                 << m2_gw19 << ", Mmax=" << Mmax << endl;
-        return m.ix_ligo_gm_invalid; 
-      } else {
-        
-        if (m1_gw19<nsd->gw19_data_table.get("rep",0) ||
-            m1_gw19>nsd->gw19_data_table.get("rep",
-              nsd->gw19_data_table.get_nlines()-1)) {
-          scr_out << "GW190425 m1 is out of range: m1=" << m1_gw19 
-                  << ", m1_low=" << nsd->gw19_data_table.get("rep",0) 
-                  << ", m1_high=" << nsd->gw19_data_table.get("rep",
-                  nsd->gw19_data_table.get_nlines()-1) << endl;
-          return m.ix_ligo_gm_invalid; 
-        }
-        
-        prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
-        ligo_gw19[1]=log(prob_gw19);
-        log_wgt+=ligo_gw19[1];
-      } // End GW190425
+        iret=m.ix_ligo_gm_invalid;
+        cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret; 
+      }   
+
+      // Check if m1 is within the range of the input data table
+      if (m1_gw19<nsd->gw19_data_table.get("rep",0) ||
+          m1_gw19>nsd->gw19_data_table.get("rep",
+            nsd->gw19_data_table.get_nlines()-1)) {
+        scr_out << "GW190425 m1 is out of range: m1=" << m1_gw19 
+                << ", m1_low=" << nsd->gw19_data_table.get("rep",0) 
+                << ", m1_high=" << nsd->gw19_data_table.get("rep",
+                nsd->gw19_data_table.get_nlines()-1) << endl;
+        log_wgt=0.0;
+        iret=m.ix_ligo_pars_outside;
+        cout << "bamr_class::compute_point() returned failure:"
+             << " ix_return=" << iret << endl;
+        return iret; 
+      }
+      
+      prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
+      ligo_gw19[1]=log(prob_gw19);
+      log_wgt+=ligo_gw19[1];
+      
+      // End GW190425
 
       // End of section for additional LIGO constraints
 
-      /* If population is included, calculate the skewed normal (SN) 
-      PDF for the GW170817 and GW190425 stars */
+      // If population is included, calculate the skewed normal (SN) 
+      // PDF for the GW170817 and GW190425 stars
       if (set->inc_pop) {
         ns_pop &pop = nsd->pop;
         double mean, width, skewns, sn_m1, sn_m2, sn_ligo;
@@ -1201,15 +1245,38 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         sn_m1=pop.skewed_norm(m1,mean,width,skewns);
         sn_m2=pop.skewed_norm(m2,mean,width,skewns);
         sn_ligo=sn_m1*sn_m2;
+        
+        // This is very unlikely, but we should still check if
+        // NS-NS probability of m1 or m2 is too small
+        if (sn_ligo<=0.0) {
+          scr_out << "GW170817: DNS mass probability is zero" << endl;
+          log_wgt=0.0;
+          iret=m.ix_pop_wgt_zero;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
+        }
+        
         log_wgt+=log(sn_ligo);
 
         // GW190425
         sn_m1=pop.skewed_norm(m1_gw19,mean,width,skewns);
         sn_m2=pop.skewed_norm(m2_gw19,mean,width,skewns);
         sn_ligo=sn_m1*sn_m2;
+        
+        if (sn_ligo<=0.0) {
+          scr_out << "GW190425: DNS mass probability is zero" << endl;
+          log_wgt=0.0;
+          iret=m.ix_pop_wgt_zero;
+          cout << "bamr_class::compute_point() returned failure:"
+               << " ix_return=" << iret << endl;
+          return iret;
+        }
+
         log_wgt+=log(sn_ligo);
-      }
-    }
+      
+      } // End of 'if (set->inc_pop)'
+    } // End of 'if (set->inc_ligo)'
 
 
     // If the gridt table has not yet been initialized perform that
@@ -1426,12 +1493,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
+  if (set->verbose>=2) {
+    cout << "End of bamr_class::compute_point()." << endl;
+  }
+
   if (iret==0) {
     cout << "bamr_class::compute_point() returned success:"
          << " log_wgt=" << log_wgt << endl;
-  } else {
-    cout << "bamr_class::compute_point() returned failure:"
-         << " ix_ret=" << iret << endl;
   }
 
   return iret;

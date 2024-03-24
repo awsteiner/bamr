@@ -76,7 +76,7 @@ namespace bamr {
     static const int ix_crust_unstable=7;
     static const int ix_mvsr_failed=8;
     static const int ix_tov_failure=9;
-    static const int ix_small_max=10; // monitored
+    static const int ix_small_mmax=10; // monitored
     static const int ix_tov_conv=11;
     static const int ix_mvsr_table=12;
     static const int ix_eos_acausal=13; // monitored
@@ -94,7 +94,8 @@ namespace bamr {
     static const int ix_deriv_infinite=25; // monitored
     static const int ix_pop_wgt_zero=26;
     static const int ix_ligo_gm_invalid=27; // monitored
-    static const int ix_gm_exceeds_mmax=28; // monitored
+    static const int ix_ligo_pars_outside=28;
+    static const int ix_gm_exceeds_mmax=29; // monitored
     //@}
 
     /// Number of EOS parameters

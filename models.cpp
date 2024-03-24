@@ -138,7 +138,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Solve the TOV eq. for the modified EoS
       int info=ts.mvsr();
       if (info!=0) {
-        scr_out << "M vs. R failed (Sarah's section): info="
+        scr_out << "M vs. R failed (2): info="
                 << info << std::endl;
         ret=ix_mvsr_failed;
         return;
@@ -156,7 +156,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       if (m_max2<set->min_max_mass) {
         scr_out << "M_max2 is too small: " << m_max2 << " < "
                 << set->min_max_mass << "." << std::endl;
-        ret=ix_small_max;
+        ret=ix_small_mmax;
         return;
       }
 
@@ -511,7 +511,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     if (m_max<set->min_max_mass) {
       scr_out << "M_max is too small: " << m_max << " < "
               << set->min_max_mass << "." << std::endl;
-      ret=ix_small_max;
+      ret=ix_small_mmax;
       return;
     }
 
@@ -795,7 +795,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
   // ---------------------------------------------------------------
   // Compute M, R for fixed central baryon densities
 
-  // Note: baron_density=false in the current version
   if (has_eos && set->baryon_density) {
     double ed1=eost.interp("nb",0.16,"ed");
     dat.mvsr.add_constant("gm_nb1",dat.mvsr.interp("ed",ed1,"gm"));
