@@ -745,6 +745,16 @@ file-nlines:
 	acol -read nl_28 markov_chain_0 $(foreach i,$(NL),-cat nl_$i) -nlines
 	acol -read np_30 markov_chain_0 $(foreach i,$(NP),-cat np_$i) -nlines
 
++file-cp:
+	$(foreach m,$(models),\
+        $(foreach r,$(rank),\
+            $(if $(filter $(m),ml),\
+                cp $(m)_59b $(m)_59b$(r);,\
+                cp $(m)_51b $(m)_51b$(r);\
+            )\
+        )\
+    )
+
 file-rm:
 	rm -f *_out ml_58a* mp_50a* nl_50a* np_50a*
 

@@ -154,7 +154,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       // Find and check the maximum mass
       double m_max2=dat.mvsr.max("gm");
       if (m_max2<set->min_max_mass) {
-        scr_out << "M_max2 is too small: " << m_max2 << " < "
+        scr_out << "M_max2 is too small (2): " << m_max2 << " < "
                 << set->min_max_mass << "." << std::endl;
         ret=ix_small_mmax;
         return;
@@ -188,7 +188,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       for (size_t i=0;i<eost.get_nlines();i++) {
         if (eost.get("ed",i)<c_ed) {
           if (eost.get("cs2",i)>1.0) {
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
+            scr_out << "Acausal EOS (2): cs2_" << i << "=" 
                     << eost.get("cs2",i) << " > 1" << std::endl;
             ret=ix_eos_acausal;
             return;
