@@ -1151,44 +1151,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 #endif
 
-  // ---------------------------------------
-  // Put KDE stuff here, let's start with the single thread
-  // version, and deal with OpenMP later
-
-  if (true) {
-    
-    // Copy the table data to a tensor for use in kde_python.
-    // We need a copy for each thread because kde_python takes
-    // over the tensor data.
-
-    // AWS: I'm leaving this for Anik to change
-    o2scl::table<> tab_in;
-    
-    vector<size_t> in_size={tab_in.get_nlines(),1};
-    ten_in.resize(2,in_size);
-    
-    for(size_t i=0;i<tab_in.get_nlines();i++) {
-      vector<size_t> ix;
-      ix={i,0};
-      ten_in.get(ix)=tab_in.get("x",i);
-    }
-    
-    // Train the KDE
-    vector<double> weights;
-    kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
-    kp->set_function("o2sclpy",ten_in,
-                     weights,"verbose=0","kde_scipy");
-    
-    // Setting the KDE as the base distribution for the independent
-    // conditional probability. This code may need to be changed
-    // for more than one OpenMP thread.
-    stepper.proposal.resize(1);
-    stepper.proposal[0].set_base(kp);
-    
-  }
-    
-  // ---------------------------------------
-  
   for(size_t j=0;j<names.size();j++) {
     pvi.append(names[j]);
   }

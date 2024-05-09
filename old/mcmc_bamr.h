@@ -40,7 +40,6 @@
 
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
-#include <o2scl/kde_python.h>
 
 #ifdef O2SCL_NEVER_DEFINED
 #include "emulator_bamr.h"
@@ -108,18 +107,11 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class mcmc_bamr :
-    public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_mh<point_funct,model_data,
-                   ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>> {
-    
+    public o2scl::mcmc_para_cli<point_funct,fill_funct,
+                                model_data,ubvector> {
+
   protected:
 
-    o2scl::tensor<> ten_in;
-    
-    std::shared_ptr<o2scl::kde_python<ubvector>> kp;
-    
     /** \brief If true, use index2 to take derivative of M_max
      */
     bool dv_index2;
