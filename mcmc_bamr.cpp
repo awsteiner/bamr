@@ -1162,23 +1162,82 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // over the tensor data.
 
     // AWS: I'm leaving this for Anik to change
-    o2scl::table<> tab_in;
-    
-    vector<size_t> in_size={tab_in.get_nlines(),1};
-    ten_in.resize(2,in_size);
-    
-    for(size_t i=0;i<tab_in.get_nlines();i++) {
-      vector<size_t> ix;
-      ix={i,0};
-      ten_in.get(ix)=tab_in.get("x",i);
+
+/*#ifdef BAMR_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+      
+    // Ensure that multiple MPI ranks aren't reading from the
+    // filesystem at the same time
+    int tag=0, buffer=0;
+    if (mpi_size>1 && mpi_rank>=1) {
+      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+         tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    }
+#endif*/
+
+    // Input table object
+    o2scl::table_units<> tab_in;
+
+    hdf_file hf;
+
+    // Set input file name based on the model type
+    string fname;
+
+    if (model_type==string("new_lines")) {
+      if (set->model_dpdm==1) fname="out/ml_in";
+      else fname="out/nl_in";
+    }
+    else if (model_type==string("new_poly")) {
+      if (set->model_dpdm==1) fname="out/mp_in";
+      else fname="out/np_in";
     }
     
-    // Train the KDE
-    vector<double> weights;
-    kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
-    kp->set_function("o2sclpy",ten_in,
-                     weights,"verbose=0","kde_scipy");
+    // Fill input data
+    size_t n_pars=names.size(); 
+    cout << "KDE is reading the input table of " << n_pars 
+         << " parameters." << endl;
+    hf.open(fname);
+    hdf_input(hf,tab_in);
+    hf.close();
+
+    // Print column names
+    /*for (size_t i=0; i<n_pars; i++) {
+      cout << tab_in.get_column_name(i+5) << " ";
+    }
+    cout << endl;*/
+
+    // Copy input data to the tensor object
+    vector<size_t> in_size={tab_in.get_nlines(),n_pars};
+    ten_in.resize(2,in_size);
+    for (size_t j=0; j<tab_in.get_nlines(); j++) {
+      vector<size_t> ix;
+      for (size_t i=0; i<n_pars; i++) {
+        ix={j,i};
+        ten_in.get(ix)=tab_in.get(i+5,j);
+      }
+    }
     
+    // Fill input weights 
+    vector<double> weights;
+    for (size_t j=0; j<tab_in.get_nlines(); j++) {
+        weights.push_back(exp(tab_in.get(4,j)));
+    }
+
+    // Train the KDE
+    kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
+    kp->set_function("o2sclpy", ten_in, weights,
+                     "verbose=0", "kde_scipy");
+    
+/*#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+         tag,MPI_COMM_WORLD);
+    }
+#endif*/
+
     // Setting the KDE as the base distribution for the independent
     // conditional probability. This code may need to be changed
     // for more than one OpenMP thread.

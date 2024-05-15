@@ -1,10 +1,8 @@
 #! /usr/bin/bash
 
 # nlines:
-	./bamr -threads 8 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/nl -set max_iters 1000 -set n_walk 64 \
-	-set step_fac 2.0 -set file_update_time 1800 \
-	-set verbose 1 -set mcmc_verbose 2 \
+	./bamr -threads 1 -set prefix out/nl -set max_iters 100 \
+	-set file_update_time 1800 -set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
 	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
@@ -34,4 +32,4 @@
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 0 \
-	-initial-point-last out/nl_50 -mcmc > out/nl.out 2>&1 &
+	-initial-point-last out/nl_54 -mcmc
