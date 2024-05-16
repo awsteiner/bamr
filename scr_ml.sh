@@ -1,7 +1,8 @@
 #! /usr/bin/bash
 
 # mlines:
-	./bamr -threads 1 -set prefix out/ml -set max_iters 100 \
+mpirun -np 16 ./bamr -threads 1 -set use_kde 1 \
+	-set prefix out/ml -set max_iters 100 \
 	-set file_update_time 1800 -set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
@@ -32,4 +33,4 @@
 	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 	-set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 1 \
-	-initial-point-last out/ml_65 -mcmc
+	-initial-point-last "out/ml_65a<rank>" -mcmc

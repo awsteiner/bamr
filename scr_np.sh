@@ -1,7 +1,8 @@
 #! /usr/bin/bash
 
 # npoly:
-	./bamr -threads 1 -set prefix out/np -set max_iters 100 \
+./bamr -threads 1 -set use_kde 1 \
+	-set prefix out/np -set max_iters 100 \
 	-set file_update_time 1800 -set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
 	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \

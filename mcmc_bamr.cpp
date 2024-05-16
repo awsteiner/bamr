@@ -1155,7 +1155,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
 
-  if (true) {
+  if (set->use_kde) {
     
     // Copy the table data to a tensor for use in kde_python.
     // We need a copy for each thread because kde_python takes
@@ -1163,7 +1163,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
     // AWS: I'm leaving this for Anik to change
 
-/*#ifdef BAMR_MPI
+#ifdef BAMR_MPI
     // Get MPI rank, etc.
     MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
     MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
@@ -1175,7 +1175,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
          tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     }
-#endif*/
+#endif
 
     // Input table object
     o2scl::table_units<> tab_in;
@@ -1230,13 +1230,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     kp->set_function("o2sclpy", ten_in, weights,
                      "verbose=0", "kde_scipy");
     
-/*#ifdef BAMR_MPI
+#ifdef BAMR_MPI
     // Send a message to the next MPI rank
     if (mpi_size>1 && mpi_rank<mpi_size-1) {
       MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
          tag,MPI_COMM_WORLD);
     }
-#endif*/
+#endif
 
     // Setting the KDE as the base distribution for the independent
     // conditional probability. This code may need to be changed
