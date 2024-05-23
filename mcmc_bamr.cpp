@@ -1186,12 +1186,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     string fname;
 
     if (model_type==string("new_lines")) {
-      if (set->model_dpdm==1) fname="out/ml_in";
-      else fname="out/nl_in";
+      if (set->model_dpdm==1) fname="out/ml_train";
+      else fname="out/nl_train";
     }
     else if (model_type==string("new_poly")) {
-      if (set->model_dpdm==1) fname="out/mp_in";
-      else fname="out/np_in";
+      if (set->model_dpdm==1) fname="out/mp_train";
+      else fname="out/np_train";
     }
     
     // Fill input data
@@ -1221,9 +1221,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     // Fill input weights 
     vector<double> weights;
-    for (size_t j=0; j<tab_in.get_nlines(); j++) {
+    /*for (size_t j=0; j<tab_in.get_nlines(); j++) {
         weights.push_back(exp(tab_in.get(4,j)));
-    }
+    }*/
 
     // Train the KDE
     kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
