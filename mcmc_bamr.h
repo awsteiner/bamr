@@ -237,6 +237,10 @@ namespace bamr {
     */
     virtual int initial_point_best(std::vector<std::string> &sv,
                                    bool itive_com);
+
+    /// Desc
+    virtual int combine_files(std::vector<std::string> &sv,
+                                   bool itive_com);
     
     /** \brief Read previous results from a file
      */

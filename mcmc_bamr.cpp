@@ -792,6 +792,134 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int mcmc_bamr::combine_files(std::vector<std::string> &sv,
+			     bool itive_com) {
+
+  if (sv.size()<3) {
+    O2SCL_ERR("Not enough args combine_files.",
+	      o2scl::exc_einval);
+  }
+  size_t n_files=sv.size()-2;
+  string file_final=sv[sv.size()-1];
+  table_units<> t_final;
+
+  for(size_t i_file=0;i_file<n_files;i_file++) {
+  
+    // Read file
+    hdf_file hf;
+    hf.open(sv[i_file+1]);
+    table_units<> t0;
+    hdf_input(hf,t0);
+    
+    if (t0.is_column("walker")==false || t0.is_column("thread")==false) {
+      O2SCL_ERR("No walker or thread columns.",
+		o2scl::exc_einval);
+    }
+    
+    // Remove empty rows from table.
+    t0.delete_rows_func("mult<0.5");
+  
+    // Compute number of walkers and threads
+    size_t n_walker=((size_t)(t0.max("walker")+1.00001));
+    size_t n_thread=((size_t)(t0.max("thread")+1.00001));
+    cout << "Determined file has " << n_walker << " walkers, " << n_thread
+	 << " threads, and " << t0.get_nlines() << " lines." << endl;
+    if (t0.get_nlines()<n_walker*n_thread) {
+      O2SCL_ERR("Not enough lines in table.",
+		o2scl::exc_einval);
+    }
+    
+    // Remove first point
+    vector<size_t> list;
+    list.push_back(0);
+    for(size_t j=1;j<n_walker*n_thread;j++) {
+      list.push_back(j);
+    }
+    t0.delete_rows_list(list);
+    cout << "Table now has " << t0.get_nlines() << " lines." << endl;
+    
+    // Remove last point
+    list.clear();
+    for(size_t j=0;j<n_walker;j++) {
+      for(size_t k=0;k<n_thread;k++) {
+	for(int i=t0.get_nlines()-1;i>=0;i--) {
+	  if (fabs(t0.get("walker",i)-((double)j))<1.0e-4 &&
+	      fabs(t0.get("thread",i)-((double)k))<1.0e-4) {
+	    list.push_back(i);
+	    cout << "Deleting row " << i << " for thread "
+		 << k << " and walker " << j << endl;
+	    i=-1;
+	  }
+	}
+      }
+    }
+    t0.delete_rows_list(list);
+    cout << "Table now has " << t0.get_nlines() << " lines." << endl;
+
+    cout << "Copying " << t0.get_nlines() << " lines to final table." << endl;
+    
+    if (i_file==0) {
+      
+      t_final=t0;
+      
+    } else {
+
+      if (t0.get_ncolumns()!=t_final.get_ncolumns()) {
+	O2SCL_ERR("Different number of columns.",
+		  o2scl::exc_einval);
+      }
+
+      size_t t_final_orig=t_final.get_nlines();
+      t_final.set_nlines(t_final.get_nlines()+t0.get_nlines());
+      for(size_t i=0;i<t0.get_nlines();i++) {
+	for(size_t j=0;j<t0.get_ncolumns();j++) {
+	  t_final.set(j,t_final_orig+i,t0.get(j,i));
+	}
+      }
+    }
+    
+  }
+
+  cout << "Selecting independent samples from " << t_final.get_nlines()
+       << " lines." << endl;
+
+  table_units<> ttemp;
+  copy_table_thin_mcmc(1,t_final,ttemp,"mult",3);
+
+  cout << "Performed initial copy " << ttemp.get_nlines() << " "
+       << ttemp.get_maxlines() << "." << endl;
+  
+  // Compute the autocorrelation length from log_wgt
+  if (ttemp.get_nlines()!=ttemp.get_maxlines()) {
+    ttemp.set_maxlines(ttemp.get_nlines());
+  }
+  double mean=vector_mean(ttemp["log_wgt"]);
+  double stddev=vector_stddev(ttemp["log_wgt"]);
+  std::vector<double> ac, ftom;
+  o2scl::vector_autocorr_vector_fftw(ttemp["log_wgt"],ac,mean,stddev);
+                                     
+  size_t ac_len=o2scl::vector_autocorr_tau(ac,ftom);
+  cout << "Autocorrelation length is: " << ac_len << endl;
+
+  for(size_t j=0;j<ttemp.get_nlines();j+=ttemp.get_nlines()/17) {
+    cout << j << " " << ttemp.get("mult",j) << endl;
+  }
+  exit(-1);
+  
+  // Create a separate table of statistically independent samples
+  table_units<> indep;
+  copy_table_thin_mcmc(ac_len,ttemp,indep,"mult",3);
+  
+  cout << "Found " << indep.get_nlines() << " independent samples." << endl;
+  
+  hdf_file hfx;
+  hfx.open_or_create(file_final);
+  hdf_output(hfx,indep,"markov_chain_0");
+  hfx.close();
+  
+  return 0;
+}
+
 int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
                                   bool itive_com) {
 
@@ -1297,7 +1425,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=8; // nopt=10 with commented out 2 options
+  static const int nopt=9; // nopt=11 with commented out 2 options
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
@@ -1361,6 +1489,10 @@ void mcmc_bamr::setup_cli_mb() {
        "the file.",
        new o2scl::comm_option_mfptr<mcmc_bamr>
        (this,&mcmc_bamr::initial_point_best),
+       o2scl::cli::comm_option_both},
+      {0,"combine-files","Desc.",-1,-1,"<file 1> <file 2> ... <target file>","",
+       new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::combine_files),
        o2scl::cli::comm_option_both},
       {0,"read-prev-results","Read previous results from file (unfinished).",
        1,1,"<filename>","Long. desc.",
