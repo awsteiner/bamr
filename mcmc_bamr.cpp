@@ -1347,16 +1347,76 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       }
     }
     
-    // Fill input weights 
-    vector<double> weights;
-    //for (size_t j=0; j<tab_in.get_nlines(); j++) {
-    //weights.push_back(exp(tab_in.get(4,j)));
-    //}
-
     // Train the KDE
-    kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
-    kp->set_function("o2sclpy", ten_in, weights,
-                     "verbose=0", "kde_scipy");
+    if (true) {
+
+      // Fill input weights 
+      vector<double> weights;
+      //for (size_t j=0; j<tab_in.get_nlines(); j++) {
+      //weights.push_back(exp(tab_in.get(4,j)));
+      //}
+
+      kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
+      kp->set_function("o2sclpy", ten_in, weights,
+		       "verbose=0", "kde_scipy");
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
+    
+    } else if (false) {
+      
+      kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
+      uniform_grid_log_end<double> ug(1.0e-3,1.0e3,99);
+      vector<double> bw_array;
+      ug.vector(bw_array);
+      kp->set_function("o2sclpy", ten_in, bw_array,
+		       "verbose=0", "kde_sklearn");
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
+      
+    } else {
+
+      ubvector std(n_pars), avg(n_pars);
+      cout << "j param,avg,std: " << endl;
+      for(size_t j=0;j<n_pars;j++) {
+	avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+	std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+	cout << j << " " << pvi[j] << " " << avg[j] 
+	     << " " << std[j] << endl;
+      }
+      
+      ubmatrix covar(n_pars,n_pars);
+      for(size_t i=0;i<n_pars;i++) {
+	for(size_t j=0;j<n_pars;j++) {
+	  if (i==j) {
+	    covar(i,j)=std[j]*std[j];
+	    //covar(i,j)/=var_dec_factor;
+	  } else {
+	    covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
+					 tab_in[j+5]);
+	    //covar(i,j)/=covar_dec_factor;
+	  }
+	}
+      }
+      
+      gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
+	(new prob_dens_mdim_gaussian<>);
+      gpp->set_covar(n_pars,avg,covar);
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(gpp);
+    
+    }
     
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -1366,12 +1426,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #endif
 
-    // Setting the KDE as the base distribution for the independent
-    // conditional probability. This code may need to be changed
-    // for more than one OpenMP thread.
-    stepper.proposal.resize(1);
-    stepper.proposal[0].set_base(kp);
-    
   }
     
   // ---------------------------------------

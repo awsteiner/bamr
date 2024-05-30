@@ -119,6 +119,8 @@ namespace bamr {
     o2scl::tensor<> ten_in;
     
     std::shared_ptr<o2scl::kde_python<ubvector>> kp;
+
+    std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
     
     /** \brief If true, use index2 to take derivative of M_max
      */
