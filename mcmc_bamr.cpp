@@ -1186,12 +1186,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     string fname;
 
     if (model_type==string("new_lines")) {
-      if (set->model_dpdm==1) fname="out/ml_in";
-      else fname="out/nl_in";
+      if (set->model_dpdm==1) fname="out/ml_train";
+      else fname="out/nl_train";
     }
     else if (model_type==string("new_poly")) {
-      if (set->model_dpdm==1) fname="out/mp_in";
-      else fname="out/np_in";
+      if (set->model_dpdm==1) fname="out/mp_train";
+      else fname="out/np_train";
     }
     
     // Fill input data
