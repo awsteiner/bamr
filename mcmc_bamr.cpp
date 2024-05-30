@@ -1221,9 +1221,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     // Fill input weights 
     vector<double> weights;
-    for (size_t j=0; j<tab_in.get_nlines(); j++) {
-        weights.push_back(exp(tab_in.get(4,j)));
-    }
+    //for (size_t j=0; j<tab_in.get_nlines(); j++) {
+    //weights.push_back(exp(tab_in.get(4,j)));
+    //}
 
     // Train the KDE
     kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
