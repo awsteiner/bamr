@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2022, Mohammad Al-Mamun, Mahmudul Hasan Anik, 
+  Copyright (C) 2012-2024, Mohammad Al-Mamun, Mahmudul Hasan Anik, 
   and Andrew W. Steiner
   
   This file is part of Bamr.
@@ -883,32 +883,20 @@ int mcmc_bamr::combine_files(std::vector<std::string> &sv,
   cout << "Selecting independent samples from " << t_final.get_nlines()
        << " lines." << endl;
 
-  table_units<> ttemp;
-  copy_table_thin_mcmc(1,t_final,ttemp,"mult",3);
-
-  cout << "Performed initial copy " << ttemp.get_nlines() << " "
-       << ttemp.get_maxlines() << "." << endl;
-  
   // Compute the autocorrelation length from log_wgt
-  if (ttemp.get_nlines()!=ttemp.get_maxlines()) {
-    ttemp.set_maxlines(ttemp.get_nlines());
+  if (t_final.get_nlines()!=t_final.get_maxlines()) {
+    t_final.set_maxlines(t_final.get_nlines());
   }
-  double mean=vector_mean(ttemp["log_wgt"]);
-  double stddev=vector_stddev(ttemp["log_wgt"]);
   std::vector<double> ac, ftom;
-  o2scl::vector_autocorr_vector_fftw(ttemp["log_wgt"],ac,mean,stddev);
-                                     
-  size_t ac_len=o2scl::vector_autocorr_tau(ac,ftom);
+  o2scl::vector_autocorr_vector_fftw_mult(t_final["log_wgt"],
+                                          t_final["mult"],ac);
+
+  size_t ac_len=o2scl::vector_autocorr_tau(ac,ftom,3);
   cout << "Autocorrelation length is: " << ac_len << endl;
 
-  for(size_t j=0;j<ttemp.get_nlines();j+=ttemp.get_nlines()/17) {
-    cout << j << " " << ttemp.get("mult",j) << endl;
-  }
-  exit(-1);
-  
   // Create a separate table of statistically independent samples
   table_units<> indep;
-  copy_table_thin_mcmc(ac_len,ttemp,indep,"mult",3);
+  copy_table_thin_mcmc(ac_len,t_final,indep,"mult",3);
   
   cout << "Found " << indep.get_nlines() << " independent samples." << endl;
   
