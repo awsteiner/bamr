@@ -887,6 +887,11 @@ int mcmc_bamr::combine_files(std::vector<std::string> &sv,
   if (t_final.get_nlines()!=t_final.get_maxlines()) {
     t_final.set_maxlines(t_final.get_nlines());
   }
+  
+  /*
+    AWS: commenting these out temporarily because they depend on
+    a more recent o2scl
+    
   std::vector<double> ac, ftom;
   o2scl::vector_autocorr_vector_fftw_mult(t_final["log_wgt"],
                                           t_final["mult"],ac);
@@ -904,6 +909,7 @@ int mcmc_bamr::combine_files(std::vector<std::string> &sv,
   hfx.open_or_create(file_final);
   hdf_output(hfx,indep,"markov_chain_0");
   hfx.close();
+  */
   
   return 0;
 }
@@ -1336,7 +1342,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
     
     // Train the KDE
-    if (true) {
+    if (false) {
 
       // Fill input weights 
       vector<double> weights;
