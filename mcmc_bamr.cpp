@@ -1404,6 +1404,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
 	(new prob_dens_mdim_gaussian<>);
       gpp->set_covar(n_pars,avg,covar);
+      gpp->pdg.set_seed(mpi_rank*clock());
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. This code may need to be changed
