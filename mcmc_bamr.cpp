@@ -1342,7 +1342,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
     
     // Train the KDE
-    if (false) {
+    if (true) {
 
       // Fill input weights 
       vector<double> weights;
