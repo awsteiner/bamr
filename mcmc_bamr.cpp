@@ -1325,7 +1325,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Fill input data
     size_t n_pars=names.size(); 
     cout << "KDE is reading the input table of " << n_pars 
-         << " parameters." << endl;
+         << " parameters from file " << fname << endl;
     hf.open(fname);
     hdf_input(hf,tab_in);
     hf.close();
@@ -1342,8 +1342,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     for (size_t j=0; j<tab_in.get_nlines(); j++) {
       vector<size_t> ix;
       for (size_t i=0; i<n_pars; i++) {
-        ix={j,i};
-        ten_in.get(ix)=tab_in.get(i+5,j);
+	ix={j,i};
+	ten_in.get(ix)=tab_in.get(i+5,j);
       }
     }
     
@@ -1383,12 +1383,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
     } else {
 
+      std::cout << "Setting up Gaussian:" << std::endl;
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {
 	avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
 	std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
-	cout << j << " " << pvi[j] << " " << avg[j] 
+	cout << "param,avg,stddev: " << j << " " << avg[j] 
 	     << " " << std[j] << endl;
       }
       
@@ -1401,7 +1402,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	  } else {
 	    covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
 					 tab_in[j+5]);
-	    //covar(i,j)/=covar_dec_factor;
+	    covar(i,j)/=2.0;
 	  }
 	}
       }
