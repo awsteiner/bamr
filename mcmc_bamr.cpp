@@ -1490,7 +1490,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=9; // nopt=11 with commented out 2 options
+  static const int nopt=10; // nopt=11 with commented out 2 options
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
