@@ -119,6 +119,8 @@ namespace bamr {
     o2scl::tensor<> ten_in;
     
     std::shared_ptr<o2scl::kde_python<ubvector>> kp;
+
+    std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
     
     /** \brief If true, use index2 to take derivative of M_max
      */
@@ -245,6 +247,10 @@ namespace bamr {
         for the initial point
     */
     virtual int initial_point_best(std::vector<std::string> &sv,
+                                   bool itive_com);
+
+    /// Desc
+    virtual int combine_files(std::vector<std::string> &sv,
                                    bool itive_com);
     
     /** \brief Read previous results from a file

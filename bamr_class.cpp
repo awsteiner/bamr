@@ -1085,6 +1085,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return iret;
         
       } else {
+        
         // radii
         double R1=dat.mvsr.interp("gm",m1,"r");
         double R2=dat.mvsr.interp("gm",m2,"r");

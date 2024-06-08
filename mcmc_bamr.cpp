@@ -1,7 +1,7 @@
 /*
   -------------------------------------------------------------------
   
-  Copyright (C) 2012-2022, Mohammad Al-Mamun, Mahmudul Hasan Anik, 
+  Copyright (C) 2012-2024, Mohammad Al-Mamun, Mahmudul Hasan Anik, 
   and Andrew W. Steiner
   
   This file is part of Bamr.
@@ -807,6 +807,128 @@ int mcmc_bamr::set_model(std::vector<std::string> &sv, bool itive_com) {
   return 0;
 }
 
+int mcmc_bamr::combine_files(std::vector<std::string> &sv,
+			     bool itive_com) {
+
+  if (sv.size()<3) {
+    O2SCL_ERR("Not enough args combine_files.",
+	      o2scl::exc_einval);
+  }
+  size_t n_files=sv.size()-2;
+  string file_final=sv[sv.size()-1];
+  table_units<> t_final;
+
+  for(size_t i_file=0;i_file<n_files;i_file++) {
+  
+    // Read file
+    hdf_file hf;
+    hf.open(sv[i_file+1]);
+    table_units<> t0;
+    hdf_input(hf,t0);
+    
+    if (t0.is_column("walker")==false || t0.is_column("thread")==false) {
+      O2SCL_ERR("No walker or thread columns.",
+		o2scl::exc_einval);
+    }
+    
+    // Remove empty rows from table.
+    t0.delete_rows_func("mult<0.5");
+  
+    // Compute number of walkers and threads
+    size_t n_walker=((size_t)(t0.max("walker")+1.00001));
+    size_t n_thread=((size_t)(t0.max("thread")+1.00001));
+    cout << "Determined file has " << n_walker << " walkers, " << n_thread
+	 << " threads, and " << t0.get_nlines() << " lines." << endl;
+    if (t0.get_nlines()<n_walker*n_thread) {
+      O2SCL_ERR("Not enough lines in table.",
+		o2scl::exc_einval);
+    }
+    
+    // Remove first point
+    vector<size_t> list;
+    list.push_back(0);
+    for(size_t j=1;j<n_walker*n_thread;j++) {
+      list.push_back(j);
+    }
+    t0.delete_rows_list(list);
+    cout << "Table now has " << t0.get_nlines() << " lines." << endl;
+    
+    // Remove last point
+    list.clear();
+    for(size_t j=0;j<n_walker;j++) {
+      for(size_t k=0;k<n_thread;k++) {
+	for(int i=t0.get_nlines()-1;i>=0;i--) {
+	  if (fabs(t0.get("walker",i)-((double)j))<1.0e-4 &&
+	      fabs(t0.get("thread",i)-((double)k))<1.0e-4) {
+	    list.push_back(i);
+	    cout << "Deleting row " << i << " for thread "
+		 << k << " and walker " << j << endl;
+	    i=-1;
+	  }
+	}
+      }
+    }
+    t0.delete_rows_list(list);
+    cout << "Table now has " << t0.get_nlines() << " lines." << endl;
+
+    cout << "Copying " << t0.get_nlines() << " lines to final table." << endl;
+    
+    if (i_file==0) {
+      
+      t_final=t0;
+      
+    } else {
+
+      if (t0.get_ncolumns()!=t_final.get_ncolumns()) {
+	O2SCL_ERR("Different number of columns.",
+		  o2scl::exc_einval);
+      }
+
+      size_t t_final_orig=t_final.get_nlines();
+      t_final.set_nlines(t_final.get_nlines()+t0.get_nlines());
+      for(size_t i=0;i<t0.get_nlines();i++) {
+	for(size_t j=0;j<t0.get_ncolumns();j++) {
+	  t_final.set(j,t_final_orig+i,t0.get(j,i));
+	}
+      }
+    }
+    
+  }
+
+  cout << "Selecting independent samples from " << t_final.get_nlines()
+       << " lines." << endl;
+
+  // Compute the autocorrelation length from log_wgt
+  if (t_final.get_nlines()!=t_final.get_maxlines()) {
+    t_final.set_maxlines(t_final.get_nlines());
+  }
+  
+  /*
+    AWS: commenting these out temporarily because they depend on
+    a more recent o2scl
+    
+  std::vector<double> ac, ftom;
+  o2scl::vector_autocorr_vector_fftw_mult(t_final["log_wgt"],
+                                          t_final["mult"],ac);
+
+  size_t ac_len=o2scl::vector_autocorr_tau(ac,ftom,3);
+  cout << "Autocorrelation length is: " << ac_len << endl;
+
+  // Create a separate table of statistically independent samples
+  table_units<> indep;
+  copy_table_thin_mcmc(ac_len,t_final,indep,"mult",3);
+  
+  cout << "Found " << indep.get_nlines() << " independent samples." << endl;
+  
+  hdf_file hfx;
+  hfx.open_or_create(file_final);
+  hdf_output(hfx,indep,"markov_chain_0");
+  hfx.close();
+  */
+  
+  return 0;
+}
+
 int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
                                   bool itive_com) {
 
@@ -1212,7 +1334,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Fill input data
     size_t n_pars=names.size(); 
     cout << "KDE is reading the input table of " << n_pars 
-         << " parameters." << endl;
+         << " parameters from file " << fname << endl;
     hf.open(fname);
     hdf_input(hf,tab_in);
     hf.close();
@@ -1229,21 +1351,83 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     for (size_t j=0; j<tab_in.get_nlines(); j++) {
       vector<size_t> ix;
       for (size_t i=0; i<n_pars; i++) {
-        ix={j,i};
-        ten_in.get(ix)=tab_in.get(i+5,j);
+	ix={j,i};
+	ten_in.get(ix)=tab_in.get(i+5,j);
       }
     }
     
-    // Fill input weights 
-    vector<double> weights;
-    /*for (size_t j=0; j<tab_in.get_nlines(); j++) {
-        weights.push_back(exp(tab_in.get(4,j)));
-    }*/
-
     // Train the KDE
-    kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
-    kp->set_function("o2sclpy", ten_in, weights,
-                     "verbose=0", "kde_scipy");
+    if (true) {
+
+      // Fill input weights 
+      vector<double> weights;
+      //for (size_t j=0; j<tab_in.get_nlines(); j++) {
+      //weights.push_back(exp(tab_in.get(4,j)));
+      //}
+
+      kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
+      kp->set_function("o2sclpy", ten_in, weights,
+		       "verbose=0", "kde_scipy");
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
+    
+    } else if (false) {
+      
+      kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
+      uniform_grid_log_end<double> ug(1.0e-3,1.0e3,99);
+      vector<double> bw_array;
+      ug.vector(bw_array);
+      kp->set_function("o2sclpy", ten_in, bw_array,
+		       "verbose=0", "kde_sklearn");
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
+      
+    } else {
+
+      std::cout << "Setting up Gaussian:" << std::endl;
+      ubvector std(n_pars), avg(n_pars);
+      cout << "j param,avg,std: " << endl;
+      for(size_t j=0;j<n_pars;j++) {
+	avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+	std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+	cout << "param,avg,stddev: " << j << " " << avg[j] 
+	     << " " << std[j] << endl;
+      }
+      
+      ubmatrix covar(n_pars,n_pars);
+      for(size_t i=0;i<n_pars;i++) {
+	for(size_t j=0;j<n_pars;j++) {
+	  if (i==j) {
+	    covar(i,j)=std[j]*std[j];
+	    //covar(i,j)/=var_dec_factor;
+	  } else {
+	    covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
+					 tab_in[j+5]);
+	    covar(i,j)/=2.0;
+	  }
+	}
+      }
+      
+      gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
+	(new prob_dens_mdim_gaussian<>);
+      gpp->set_covar(n_pars,avg,covar);
+      gpp->pdg.set_seed(mpi_rank*clock());
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. This code may need to be changed
+      // for more than one OpenMP thread.
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(gpp);
+    
+    }
     
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -1253,12 +1437,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #endif
 
-    // Setting the KDE as the base distribution for the independent
-    // conditional probability. This code may need to be changed
-    // for more than one OpenMP thread.
-    stepper.proposal.resize(1);
-    stepper.proposal[0].set_base(kp);
-    
   }
     
   // ---------------------------------------
@@ -1312,7 +1490,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=9; // nopt=10 with commented out 2 options
+  static const int nopt=9; // nopt=11 with commented out 2 options
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
@@ -1381,6 +1559,10 @@ void mcmc_bamr::setup_cli_mb() {
        "the file.",
        new o2scl::comm_option_mfptr<mcmc_bamr>
        (this,&mcmc_bamr::initial_point_best),
+       o2scl::cli::comm_option_both},
+      {0,"combine-files","Desc.",-1,-1,"<file 1> <file 2> ... <target file>","",
+       new o2scl::comm_option_mfptr<mcmc_bamr>
+       (this,&mcmc_bamr::combine_files),
        o2scl::cli::comm_option_both},
       {0,"read-prev-results","Read previous results from file (unfinished).",
        1,1,"<filename>","Long. desc.",
