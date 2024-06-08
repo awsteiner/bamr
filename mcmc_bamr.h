@@ -161,6 +161,11 @@ namespace bamr {
                            bool itive_com);
 #endif
 
+    /** \brief A string specifying the sampling algorithm for MCMC
+        Current options are: 'kde' and 'hmc'
+    */
+    std::string mcmc_method;
+
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
@@ -193,6 +198,10 @@ namespace bamr {
 
     /// \name Main functions called from the command-line interface
     //@{
+    /** \brief Set the MCMC sampling method
+     */
+    virtual int set_method(std::vector<std::string> &sv,
+                                bool itive_com);
     /** \brief Set the model for the EOS to use
      */
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);

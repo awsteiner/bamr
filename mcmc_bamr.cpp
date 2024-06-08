@@ -341,6 +341,7 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 
   hf.set_szt("grid_size",set->grid_size);
   hf.set_szt("n_sources",nsd->n_sources);
+  hf.sets("method",mcmc_method);
   hf.sets("model",model_type);
   hf.setd("min_mass",set->min_mass);
   hf.setd("exit_mass",set->exit_mass);
@@ -681,6 +682,20 @@ int mcmc_bamr::mcmc_init() {
               << ") End mcmc_bamr::mcmc_init()." << std::endl;
   }
 
+  return 0;
+}
+
+int mcmc_bamr::set_method(std::vector<std::string> &sv, bool itive_com) {
+  
+  if (sv.size()<2) {
+    cerr << "MCMC method not given." << endl;
+    return exc_efailed;
+  }
+  if (mcmc_method==sv[1]) {
+    cerr << "Method already set to " << sv[1] << endl;
+    return 0;
+  }
+  mcmc_method=sv[1];
   return 0;
 }
 
@@ -1155,7 +1170,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
 
-  if (set->use_kde) {
+  if (mcmc_method==string("kde")) {
     
     // Copy the table data to a tensor for use in kde_python.
     // We need a copy for each thread because kde_python takes
@@ -1297,7 +1312,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=8; // nopt=10 with commented out 2 options
+  static const int nopt=9; // nopt=10 with commented out 2 options
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",
@@ -1313,6 +1328,11 @@ void mcmc_bamr::setup_cli_mb() {
        "model must be chosen before a MCMC run.",
        new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_model),
        cli::comm_option_both},
+      {'t',"method","Choose MCMC method.",
+        1,1,"<method type>",((string)"Choose the MCMC sampling method. ")+
+        "Possible values are 'kde'.",
+        new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_method),
+        cli::comm_option_both},
       {0,"threads","Specify number of OpenMP threads",
        1,1,"<number>",((string)"The threads command must be ")+
        "before any model selection, any changes to the data, and "+

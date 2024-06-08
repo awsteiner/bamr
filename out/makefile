@@ -686,10 +686,8 @@ file-all:
 	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
 	make model="ML" file-dist  && make model="MP" file-dist  && make model="NL" file-dist  && make model="NP" file-dist
 
-#fname = 51 52 53 54 55 56 57 58 59 60 60b 61 61b 62 63 64 65
-
 # n_rank=16
-fname = 50 51 52 53 54 55 56
+fname = 52a 52b 53a 54a
 
 #models = ml mp nl np
 rank = $(shell seq 0 15)
@@ -698,17 +696,17 @@ rank2 = $(shell seq 1 15)
 file-pars:
 	$(foreach r,$(rank),\
 		$(foreach f,$(fname),\
-			acol -read mp_$(f) markov_chain_0 -index -select-rows "rank==$(r) && N>511" -select rank thread walker mult log_wgt a alpha param_S param_L exp1 trans1 exp2 trans2 exp3 M_chirp_det q z_cdf m1_gw19 mf_6304 mf_6397 mf_M13 mf_M28 mf_M30 mf_wCen mf_X7 mf_1810b mf_1724b mf_1702 mf_0030 mf_0740 mean_NS log10_width_NS skewness_NS mean_WD log10_width_WD skewness_WD mean_LMS log10_width_LMS skewness_LMS M_J0453p M_J0453c M_J1906p M_J1906c M_B1534p M_B1534c M_B1913p M_B1913c M_B2127p M_B2127c M_J0737A M_J0737B M_J1756p M_J1756c M_J1807p M_J1807c M_J1518p M_J1518c M_J1811p M_J1811c M_J1829p M_J1829c M_J2045 M_J2053 M_J1713 M_B1855 M_J0751 M_J1141 M_J1738 M_J1614 M_J0348 M_J2222 M_J2234 M_J1949 M_J1012 M_J0437 M_J1909 M_J1802 M_J1911 M_J2043 M_J0337 M_J1946 M_J1918 M_J1600 M_J0621 M_B2303 M_J0024 M_J0514 M_B1516 M_J1748I M_J1748J M_B1802 M_B1911 M_J0740 M_CygX2 M_XTEJ2123 M_4U1822 M_HerX1 M_2S0921 -internal mp_$(f)a$(r);\
+			acol -read np_$(f)$(r) markov_chain_0 -index -select-rows "N>511" -select rank thread walker mult log_wgt a alpha param_S param_L exp1 trans1 exp2 trans2 exp3 M_chirp_det q z_cdf m1_gw19 mf_6304 mf_6397 mf_M13 mf_M28 mf_M30 mf_wCen mf_X7 mf_1810b mf_1724b mf_1702 mf_0030 mf_0740 mean_NS log10_width_NS skewness_NS mean_WD log10_width_WD skewness_WD mean_LMS log10_width_LMS skewness_LMS M_J0453p M_J0453c M_J1906p M_J1906c M_B1534p M_B1534c M_B1913p M_B1913c M_B2127p M_B2127c M_J0737A M_J0737B M_J1756p M_J1756c M_J1807p M_J1807c M_J1518p M_J1518c M_J1811p M_J1811c M_J1829p M_J1829c M_J2045 M_J2053 M_J1713 M_B1855 M_J0751 M_J1141 M_J1738 M_J1614 M_J0348 M_J2222 M_J2234 M_J1949 M_J1012 M_J0437 M_J1909 M_J1802 M_J1911 M_J2043 M_J0337 M_J1946 M_J1918 M_J1600 M_J0621 M_B2303 M_J0024 M_J0514 M_B1516 M_J1748I M_J1748J M_B1802 M_B1911 M_J0740 M_CygX2 M_XTEJ2123 M_4U1822 M_HerX1 M_2S0921 -internal np_$(f)$(r);\
 		)\
 	)
 
 file-con:
 	$(foreach f,$(fname),\
-		acol -read mp_$(f)a0 markov_chain_0 $(foreach r,$(rank2),-cat mp_$(f)a$(r)) -internal mp_$(f);\
+		acol -read np_$(f)0 markov_chain_0 $(foreach r,$(rank2),-cat np_$(f)$(r)) -internal np_$(f);\
 	)
 
 file-con2:
-	acol -read mp_49 markov_chain_0 $(foreach f,$(fname),-cat mp_$(f)) -internal mp_train
+	acol -read np_51a markov_chain_0 $(foreach f,$(fname),-cat np_$(f)) -internal np_train
 
 file-rm:
 	$(foreach f,$(fname),\

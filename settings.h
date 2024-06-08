@@ -85,7 +85,6 @@ namespace bamr {
       model_dpdm = false;
       inc_pop=true;
       inc_ligo=true;
-      use_kde=false;
     }
     
     /// \name Parameter objects for the 'set' command
@@ -127,7 +126,6 @@ namespace bamr {
     o2scl::cli::parameter_bool p_mmax_deriv;
     o2scl::cli::parameter_bool p_model_dpdm;
     o2scl::cli::parameter_bool p_inc_ligo;
-    o2scl::cli::parameter_bool p_use_kde;
     //@}
 
     /// Verbosity parameter
@@ -245,9 +243,6 @@ namespace bamr {
 
     bool couple_threads;
 
-    /** \brief If true, use Scipy KDE
-     */
-    bool use_kde;
     //@}
 
     /** \name Histogram limits
@@ -468,10 +463,6 @@ namespace bamr {
       p_emu_train.str=&emu_train;
       p_emu_train.help="help";
       cl.par_list.insert(std::make_pair("emu_train",&p_emu_train));
-      
-      p_use_kde.b=&use_kde;
-      p_use_kde.help="Activate KDE";
-      cl.par_list.insert(std::make_pair("use_kde",&p_use_kde));
 
       return;
     }
