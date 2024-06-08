@@ -242,6 +242,7 @@ namespace bamr {
     bool model_dpdm;
 
     bool couple_threads;
+
     //@}
 
     /** \name Histogram limits
@@ -462,7 +463,7 @@ namespace bamr {
       p_emu_train.str=&emu_train;
       p_emu_train.help="help";
       cl.par_list.insert(std::make_pair("emu_train",&p_emu_train));
-      
+
       return;
     }
     

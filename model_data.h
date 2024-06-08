@@ -59,6 +59,8 @@ namespace bamr {
 
     /// Grid quantities
     o2scl::table_units<> gridt;
+
+    /// The second maximum mass, when mmax_deriv is true
     double m_max2;
 
     model_data() {

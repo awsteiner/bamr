@@ -96,7 +96,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   ret=ix_success;
 
-  // Call read_table()
   table_units<> &eost=dat.eos;
 
   if (has_eos) {
@@ -112,39 +111,60 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
     
     // ---------------------------------------------------------------
-    // Compute the EOS
-    compute_eos(pars,ret,scr_out,dat);
-    if (ret!=ix_success) return;
-    
-    // Sarah's section
-    if (set->mmax_deriv==true) {
-      
+    // Sarah's section part 1 of 2
+
+    if (set->mmax_deriv==true) { 
+
+      // Modify the last EoS parameter: exp3 (poly.) or csq3 (lines)
+      ubvector pars2=pars;
+      pars2[this->n_eos_params-1]*=1.01;
+
+      // Recompute the EOS with the modified parameter
+      // Note: This clears the dat.eos object
+      compute_eos(pars2,ret,scr_out,dat);
+      if (ret!=ix_success) return;
+
+      // Set the dat.eos interpolation type
       eost.set_interp_type(o2scl::itp_linear);
+
+      // Set the units
       eost.set_unit("ed","1/fm^4");
       eost.set_unit("pr","1/fm^4");
       eost.set_unit("nb","1/fm^3");
-
+      
+      // Read the EoS into the tov_eos object
       teos.read_table(eost,"ed","pr","nb");
       
-      // First TOV solve here
-      ts.mvsr();
-      
-      // Check the maximum mass
-      dat.mvsr=*(ts.get_results());
-      dat.mvsr.set_interp_type(o2scl::itp_linear);
-
-      double m_max=dat.mvsr.max("gm");
-      
-      //cout << "m_max1: " << m_max << endl;
-      
-      if (m_max<set->min_max_mass) {
-        scr_out << "Maximum mass too small: " << m_max << " < "
-                << set->min_max_mass << "." << std::endl;
-        ret=ix_small_max;
+      // Solve the TOV eq. for the modified EoS
+      int info=ts.mvsr();
+      if (info!=0) {
+        scr_out << "M vs. R failed (2): info="
+                << info << std::endl;
+        ret=ix_mvsr_failed;
         return;
       }
-      // Find the central energy density of the maximum mass star
-      size_t row=dat.mvsr.lookup("gm",m_max);
+      
+      // Get the M vs. R table. This code overwrites the dat.mvsr
+      // object.
+      dat.mvsr=*(ts.get_results());
+
+      // Set the dat.mvsr interpolation type
+      dat.mvsr.set_interp_type(o2scl::itp_linear);
+
+      // Find and check the maximum mass
+      double m_max2=dat.mvsr.max("gm");
+      if (m_max2<set->min_max_mass) {
+        scr_out << "M_max2 is too small (2): " << m_max2 << " < "
+                << set->min_max_mass << "." << std::endl;
+        ret=ix_small_mmax;
+        return;
+      }
+
+      // Add 'M_max2' to the output table
+      dat.m_max2=m_max2;
+
+      // Compute the central energy density of the maximum mass star
+      size_t row=dat.mvsr.lookup("gm",m_max2);
       double c_ed=dat.mvsr.get("ed",row);
 
       // Ensure that the last polytrope appears in the center
@@ -153,121 +173,33 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
           model_type==((string)"new_lines")) {
         double trans2=pars[7];
         if (trans2>c_ed) {
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
+          scr_out << "Polytrope/line beyond central density (2):"
+                  << std::endl;
           scr_out << "trans2, c_ed = " << trans2 << ", " 
                   << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_eos_pars_mismatch;
+          ret=ix_trans2_outside;
           return;
         }
       }
-      // Check that the speed of sound is less than 1
+
+      // Check causality: For densities below c_ed, 
+      // the speed of sound is less than 1.0
       eost.deriv("ed","pr","cs2");
       for (size_t i=0;i<eost.get_nlines();i++) {
         if (eost.get("ed",i)<c_ed) {
           if (eost.get("cs2",i)>1.0) {
-            //cout << eost.get("ed",i) << " " << c_ed << endl;
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
-                    << eost.get("cs2",i) << " > 1" << std::endl;
-            ret=ix_eos_acausal;
-            return;
-          }
-        }
-      } 
-      // Now modify the last parameter: exp3 or csq3
-      ubvector pars2=pars;
-      pars2[this->n_eos_params-1]*=1.01;
-
-      /* cout << "Last eos param - old value: "
-           << pars[this->n_eos_params-1] << ", new value:"
-           << pars2[this->n_eos_params-1] << endl; */
-
-      // Recompute the EOS
-      compute_eos(pars2,ret,scr_out,dat);
-      if (ret!=ix_success) return;
-
-      eost.set_interp_type(o2scl::itp_linear);
-      eost.set_unit("ed","1/fm^4");
-      eost.set_unit("pr","1/fm^4");
-      eost.set_unit("nb","1/fm^3");
-      
-      // Call read_table()
-      teos.read_table(eost,"ed","pr","nb");
-      
-      // Second TOV solve here
-      ts.mvsr();
-      
-      // Check the maximum mass
-      dat.mvsr=*(ts.get_results());
-      dat.mvsr.set_interp_type(o2scl::itp_linear);
-      double m_max2=dat.mvsr.max("gm");
-      dat.m_max2=m_max2;
-      
-      //cout << "m_max2: " << m_max2 << endl;
-      if (m_max2<set->min_max_mass) {
-        scr_out << "Maximum mass too small: " << m_max2 << " < "
-                << set->min_max_mass << "." << std::endl;
-        ret=ix_small_max;
-        return;
-      }
-      // Now, compute the derivative
-      double dpdM=(pars2[this->n_eos_params-1]-
-                   pars[this->n_eos_params-1])/(m_max2-m_max);
-      //cout << "dpdM: " << dpdM << endl;
-      
-      // Reject the point if the derivative is not finite or negative
-      if (isfinite(dpdM)!=1) {
-        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
-                << ", m_max2=" << m_max2 << std::endl;
-        ret=ix_deriv_infinite;
-        return;
-      } 
-      if (dpdM<=0.0) {
-        scr_out << "Rejected: dp/dM is negative: dp/dM="
-                << dpdM << std::endl;
-        ret=ix_deriv_infinite;
-        return;
-      } 
-
-      eost.add_constant("dpdM",dpdM);
-
-      // Compute the central energy density
-      row=dat.mvsr.lookup("gm",m_max);
-      c_ed=dat.mvsr.get("ed",row);
-
-      // Ensure that the last polytrope appears in the center
-      // of the maximum mass star
-      if (model_type==((string)"new_poly") ||
-          model_type==((string)"new_lines")) {
-        double trans2=pars[7];
-        if (trans2>c_ed) {
-          //cout << "trans2, c_ed (2): " << trans2 << " " 
-          //     << c_ed << endl;
-          scr_out << "Polytrope/line beyond central density:" << std::endl;
-          scr_out << "trans2, c_ed = " << trans2 << ", " 
-                  << c_ed << ", trans2>c_ed" << std::endl;
-          ret=ix_eos_pars_mismatch;
-          return;
-        }
-      }
-      // Check that the speed of sound is less than 1
-      eost.deriv("ed","pr","cs2");
-      for (size_t i=0;i<eost.get_nlines();i++) {
-        if (eost.get("ed",i)<c_ed) {
-          /*
-            cout << i << " " << eost.get("ed",i) << " "
-            << c_ed << " "
-            << eost.get("cs2",i) << endl;
-          */
-          if (eost.get("cs2",i)>1.0) {
-            scr_out << "Acausal EOS: cs2_" << i << "=" 
+            scr_out << "Acausal EOS (2): cs2_" << i << "=" 
                     << eost.get("cs2",i) << " > 1" << std::endl;
             ret=ix_eos_acausal;
             return;
           }
         }
       }
-      // End of Sarah's section
-    }
+    } // End of Sarah's section part 1 of 2
+
+    // Compute the original EOS. Note: this clears the dat.eos object
+    compute_eos(pars,ret,scr_out,dat);
+    if (ret!=ix_success) return;
     
     // ---------------------------------------------------------------
     // Check that pressure is increasing. If we're using a crust EOS,
@@ -292,7 +224,6 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
   // ---------------------------------------------------------------
   // If requested, compute the baryon density automatically
-
   if (has_eos && set->baryon_density && !eost.is_column("nb")) {
     O2SCL_ERR2("Setting baryon_density is true but EOS does not ",
                "have a column \"nb\".",o2scl::exc_einval);
@@ -305,11 +236,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Compute crust transition density and set crust (if necessary)
 
+    // Note: baron_density=false in the current version
     if (set->compute_cthick && set->baryon_density) {
 
-      // If crust_from_L is true, compute the pressure at the number 
-      // density specified by the correlation. Otherwise, just use 0.08
+      // If crust_from_L is true, compute the pressure at the number
+      // density specified by the correlation. Otherwise, just use
+      // 0.08 fm^{-3}.
 
+      // Note: crust_from_L=false in the current version
       if (set->crust_from_L) {
 
         if (set->verbose>=2) {
@@ -397,12 +331,14 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         if (set->verbose>=2) {
           std::cout << "Done with crust from L." << std::endl;
         }
-        
+
+      // End of 'if (set->crust_from_L)'
+
       } else {
 
         // Otherwise, if we're not determining the crust from L, then
         // compute the crust thickness based on a density of 0.08
-        // fm^{-3}
+        // fm^{-3}.
 
         double nt=0.08;
         eost.add_constant("nt",nt);
@@ -414,7 +350,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         ts.pr_list.push_back(prt);
         
       }
-    
+
+    // End of 'if (set->compute_cthick && set->baryon_density)'
+
     } else {
 
       if (ts.pr_list.size()>0) {
@@ -427,6 +365,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Read the EOS into the tov_eos object
     
     if (set->baryon_density && set->inc_baryon_mass) {
+      // Note: baron_density=false in the current version
       eost.set_unit("ed","1/fm^4");
       eost.set_unit("pr","1/fm^4");
       eost.set_unit("nb","1/fm^3");
@@ -441,7 +380,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // We checked that the pressure of the core EOS was increasing
     // earlier. Here we also double check that the EOS is increasing
     // near the crust-core transition.
-    
+
+    // Note: use_crust=false in the current version
     if (set->use_crust) {
     
       double ed_last=0.0;
@@ -473,8 +413,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
         }
         ed_last=ed;
       }
-      // End of 'if (set->use_crust)'
-    }
+    } // End of 'if (set->use_crust)'
 
     // ---------------------------------------------------------------
     // If necessary, output debug information (We want to make sure
@@ -536,23 +475,27 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     
     double m_max=0.0;
 
+    // Solve the TOV eq. for the original EOS
     int info=ts.mvsr();
-
-    dat.mvsr=*(ts.get_results());
-    if (set->verbose>=2) {
-      scr_out << "Done with TOV." << endl;
-    }
-    
     if (info!=0) {
       scr_out << "M vs. R failed: info=" << info << std::endl;
       ret=ix_mvsr_failed;
       return;
     }
+
+    // Get the M vs. R table. This overwrites the dat.mvsr object.
+    dat.mvsr=*(ts.get_results());
+
+    if (set->verbose>=2) {
+      scr_out << "Done with TOV." << endl;
+    }
+    
+    // Set the dat.mvsr interpolation type
     dat.mvsr.set_interp_type(o2scl::itp_linear);
 
     // ---------------------------------------------------------------
     // Add baryon density to M vs. R table if it's not already there
-
+    
     if (set->baryon_density && !set->inc_baryon_mass) {
       dat.mvsr.add_col_from_table(eost,"pr","nb","pr");
       dat.mvsr.set_unit("nb","1/fm^3");
@@ -565,13 +508,74 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // set->mvsr_pr_inc smaller.
     
     m_max=dat.mvsr.max("gm");
-    dat.mvsr.add_constant("M_max",m_max);
     if (m_max<set->min_max_mass) {
-      scr_out << "Maximum mass too small: " << m_max << " < "
+      scr_out << "M_max is too small: " << m_max << " < "
               << set->min_max_mass << "." << std::endl;
-      ret=ix_small_max;
+      ret=ix_small_mmax;
       return;
     }
+
+    // Add 'M_max' to the output table
+    dat.mvsr.add_constant("M_max",m_max);
+    
+    // Find the central energy density of the maximum mass star.
+    size_t row=dat.mvsr.lookup("gm",m_max);
+    double c_ed=dat.mvsr.get("ed",row);
+    
+    // Ensure that the last polytrope appears in the center
+    // of the maximum mass star.
+    if (model_type==((string)"new_poly") ||
+        model_type==((string)"new_lines")) {
+      double trans2=pars[7];
+      if (trans2>c_ed) {
+        scr_out << "Polytrope/line beyond central density:" << std::endl;
+        scr_out << "trans2, c_ed = " << trans2 << ", " 
+                << c_ed << ", trans2>c_ed" << std::endl;
+        ret=ix_trans2_outside;
+        return;
+      }
+    }
+    
+    // Check that the speed of sound is less than 1
+    eost.deriv("ed","pr","cs2");
+    for (size_t i=0;i<eost.get_nlines();i++) {
+      if (eost.get("ed",i)<c_ed) {
+        if (eost.get("cs2",i)>1.0) {
+          scr_out << "Acausal EOS: cs2_" << i << "=" 
+                  << eost.get("cs2",i) << " > 1" << std::endl;
+          ret=ix_eos_acausal;
+          return;
+        }
+      }
+    }
+    
+    // ---------------------------------------------------------------
+    // Sarah's section part 2 of 2
+
+    if (set->mmax_deriv) {
+
+      // Now, compute the derivative
+      double dpdM=(pars[this->n_eos_params-1]*1.01-
+                   pars[this->n_eos_params-1])/(dat.m_max2-m_max);
+      
+      // Reject the point if the derivative is not finite or negative
+      if (isfinite(dpdM)==false) {
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", m_max2=" << dat.m_max2 << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      }
+      if (dpdM<=0.0) {
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
+                << dpdM << std::endl;
+        ret=ix_deriv_infinite;
+        return;
+      } 
+
+      // Add 'dpdM' to the output table
+      eost.add_constant("dpdM",dpdM);
+
+    } // End of Sarah's section part 2 of 2
 
     // ---------------------------------------------------------------
     // If the EOS is sufficiently stiff, the TOV solver will output
@@ -603,6 +607,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
 
     // Compute the central baryon density in the maximum mass star
+
     if (set->baryon_density) {
       double nb_max=dat.mvsr.get("nb",ix_max);
       dat.mvsr.add_constant("nb_max",nb_max);
@@ -656,7 +661,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // Compute the masses and radii for each source
     for(size_t i=0;i<nsd->n_sources;i++) {
       if (set->inc_ligo) {
-        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+nsd->n_ligo_params]);
+        dat.sourcet.set("M",i,m_max*pars[this->n_eos_params+i+
+                                         nsd->n_ligo_params]);
         dat.sourcet.set("R",i,
                         dat.mvsr.interp("gm",dat.sourcet.get("M",i),"r"));
       } else {
@@ -667,6 +673,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     }
 
     // End of loop 'if (has_eos)'
+
   } else {
 
     // Compute mass-radius curve directly
@@ -755,6 +762,9 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
+    // AWS, 3/22/24: I think this check is already taken care of
+    // above, because c_ed and ed_max are the same. We'll leave it
+    // in for now just in case and possibly remove it later. 
     for(size_t i=0;i<eost.get_nlines();i++) {
       if (eost.get("ed",i)<ed_max && eost["cs2"][i]>1.0) {
         scr_out.precision(4);
@@ -807,7 +817,8 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     cout << "End model::compute_star()." << endl;
   }
   return;
-}
+
+} // End of model::compute_star()
 
 void two_polytropes::setup_params(o2scl::cli &cl) {
   p_kin_sym.d=&se.a;
@@ -912,7 +923,7 @@ void two_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
   
@@ -1067,7 +1078,7 @@ void alt_polytropes::compute_eos(const ubvector &params, int &ret,
   ret=ix_success;
   if (params[4]>params[6]) {
     scr_out << "Rejected: Transition densities misordered." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -1716,7 +1727,7 @@ void quark_star::compute_eos(const ubvector &params, int &ret,
       // is less than iron
       if (ed/nb>931.0/o2scl_const::hc_mev_fm) {
         scr_out << "Not absolutely stable." << std::endl;
-        ret=ix_eos_pars_mismatch;
+        ret=ix_ed_pr_nb_invalid;
         return;
       }
 
@@ -1894,7 +1905,7 @@ void qmc_neut::compute_eos(const ubvector &params, int &ret,
   // polytropes
   if (params[5]<ed) {
     scr_out << "First polytrope doesn't appear." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_ed_pr_nb_invalid;
     return;
   }
 
@@ -2052,7 +2063,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2061,7 +2072,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -2115,7 +2126,7 @@ void qmc_threep::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2311,7 +2322,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2320,7 +2331,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -2368,7 +2379,7 @@ void qmc_fixp::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2543,7 +2554,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -2552,7 +2563,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta || b<0.5) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -2566,7 +2577,7 @@ void qmc_twolines::compute_eos(const ubvector &params, int &ret,
   if (ed1>ed2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed1 << " " << ed2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -2920,7 +2931,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   
   if (b<0.0 || beta<0.0) {
     scr_out << "parameter values for b and beta are negative" << std::endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -3019,7 +3030,7 @@ void tews_threep_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << std::endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << std::endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3308,7 +3319,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
 
   if (b<0.0 || beta<0.0) {
     scr_out << "Value of b or beta negative." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   
@@ -3397,7 +3408,7 @@ void tews_fixp_ligo::compute_eos(const ubvector &params, int &ret,
   if (ed_trans>ed1) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_trans << " " << ed1 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3663,7 +3674,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -3672,7 +3683,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -3712,7 +3723,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -3750,7 +3761,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3788,7 +3799,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -3835,7 +3846,7 @@ void new_poly::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     
@@ -3991,7 +4002,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -4000,7 +4011,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -4047,7 +4058,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -4092,7 +4103,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4137,7 +4148,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4189,7 +4200,7 @@ void new_lines::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     
@@ -4318,7 +4329,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
     scr_out << "L out of range. S: " << Stmp << " L: " << Ltmp
             << "\n\tL_min: " << Lmin << " L_max: "
             << Lmax << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_L_outside;
     return;
   }
 
@@ -4327,7 +4338,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
   if (b<=0.0 || beta<=0.0 || alpha>beta) {
     scr_out << "Parameter b=" << b << " or beta=" 
             << beta << " out of range." << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_b_beta_invalid;
     return;
   }
   if (debug) {
@@ -4374,7 +4385,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
   if (ed_last>trans1 || trans1>trans2) {
     scr_out << "Transition densities misordered." << endl;
     scr_out << ed_last << " " << trans1 << " " << trans2 << endl;
-    ret=ix_eos_pars_mismatch;
+    ret=ix_trans_misordered;
     return;
   }
 
@@ -4419,7 +4430,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4464,7 +4475,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     double line[3]={ed,pr,nb};
@@ -4516,7 +4527,7 @@ void prx::compute_eos(const ubvector &params, int &ret,
         !std::isfinite(pr) ||
         !std::isfinite(nb)) {
       scr_out << "EOS diverged." << endl;
-      ret=ix_eos_pars_mismatch;
+      ret=ix_ed_pr_nb_invalid;
       return;
     }
     

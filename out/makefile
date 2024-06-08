@@ -70,7 +70,7 @@ file-main2:
 
 XLO = 0.0
 XHI = 3.0
-YLO = 0.04
+YLO = 0.0
 YHI = 4.0
 DX = 99.0
 
@@ -89,6 +89,7 @@ file-dist:
 	-function "exp(-0.5*(($i*0.03-mean_LM)/width_LM)^2)" pdf \
 	-function "1+erf(($i*0.03-mean_LM)*(skewness_LM)/width_LM/sqrt(2))" cdf \
 	-function "if($i*0.03<=M_max,cf*pdf*cdf,0.0)" SN_LM_$i) \
+	-delete-col SN_NS -delete-col SN_WD -delete-col SN_LM \
 	-select ":SN_*" -set obj_name gm_sn -internal tmp/dist_$(model).o2
 	acol -read tmp/dist_$(model).o2 gm_sn -ser-hist-t3d \
 	"grid:$(XLO),$(XHI),($(XHI)-$(XLO))/$(DX)" x gm \
@@ -571,8 +572,8 @@ plot-mvsr:
 	-read tmp/mvsr_$(model).o2 c95 -plot lw=1,color=orange \
 	-xtitle "Radius, $$ R~[\mathrm{km}] $$" \
 	-ytitle "Mass, $$ M~[\mathrm{M}_\odot] $$" \
-	-ttext 0.5 0.96 "$(model): $(title)" \
-	-save figs/mvsr_$(model).png -show &
+	-ttext 0.5 0.96 "$(model): $$ M-R $$" \
+	-save figs/mvsr_$(model).png -exec plots.py -show &
 
 file-eoa:
 	acol -read tmp/main_$(model).o2 markov_chain_0 -select ":EoA_*" \
@@ -681,72 +682,148 @@ plot-acor-a:
 	-save figs/a-acor_$(model).png -show &
 	
 file-all:
-	make model="ML" file-esmr && make model="MP" file-esmr && make model="NL" file-esmr && make model="NP" file-esmr && \
+	make model="ML" file-esmr  && make model="MP" file-esmr  && make model="NL" file-esmr  && make model="NP" file-esmr  && \
 	make model="ML" file-main2 && make model="MP" file-main2 && make model="NL" file-main2 && make model="NP" file-main2 && \
-	make model="ML" file-dist && make model="MP" file-dist && make model="NL" file-dist && make model="NP" file-dist
+	make model="ML" file-dist  && make model="MP" file-dist  && make model="NL" file-dist  && make model="NP" file-dist
 
-models = ml mp 
+# n_rank=16
+fname = 52a 52b 53a 54a
 
-#nl np
-
+#models = ml mp nl np
 rank = $(shell seq 0 15)
 rank2 = $(shell seq 1 15)
 
-scp-down-br2:
-	scp manik@br2:/ocean/projects/phy230011p/shared/bamr/out/*_out .
-
-file-mult:
-	$(foreach m,$(models),\
-		$(foreach r,$(rank),\
-			acol -read $(m)_$(r)_out -select-rows "mult>0.5" -internal $(m)_$(r)_out;\
-		)\
-	)
-
-file-hcp:
-	$(foreach m,$(models),\
-		$(foreach r,$(rank),\
-			$(if $(filter $(m),ml),\
-				acol -h5-copy $(m)_$(r)_out $(m)_59a$(r);,\
-				acol -h5-copy $(m)_$(r)_out $(m)_51a$(r);\
-			)\
+file-pars:
+	$(foreach r,$(rank),\
+		$(foreach f,$(fname),\
+			acol -read np_$(f)$(r) markov_chain_0 -index -select-rows "N>511" -select rank thread walker mult log_wgt a alpha param_S param_L exp1 trans1 exp2 trans2 exp3 M_chirp_det q z_cdf m1_gw19 mf_6304 mf_6397 mf_M13 mf_M28 mf_M30 mf_wCen mf_X7 mf_1810b mf_1724b mf_1702 mf_0030 mf_0740 mean_NS log10_width_NS skewness_NS mean_WD log10_width_WD skewness_WD mean_LMS log10_width_LMS skewness_LMS M_J0453p M_J0453c M_J1906p M_J1906c M_B1534p M_B1534c M_B1913p M_B1913c M_B2127p M_B2127c M_J0737A M_J0737B M_J1756p M_J1756c M_J1807p M_J1807c M_J1518p M_J1518c M_J1811p M_J1811c M_J1829p M_J1829c M_J2045 M_J2053 M_J1713 M_B1855 M_J0751 M_J1141 M_J1738 M_J1614 M_J0348 M_J2222 M_J2234 M_J1949 M_J1012 M_J0437 M_J1909 M_J1802 M_J1911 M_J2043 M_J0337 M_J1946 M_J1918 M_J1600 M_J0621 M_B2303 M_J0024 M_J0514 M_B1516 M_J1748I M_J1748J M_B1802 M_B1911 M_J0740 M_CygX2 M_XTEJ2123 M_4U1822 M_HerX1 M_2S0921 -internal np_$(f)$(r);\
 		)\
 	)
 
 file-con:
-	$(foreach m,$(models),\
-		$(if $(filter $(m),ml),\
-			acol -read $(m)_59a0 $(foreach r,$(rank2),-cat $(m)_59a$(r)) -internal $(m)_59;,\
-			acol -read $(m)_51a0 $(foreach r,$(rank2),-cat $(m)_51a$(r)) -internal $(m)_51;\
-		)\
+	$(foreach f,$(fname),\
+		acol -read np_$(f)0 markov_chain_0 $(foreach r,$(rank2),-cat np_$(f)$(r)) -internal np_$(f);\
 	)
 
-scp-up-br2:
-	scp ml_59a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	scp mp_51a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-	
-#scp nl_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-#scp np_50a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
-
-scp-up-iso:
-	scp ml_59a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r59_16n_8c_72h/.
-	scp mp_51a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r51_16n_8c_72h/.
-
-#scp nl_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
-#scp np_50a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r50_16n_8c_72h/.
-
-ML = $(shell seq 32 58)
-MP = $(shell seq 33 50)
-NL = $(shell seq 29 50)
-NP = $(shell seq 31 50)
-
-file-nlines:
-	acol -read ml_31 markov_chain_0 $(foreach i,$(ML),-cat ml_$i) -nlines
-	acol -read mp_32 markov_chain_0 $(foreach i,$(MP),-cat mp_$i) -nlines
-	acol -read nl_28 markov_chain_0 $(foreach i,$(NL),-cat nl_$i) -nlines
-	acol -read np_30 markov_chain_0 $(foreach i,$(NP),-cat np_$i) -nlines
+file-con2:
+	acol -read np_51a markov_chain_0 $(foreach f,$(fname),-cat np_$(f)) -internal np_train
 
 file-rm:
-	rm -f *_out ml_58a* mp_50a* nl_50a* np_50a*
+	$(foreach f,$(fname),\
+		rm mp_$(f);\
+	)
 
-clean:
-	rm -f figs/*.png figs/*.pdf tmp/*.o2 
+#scp-down-br2:
+#	scp manik@br2:/ocean/projects/phy230011p/shared/bamr/out/*_out .
+#
+#file-mult:
+#	$(foreach m,$(models),\
+#		$(foreach r,$(rank),\
+#			acol -read $(m)_$(r)_out -select-rows "mult>0.5" -internal $(m)_$(r)_out;\
+#		)\
+#	)
+#
+#file-hcp:
+#	$(foreach m,$(models),\
+#		$(foreach r,$(rank),\
+#			$(if $(filter $(m),ml),\
+#				acol -h5-copy $(m)_$(r)_out $(m)_65a$(r);,\
+#				$(if $(filter $(m),mp),\
+#					acol -h5-copy $(m)_$(r)_out $(m)_56a$(r);,\
+#					acol -h5-copy $(m)_$(r)_out $(m)_54a$(r);\
+#				)\
+#			)\
+#		)\
+#	)
+#
+#file-con:
+#	$(foreach m,$(models),\
+#		$(if $(filter $(m),ml),\
+#			acol -read $(m)_65a0 $(foreach r,$(rank2),-cat $(m)_65a$(r)) -internal $(m)_65;,\
+#			$(if $(filter $(m),mp),\
+#				acol -read $(m)_56a0 $(foreach r,$(rank2),-cat $(m)_56a$(r)) -internal $(m)_56;,\
+#				acol -read $(m)_54a0 $(foreach r,$(rank2),-cat $(m)_54a$(r)) -internal $(m)_54;\
+#			)\
+#		)\
+#	)
+#
+#scp-up-br2:
+#	scp ml_65a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+#	scp mp_56a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+#	scp nl_54a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+#	scp np_54a* manik@br2:/ocean/projects/phy230011p/shared/bamr/out/.
+#
+#scp-up-iso:
+#	scp ml_65a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r65_16n_8c_72h/.
+#	scp mp_56a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r56_16n_8c_72h/.
+#	scp nl_54a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r54_16n_8c_72h/.
+#	scp np_54a* anikmh@iso:/mnt/hyperon/anikmh/bridges/r54_16n_8c_72h/.
+#
+#ML = $(shell seq 32 63)
+#MP = $(shell seq 33 54)
+#NL = $(shell seq 29 51)
+#NP = $(shell seq 31 51)
+#
+#file-nlines:
+#	acol -read ml_31 markov_chain_0 $(foreach i,$(ML),-cat ml_$i) -nlines
+#	acol -read mp_32 markov_chain_0 $(foreach i,$(MP),-cat mp_$i) -nlines
+#	acol -read nl_28 markov_chain_0 $(foreach i,$(NL),-cat nl_$i) -nlines
+#	acol -read np_30 markov_chain_0 $(foreach i,$(NP),-cat np_$i) -nlines
+
+#file-rm-last:
+#	$(foreach i,$(ML),acol -read ml_$i markov_chain_0 -index -select-rows "N>511" -delete-col N -internal tmp/ml_$i;)
+#	$(foreach i,$(MP),acol -read mp_$i markov_chain_0 -index -select-rows "N>511" -delete-col N -internal tmp/mp_$i;)
+#	$(foreach i,$(NL),acol -read nl_$i markov_chain_0 -index -select-rows "N>511" -delete-col N -internal tmp/nl_$i;)
+#	$(foreach i,$(NP),acol -read np_$i markov_chain_0 -index -select-rows "N>511" -delete-col N -internal tmp/np_$i;)
+
+#file-all-con:
+#	acol -read ml_31 markov_chain_0 $(foreach i,$(ML),-cat ml_$i) -internal tmp/main_ML.o2
+#	acol -read mp_32 markov_chain_0 $(foreach i,$(MP),-cat mp_$i) -internal tmp/main_MP.o2
+#	acol -read nl_28 markov_chain_0 $(foreach i,$(NL),-cat nl_$i) -internal tmp/main_NL.o2
+#	acol -read np_30 markov_chain_0 $(foreach i,$(NP),-cat np_$i) -internal tmp/main_NP.o2
+#
+#file-cp:
+#	$(foreach m,$(models),\
+#        $(foreach r,$(rank3),\
+#            $(if $(filter $(m),ml),\
+#                cp $(m)_59b $(m)_59b$(r);,\
+#                cp $(m)_50a10 $(m)_50a$(r);\
+#            )\
+#        )\
+#    )
+
+#R = 0
+#T = 5
+#W = 30
+
+#file-init:
+#	acol -read mp_51a$R markov_chain_0 \
+	-select-rows "thread==$T && walker==$W" \
+	-index -function "(-N)" N2 -sort N2 -index N3 -select-rows "N3<1" \
+	-function 0 thread -function 0 walker \
+	-delete-col N -delete-col N2 -delete-col N3 -internal mpa$R_$T_$W
+
+#file-view:
+#	acol -read np_50a$R markov_chain_0 \
+#	-index -select-rows "thread==$T && walker==$W" \
+#	-select N thread walker log_wgt -o
+#
+#N = 5284
+##N = 1910
+#
+#file-point:
+#	acol -read np_50a$R markov_chain_0 \
+#	-index -select-rows "N==$N" \
+#	-function 0 thread -function 0 walker \
+#	-delete-col N -internal npa$R_$T_$W
+#
+#file-init:
+#	acol -read np_50a$R markov_chain_0 \
+#	-index -select-rows "N!=$N" \
+#	-delete-col N -internal np_50a$R
+#
+#file-rm:
+#	rm -f *_out *_scr
+#
+#clean:
+#	rm -f figs/*.png figs/*.pdf tmp/*.o2 

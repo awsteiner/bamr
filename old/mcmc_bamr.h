@@ -40,7 +40,6 @@
 
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
-#include <o2scl/kde_python.h>
 
 #ifdef O2SCL_NEVER_DEFINED
 #include "emulator_bamr.h"
@@ -108,20 +107,11 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
   class mcmc_bamr :
-    public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_mh<point_funct,model_data,
-                   ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>> {
-    
+    public o2scl::mcmc_para_cli<point_funct,fill_funct,
+                                model_data,ubvector> {
+
   protected:
 
-    o2scl::tensor<> ten_in;
-    
-    std::shared_ptr<o2scl::kde_python<ubvector>> kp;
-
-    std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
-    
     /** \brief If true, use index2 to take derivative of M_max
      */
     bool dv_index2;
@@ -163,11 +153,6 @@ namespace bamr {
                            bool itive_com);
 #endif
 
-    /** \brief A string specifying the sampling algorithm for MCMC
-        Current options are: 'kde' and 'hmc'
-    */
-    std::string mcmc_method;
-
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
@@ -200,10 +185,6 @@ namespace bamr {
 
     /// \name Main functions called from the command-line interface
     //@{
-    /** \brief Set the MCMC sampling method
-     */
-    virtual int set_method(std::vector<std::string> &sv,
-                                bool itive_com);
     /** \brief Set the model for the EOS to use
      */
     virtual int set_model(std::vector<std::string> &sv, bool itive_com);
@@ -247,10 +228,6 @@ namespace bamr {
         for the initial point
     */
     virtual int initial_point_best(std::vector<std::string> &sv,
-                                   bool itive_com);
-
-    /// Desc
-    virtual int combine_files(std::vector<std::string> &sv,
                                    bool itive_com);
     
     /** \brief Read previous results from a file
