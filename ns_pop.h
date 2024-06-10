@@ -96,6 +96,12 @@ class ns_pop {
     [eq. 14, Kiziltan et al. (2013)] */
     double asym_norm(double, double, double);
 
+    /* Derivative of the Skewed Normal PDF */
+    double deriv_sn(string &, double, double, double, double);
+
+    /* Derivative of the Asymmetric Normal PDF */
+    double deriv_an(double, double, double);
+
     /* Function to fill vectors with the names and units of 
     population parameter */
     void get_param_info();

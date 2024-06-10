@@ -1351,8 +1351,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     for (size_t j=0; j<tab_in.get_nlines(); j++) {
       vector<size_t> ix;
       for (size_t i=0; i<n_pars; i++) {
-	ix={j,i};
-	ten_in.get(ix)=tab_in.get(i+5,j);
+	      ix={j,i};
+	      ten_in.get(ix)=tab_in.get(i+5,j);
       }
     }
     
@@ -1396,28 +1396,28 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {
-	avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
-	std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
-	cout << "param,avg,stddev: " << j << " " << avg[j] 
-	     << " " << std[j] << endl;
+	      avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+	      std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+	      cout << "param,avg,stddev: " << j << " " << avg[j] 
+	           << " " << std[j] << endl;
       }
       
       ubmatrix covar(n_pars,n_pars);
       for(size_t i=0;i<n_pars;i++) {
-	for(size_t j=0;j<n_pars;j++) {
-	  if (i==j) {
-	    covar(i,j)=std[j]*std[j];
-	    //covar(i,j)/=var_dec_factor;
-	  } else {
-	    covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
-					 tab_in[j+5]);
-	    covar(i,j)/=2.0;
-	  }
-	}
+	      for(size_t j=0;j<n_pars;j++) {
+	        if (i==j) {
+	          covar(i,j)=std[j]*std[j];
+	          //covar(i,j)/=var_dec_factor;
+	        } else {
+	          covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
+	      				 tab_in[j+5]);
+	          covar(i,j)/=2.0;
+	        }
+	      }
       }
       
       gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
-	(new prob_dens_mdim_gaussian<>);
+	      (new prob_dens_mdim_gaussian<>);
       gpp->set_covar(n_pars,avg,covar);
       gpp->pdg.set_seed(mpi_rank*clock());
       

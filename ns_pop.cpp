@@ -3,29 +3,44 @@
 
 // PDF of standard normal distribution N(0,1)
 double ns_pop::norm_pdf(double x) {
-  return exp(-0.5*x*x) / sqrt(2.0*M_PI);
+  return exp(-0.5*x*x)/sqrt(2.0*M_PI);
 }
-
 
 // CDF of standard normal N(0,1) in terms of erf(x)
 double ns_pop::norm_cdf(double x) {
-  return 0.5 * (1.0 + erf(x/sqrt(2.0)));
+  return 0.5*(1.0+erf(x/sqrt(2.0)));
 }
-
 
 // Skewed Normal PDF 
-double ns_pop::skewed_norm(double x, double mean, double width, 
-    double skewness) {
-  return 2.0 * norm_pdf((x-mean)/width)
-    * norm_cdf((x-mean)*skewness/width) / width;
+double ns_pop::skewed_norm(double x, double m, double s, double a) {
+  return 2.0*norm_pdf((x-m)/s)*norm_cdf((x-m)*a/s)/s;
 }
-
 
 // Asymmetric Normal PDF 
 double ns_pop::asym_norm(double x, double c, double d) {
-  double a = 2.0 / (d*(c+1.0/c));
-  if (x>=0.0) return a * norm_pdf(x/(c*d));
-  else return a * norm_pdf(c*x/d);
+  double k = 2.0/(d*(c+1.0/c));
+  if (x<0.0) return k*norm_pdf(c*x/d);
+  else return k*norm_pdf(x/c/d);
+}
+
+double ns_pop::deriv_sn(string &wrt, double x, double m, 
+    double s, double a) {
+
+  double k=1.0/s/sqrt(2.0*M_PI);
+  double ef=exp(-0.5*pow((x-m)/s,2.0));
+  double p=(x-m)*a/s/sqrt(2.0);
+  double t1=a*sqrt(2.0/M_PI)*exp(-p*p)/s;
+  double t2=(x-m)*(1.0+erf(p))/s/s;
+
+  if (wrt==string("mass")) return k*ef*(t1-t2);
+  if (wrt==string("mean")) return k*ef*(t2-t1);
+  if (wrt==string("width")) return k*ef*(t2-t1)*(x-m)/s;
+}
+
+double ns_pop::deriv_an(double x, double c, double d) {
+  double k=2.0/(d*(c+1.0/c));
+  if (x<0.0) return -k*x*norm_pdf(c*x/d)*c*c/d/d;
+  else return -k*x*norm_pdf(x/(c*d))/c/c/d/d;
 }
 
 
