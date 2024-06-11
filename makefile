@@ -75,9 +75,7 @@ ALL_FLAGS_MPI = $(COMPILER_FLAGS_MPI) $(INC_DIRS) $(READLINE_VAR) \
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
 	$(PYTHON_INCLUDES)
 
-LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) \
-	-lo2scl -lhdf5_hl -lhdf5 -lgsl -lgslcblas -lm \
-	$(READLINE_LIB) $(FFTW_LIB)
+LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) $(READLINE_LIB) $(FFTW_LIB)
 
 # ----------------------------------------------------------------------
 # Targets for bamr
