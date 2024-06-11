@@ -1289,10 +1289,33 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 #endif
 
   // ---------------------------------------
+
+  if (mcmc_method==string("hmc")) {
+    size_t n_pars=names.size();
+    size_t n_ligo_pars=nsd->n_ligo_params;
+    size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
+    size_t n_src_pars=nsd->n_sources;
+    size_t n_pop_pars=nsd->pop.n_pop_params;
+    
+    stepper.auto_grad.resize(n_pars);
+    for (size_t i=0; i<n_pars; i++) {
+      if (i<n_eos_pars+n_ligo_pars+n_src_pars) {
+        stepper.auto_grad[i]=true;
+      } else {
+        stepper.auto_grad[i]=false;
+      }
+    }
+
+
+  }
+
+  // ---------------------------------------
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
 
   if (mcmc_method==string("kde")) {
+
+    cout << "Entering loop for method KDE" << endl;
     
     // Copy the table data to a tensor for use in kde_python.
     // We need a copy for each thread because kde_python takes
@@ -1490,7 +1513,7 @@ void mcmc_bamr::setup_cli_mb() {
   // ---------------------------------------
   // Set options
     
-  static const int nopt=10; // nopt=11 with commented out 2 options
+  static const int nopt=10; // nopt=12 with commented out 2 options
   comm_option_s options[nopt]=
     {
       {'m',"mcmc","Perform the Markov Chain Monte Carlo simulation.",

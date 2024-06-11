@@ -110,9 +110,11 @@ namespace bamr {
   class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_mh<point_funct,model_data,
+   /*mcmc_stepper_mh<point_funct,model_data,
                    ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>> {
+                   prob_cond_mdim_indep<>>,*/
+   mcmc_stepper_hmc<point_funct,model_data,ubvector,
+                    function<int>,vector<bool>>> {
     
   protected:
 
@@ -163,7 +165,8 @@ namespace bamr {
                            bool itive_com);
 #endif
 
-    /** \brief A string specifying the sampling algorithm for MCMC
+    /** \brief A string specifying the sampling algorithm for MCMC, set
+        in \ref set_method().
         Current options are: 'kde' and 'hmc'
     */
     std::string mcmc_method;
