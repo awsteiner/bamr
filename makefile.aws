@@ -586,6 +586,7 @@ prx2:
 
 mp_2024:
 	mpirun -np 2 --allow-run-as-root ./bamr -threads 1 \
+		-method gauss \
 		-set prefix out/mp -set max_iters 1000000 \
 		-set file_update_time 1800 -set verbose 1 \
 		-set mcmc_verbose 2 -set compute_cthick 1 \

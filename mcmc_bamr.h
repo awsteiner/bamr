@@ -165,9 +165,8 @@ namespace bamr {
                            bool itive_com);
 #endif
 
-    /** \brief A string specifying the sampling algorithm for MCMC, set
-        in \ref set_method().
-        Current options are: 'kde' and 'hmc'
+    /** \brief A string specifying the sampling algorithm for MCMC
+        Current options are: 'kde', 'kde_sklearn', 'gauss' and 'hmc'
     */
     std::string mcmc_method;
 
