@@ -113,8 +113,7 @@ namespace bamr {
    /*mcmc_stepper_mh<point_funct,model_data,
                    ubvector,ubmatrix,
                    prob_cond_mdim_indep<>>,*/
-   mcmc_stepper_hmc<point_funct,model_data,ubvector,
-                    function<int>,vector<bool>>> {
+   mcmc_stepper_hmc<point_funct,model_data,ubvector>> {
     
   protected:
 

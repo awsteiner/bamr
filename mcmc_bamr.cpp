@@ -1291,6 +1291,21 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // ---------------------------------------
 
   if (mcmc_method==string("hmc")) {
+
+#ifdef BAMR_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+      
+    // Ensure that multiple MPI ranks aren't reading from the
+    // filesystem at the same time
+    int tag=0, buffer=0;
+    if (mpi_size>1 && mpi_rank>=1) {
+      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+         tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    }
+#endif
+    cout << "Begin mcmc_method==hmc" << endl;
     size_t n_pars=names.size();
     size_t n_ligo_pars=nsd->n_ligo_params;
     size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
@@ -1302,17 +1317,40 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       if (i<n_eos_pars+n_ligo_pars+n_src_pars) {
         stepper.auto_grad[i]=true;
       } else {
-        stepper.auto_grad[i]=false;
+        stepper.auto_grad[i]=true;
       }
     }
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> unif_dist(0.0, 1.0);
+
+    stepper.traj_length=1;
+    stepper.mom_step.resize(n_pars);
+    for (size_t ip=0; ip<n_pars; ip++) {
+      stepper.mom_step[ip]=1.0e-6*(high[ip]-low[ip])
+                               *(unif_dist(gen)*2.0-1.0);
+    }
+    for (size_t i=0; i<stepper.mom_step.size(); i++) {
+      cout << "mom_step[" << i << "] = " << stepper.mom_step[i] 
+           << endl;
+    }
+    cout << "End of mcmc_method==hmc" << endl;
+
+#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+         tag,MPI_COMM_WORLD);
+    }
+#endif
 
   }
 
   // ---------------------------------------
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
-
+#ifdef O2SCL_NEVER_DEFINED
   if (mcmc_method==string("kde") ||
       mcmc_method==string("kde_sklearn") ||
       mcmc_method==string("gauss")) {
@@ -1393,8 +1431,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(kp);
+      hmc.proposal.resize(1);
+      hmc.proposal[0].set_base(kp);
     
     } else if (mcmc_method==string("kde_sklearn")) {
       
@@ -1408,8 +1446,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(kp);
+      hmc.proposal.resize(1);
+      hmc.proposal[0].set_base(kp);
       
     } else {
 
@@ -1446,8 +1484,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. This code may need to be changed
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(gpp);
+      hmc.proposal.resize(1);
+      hmc.proposal[0].set_base(gpp);
     
     }
     
@@ -1460,6 +1498,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 #endif
 
   }
+#endif
     
   // ---------------------------------------
   

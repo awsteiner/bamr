@@ -23,9 +23,8 @@ double ns_pop::asym_norm(double x, double c, double d) {
   else return k*norm_pdf(x/c/d);
 }
 
-double ns_pop::deriv_sn(string &wrt, double x, double m, 
-    double s, double a) {
-
+double ns_pop::deriv_sn(const string &wrt, double x, double m, 
+                        double s, double a) {
   double k=1.0/s/sqrt(2.0*M_PI);
   double ef=exp(-0.5*pow((x-m)/s,2.0));
   double p=(x-m)*a/s/sqrt(2.0);
@@ -35,6 +34,7 @@ double ns_pop::deriv_sn(string &wrt, double x, double m,
   if (wrt==string("mass")) return k*ef*(t1-t2);
   if (wrt==string("mean")) return k*ef*(t2-t1);
   if (wrt==string("width")) return k*ef*(t2-t1)*(x-m)/s;
+  if (wrt==string("skew")) return k*ef*exp(-p*p);
 }
 
 double ns_pop::deriv_an(double x, double c, double d) {

@@ -97,7 +97,7 @@ class ns_pop {
     double asym_norm(double, double, double);
 
     /* Derivative of the Skewed Normal PDF */
-    double deriv_sn(string &, double, double, double, double);
+    double deriv_sn(const string &, double, double, double, double);
 
     /* Derivative of the Asymmetric Normal PDF */
     double deriv_an(double, double, double);
