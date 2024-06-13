@@ -536,6 +536,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
+    log_wgt_src=0.0;
+    log_snf_src.clear();
+
     if (set->apply_intsc==false) {
 
       // -----------------------------------------------
@@ -546,9 +549,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       double m_max_current=dat.mvsr.max("gm");
             
       if (set->verbose>=2) scr_out << "Name M R Weight" << std::endl;
-
-      log_wgt_src=0.0;
-      log_snf_src=0.0;
             
       for(size_t i=0;i<nsd->n_sources;i++) {
               
@@ -645,7 +645,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             double m_src=mf*m_max_current;
             double sn_src=pop.skewed_norm(m_src,mean,width,skewness);
             log_wgt+=log(sn_src);
-            log_snf_src+=log(sn_src);
+            log_snf_src[i]=log(sn_src);
           }
         }
 
@@ -1064,7 +1064,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // Section for additional LIGO constraints 
     if (iret==0 && set->inc_ligo) {
 
-      // Begin GW170817      
+      // Begin GW170817
       double M_chirp_det=0.0, q=0.0, z_cdf; 
       double M_chirp, z, m1=0.0, m2=0.0;
       M_chirp_det=pars[m.n_eos_params];
@@ -1188,6 +1188,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         dat.eos.add_constant("prob_gw17",prob_data); 
         log_wgt+=(prob_data);
         log_wgt_gw17=prob_data;
+
+        // Store the values of m1 and m2 to compute derivatives
+        mass_gw17[0]=m1;
+        mass_gw17[1]=m2;
       
       } 
       // End GW170817
@@ -1234,6 +1238,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
       ligo_gw19[1]=log(prob_gw19);
       log_wgt+=ligo_gw19[1];
+
+      // Store the values of m1 and m2 to compute derivatives
+      mass_gw19[0]=m1_gw19;
+      mass_gw19[1]=m2_gw19;
       
       // End GW190425
 
@@ -1265,7 +1273,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
         
         log_wgt+=log(sn_ligo);
-        log_snf_gw17=log(sn_ligo);
+
+        log_snf_gw17[0]=sn_m1;
+        log_snf_gw17[1]=sn_m2;
 
         // GW190425
         sn_m1=pop.skewed_norm(m1_gw19,mean,width,skewns);
@@ -1282,7 +1292,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
 
         log_wgt+=log(sn_ligo);
-        log_snf_gw19=log(sn_ligo);
+
+        log_snf_gw19[0]=sn_m1;
+        log_snf_gw19[1]=sn_m2;
       
       } // End of 'if (set->inc_pop)'
     } // End of 'if (set->inc_ligo)'
@@ -1524,7 +1536,7 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 
 int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi, 
-                                 ubvector &grad) {
+                                 ubvector &grad, model_data &dat) {
   
   /*Note: 'pars' should contain only the parameters for which exact
   gradients exist. The parameters must be given in the order they
@@ -1536,8 +1548,8 @@ int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi,
   size_t n_pars=pars.size();
   size_t n_ligo_pars=1;
   size_t n_src_pars=nsd->n_sources;
-  size_t n_pop_stars=nsd->pd.n_stars;
   size_t n_dist_pars=nsp.n_pop_params-nsd->pd.n_stars;
+  size_t n_pop_stars=nsd->pd.n_stars;
 
   if (n_pars!=n_ligo_pars+n_src_pars+n_dist_pars+n_pop_stars) {
     cout << "bamr_class::compute_gradient() failure due to "
@@ -1558,15 +1570,23 @@ int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi,
   double wgt_lm=exp(pop_weights[2]);
   double wgt_pop=exp(pop_weights[3]);
   double wgt_gw17=exp(log_wgt_gw17);
-  double snf_gw17=exp(log_snf_gw17);
   double wgt_gw19=exp(ligo_gw19[1]);
-  double snf_gw19=exp(log_snf_gw19);
   double wgt_src=exp(log_wgt_src);
-  double snf_src=exp(log_snf_src);
+
+  vector<double> snf_gw17, snf_gw19, snf_src;
+  for (size_t i=0; i<2; i++) {
+    snf_gw17[i]=exp(log_snf_gw17[i]);
+    snf_gw19[i]=exp(log_snf_gw19[i]);
+  }
+  for (size_t i=0; i<snf_src.size(); i++) {
+    snf_src[i]=exp(log_snf_src[i]);
+  }
+
   const string wrt_M="mass";
   const string wrt_m="mean";
   const string wrt_w="width";
   const string wrt_s="skew";
+  
   double mean_ns=pars[pvi["mean_NS"]];
   double width_ns=pow(10.0, pars[pvi["log10_width_NS"]]);
   double skew_ns=pars[pvi["skewness_NS"]];
@@ -1576,21 +1596,23 @@ int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi,
   double mean_lm=pars[pvi["mean_LMS"]];
   double width_lm=pow(10.0, pars[pvi["log10_width_LMS"]]);
   double skew_lm=pars[pvi["skewness_LMS"]];
+
+  double M_max=dat.mvsr.get_constant("M_max");
   
   for (size_t i=0; i<n_pars; i++) {
-    if (i<n_ligo_pars) {
-      double cf=wgt_pop*snf_gw17*wgt_gw19*wgt_gw17*snf_src*wgt_src;
+    if (i<n_ligo_pars) { // w.r.t. m1_gw19
+      double cf=wgt_pop*snf_gw19[1]*wgt_gw19*wgt_gw17*wgt_src;
+      for (size_t i=0; i<snf_gw17.size(); i++) cf*=snf_gw17[i];
+      for (size_t i=0; i<snf_src.size(); i++) cf*=snf_src[i];
       grad[i]=cf*nsp.deriv_sn(wrt_M, pars[i], mean_ns, width_ns, skew_ns);
     }
     else if (i>=n_ligo_pars && i<n_ligo_pars+n_src_pars) {
-      double cf=wgt_pop*snf_gw17*snf_gw19*wgt_gw19*wgt_gw17*wgt_src;
-      double sn_lm=1.0;
+      double cf=wgt_pop*wgt_gw19*wgt_gw17*wgt_src;
+      for (size_t i=0; i<2; i++) cf*=snf_gw17[i]*snf_gw19[i];
       for (size_t j=0; j<n_src_pars; j++) {
-        if (j!=i) {
-          sn_lm*=nsp.skewed_norm(pars[j], mean_lm, width_lm, skew_lm);
-        }
+        if (j!=i) cf*=nsp.skewed_norm(pars[j], mean_lm, width_lm, skew_lm);
       }
-      grad[i]=cf*sn_lm*nsp.deriv_sn(wrt_M, pars[i], mean_lm, width_lm, skew_lm);
+      grad[i]=cf*nsp.deriv_sn(wrt_M, pars[i], mean_lm, width_lm, skew_lm);
     }
     else if (i>=n_ligo_pars+n_src_pars && 
              i<n_ligo_pars+n_src_pars+n_dist_pars) {
@@ -1610,7 +1632,7 @@ int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi,
       }
     }
     else {
-      double cf=snf_gw19*snf_gw17*wgt_gw19*wgt_gw17*snf_src*wgt_src;
+      // double cf=snf_gw19*snf_gw17*wgt_gw19*wgt_gw17*snf_src*wgt_src;
     }
   }
 

@@ -177,6 +177,11 @@ namespace bamr {
       pop_weights.resize(4);
       ligo_gw19.resize(2);
       n_threads=1;
+      log_snf_gw19.resize(2);
+      mass_gw19.resize(2);
+      log_snf_gw17.resize(2);
+      mass_gw17.resize(2);
+      log_snf_src.resize(nsd->n_sources);
     }
 
     // Empty destructor to make sure its virtual
@@ -193,7 +198,9 @@ namespace bamr {
                               double &log_wgt, model_data &dat);
 
     virtual int compute_gradient(const ubvector &pars, vec_index &pvi, 
-                              ubvector &grad);
+                              ubvector &grad, model_data &dat);
+
+    // virtual int gradient_fd()
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point
