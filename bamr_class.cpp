@@ -1582,26 +1582,32 @@ int bamr_class::compute_gradient(const ubvector &pars, vec_index &pvi,
       double cf=wgt_pop*snf_gw17*wgt_gw19*wgt_gw17*snf_src*wgt_src;
       grad[i]=cf*nsp.deriv_sn(wrt_M, pars[i], mean_ns, width_ns, skew_ns);
     }
-    else if (i>n_ligo_pars && i<n_ligo_pars+n_src_pars) {
+    else if (i>=n_ligo_pars && i<n_ligo_pars+n_src_pars) {
       double cf=wgt_pop*snf_gw17*snf_gw19*wgt_gw19*wgt_gw17*wgt_src;
-      double sn=1.0;
+      double sn_lm=1.0;
       for (size_t j=0; j<n_src_pars; j++) {
         if (j!=i) {
-          sn*=nsp.skewed_norm(pars[j], mean_lm, width_lm, skew_lm);
+          sn_lm*=nsp.skewed_norm(pars[j], mean_lm, width_lm, skew_lm);
         }
       }
-      grad[i]=cf*sn*nsp.deriv_sn(wrt_M, pars[i], mean_lm, width_lm, skew_lm);
+      grad[i]=cf*sn_lm*nsp.deriv_sn(wrt_M, pars[i], mean_lm, width_lm, skew_lm);
     }
-    else if (i>n_ligo_pars+n_src_pars && 
+    else if (i>=n_ligo_pars+n_src_pars && 
              i<n_ligo_pars+n_src_pars+n_dist_pars) {
-      double cf=snf_gw17*wgt_gw19*wgt_gw17*wgt_src;
-      double ddm_ns=1.0, ddw_ns=1.0, dds_ns=1.0, sn_ns=1.0;
-      double ddm_wd=1.0, ddw_wd=1.0, dds_wd=1.0, sn_wd=1.0;
-      double ddm_lm=1.0, ddw_lm=1.0, dds_lm=1.0, sn_lm=1.0;
-      for (size_t j=0; j<n_dist_pars; j++) {
-        ddm_ns=nsp.deriv_sn(wrt_m, pars[j], mean_ns, width_ns, skew_ns);
+      if (i==n_ligo_pars+n_src_pars) { // w.r.t. mean_NS
+        double cf=wgt_gw19*wgt_gw17*wgt_src;
+        double cf_an=1.0, cf_sn=1.0, ddm_ns=1.0;
+        for (size_t j=0; j<pd.id_ns.size(); j++) {
+          cf_an*=nsp.an_ns[i];
+          if (j==i) {
+            double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
+            ddm_ns=nsp.deriv_sn(wrt_m, M_star, mean_ns, width_ns, skew_ns);
+          }
+          else {
+            cf_sn*=nsp.sn_ns[i];
+          }
+        }
       }
-
     }
     else {
       double cf=snf_gw19*snf_gw17*wgt_gw19*wgt_gw17*snf_src*wgt_src;

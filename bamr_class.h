@@ -160,15 +160,17 @@ namespace bamr {
     vector<double> ligo_gw19;
 
     /// Weight vector to compute gradient for GW190425
-    double log_snf_gw19;
+    vector<double> log_snf_gw19;
+    vector<double> mass_gw19;
 
     /// Weight vectors to compute gradient for GW170817
     double log_wgt_gw17;
-    double log_snf_gw17;
+    vector<double> log_snf_gw17;
+    vector<double> mass_gw17;
 
     /// Weight vectors to compute gradient for LMXBs with EM data
     double log_wgt_src;
-    double log_snf_src;
+    vector<double> log_snf_src;
 
     bamr_class() {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;

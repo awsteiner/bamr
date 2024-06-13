@@ -62,6 +62,12 @@ class ns_pop {
     /* Constructor to load source data */
     ns_pop() {
       pd.load_data();
+      an_ns.resize(pd.id_ns.size());
+      an_wd.resize(pd.id_wd.size());
+      an_lm.resize(pd.id_lms.size());
+      sn_ns.resize(pd.id_ns.size());
+      sn_wd.resize(pd.id_wd.size());
+      sn_lm.resize(pd.id_lms.size());
       debug=false;
     }
 
@@ -125,6 +131,16 @@ class ns_pop {
     /* Combined likelihood function for all stars, except 
     GW170817, QLMXBs, PREs, and NICER */
     double get_weight(const ubvector &, vec_index &, int &);
+
+    /* Store the values of AN(x|c,d) for all stars in a binary */
+    vector<double> an_ns;
+    vector<double> an_wd;
+    vector<double> an_lm;
+
+    /* Store the values of SN(x|m,s,a) for all stars in a binary*/
+    vector<double> sn_ns;
+    vector<double> sn_wd;
+    vector<double> sn_lm;
 
 
   private:

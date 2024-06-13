@@ -48,11 +48,10 @@ double ns_pop::deriv_an(double x, double c, double d) {
 double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   ret=0;
-  double mean = pars[pvi["mean_NS"]];
-  double log10_width = pars[pvi["log10_width_NS"]];
-  double width = pow(10.0, log10_width);
-  double skewness = pars[pvi["skewness_NS"]];
-  double M_star, mass, lowlim, uplim, asym, scale, wgt_star; 
+  double mean=pars[pvi["mean_NS"]];
+  double log10_width=pars[pvi["log10_width_NS"]];
+  double width=pow(10.0, log10_width);
+  double skew=pars[pvi["skewness_NS"]];
   double log_wgt=0.0;
   eqn_solver es;
   
@@ -61,30 +60,30 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
          << "mean width skewness wgt AN SN" << endl;
   }
   for (size_t i=0; i<pd.id_ns.size(); i++) {
-    mass = pd.mass_ns[i]; 
-    uplim = pd.uplim_ns[i];
-    lowlim = pd.lowlim_ns[i]; 
-    asym = sqrt(uplim/lowlim);
-    scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+pd.id_ns[i]]];
-    wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skewed_norm(M_star, mean, width, skewness);
+    double mass=pd.mass_ns[i];
+    double high=pd.uplim_ns[i];
+    double low=pd.lowlim_ns[i]; 
+    double asym=sqrt(high/low);
+    double scale=es.get_scale(low, high);
+    double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
+    an_ns[i]=asym_norm(mass-M_star, asym, scale);
+    sn_ns[i]=skewed_norm(M_star, mean, width, skew);
+    double wgt_star=an_ns[i]*sn_ns[i];
     
     if (this->debug) {
       cout << "NS: " << i << " " << pd.id_ns[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
-           << skewness << " " << wgt_star; 
-      cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skewed_norm(M_star, mean, width, skewness) << endl;
+           << skew << " " << wgt_star;
+      cout << " " << an_ns[i]  << " " << sn_ns[i] << endl;
     }
     if (wgt_star<=0.0) {
       /* Record index i (via ret) for bookkeeping (scr_out): 
       30 is added to avoid ret=0 when wgt_star=0 */
-      ret = 30+i; 
+      ret=30+i; 
       return 0.0;
     }
-    log_wgt += log(wgt_star); 
+    log_wgt+=log(wgt_star); 
   }
   if (this->debug) cout << "NS: log_wgt = " << log_wgt << endl;
   return log_wgt;
@@ -95,11 +94,10 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
 double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   ret=0;
-  double mean = pars[pvi["mean_WD"]];
-  double log10_width = pars[pvi["log10_width_WD"]];
-  double width = pow(10.0, log10_width);
-  double skewness = pars[pvi["skewness_WD"]];
-  double M_star, mass, lowlim, uplim, asym, scale, wgt_star; 
+  double mean=pars[pvi["mean_WD"]];
+  double log10_width=pars[pvi["log10_width_WD"]];
+  double width=pow(10.0, log10_width);
+  double skew=pars[pvi["skewness_WD"]];
   double log_wgt=0.0;
   eqn_solver es;
 
@@ -108,28 +106,28 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
          << "mean width skewness wgt AN SN" << endl;
   }
   for (size_t i=0; i<pd.id_wd.size(); i++) {
-    mass = pd.mass_wd[i]; 
-    uplim = pd.uplim_wd[i];
-    lowlim = pd.lowlim_wd[i];
-    asym = sqrt(uplim/lowlim);
-    scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+pd.id_wd[i]]];
-    wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skewed_norm(M_star, mean, width, skewness);
+    double mass=pd.mass_wd[i];
+    double high=pd.uplim_wd[i];
+    double low=pd.lowlim_wd[i];
+    double asym=sqrt(high/low);
+    double scale=es.get_scale(low, high);
+    double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
+    an_wd[i]=asym_norm(mass-M_star, asym, scale);
+    sn_wd[i]=skewed_norm(M_star, mean, width, skew);
+    double wgt_star=an_wd[i]*sn_wd[i];
     
     if (this->debug) {
       cout << "WD: " << i << " " << pd.id_wd[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
-           << skewness << " " << wgt_star; 
-      cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skewed_norm(M_star, mean, width, skewness) << endl;
+           << skew << " " << wgt_star; 
+      cout << " " << an_wd[i]  << " " << sn_wd[i] << endl;
     }
     if (wgt_star<=0.0) {
-      ret = 60+i;
+      ret=60+i;
       return 0.0;
     }
-    log_wgt += log(wgt_star); 
+    log_wgt+=log(wgt_star); 
   }
   if (this->debug) cout << "WD: " << log_wgt << endl;
   return log_wgt;
@@ -140,11 +138,10 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
 double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   ret=0;
-  double mean = pars[pvi["mean_LMS"]];
-  double log10_width = pars[pvi["log10_width_LMS"]];
-  double width = pow(10.0, log10_width);
-  double skewness = pars[pvi["skewness_LMS"]];
-  double M_star, mass, lowlim, uplim, asym, scale, wgt_star; 
+  double mean=pars[pvi["mean_LMS"]];
+  double log10_width=pars[pvi["log10_width_LMS"]];
+  double width=pow(10.0, log10_width);
+  double skew=pars[pvi["skewness_LMS"]];
   double log_wgt=0.0;
   eqn_solver es;
 
@@ -153,28 +150,28 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
          << "mean width skewness wgt AN SN" << endl;
   }
   for (size_t i=0; i<pd.id_lms.size(); i++) {
-    mass = pd.mass_lms[i]; 
-    uplim = pd.lim_lms[i];
-    lowlim = uplim; // Symmetric 68% limits
-    asym = sqrt(uplim/lowlim); 
-    scale = es.get_scale(lowlim, uplim);
-    M_star = pars[pvi[string("M_")+pd.id_lms[i]]];
-    wgt_star = asym_norm(mass-M_star, asym, scale) 
-      * skewed_norm(M_star, mean, width, skewness);
+    double mass=pd.mass_lms[i]; 
+    double high=pd.lim_lms[i];
+    double low=high; // Symmetric 68% limits
+    double asym=sqrt(high/low);
+    double scale=es.get_scale(low, high);
+    double M_star=pars[pvi[string("M_")+pd.id_lms[i]]];
+    an_lm[i]=asym_norm(mass-M_star, asym, scale);
+    sn_lm[i]=skewed_norm(M_star, mean, width, skew);
+    double wgt_star=an_lm[i]*sn_lm[i];
     
     if (this->debug) {
       cout << "LMXB: " << i << " " << pd.id_lms[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
-           << skewness << " " << wgt_star; 
-      cout << " " << asym_norm(mass-M_star, asym, scale)  << " "
-           << skewed_norm(M_star, mean, width, skewness) << endl;
+           << skew << " " << wgt_star; 
+      cout << " " << an_lm[i]  << " " << sn_lm[i] << endl;
     }
     if (wgt_star<=0.0) {
-      ret = 100+i;
+      ret=100+i;
       return 0.0;
     }
-    log_wgt += log(wgt_star); 
+    log_wgt+=log(wgt_star); 
   }
   if (this->debug) {
     cout << "LMXB: " << log_wgt << endl;
@@ -191,13 +188,13 @@ double ns_pop::get_weight(const ubvector &pars, vec_index &pvi,
   double wgt_ns, wgt_wd, wgt_hms, wgt_lms, wgt; 
 
   // Calculate log-likelihood for each population
-  wgt_ns = get_weight_ns(pars, pvi, ret);
-  wgt_wd = get_weight_wd(pars, pvi, ret);
-  // wgt_hms = get_weight_hms(pars, pvi, ret);
-  wgt_lms = get_weight_lms(pars, pvi, ret);
+  wgt_ns=get_weight_ns(pars, pvi, ret);
+  wgt_wd=get_weight_wd(pars, pvi, ret);
+  // wgt_hms=get_weight_hms(pars, pvi, ret);
+  wgt_lms=get_weight_lms(pars, pvi, ret);
 
   // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt = wgt_ns + wgt_wd + wgt_lms; // + wgt_hms
+  wgt=wgt_ns+wgt_wd+wgt_lms; // + wgt_hms
   
   // Return the log-likelihood
   return wgt;
@@ -296,7 +293,8 @@ void ns_pop::get_param_info() {
     par_low.push_back(1.0);
     par_high.push_back(2.5);
   }
-  n_pop_params = par_names.size();
+  
+  n_pop_params=par_names.size();
 
   return;
 }
@@ -310,7 +308,7 @@ void ns_pop::get_param_info() {
 */
 void ns_pop::set_params(vec_index &pvi) {
 
-  // Fill in NS-NS parameters
+  // Fill in DNS parameters
   pvi.append("mean_NS");
   pvi.append("log10_width_NS");
   pvi.append("skewness_NS");
@@ -340,22 +338,22 @@ void ns_pop::set_params(vec_index &pvi) {
 
 // This is the function to solve for d, given c
 double eqn_solver::f_to_solve(double x, double &l, double &u) {
-  double c = sqrt(u/l);
+  double c=sqrt(u/l);
   return c*c*erf(u/(sqrt(2.0)*c*x)) - erf(-c*l/(sqrt(2.0)*x))
     - 0.68*(c*c+1.0);
 }
 
 // This is the function to solve for m2, given q
 double eqn_solver::f2_to_solve(double x, double &M_chirp, double &m1) {
-  double k = pow(m1/M_chirp, 5.0);
+  double k=pow(m1/M_chirp, 5.0);
   return k*pow(x,3.0)-x-1.0;
 }
 
 
 // Derivative of the function to solve 
 double eqn_solver::df_to_solve(double x, double &l, double &u) {
-  double c = sqrt(u/l);
-  double a = sqrt(2.0/M_PI) * c / x / x;
+  double c=sqrt(u/l);
+  double a=sqrt(2.0/M_PI) * c / x / x;
   return a*l*exp(-pow(u/(sqrt(2.0)*c*x), 2.0))
     - a*u*exp(-pow(c*l/sqrt(2.0)/x, 2.0));
 }
@@ -373,7 +371,7 @@ double eqn_solver::get_scale(double l, double u) {
      functions as functions to solve. We need to provide the address of
      an instantiated object and the address of the member function. */
   eqn_solver es;
-  funct f = bind(mem_fn<double(double, double &, double &)>
+  funct f=bind(mem_fn<double(double, double &, double &)>
 		  (&eqn_solver::f_to_solve), &es, _1, ref(l), ref(u));
   
   /* funct df2 = bind(mem_fn<double(double, double &, double &)>
@@ -401,7 +399,7 @@ double eqn_solver::get_m2(double M_chirp, double m1) {
   root_brent_gsl<> solver;
 
   eqn_solver es;
-  funct f = bind(mem_fn<double(double, double &, double &)>
+  funct f=bind(mem_fn<double(double, double &, double &)>
 		  (&eqn_solver::f2_to_solve), &es, _1, ref(M_chirp), ref(m1));
   
   // The root is bracketted in [x1, x2]
