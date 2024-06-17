@@ -169,8 +169,8 @@ namespace bamr {
     vector<double> mass_gw17;
 
     /// Weight vectors to compute gradient for LMXBs with EM data
-    double log_wgt_src;
-    vector<double> log_snf_src;
+    vector<double> log_wgt_em;
+    vector<double> log_snf_em;
 
     bamr_class() {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
@@ -181,7 +181,7 @@ namespace bamr {
       mass_gw19.resize(2);
       log_snf_gw17.resize(2);
       mass_gw17.resize(2);
-      log_snf_src.resize(nsd->n_sources);
+      log_snf_em.resize(nsd->n_sources);
     }
 
     // Empty destructor to make sure its virtual
@@ -195,12 +195,15 @@ namespace bamr {
                               double &log_wgt, model_data &dat);
 
     virtual int compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
-                              double &log_wgt, model_data &dat);
+                                  double &log_wgt, model_data &dat);
 
-    virtual int compute_gradient(const ubvector &pars, vec_index &pvi, 
-                              ubvector &grad, model_data &dat);
+    virtual int compute_gradient(ubvector &pars, std::ofstream &scr_out, 
+                                 double &log_wgt, model_data &dat,
+                                 vec_index &pvi, ubvector &grad);
 
-    // virtual int gradient_fd()
+    virtual int gradient_fd(size_t &index, ubvector &pars, 
+                            std::ofstream &scr_out, double &log_wgt, 
+                            model_data &dat, double &grad);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point

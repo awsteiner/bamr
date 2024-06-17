@@ -96,6 +96,7 @@ namespace bamr {
     static const int ix_ligo_gm_invalid=27; // monitored
     static const int ix_ligo_pars_outside=28;
     static const int ix_gm_exceeds_mmax=29; // monitored
+    static const int ix_grad_failed=30; // monitored
     //@}
 
     /// Number of EOS parameters

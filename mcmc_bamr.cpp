@@ -1350,7 +1350,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // ---------------------------------------
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
-#ifdef O2SCL_NEVER_DEFINED
+
+#ifdef BAMR_KDE
   if (mcmc_method==string("kde") ||
       mcmc_method==string("kde_sklearn") ||
       mcmc_method==string("gauss")) {
@@ -1431,8 +1432,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      hmc.proposal.resize(1);
-      hmc.proposal[0].set_base(kp);
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
     
     } else if (mcmc_method==string("kde_sklearn")) {
       
@@ -1446,12 +1447,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      hmc.proposal.resize(1);
-      hmc.proposal[0].set_base(kp);
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(kp);
       
     } else {
 
-      
       std::cout << "Setting up Gaussian:" << std::endl;
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
