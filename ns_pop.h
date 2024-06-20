@@ -22,19 +22,19 @@ struct pop_data {
   /* std::string to store the full names of stars */
   vector<string> name_ns;
   vector<string> name_wd;
-  vector<string> name_lms;
+  vector<string> name_lx;
   // vector<string> name_hms;
 
   /* std::string to store the shortened names of stars */
   vector<string> id_ns;
   vector<string> id_wd;
-  vector<string> id_lms;
+  vector<string> id_lx;
   // vector<string> id_hms;
 
   /* std::vector to store the measured NS mass */
   vector<double> mass_ns;
   vector<double> mass_wd;
-  vector<double> mass_lms;
+  vector<double> mass_lx;
   // vector<double> mass_hms;
 
   /* std::vector to store 68% central limits of NS masses */
@@ -42,7 +42,7 @@ struct pop_data {
   vector<double> lowlim_wd;
   vector<double> uplim_ns;
   vector<double> uplim_wd;
-  vector<double> lim_lms; // Symmetric 68% limits for LMXB
+  vector<double> lim_lx; // Symmetric 68% limits for LMXB
   // vector<double> lim_hms;
 
   /* Total number of stars in all populations */
@@ -64,10 +64,10 @@ class ns_pop {
       pd.load_data();
       an_ns.resize(pd.id_ns.size());
       an_wd.resize(pd.id_wd.size());
-      an_lm.resize(pd.id_lms.size());
+      an_lx.resize(pd.id_lx.size());
       sn_ns.resize(pd.id_ns.size());
       sn_wd.resize(pd.id_wd.size());
-      sn_lm.resize(pd.id_lms.size());
+      sn_lx.resize(pd.id_lx.size());
       debug=false;
     }
 
@@ -103,7 +103,7 @@ class ns_pop {
     double asym_norm(double, double, double);
 
     /* Derivative of the Skewed Normal PDF */
-    double deriv_sn(const string &, double, double, double, double);
+    double deriv_sn(const int, double, double, double, double);
 
     /* Derivative of the Asymmetric Normal PDF */
     double deriv_an(double, double, double);
@@ -123,10 +123,10 @@ class ns_pop {
     double get_weight_wd(const ubvector &, vec_index &, int &);
 
     /* Likelihood function for NS-MS/HMXB */
-    double get_weight_hms(const ubvector &, vec_index &, int &);
+    double get_weight_hx(const ubvector &, vec_index &, int &);
 
     /* Likelihood function for NS-MS/LMXB */
-    double get_weight_lms(const ubvector &, vec_index &, int &);
+    double get_weight_lx(const ubvector &, vec_index &, int &);
 
     /* Combined likelihood function for all stars, except 
     GW170817, QLMXBs, PREs, and NICER */
@@ -135,12 +135,12 @@ class ns_pop {
     /* Store the values of AN(x|c,d) for all stars in a binary */
     vector<double> an_ns;
     vector<double> an_wd;
-    vector<double> an_lm;
+    vector<double> an_lx;
 
     /* Store the values of SN(x|m,s,a) for all stars in a binary*/
     vector<double> sn_ns;
     vector<double> sn_wd;
-    vector<double> sn_lm;
+    vector<double> sn_lx;
 
 
   private:

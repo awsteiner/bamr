@@ -23,7 +23,7 @@ double ns_pop::asym_norm(double x, double c, double d) {
   else return k*norm_pdf(x/c/d);
 }
 
-double ns_pop::deriv_sn(const string &wrt, double x, double m, 
+double ns_pop::deriv_sn(const int i_wrt, double x, double m, 
                         double s, double a) {
   double k=1.0/s/sqrt(2.0*M_PI);
   double ef=exp(-0.5*pow((x-m)/s,2.0));
@@ -31,10 +31,10 @@ double ns_pop::deriv_sn(const string &wrt, double x, double m,
   double t1=a*sqrt(2.0/M_PI)*exp(-p*p)/s;
   double t2=(x-m)*(1.0+erf(p))/s/s;
 
-  if (wrt==string("mass")) return k*ef*(t1-t2);
-  if (wrt==string("mean")) return k*ef*(t2-t1);
-  if (wrt==string("width")) return k*ef*(t2-t1)*(x-m)/s;
-  if (wrt==string("skew")) return k*ef*exp(-p*p);
+  if (i_wrt==0) return k*ef*(t1-t2);
+  if (i_wrt==1) return k*ef*(t2-t1);
+  if (i_wrt==2) return k*ef*(t2-t1)*(x-m)/s;
+  if (i_wrt==3) return k*ef*exp(-p*p);
 }
 
 double ns_pop::deriv_an(double x, double c, double d) {
@@ -135,7 +135,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
 
 
 // The likelihood function for NS-MS/LMXB 
-double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
+double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
                                  int &ret) {
   ret=0;
   double mean=pars[pvi["mean_LMS"]];
@@ -149,23 +149,23 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
-  for (size_t i=0; i<pd.id_lms.size(); i++) {
-    double mass=pd.mass_lms[i]; 
-    double high=pd.lim_lms[i];
+  for (size_t i=0; i<pd.id_lx.size(); i++) {
+    double mass=pd.mass_lx[i]; 
+    double high=pd.lim_lx[i];
     double low=high; // Symmetric 68% limits
     double asym=sqrt(high/low);
     double scale=es.get_scale(low, high);
-    double M_star=pars[pvi[string("M_")+pd.id_lms[i]]];
-    an_lm[i]=asym_norm(mass-M_star, asym, scale);
-    sn_lm[i]=skewed_norm(M_star, mean, width, skew);
-    double wgt_star=an_lm[i]*sn_lm[i];
+    double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];
+    an_lx[i]=asym_norm(mass-M_star, asym, scale);
+    sn_lx[i]=skewed_norm(M_star, mean, width, skew);
+    double wgt_star=an_lx[i]*sn_lx[i];
     
     if (this->debug) {
-      cout << "LMXB: " << i << " " << pd.id_lms[i] << " "
+      cout << "LMXB: " << i << " " << pd.id_lx[i] << " "
            << mass << " " << asym << " " << scale << " " 
            << M_star << " " << mean << " " << width << " " 
            << skew << " " << wgt_star; 
-      cout << " " << an_lm[i]  << " " << sn_lm[i] << endl;
+      cout << " " << an_lx[i]  << " " << sn_lx[i] << endl;
     }
     if (wgt_star<=0.0) {
       ret=100+i;
@@ -185,16 +185,16 @@ double ns_pop::get_weight_lms(const ubvector &pars, vec_index &pvi,
 double ns_pop::get_weight(const ubvector &pars, vec_index &pvi,
                               int &ret) {
 
-  double wgt_ns, wgt_wd, wgt_hms, wgt_lms, wgt; 
+  double wgt_ns, wgt_wd, wgt_hms, wgt_lx, wgt; 
 
   // Calculate log-likelihood for each population
   wgt_ns=get_weight_ns(pars, pvi, ret);
   wgt_wd=get_weight_wd(pars, pvi, ret);
-  // wgt_hms=get_weight_hms(pars, pvi, ret);
-  wgt_lms=get_weight_lms(pars, pvi, ret);
+  // wgt_hms=get_weight_hx(pars, pvi, ret);
+  wgt_lx=get_weight_lx(pars, pvi, ret);
 
   // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt=wgt_ns+wgt_wd+wgt_lms; // + wgt_hms
+  wgt=wgt_ns+wgt_wd+wgt_lx; // + wgt_hms
   
   // Return the log-likelihood
   return wgt;
@@ -272,10 +272,10 @@ void ns_pop::get_param_info() {
     par_units.push_back("Msun");
     par_init.push_back(pd.mass_hms[i]);
   } */
-  for(size_t i=0; i<pd.id_lms.size(); i++) {
-    par_names.push_back(string("M_")+pd.id_lms[i]);
+  for(size_t i=0; i<pd.id_lx.size(); i++) {
+    par_names.push_back(string("M_")+pd.id_lx[i]);
     par_units.push_back("Msun");
-    par_init.push_back(pd.mass_lms[i]);
+    par_init.push_back(pd.mass_lx[i]);
   }
 
   // Set priors for distribution parameters
@@ -328,8 +328,8 @@ void ns_pop::set_params(vec_index &pvi) {
   pvi.append("mean_LMS");
   pvi.append("log10_width_LMS");
   pvi.append("skewness_LMS");
-  for(size_t i=0; i<pd.id_lms.size(); i++) {
-    string mass_par=string("M_")+pd.id_lms[i];
+  for(size_t i=0; i<pd.id_lx.size(); i++) {
+    string mass_par=string("M_")+pd.id_lx[i];
     pvi.append(mass_par);
   }
   return;

@@ -154,34 +154,32 @@ namespace bamr {
     vec_index pvi;
     
     /// Vector to store log-weights to be passed to table
-    vector<double> pop_weights;
+    vector<double> wgt_pop;
 
-    /// Vector to store the output quantities for GW190817
-    vector<double> ligo_gw19;
-
-    /// Weight vector to compute gradient for GW190425
-    vector<double> log_snf_gw19;
+    /// Vector to store the output quantities for GW190425
+    double wgt_gw19;
+    vector<double> fsn_gw19;
     vector<double> mass_gw19;
 
-    /// Weight vectors to compute gradient for GW170817
-    double log_wgt_gw17;
-    vector<double> log_snf_gw17;
+    /// Vector to store the output quantities for GW170817
+    double wgt_gw17;
+    vector<double> fsn_gw17;
     vector<double> mass_gw17;
 
-    /// Weight vectors to compute gradient for LMXBs with EM data
-    vector<double> log_wgt_em;
-    vector<double> log_snf_em;
+    /// Vector to store the output quantities for EM sources
+    vector<double> wgt_em;
+    vector<double> fsn_em;
 
     bamr_class() {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
-      pop_weights.resize(4);
-      ligo_gw19.resize(2);
       n_threads=1;
-      log_snf_gw19.resize(2);
+      wgt_pop.resize(4);
+      fsn_gw19.resize(2);
       mass_gw19.resize(2);
-      log_snf_gw17.resize(2);
+      fsn_gw17.resize(2);
       mass_gw17.resize(2);
-      log_snf_em.resize(nsd->n_sources);
+      wgt_em.resize(nsd->n_sources);
+      fsn_em.resize(nsd->n_sources);
     }
 
     // Empty destructor to make sure its virtual

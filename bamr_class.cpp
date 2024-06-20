@@ -216,8 +216,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.eos.get_constant("del_Lambdat"));    
       line.push_back(dat.eos.get_constant("prob_gw17"));
       line.push_back(dat.eos.get_constant("eta"));
-      line.push_back(ligo_gw19[0]);
-      line.push_back(ligo_gw19[1]);
+      line.push_back(mass_gw19[1]);
+      line.push_back(wgt_gw19);
     }
     
     if (nsd->n_sources>0) {
@@ -233,8 +233,8 @@ int bamr_class::fill(const ubvector &pars, double weight,
     }
     
     if (set->inc_pop) {
-      for (size_t i=0; i<pop_weights.size(); i++) {
-        line.push_back(pop_weights[i]);
+      for (size_t i=0; i<wgt_pop.size(); i++) {
+        line.push_back(wgt_pop[i]);
       }
     }
     
@@ -384,11 +384,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       pop_data &pd=nsd->pd;
 
       double M_max=dat.mvsr.max("gm");
-
-      // std::cout << "XY: " << pop_weights.size() << endl;
-      if (pop_weights.size()==0) pop_weights.resize(4); 
       
-      pop_weights[0]=pop.get_weight_ns(pars,pvi,iret);
+      wgt_pop[0]=pop.get_weight_ns(pars,pvi,iret);
       
       if (iret!=m.ix_success) {
         /* iret_old = 30+i, where "i" is the star index
@@ -415,7 +412,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      pop_weights[1]=pop.get_weight_wd(pars,pvi,iret);
+      wgt_pop[1]=pop.get_weight_wd(pars,pvi,iret);
       if (iret!=m.ix_success) {
         log_wgt=0.0;
         iret=iret-60;
@@ -439,22 +436,22 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      pop_weights[2]=pop.get_weight_lms(pars,pvi,iret);
+      wgt_pop[2]=pop.get_weight_lx(pars,pvi,iret);
       if (iret!=m.ix_success) {
         log_wgt=0.0;
         iret=iret-100;
         scr_out << "LMXB: Returned zero weight for star "
-                << pd.id_lms[iret] << std::endl;
+                << pd.id_lx[iret] << std::endl;
         iret=m.ix_pop_wgt_zero;
-        cout << "ns_pop::weight_lm() failure:"
+        cout << "ns_pop::weight_lx() failure:"
              << " ix_return=" << iret << endl;
         return iret;
       }
 
-      for (size_t i=0; i<pd.id_lms.size(); i++) {
-        if (M_max<pars[pvi[string("M_")+pd.id_lms[i]]]) {
+      for (size_t i=0; i<pd.id_lx.size(); i++) {
+        if (M_max<pars[pvi[string("M_")+pd.id_lx[i]]]) {
           scr_out << "LMXB: Gravitational mass beyond M_max "
-                  << "for star " << pd.id_lms[i] << std::endl;
+                  << "for star " << pd.id_lx[i] << std::endl;
           log_wgt=0.0;
           iret=m.ix_gm_exceeds_mmax;
           cout << "bamr_class::compute_point() failure:"
@@ -463,8 +460,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      pop_weights[3]=pop_weights[0]+pop_weights[1]+pop_weights[2];
-      log_wgt+=pop_weights[3];
+      wgt_pop[3]=wgt_pop[0]+wgt_pop[1]+wgt_pop[2];
+      log_wgt+=wgt_pop[3];
       
       /* cout << "Final pop result: ";
         vector_out(cout, pop_weights, true); */
@@ -536,8 +533,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
-    log_wgt_em.clear();
-    log_snf_em.clear();
+    wgt_em.clear();
+    fsn_em.clear();
 
     if (set->apply_intsc==false) {
 
@@ -624,7 +621,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
               
         // Include the weight for this source
         log_wgt+=log(dat.sourcet.get("wgt",i));
-        log_wgt_em[i]=log(dat.sourcet.get("wgt",i));
+        wgt_em[i]=dat.sourcet.get("wgt",i);
 
         /* If population is included, calculate the skewed normal (SN) 
         PDF for the sources: QLMXBs, PREs, and NICER */
@@ -645,7 +642,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             double m_em=mf*m_max_current;
             double sn_em=pop.skewed_norm(m_em,mean,width,skewness);
             log_wgt+=log(sn_em);
-            log_snf_em[i]=log(sn_em);
+            fsn_em[i]=sn_em;
           }
         }
 
@@ -1187,12 +1184,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         prob_data=prob;          
         dat.eos.add_constant("prob_gw17",prob_data); 
         log_wgt+=(prob_data);
-        log_wgt_gw17=prob_data;
 
-        // Store the values of m1 and m2 to compute derivatives
+        // Store the output quantities to compute derivatives
+        wgt_gw17=exp(prob_data);
         mass_gw17[0]=m1;
         mass_gw17[1]=m2;
-      
       } 
       // End GW170817
       
@@ -1204,10 +1200,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       m1_gw19=pars[m.n_eos_params+3];
       m2_gw19=nsd->solver.get_m2(M_chirp_gw19, m1_gw19);
-
-      if (ligo_gw19.size()==0) ligo_gw19.resize(2); 
-
-      ligo_gw19[0]=m2_gw19;
 
       // Check if m2 < m1 < M_max
       if (m1_gw19>Mmax || m2_gw19>Mmax || m1_gw19<m2_gw19) {  
@@ -1236,8 +1228,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
       
       prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
-      ligo_gw19[1]=log(prob_gw19);
-      log_wgt+=ligo_gw19[1];
+      wgt_gw19=prob_gw19;
+      log_wgt+=log(prob_gw19);
 
       // Store the values of m1 and m2 to compute derivatives
       mass_gw19[0]=m1_gw19;
@@ -1274,8 +1266,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         
         log_wgt+=log(sn_ligo);
 
-        log_snf_gw17[0]=sn_m1;
-        log_snf_gw17[1]=sn_m2;
+        fsn_gw17[0]=sn_m1;
+        fsn_gw17[1]=sn_m2;
 
         // GW190425
         sn_m1=pop.skewed_norm(m1_gw19,mean,width,skewns);
@@ -1293,8 +1285,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         log_wgt+=log(sn_ligo);
 
-        log_snf_gw19[0]=sn_m1;
-        log_snf_gw19[1]=sn_m2;
+        fsn_gw19[0]=sn_m1;
+        fsn_gw19[1]=sn_m2;
       
       } // End of 'if (set->inc_pop)'
     } // End of 'if (set->inc_ligo)'
@@ -1593,70 +1585,80 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
   grad.clear();
   if (grad.size()!=n_pars) grad.resize(n_pars);
   
-  double wgt_ns=exp(pop_weights[0]);
-  double wgt_wd=exp(pop_weights[1]);
-  double wgt_lm=exp(pop_weights[2]);
-  double wgt_pop=exp(pop_weights[3]);
-  double wgt_gw17=exp(log_wgt_gw17);
-  double wgt_gw19=exp(ligo_gw19[1]);
-
-  vector<double> snf_gw17(log_snf_gw17.size());
-  vector<double> snf_gw19(log_snf_gw19.size());
-  vector<double> snf_em(log_snf_em.size());
-  vector<double> wgt_em(log_wgt_em.size());
-
-  for (size_t i=0; i<2; i++) {
-    snf_gw17[i]=exp(log_snf_gw17[i]);
-    snf_gw19[i]=exp(log_snf_gw19[i]);
-  }
-  for (size_t i=0; i<snf_em.size(); i++) {
-    snf_em[i]=exp(log_snf_em[i]);
-    wgt_em[i]=exp(log_wgt_em[i]);
-  }
-
-  const string wrt_M="mass";
-  const string wrt_m="mean";
-  const string wrt_w="width";
-  const string wrt_s="skew";
-  
+  double wgt_ns=exp(wgt_pop[0]);
+  double wgt_wd=exp(wgt_pop[1]);
+  double wgt_lx=exp(wgt_pop[2]);
   double mean_ns=pars[pvi["mean_NS"]];
-  double width_ns=pow(10.0, pars[pvi["log10_width_NS"]]);
-  double skew_ns=pars[pvi["skewness_NS"]];
   double mean_wd=pars[pvi["mean_WD"]];
+  double mean_lx=pars[pvi["mean_LMS"]];
+  double width_ns=pow(10.0, pars[pvi["log10_width_NS"]]);
   double width_wd=pow(10.0, pars[pvi["log10_width_WD"]]);
+  double width_lx=pow(10.0, pars[pvi["log10_width_LMS"]]);
+  double skew_ns=pars[pvi["skewness_NS"]];
   double skew_wd=pars[pvi["skewness_WD"]];
-  double mean_lm=pars[pvi["mean_LMS"]];
-  double width_lm=pow(10.0, pars[pvi["log10_width_LMS"]]);
-  double skew_lm=pars[pvi["skewness_LMS"]];
-
+  double skew_lx=pars[pvi["skewness_LMS"]];
   double M_max=dat.mvsr.get_constant("M_max");
-  
+
+  double c_sn=1.0, c_an=1.0;
+  vector<double> m_star, sn_star, an_star;
+
+  for (size_t j=0; j<2; j++) c_sn*=fsn_gw19[j]*fsn_gw17[j];
+  m_star.push_back(pars[pvi["m1_gw19"]]);
+  sn_star.push_back(fsn_gw19[0]);
+  for (size_t j=0; j<pd.id_ns.size(); j++) {
+    m_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
+    sn_star.push_back(nsp.sn_ns[j]);
+    an_star.push_back(nsp.an_ns[j]);
+    c_sn*=nsp.sn_ns[j];
+    c_an*=nsp.an_ns[j];
+  }
+  for (size_t j=0; j<pd.id_wd.size(); j++) {
+    m_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
+    sn_star.push_back(nsp.sn_wd[j]);
+    an_star.push_back(nsp.an_wd[j]);
+    c_sn*=nsp.sn_wd[j];
+    c_an*=nsp.an_wd[j];
+  }
+  for (size_t j=0; j<pd.id_lx.size(); j++) {
+    m_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
+    sn_star.push_back(nsp.sn_lx[j]);
+    an_star.push_back(nsp.an_lx[j]);
+    c_sn*=nsp.sn_lx[j];
+    c_an*=nsp.an_lx[j];
+  }
+  for (size_t j=0; j<nsd->n_sources; j++) {
+    m_star.push_back(M_max*pars[pvi["mf_"+nsd->source_names[j]]]);
+    sn_star.push_back(fsn_em[j]);
+  }
+  for (size_t j=0; j<nsd->n_sources; j++) c_sn*=fsn_em[j];
+
+  //-------------------------------------------------------------------------
+
   for (size_t i=0; i<n_pars; i++) {
     if (i<n_ligo_pars) { // w.r.t. m1_gw19
-      double cf=wgt_pop*snf_gw19[1]*wgt_gw19*wgt_gw17;
-      for (size_t i=0; i<snf_gw17.size(); i++) cf*=snf_gw17[i];
-      for (size_t i=0; i<snf_em.size(); i++) {
-        cf*=snf_em[i]*wgt_em[i];
+      double cf=wgt_pop[3]*fsn_gw19[1]*wgt_gw19*wgt_gw17;
+      for (size_t i=0; i<fsn_gw17.size(); i++) cf*=fsn_gw17[i];
+      for (size_t i=0; i<fsn_em.size(); i++) {
+        cf*=fsn_em[i]*wgt_em[i];
       }
-      grad[i]=cf*nsp.deriv_sn(wrt_M, pars[i], mean_ns, width_ns, skew_ns);
+      grad[i]=cf*nsp.deriv_sn(0, pars[i], mean_ns, width_ns, skew_ns);
     }
 
     else if (i>=n_ligo_pars && i<n_ligo_pars+n_src_pars) { 
       // w.r.t. mf_*
-      double cf=wgt_pop*wgt_gw19*wgt_gw17;
-      for (size_t i=0; i<2; i++) cf*=snf_gw17[i]*snf_gw19[i];
-      double ct1=1.0, ct2=1.0;
-      double ddm_sn, ddm_em;
+      double cf=wgt_pop[3]*wgt_gw19*wgt_gw17;
+      for (size_t k=0; k<2; k++) cf*=fsn_gw17[k]*fsn_gw19[k];
+      double ddm_sn, ddm_em, ct1=1.0, ct2=1.0;
       for (size_t j=0; j<n_src_pars; j++) {
         ct1*=wgt_em[j];
-        ct2*=snf_em[j];
+        ct2*=fsn_em[j];
         if (j!=i) {
-          ct1*=snf_em[j];
+          ct1*=fsn_em[j];
           ct2*=wgt_em[j];
         }
       }
       double M_em=M_max*pars[i];
-      ddm_sn=nsp.deriv_sn(wrt_M, M_em, mean_ns, width_ns, skew_ns);
+      ddm_sn=nsp.deriv_sn(0, M_em, mean_ns, width_ns, skew_ns);
       int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, ddm_em);
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
@@ -1668,24 +1670,61 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
 
     else if (i>=n_ligo_pars+n_src_pars && 
              i<n_ligo_pars+n_src_pars+n_dist_pars) {
-      if (i==n_ligo_pars+n_src_pars) { // w.r.t. mean_NS
-        double cf=wgt_gw19*wgt_gw17*wgt_em;
-        double cf_an=1.0, cf_sn=1.0, ddm_ns=1.0;
-        for (size_t j=0; j<pd.id_ns.size(); j++) {
-          cf_an*=nsp.an_ns[i];
-          if (j==i) {
-            double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
-            ddm_ns=nsp.deriv_sn(wrt_m, M_star, mean_ns, width_ns, skew_ns);
-          }
-          else {
-            cf_sn*=nsp.sn_ns[i];
-          }
+      
+      double cf=c_an*wgt_gw19*wgt_gw17;
+      for (size_t k=0; k<nsd->n_sources; k++) cf*=wgt_em[k];
+
+      double ddm_sn, ddw_sn, dds_sn, ct;
+
+      if (i==n_ligo_pars+n_src_pars) {
+        // w.r.t. mean_NS, width_NS, skew_NS
+        for (size_t j=0; j<pd.id_ns.size()+4; j++) {
+          ct=c_sn/sn_star[j];
+          ddm_sn=nsp.deriv_sn(1, m_star[j], mean_ns, width_ns, skew_ns);
+          ddw_sn=nsp.deriv_sn(2, m_star[j], mean_ns, width_ns, skew_ns);
+          dds_sn=nsp.deriv_sn(3, m_star[j], mean_ns, width_ns, skew_ns);
+          grad[i]+=cf*ct*ddm_sn;
+          grad[i+1]+=cf*ct*ddw_sn;
+          grad[i+2]+=cf*ct*dds_sn;
+        }
+      }
+      if (i==n_ligo_pars+n_src_pars+3) {
+        // w.r.t. mean_WD, width_WD, skew_WD
+        for (size_t j=pd.id_ns.size()+4; 
+            j<pd.id_ns.size()+4+pd.id_wd.size(); j++) {
+          ct=c_sn/sn_star[j];
+          ddm_sn=nsp.deriv_sn(1, m_star[j], mean_wd, width_wd, skew_wd);
+          ddw_sn=nsp.deriv_sn(2, m_star[j], mean_wd, width_wd, skew_wd);
+          dds_sn=nsp.deriv_sn(3, m_star[j], mean_wd, width_wd, skew_wd);
+          grad[i]+=cf*ct*ddm_sn;
+          grad[i+1]+=cf*ct*ddw_sn;
+          grad[i+2]+=cf*ct*dds_sn;
+        }
+      }
+      if (i==n_ligo_pars+n_src_pars+6) {
+        // w.r.t. mean_LMS, width_LMS, skew_LMS
+        for (size_t j=pd.id_ns.size()+4+pd.id_wd.size(); 
+            j<pd.id_ns.size()+4+pd.id_wd.size()+pd.id_lx.size()+4; j++) {
+          ct=c_sn/sn_star[j];
+          ddm_sn=nsp.deriv_sn(1, m_star[j], mean_lx, width_lx, skew_lx);
+          ddw_sn=nsp.deriv_sn(2, m_star[j], mean_lx, width_lx, skew_lx);
+          dds_sn=nsp.deriv_sn(3, m_star[j], mean_lx, width_lx, skew_lx);
+          grad[i]+=cf*ct*ddm_sn;
+          grad[i+1]+=cf*ct*ddw_sn;
+          grad[i+2]+=cf*ct*dds_sn;
         }
       }
     }
 
     else { // w.r.t. M_*
-      // double cf=snf_gw19*snf_gw17*wgt_gw19*wgt_gw17*snf_em*wgt_em;
+      double ct, ddm_sn, ddm_an;
+      double cf=wgt_gw19*wgt_gw17;
+      for (size_t j=0; j<2; j++) cf*=fsn_gw19[j]*fsn_gw17[j];
+      for (size_t j=0; j<nsd->n_sources; j++) cf*=fsn_em[j]*wgt_em[j];
+      for (size_t j=1; j<1+pd.id_ns.size()+pd.id_wd.size()+pd.id_lx.size(); j++) {
+        ct=c_sn*c_an/sn_star[j];
+        grad[i]+=cf*ct*nsp.deriv_sn(0, m_star[j], mean_ns, width_ns, skew_ns);
+      }
     }
   }
 
