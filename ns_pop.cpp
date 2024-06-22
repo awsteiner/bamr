@@ -61,8 +61,8 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
   }
   for (size_t i=0; i<pd.id_ns.size(); i++) {
     double mass=pd.mass_ns[i];
-    double high=pd.uplim_ns[i];
-    double low=pd.lowlim_ns[i]; 
+    double high=pd.high_ns[i];
+    double low=pd.low_ns[i]; 
     double asym=sqrt(high/low);
     double scale=es.get_scale(low, high);
     double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
@@ -107,8 +107,8 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
   }
   for (size_t i=0; i<pd.id_wd.size(); i++) {
     double mass=pd.mass_wd[i];
-    double high=pd.uplim_wd[i];
-    double low=pd.lowlim_wd[i];
+    double high=pd.high_wd[i];
+    double low=pd.low_wd[i];
     double asym=sqrt(high/low);
     double scale=es.get_scale(low, high);
     double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
@@ -151,8 +151,8 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
   }
   for (size_t i=0; i<pd.id_lx.size(); i++) {
     double mass=pd.mass_lx[i]; 
-    double high=pd.lim_lx[i];
-    double low=high; // Symmetric 68% limits
+    double low=pd.low_lx[i];
+    double high=pd.high_lx[i];
     double asym=sqrt(high/low);
     double scale=es.get_scale(low, high);
     double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];

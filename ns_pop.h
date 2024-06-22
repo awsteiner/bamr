@@ -38,12 +38,14 @@ struct pop_data {
   // vector<double> mass_hms;
 
   /* std::vector to store 68% central limits of NS masses */
-  vector<double> lowlim_ns;
-  vector<double> lowlim_wd;
-  vector<double> uplim_ns;
-  vector<double> uplim_wd;
-  vector<double> lim_lx; // Symmetric 68% limits for LMXB
-  // vector<double> lim_hms;
+  vector<double> low_ns;
+  vector<double> low_wd;
+  vector<double> high_ns;
+  vector<double> high_wd;
+  vector<double> low_lx;
+  vector<double> high_lx;
+  // vector<double> low_hx;
+  // vector<double> high_hx;
 
   /* Total number of stars in all populations */
   size_t n_stars;
