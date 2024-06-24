@@ -943,10 +943,10 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   }
       
   size_t np;
-  size_t n_ligo_pars=nsd->n_ligo_params;
-  size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
-  size_t n_sources=nsd->n_sources;
-  size_t n_pop_pars=nsd->pop.n_pop_params;
+  size_t np_ligo=nsd->n_ligo_params;
+  size_t np_eos=bc_arr[0]->mod->n_eos_params;
+  size_t np_src=nsd->n_sources;
+  size_t np_pop=nsd->pop.n_pop_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
 
@@ -957,13 +957,13 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   // Determine the number of parameters according to the
   // settings
   if (set->inc_ligo && set->inc_pop) {
-    np=n_eos_pars+n_ligo_pars+n_sources+n_pop_pars;
+    np=np_eos+np_ligo+np_src+np_pop;
   } else if (set->inc_ligo && !set->inc_pop) {
-    np=n_eos_pars+n_ligo_pars+n_sources;
+    np=np_eos+np_ligo+np_src;
   } else if (!set->inc_ligo && set->inc_pop) {
-    np=n_eos_pars+n_sources+n_pop_pars;
+    np=np_eos+np_src+np_pop;
   } else {
-    np=n_eos_pars+n_sources;
+    np=np_eos+np_src;
   }
 
   cout << "mcmc_bamr::initial_point_last set: " << np << " parameters."
@@ -987,10 +987,10 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   }
   
   size_t np;
-  size_t n_ligo_pars=nsd->n_ligo_params;
-  size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
-  size_t n_sources=nsd->n_sources;
-  size_t n_pop_pars=nsd->pop.n_pop_params;
+  size_t np_ligo=nsd->n_ligo_params;
+  size_t np_eos=bc_arr[0]->mod->n_eos_params;
+  size_t np_src=nsd->n_sources;
+  size_t np_pop=nsd->pop.n_pop_params;
   string fname=sv[1];
   size_t pos=fname.find("<rank>");
   
@@ -999,16 +999,16 @@ int mcmc_bamr::initial_point_best(std::vector<std::string> &sv,
   }
 
   if (set->inc_ligo && set->inc_pop) {
-    np=n_eos_pars+n_ligo_pars+n_sources+n_pop_pars;
+    np=np_eos+np_ligo+np_src+np_pop;
   }
   else if (set->inc_ligo && !set->inc_pop) {
-    np=n_eos_pars+n_ligo_pars+n_sources;
+    np=np_eos+np_ligo+np_src;
   }
   else if (!set->inc_ligo && set->inc_pop) {
-    np=n_eos_pars+n_sources+n_pop_pars;
+    np=np_eos+np_src+np_pop;
   }
   else {
-    np=n_eos_pars+n_sources;
+    np=np_eos+np_src;
   }
 
   this->initial_points_file_best(fname, np);
@@ -1288,7 +1288,17 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 #endif
 
-  // ---------------------------------------
+
+  for(size_t j=0;j<names.size();j++) {
+    pvi.append(names[j]);
+  }
+  // Copy the pvi object from mcmc_bamr to bamr_class so it can
+  // be used in compute_point()
+  for(size_t j=0;j<bc_arr.size();j++) {
+    bc_arr[j]->pvi=pvi;
+  }
+
+  //-------------------------------------------------------------------
 
   if (mcmc_method==string("hmc")) {
 
@@ -1303,39 +1313,46 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     if (mpi_size>1 && mpi_rank>=1) {
       MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
          tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
     }
 #endif
     cout << "Begin mcmc_method==hmc" << endl;
-    size_t n_pars=names.size();
-    size_t n_ligo_pars=nsd->n_ligo_params;
-    size_t n_eos_pars=bc_arr[0]->mod->n_eos_params;
-    size_t n_src_pars=nsd->n_sources;
-    size_t n_pop_pars=nsd->pop.n_pop_params;
+    size_t np=this->n_params;
+    size_t np_ligo=nsd->n_ligo_params;
+    size_t np_eos=bc_arr[0]->mod->n_eos_params;
+    size_t np_src=nsd->n_sources;
+    size_t np_pop=nsd->pop.n_pop_params;
     
-    stepper.auto_grad.resize(n_pars);
-    for (size_t i=0; i<n_pars; i++) {
-      if (i<n_eos_pars+n_ligo_pars+n_src_pars) {
-        stepper.auto_grad[i]=true;
-      } else {
-        stepper.auto_grad[i]=true;
-      }
+    stepper.auto_grad.resize(np);
+    for (size_t i=0; i<np; i++) {
+      if (i<np_eos+np_ligo-1) stepper.auto_grad[i]=true;
+      else stepper.auto_grad[i]=false;
     }
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> unif_dist(0.0, 1.0);
 
     stepper.traj_length=1;
-    stepper.mom_step.resize(n_pars);
-    for (size_t ip=0; ip<n_pars; ip++) {
-      stepper.mom_step[ip]=1.0e-6*(high[ip]-low[ip])
-                               *(unif_dist(gen)*2.0-1.0);
-    }
-    for (size_t i=0; i<stepper.mom_step.size(); i++) {
-      cout << "mom_step[" << i << "] = " << stepper.mom_step[i] 
-           << endl;
+    stepper.mom_step.resize(np);
+    for (size_t i=0; i<np; i++) {
+      stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
+                               *(this->rg[0].random()*2.0-1.0);
     }
     cout << "End of mcmc_method==hmc" << endl;
+
+    vector<bamr::point_funct> pfa(n_threads);
+    vector<bamr::deriv_funct> gfa(n_threads);
+
+    using namespace std::placeholders;
+
+    for (size_t i=0; i<n_threads; i++) {
+      pfa[i]=std::bind
+        (std::mem_fn<int(const ubvector &, ofstream &, double &, model_data &)>
+        (&bamr_class::compute_point), bc_arr[i], _2, ref(scr_out), _3, _4);
+      gfa[i]=std::bind
+        (std::mem_fn<int(ubvector &, vec_index &, ofstream &, ubvector &, model_data &)>
+        (&bamr_class::compute_deriv), bc_arr[i], _2, ref(pvi), ref(scr_out), _3, _4);
+    }
+    
+    }
+    
 
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -1502,15 +1519,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
   // ---------------------------------------
   
-  for(size_t j=0;j<names.size();j++) {
-    pvi.append(names[j]);
-  }
-  // Copy the pvi object from mcmc_bamr to bamr_class so it can
-  // be used in compute_point()
-  for(size_t j=0;j<bc_arr.size();j++) {
-    bc_arr[j]->pvi=pvi;
-  }
-  
   // Perform the MCMC simulation
   ubvector low2(low.size()), high2(high.size());
   vector_copy(low,low2);
@@ -1569,7 +1577,7 @@ void mcmc_bamr::setup_cli_mb() {
        cli::comm_option_both},
       {'t',"method","Choose MCMC method.",
         1,1,"<method type>",((string)"Choose the MCMC sampling method. ")+
-        "Possible values are 'kde'.",
+        "Possible values are 'kde' and 'hmc'.",
         new comm_option_mfptr<mcmc_bamr>(this,&mcmc_bamr::set_method),
         cli::comm_option_both},
       {0,"threads","Specify number of OpenMP threads",

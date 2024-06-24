@@ -57,6 +57,9 @@ namespace bamr {
   typedef std::function<int(const ubvector &,double,
                             std::vector<double> &,model_data &)> fill_funct;
 
+  typedef std::function<int(size_t, ubvector &, o2scl::funct &, ubvector &, 
+                        model_data &)> deriv_funct;
+
   /** \brief Compute neutron star structure for each MCMC point
 
       There will be a number of instances of this class equal to the
@@ -156,6 +159,11 @@ namespace bamr {
     /// Vector to store log-weights to be passed to table
     vector<double> wgt_pop;
 
+    /// Vectors to store the input quantities for NS populations
+    vector<double> m_pop;
+    vector<double> lo_pop;
+    vector<double> hi_pop;
+
     /// Vector to store the output quantities for GW190425
     double wgt_gw19;
     vector<double> fsn_gw19;
@@ -173,6 +181,7 @@ namespace bamr {
     bamr_class() {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
       n_threads=1;
+      fill_pop_data();
       wgt_pop.resize(4);
       fsn_gw19.resize(2);
       mass_gw19.resize(2);
@@ -195,13 +204,14 @@ namespace bamr {
     virtual int compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
                                   double &log_wgt, model_data &dat);
 
-    virtual int compute_gradient(ubvector &pars, std::ofstream &scr_out, 
-                                 double &log_wgt, model_data &dat,
-                                 vec_index &pvi, ubvector &grad);
+    virtual int compute_deriv(ubvector &pars, vec_index &pvi,
+                              std::ofstream &scr_out, ubvector &grad, 
+                              model_data &dat);
 
-    virtual int gradient_fd(size_t &index, ubvector &pars, 
-                            std::ofstream &scr_out, double &log_wgt, 
-                            model_data &dat, double &grad);
+    virtual int deriv_fd(size_t &index, ubvector &pars, std::ofstream &scr_out, 
+                         double &grad, model_data &dat);
+
+    virtual void fill_pop_data();
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point

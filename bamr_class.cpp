@@ -1527,13 +1527,33 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 }
 
 
-int bamr_class::gradient_fd(size_t &i, ubvector &x, std::ofstream &scr_out,
-                            double &log_wgt, model_data &dat, double &g) {
+void bamr_class::fill_pop_data() {
+  pop_data &pd=nsd->pd;
+  for (size_t j=0; j<pd.id_ns.size(); j++) {
+    m_pop.push_back(pd.mass_ns[j]);
+    lo_pop.push_back(pd.low_ns[j]);
+    hi_pop.push_back(pd.high_ns[j]);
+  }
+  for (size_t j=0; j<pd.id_wd.size(); j++) {
+    m_pop.push_back(pd.mass_wd[j]);
+    lo_pop.push_back(pd.low_wd[j]);
+    hi_pop.push_back(pd.high_wd[j]);
+  }
+  for (size_t j=0; j<pd.id_lx.size(); j++) {
+    m_pop.push_back(pd.mass_lx[j]);
+    lo_pop.push_back(pd.low_lx[j]);
+    hi_pop.push_back(pd.high_lx[j]);
+  }
+}
+
+
+int bamr_class::deriv_fd(size_t &i, ubvector &x, std::ofstream &scr_out,
+                         double &g, model_data &dat) {
 double fv1, fv2, h;
 model &m=*this->mod;
 
 // Evaluate function at the current point
-int func_ret=compute_point(x, scr_out, log_wgt, dat);
+int func_ret=compute_point(x, scr_out, fv1, dat);
 if (func_ret!=o2scl::success) return m.ix_grad_failed;
 
 // Adjust step size
@@ -1543,7 +1563,7 @@ if (fabs(h)<=epsmin) h=epsrel;
 
 // Compute: f'(x)=[f(x+h)-f(x)]/h
 x[i]+=h;
-func_ret=compute_point(x, scr_out, log_wgt, dat);
+func_ret=compute_point(x, scr_out, fv2, dat);
 if (func_ret!=o2scl::success) return m.ix_grad_failed;
 x[i]-=h;
 
@@ -1553,9 +1573,9 @@ return o2scl::success;
 }
 
 
-int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out, 
-                              double &log_wgt, model_data &dat,
-                              vec_index &pvi, ubvector &grad) {
+int bamr_class::compute_deriv(ubvector &pars, vec_index &pvi, 
+                              std::ofstream &scr_out, ubvector &grad, 
+                              model_data &dat) {
   
   /*Note: 'pars' should contain only the parameters for which exact
   gradients exist. The parameters must be given in the order they
@@ -1565,29 +1585,29 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
   pop_data &pd=nsd->pd;
   model &m=*this->mod;
 
-  size_t n_pars=pars.size();
-  size_t n_ligo_pars=1;
-  size_t n_src_pars=nsd->n_sources;
-  size_t n_dist_pars=nsp.n_pop_params-nsd->pd.n_stars;
-  size_t n_pop_stars=nsd->pd.n_stars;
+  size_t np=pars.size();
+  size_t np_ligo=1;
+  size_t np_src=nsd->n_sources;
+  size_t np_dist=nsp.n_pop_params-pd.n_stars;
+  size_t np_nsp=pd.n_stars;
 
-  size_t n_star_ns=pd.id_ns.size()+n_ligo_pars;
+  size_t n_star_ns=pd.id_ns.size()+np_ligo;
   size_t n_star_wd=pd.id_wd.size();
-  size_t n_star_lx=pd.id_lx.size()+n_src_pars;
+  size_t n_star_lx=pd.id_lx.size()+np_src;
 
-  if (n_pars!=n_ligo_pars+n_src_pars+n_dist_pars+n_pop_stars) {
+  if (np!=np_ligo+np_src+np_dist+np_nsp) {
     cout << "bamr_class::compute_gradient() failure due to "
          << "missing parameters:" << endl;
-    cout << "n_pars=" << n_pars 
-         << ", n_ligo_pars=" << n_ligo_pars 
-         << ", n_src_pars=" << n_src_pars 
-         << ", n_dist_pars=" << n_dist_pars
-         << ", n_pop_stars=" << n_pop_stars << endl;
+    cout << "np=" << np 
+         << ", np_ligo=" << np_ligo 
+         << ", np_src=" << np_src 
+         << ", np_dist=" << np_dist
+         << ", np_nsp=" << np_nsp << endl;
     return 1;
   }
   
   grad.clear();
-  if (grad.size()!=n_pars) grad.resize(n_pars);
+  if (grad.size()!=np) grad.resize(np);
   
   vector<double> mean(3), width(3), skew(3);
   mean[0]=pars[pvi["mean_NS"]];
@@ -1612,37 +1632,28 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
 
   M_star.push_back(pars[pvi["m1_gw19"]]);
   sn_star.push_back(fsn_gw19[0]);
-  for (size_t j=0; j<pd.id_ns.size(); j++) {
+  for (size_t j=0; j<n_star_ns; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
-    m_pop.push_back(pd.mass_ns[j]);
     sn_star.push_back(nsp.sn_ns[j]);
     an_pop.push_back(nsp.an_ns[j]);
-    lo_pop.push_back(pd.low_ns[j]);
-    hi_pop.push_back(pd.high_ns[j]);
     c_fsn_pop*=nsp.sn_ns[j];
     c_fan_pop*=nsp.an_ns[j];
   }
-  for (size_t j=0; j<pd.id_wd.size(); j++) {
+  for (size_t j=0; j<n_star_wd; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
-    m_pop.push_back(pd.mass_wd[j]);
     sn_star.push_back(nsp.sn_wd[j]);
     an_pop.push_back(nsp.an_wd[j]);
-    lo_pop.push_back(pd.low_wd[j]);
-    hi_pop.push_back(pd.high_wd[j]);
     c_fsn_pop*=nsp.sn_wd[j];
     c_fan_pop*=nsp.an_wd[j];
   }
-  for (size_t j=0; j<pd.id_lx.size(); j++) {
+  for (size_t j=0; j<n_star_lx; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
-    m_pop.push_back(pd.mass_lx[j]);
     sn_star.push_back(nsp.sn_lx[j]);
     an_pop.push_back(nsp.an_lx[j]);
-    lo_pop.push_back(pd.low_lx[j]);
-    hi_pop.push_back(pd.high_lx[j]);
     c_fsn_pop*=nsp.sn_lx[j];
     c_fan_pop*=nsp.an_lx[j];
   }
-  for (size_t j=0; j<nsd->n_sources; j++) {
+  for (size_t j=0; j<np_src; j++) {
     M_star.push_back(M_max*pars[pvi["mf_"+nsd->source_names[j]]]);
     sn_star.push_back(fsn_em[j]);
     c_fsn_em*=fsn_em[j];
@@ -1652,16 +1663,16 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
   //-------------------------------------------------------------------------
 
   size_t i=0;
-  while (i<n_pars) {
+  while (i<np) {
     
-    if (i<n_ligo_pars) { // w.r.t. m1_gw19
+    if (i<np_ligo) { // w.r.t. m1_gw19
       double cf, ct1, ct2, d_sn, d_gw;
       cf=wgt_pop[3]*wgt_gw17*fsn_gw19[1]*c_fsn_em*c_wgt_em;
       for (size_t i=0; i<fsn_gw17.size(); i++) cf*=fsn_gw17[i];
       ct1=fsn_gw19[0];
       ct2=wgt_gw19;
       d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
-      int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, d_gw);
+      int ret=deriv_fd(i, pars, scr_out, d_gw, dat);
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
@@ -1671,13 +1682,13 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
       i++;
     }
 
-    if (i>=n_ligo_pars && i<n_ligo_pars+n_src_pars) { 
+    if (i>=np_ligo && i<np_ligo+np_src) { 
       // w.r.t. mf_*
       double cf, d_sn, d_em, ct1, ct2;
       cf=wgt_pop[3]*c_wgt_gw*c_fsn_gw;
-      for (size_t j=0; j<n_src_pars; j++) {
+      for (size_t j=0; j<np_src; j++) {
         ct1=c_wgt_em*c_fsn_em/wgt_em[j];
-        int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, d_em);
+        int ret=deriv_fd(i, pars, scr_out, d_em, dat);
         if (ret!=0) {
           cout << "bamr_class::compute_gradient() failure:" 
                << " ix_return=" << m.ix_grad_failed << endl;
@@ -1690,12 +1701,12 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
       }
     }
 
-    if (i>=n_ligo_pars+n_src_pars && 
-        i<n_ligo_pars+n_src_pars+n_dist_pars) {
+    if (i>=np_ligo+np_src && 
+        i<np_ligo+np_src+np_dist) {
       // w.r.t. mean_*, width_*, skewness_*
       double cf, d_sn, ct;
       cf=c_fan_pop*c_wgt_gw*c_wgt_em;
-      vector<double> term(n_dist_pars);
+      vector<double> term(np_dist);
       for (size_t j=0; j<M_star.size(); j++) {
         int ip;
         ct=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[j];
@@ -1711,10 +1722,10 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
       i+=9;
     }
 
-    if (i>n_ligo_pars+n_src_pars+n_dist_pars) { // w.r.t. M_*
+    if (i>np_ligo+np_src+np_dist) { // w.r.t. M_*
       double cf, ct1, ct2, d_sn, d_an;
       cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
-      for (size_t j=0; j<n_pop_stars; j++) {
+      for (size_t j=0; j<np_nsp; j++) {
         ct1=c_fsn_pop*c_fan_pop/an_pop[j];
         d_an=nsp.deriv_an(M_star[j+1]-m_pop[j], lo_pop[j], hi_pop[j]);
         ct2=c_fsn_pop*c_fan_pop/sn_star[j+1];
