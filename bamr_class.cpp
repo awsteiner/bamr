@@ -1571,6 +1571,10 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
   size_t n_dist_pars=nsp.n_pop_params-nsd->pd.n_stars;
   size_t n_pop_stars=nsd->pd.n_stars;
 
+  size_t n_star_ns=pd.id_ns.size()+n_ligo_pars;
+  size_t n_star_wd=pd.id_wd.size();
+  size_t n_star_lx=pd.id_lx.size()+n_src_pars;
+
   if (n_pars!=n_ligo_pars+n_src_pars+n_dist_pars+n_pop_stars) {
     cout << "bamr_class::compute_gradient() failure due to "
          << "missing parameters:" << endl;
@@ -1648,112 +1652,79 @@ int bamr_class::compute_gradient(ubvector &pars, std::ofstream &scr_out,
   //-------------------------------------------------------------------------
 
   size_t i=0;
-  
   while (i<n_pars) {
     
     if (i<n_ligo_pars) { // w.r.t. m1_gw19
-      double cf, ct1, ct2, ddm_sn, ddm_gw;
+      double cf, ct1, ct2, d_sn, d_gw;
       cf=wgt_pop[3]*wgt_gw17*fsn_gw19[1]*c_fsn_em*c_wgt_em;
       for (size_t i=0; i<fsn_gw17.size(); i++) cf*=fsn_gw17[i];
       ct1=fsn_gw19[0];
       ct2=wgt_gw19;
-      ddm_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
-      int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, ddm_gw);
+      d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
+      int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, d_gw);
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
         return m.ix_grad_failed;
       }
-      grad[i]=cf*(ct1*ddm_gw+ct2*ddm_sn);
+      grad[i]=cf*(ct1*d_gw+ct2*d_sn);
       i++;
     }
 
     if (i>=n_ligo_pars && i<n_ligo_pars+n_src_pars) { 
       // w.r.t. mf_*
-      double cf=wgt_pop[3]*wgt_gw19*wgt_gw17;
-      for (size_t k=0; k<2; k++) cf*=fsn_gw17[k]*fsn_gw19[k];
-      double ddm_sn, ddm_em, ct1=1.0, ct2=1.0;
+      double cf, d_sn, d_em, ct1, ct2;
+      cf=wgt_pop[3]*c_wgt_gw*c_fsn_gw;
       for (size_t j=0; j<n_src_pars; j++) {
-        ct1*=fsn_em[j];
-        ct2*=wgt_em[j];
-        if (j!=i) {
-          ct1*=wgt_em[j];
-          ct2*=fsn_em[j];
+        ct1=c_wgt_em*c_fsn_em/wgt_em[j];
+        int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, d_em);
+        if (ret!=0) {
+          cout << "bamr_class::compute_gradient() failure:" 
+               << " ix_return=" << m.ix_grad_failed << endl;
+          return m.ix_grad_failed;
         }
+        ct2=c_wgt_em*c_fsn_em/fsn_em[j];
+        d_sn=nsp.deriv_sn(0, M_star[i], mean[2], width[2], skew[2]);
+        grad[i]=cf*(ct1*d_em+ct2*d_sn);
+        i++;
       }
-      ddm_sn=nsp.deriv_sn(0, M_star[i], mean[2], width[2], skew[2]);
-      int ret=gradient_fd(i, pars, scr_out, log_wgt, dat, ddm_em);
-      if (ret!=0) {
-        cout << "bamr_class::compute_gradient() failure:" 
-             << " ix_return=" << m.ix_grad_failed << endl;
-        return m.ix_grad_failed;
-      }
-      grad[i]=cf*(ct1*ddm_em+ct2*ddm_sn);
-      i++;
     }
 
     if (i>=n_ligo_pars+n_src_pars && 
         i<n_ligo_pars+n_src_pars+n_dist_pars) {
-      // w.r.t. mean_*, width_*, skew_*
-      double cf=c_fan_pop*c_wgt_gw*c_wgt_em;
-      double ddm_sn0, ddm_sn, ddw_sn, dds_sn, ct0, ct1, ct2;
-      double term1=0.0, term2=0.0;
-
-      for (size_t k=0; k<3; k++) {
-        ct0=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[0];
-        ddm_sn0=nsp.deriv_sn(1, M_star[0], mean[k], width[k], skew[k]);
-        for (size_t j=1; j<M_star.size(); j++) {
-          ct1=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[j];
-          ddm_sn=nsp.deriv_sn(1, M_star[j], mean[k], width[k], skew[k]);
-          term1+=ct1*ddm_sn;
-          ddw_sn=nsp.deriv_sn(2, M_star[j], mean[k], width[k], skew[k]);
-          dds_sn=nsp.deriv_sn(3, M_star[j], mean[k], width[k], skew[k]);
-          grad[i+1]+=cf*ct1*ddw_sn;
-          grad[i+2]+=cf*ct1*dds_sn;
-          ct2=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[j+1];
+      // w.r.t. mean_*, width_*, skewness_*
+      double cf, d_sn, ct;
+      cf=c_fan_pop*c_wgt_gw*c_wgt_em;
+      vector<double> term(n_dist_pars);
+      for (size_t j=0; j<M_star.size(); j++) {
+        int ip;
+        ct=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[j];
+        if (j<n_star_ns) ip=0;
+        else if (j>n_star_ns+n_star_wd) ip=2;
+        else ip=1;
+        for (size_t k=0; k<3; k++) {
+          d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], width[ip], skew[ip]);
+          term[k+3*ip]+=ct*d_sn;
         }
-        grad[i]=cf*(ct0*ddm_sn0+term1);
-        i+=3;
       }
-
-      //if (i==n_ligo_pars+n_src_pars+3) {
-      //  // w.r.t. mean_WD, width_WD, skew_WD
-      //  for (size_t j=pd.id_ns.size()+4; 
-      //      j<pd.id_ns.size()+4+pd.id_wd.size(); j++) {
-      //    ct=c_fsn_pop/sn_star[j];
-      //    ddm_sn=nsp.deriv_sn(1, M_star[j], mean[1], width[1], skew[1]);
-      //    ddw_sn=nsp.deriv_sn(2, M_star[j], mean[1], width[1], skew[1]);
-      //    dds_sn=nsp.deriv_sn(3, M_star[j], mean[1], width[1], skew[1]);
-      //    grad[i]+=cf*ct*ddm_sn;
-      //    grad[i+1]+=cf*ct*ddw_sn;
-      //    grad[i+2]+=cf*ct*dds_sn;
-      //  }
-      //}
-      //if (i==n_ligo_pars+n_src_pars+6) {
-      //  // w.r.t. mean_LMS, width_LMS, skew_LMS
-      //  for (size_t j=pd.id_ns.size()+4+pd.id_wd.size(); 
-      //      j<pd.id_ns.size()+4+pd.id_wd.size()+pd.id_lx.size()+4; j++) {
-      //    ct=c_fsn_pop/sn_star[j];
-      //    ddm_sn=nsp.deriv_sn(1, M_star[j], mean[2], width[2], skew[2]);
-      //    ddw_sn=nsp.deriv_sn(2, M_star[j], mean[2], width[2], skew[2]);
-      //    dds_sn=nsp.deriv_sn(3, M_star[j], mean[2], width[2], skew[2]);
-      //    grad[i]+=cf*ct*ddm_sn;
-      //    grad[i+1]+=cf*ct*ddw_sn;
-      //    grad[i+2]+=cf*ct*dds_sn;
-      //  }
-      //}
+      for (size_t k=0; k<term.size(); k++) grad[i+k]=cf*term[k];
+      i+=9;
     }
 
-    else { // w.r.t. M_*
-      double ct1, ct2, ddm_sn, ddm_an;
-      double cf=wgt_gw19*wgt_gw17*c_wgt_em*c_fsn_em;
-      for (size_t j=0; j<2; j++) cf*=fsn_gw19[j]*fsn_gw17[j];
-      for (size_t j=1; j<1+pd.id_ns.size()+pd.id_wd.size()+pd.id_lx.size(); j++) {
+    if (i>n_ligo_pars+n_src_pars+n_dist_pars) { // w.r.t. M_*
+      double cf, ct1, ct2, d_sn, d_an;
+      cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
+      for (size_t j=0; j<n_pop_stars; j++) {
         ct1=c_fsn_pop*c_fan_pop/an_pop[j];
-        ddm_an=nsp.deriv_an(M_star[j]-m_pop[j], lo_pop[j], hi_pop[j]);
-        ct2=c_fsn_pop*c_fan_pop/sn_star[j];
-        ddm_sn=nsp.deriv_sn(1, M_star[j], mean[0], width[0], skew[0]);
-        grad[i]=cf*(ct1*ddm_an+ct2*ddm_sn);
+        d_an=nsp.deriv_an(M_star[j+1]-m_pop[j], lo_pop[j], hi_pop[j]);
+        ct2=c_fsn_pop*c_fan_pop/sn_star[j+1];
+        int ip;
+        if (j<n_star_ns) ip=0;
+        else if (j>n_star_ns+n_star_wd) ip=2;
+        else ip=1;
+        d_sn=nsp.deriv_sn(0, M_star[j+1], mean[ip], width[ip], skew[ip]);
+        grad[i]=cf*(ct1*d_an+ct2*d_sn);
+        i++;
       }
     }
   }
