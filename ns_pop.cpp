@@ -32,9 +32,10 @@ double ns_pop::deriv_sn(const int i_wrt, double x, double m,
   double t2=(x-m)*(1.0+erf(p))/s/s;
 
   if (i_wrt==0) return k*ef*(t1-t2);
-  if (i_wrt==1) return k*ef*(t2-t1);
-  if (i_wrt==2) return k*ef*(t2-t1)*(x-m)/s;
-  if (i_wrt==3) return k*ef*exp(-p*p);
+  else if (i_wrt==1) return k*ef*(t2-t1);
+  else if (i_wrt==2) return k*ef*(t2-t1)*(x-m)/s;
+  else if (i_wrt==3) return k*ef*exp(-p*p);
+  else return 0.0;
 }
 
 double ns_pop::deriv_an(double x, double c, double d) {

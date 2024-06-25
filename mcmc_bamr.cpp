@@ -1313,9 +1313,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     if (mpi_size>1 && mpi_rank>=1) {
       MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
          tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
     }
 #endif
+
     cout << "Begin mcmc_method==hmc" << endl;
     size_t np=this->n_params;
     size_t np_ligo=nsd->n_ligo_params;
@@ -1348,21 +1348,22 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         (&bamr_class::compute_point), bc_arr[i], _2, ref(scr_out), _3, _4);
       gfa[i]=std::bind
         (std::mem_fn<int(ubvector &, vec_index &, ofstream &, ubvector &, model_data &)>
-        (&bamr_class::compute_deriv), bc_arr[i], _2, ref(pvi), ref(scr_out), _3, _4);
+        (&bamr_class::compute_deriv), bc_arr[i], _2, ref(pvi), ref(scr_out), _4, _5);
     }
+
+    stepper.set_gradients(gfa);
     
-    }
+  }
     
 
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
     if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      int tag=0, buffer=0;
       MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
          tag,MPI_COMM_WORLD);
     }
 #endif
-
-  }
 
   // ---------------------------------------
   // Put KDE stuff here, let's start with the single thread
