@@ -385,6 +385,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       double M_max=dat.mvsr.max("gm");
       
+      if (wgt_pop.size()==0) wgt_pop.resize(4);
       wgt_pop[0]=pop.get_weight_ns(pars,pvi,iret);
       
       if (iret!=m.ix_success) {
@@ -533,8 +534,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
     }
 
-    wgt_em.clear();
-    fsn_em.clear();
+    if (wgt_em.size()==0) wgt_em.resize(nsd->n_sources);
+    if (fsn_em.size()==0) fsn_em.resize(nsd->n_sources);
 
     if (set->apply_intsc==false) {
 
@@ -1266,6 +1267,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         
         log_wgt+=log(sn_ligo);
 
+        if (fsn_gw17.size()==0) fsn_gw17.resize(2);
         fsn_gw17[0]=sn_m1;
         fsn_gw17[1]=sn_m2;
 
@@ -1285,6 +1287,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         log_wgt+=log(sn_ligo);
 
+        if (fsn_gw19.size()==0) fsn_gw19.resize(2);
         fsn_gw19[0]=sn_m1;
         fsn_gw19[1]=sn_m2;
       
@@ -1529,7 +1532,7 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 void bamr_class::fill_pop_data() {
   pop_data &pd=nsd->pd;
-  for (size_t j=0; j<pd.id_ns.size(); j++) {
+  /*for (size_t j=0; j<pd.id_ns.size(); j++) {
     m_pop.push_back(pd.mass_ns[j]);
     lo_pop.push_back(pd.low_ns[j]);
     hi_pop.push_back(pd.high_ns[j]);
@@ -1543,11 +1546,11 @@ void bamr_class::fill_pop_data() {
     m_pop.push_back(pd.mass_lx[j]);
     lo_pop.push_back(pd.low_lx[j]);
     hi_pop.push_back(pd.high_lx[j]);
-  }
+  }*/
 }
 
 
-int bamr_class::deriv_fd(size_t &i, ubvector &x, std::ofstream &scr_out,
+int bamr_class::deriv_fd(size_t i, ubvector &x, std::ofstream &scr_out,
                          double &g, model_data &dat) {
 double fv1, fv2, h;
 model &m=*this->mod;
@@ -1573,9 +1576,8 @@ return o2scl::success;
 }
 
 
-int bamr_class::compute_deriv(ubvector &pars, vec_index &pvi, 
-                              std::ofstream &scr_out, ubvector &grad, 
-                              model_data &dat) {
+int bamr_class::compute_deriv(ubvector &pars, std::ofstream &scr_out, 
+                              ubvector &grad, model_data &dat) {
   ns_pop &nsp=nsd->pop;
   pop_data &pd=nsd->pd;
   model &m=*this->mod;
@@ -1647,89 +1649,93 @@ int bamr_class::compute_deriv(ubvector &pars, vec_index &pvi,
 
   //-------------------------------------------------------------------------
 
-  size_t i=0;
+  size_t i_pars=0;
 
-  while (i<np) {
+  while (i_pars<np) {
 
-    if (i<np_eos) {
+    if (i_pars<np_eos) {
       // w.r.t. the EOS parameters
       int ret=1;
       double cf, ct1, ct2, d_gw, d_em, term=0.0;
       cf=wgt_pop[3]*wgt_gw19*c_fsn_gw*c_fsn_em;
       ct1=c_wgt_em;
-      ret*=deriv_fd(i, pars, scr_out, d_gw, dat);
+      ret*=deriv_fd(i_pars, pars, scr_out, d_gw, dat);
       for (size_t j=0; j<np_src; j++) {
         ct2=wgt_gw17*c_wgt_em/wgt_em[j];
-        ret*=deriv_fd(i, pars, scr_out, d_em, dat);
+        ret*=deriv_fd(i_pars, pars, scr_out, d_em, dat);
         term+=ct2*d_em;
       }
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
         scr_out << "bamr_class::deriv_fd() failed w.r.t. parameter" 
-                << " " << i << endl;
+                << " " << i_pars << endl;
         return m.ix_grad_failed;
       }
-      grad[i]=cf*(ct1*d_gw+term);
-      i++;
+      grad[i_pars]=cf*(ct1*d_gw+term);
+      i_pars++;
     }
 
-    if (i>=np_eos && i<np_eos+np_ligo-1) { 
+    if (i_pars>=np_eos && i_pars<np_eos+np_ligo-1) { 
       // w.r.t. the GW170817 parameters Lambda, q, z_cdf
       int ret;
       double cf, d_gw;
       cf=wgt_pop[3]*wgt_gw19*c_fsn_gw*c_wgt_em*c_fsn_em;
-      ret=deriv_fd(i, pars, scr_out, d_gw, dat);
+      ret=deriv_fd(i_pars, pars, scr_out, d_gw, dat);
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
         scr_out << "bamr_class::deriv_fd() failed w.r.t. parameter" 
-                << " " << i << endl;
+                << " " << i_pars << endl;
         return m.ix_grad_failed;
       }
-      grad[i]=cf*d_gw;
-      i++;
+      grad[i_pars]=cf*d_gw;
+      i_pars++;
     }
     
-    if (i==np_eos+np_ligo-1) { 
+    if (i_pars==np_eos+np_ligo-1) { 
       // w.r.t. the parameter m1_gw19
       double cf, ct1, ct2, d_sn, d_gw;
       cf=wgt_pop[3]*wgt_gw17*fsn_gw19[1]*c_fsn_em*c_wgt_em;
-      for (size_t i=0; i<fsn_gw17.size(); i++) cf*=fsn_gw17[i];
+      for (size_t j=0; j<fsn_gw17.size(); j++) cf*=fsn_gw17[j];
       ct1=fsn_gw19[0];
       ct2=wgt_gw19;
       d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
-      int ret=deriv_fd(i, pars, scr_out, d_gw, dat);
+      int ret=deriv_fd(i_pars, pars, scr_out, d_gw, dat);
       if (ret!=0) {
         cout << "bamr_class::compute_gradient() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
+        scr_out << "bamr_class::deriv_fd() failed w.r.t. parameter" 
+                << " " << i_pars << endl;
         return m.ix_grad_failed;
       }
-      grad[i]=cf*(ct1*d_gw+ct2*d_sn);
-      i++;
+      grad[i_pars]=cf*(ct1*d_gw+ct2*d_sn);
+      i_pars++;
     }
 
-    if (i>=np_eos+np_ligo && i<np_eos+np_ligo+np_src) { 
+    if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
       // w.r.t. the mass fractions mf_*
       double cf, d_sn, d_em, ct1, ct2;
       cf=wgt_pop[3]*c_wgt_gw*c_fsn_gw;
       for (size_t j=0; j<np_src; j++) {
         ct1=c_wgt_em*c_fsn_em/wgt_em[j];
-        int ret=deriv_fd(i, pars, scr_out, d_em, dat);
+        int ret=deriv_fd(i_pars, pars, scr_out, d_em, dat);
         if (ret!=0) {
           cout << "bamr_class::compute_gradient() failure:" 
                << " ix_return=" << m.ix_grad_failed << endl;
+          scr_out << "bamr_class::deriv_fd() failed w.r.t. parameter" 
+                  << " " << i_pars << endl;
           return m.ix_grad_failed;
         }
         ct2=c_wgt_em*c_fsn_em/fsn_em[j];
-        d_sn=nsp.deriv_sn(0, M_star[i], mean[2], width[2], skew[2]);
-        grad[i]=cf*(ct1*d_em+ct2*d_sn);
-        i++;
+        d_sn=nsp.deriv_sn(0, M_star[i_pars], mean[2], width[2], skew[2]);
+        grad[i_pars]=cf*(ct1*d_em+ct2*d_sn);
+        i_pars++;
       }
     }
 
-    if (i>=np_eos+np_ligo+np_src && 
-        i<np_eos+np_ligo+np_src+np_dist) {
+    if (i_pars>=np_eos+np_ligo+np_src && 
+        i_pars<np_eos+np_ligo+np_src+np_dist) {
       // w.r.t. the distribution parameters 
       // mean_*, width_*, skewness_*
       double cf, d_sn, ct;
@@ -1746,11 +1752,12 @@ int bamr_class::compute_deriv(ubvector &pars, vec_index &pvi,
           term[k+3*ip]+=ct*d_sn;
         }
       }
-      for (size_t k=0; k<term.size(); k++) grad[i+k]=cf*term[k];
-      i+=9;
+      for (size_t k=0; k<term.size(); k++) grad[i_pars+k]=cf*term[k];
+      i_pars+=9;
     }
 
-    if (i>np_eos+np_ligo+np_src+np_dist) { // w.r.t. M_*
+    if (i_pars>np_eos+np_ligo+np_src+np_dist) { 
+      // w.r.t. the mass parameters M_*
       double cf, ct1, ct2, d_sn, d_an;
       cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
       for (size_t j=0; j<np_nsp; j++) {
@@ -1762,8 +1769,8 @@ int bamr_class::compute_deriv(ubvector &pars, vec_index &pvi,
         else if (j>n_star_ns+n_star_wd) ip=2;
         else ip=1;
         d_sn=nsp.deriv_sn(0, M_star[j+1], mean[ip], width[ip], skew[ip]);
-        grad[i]=cf*(ct1*d_an+ct2*d_sn);
-        i++;
+        grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
+        i_pars++;
       }
     }
   }

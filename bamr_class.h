@@ -181,14 +181,7 @@ namespace bamr {
     bamr_class() {
       schwarz_km=o2scl_const::schwarzchild_radius_f<double>()/1.0e3;
       n_threads=1;
-      fill_pop_data();
-      wgt_pop.resize(4);
-      fsn_gw19.resize(2);
-      mass_gw19.resize(2);
-      fsn_gw17.resize(2);
-      mass_gw17.resize(2);
-      wgt_em.resize(nsd->n_sources);
-      fsn_em.resize(nsd->n_sources);
+      // fill_pop_data();
     }
 
     // Empty destructor to make sure its virtual
@@ -204,11 +197,10 @@ namespace bamr {
     virtual int compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
                                   double &log_wgt, model_data &dat);
 
-    virtual int compute_deriv(ubvector &pars, vec_index &pvi,
-                              std::ofstream &scr_out, ubvector &grad, 
-                              model_data &dat);
+    virtual int compute_deriv(ubvector &pars, std::ofstream &scr_out, 
+                              ubvector &grad, model_data &dat);
 
-    virtual int deriv_fd(size_t &index, ubvector &pars, std::ofstream &scr_out, 
+    virtual int deriv_fd(size_t index, ubvector &pars, std::ofstream &scr_out, 
                          double &grad, model_data &dat);
 
     virtual void fill_pop_data();

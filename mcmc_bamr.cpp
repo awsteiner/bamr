@@ -385,7 +385,7 @@ int mcmc_bamr::mcmc_init() {
   this->ret_value_counts.resize(this->n_threads);
   for(size_t it=0;it<this->n_threads;it++) {
     // The size must be at least (total # of error codes + 1)
-    this->ret_value_counts[it].resize(30);
+    this->ret_value_counts[it].resize(31);
   }
 
   // Copy parameter values to all of the model objects
@@ -1288,88 +1288,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 #endif
 
-
-  for(size_t j=0;j<names.size();j++) {
-    pvi.append(names[j]);
-  }
-  // Copy the pvi object from mcmc_bamr to bamr_class so it can
-  // be used in compute_point()
-  for(size_t j=0;j<bc_arr.size();j++) {
-    bc_arr[j]->pvi=pvi;
-  }
-
   //-------------------------------------------------------------------
 
-  if (mcmc_method==string("hmc")) {
-
-#ifdef BAMR_MPI
-    // Get MPI rank, etc.
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-      
-    // Ensure that multiple MPI ranks aren't reading from the
-    // filesystem at the same time
-    int tag=0, buffer=0;
-    if (mpi_size>1 && mpi_rank>=1) {
-      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-         tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-    }
-#endif
-
-    cout << "Begin mcmc_method==hmc" << endl;
-    size_t np=this->n_params;
-    size_t np_ligo=nsd->n_ligo_params;
-    size_t np_eos=bc_arr[0]->mod->n_eos_params;
-    size_t np_src=nsd->n_sources;
-    size_t np_pop=nsd->pop.n_pop_params;
-    
-    stepper.auto_grad.resize(np);
-    for (size_t i=0; i<np; i++) {
-      if (i<np_eos+np_ligo-1) stepper.auto_grad[i]=true;
-      else stepper.auto_grad[i]=false;
-    }
-
-    stepper.traj_length=1;
-    stepper.mom_step.resize(np);
-    for (size_t i=0; i<np; i++) {
-      stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
-                               *(this->rg[0].random()*2.0-1.0);
-    }
-    cout << "End of mcmc_method==hmc" << endl;
-
-    vector<bamr::point_funct> pfa(n_threads);
-    vector<bamr::deriv_funct> gfa(n_threads);
-
-    using namespace std::placeholders;
-
-    for (size_t i=0; i<n_threads; i++) {
-      pfa[i]=std::bind
-        (std::mem_fn<int(const ubvector &, ofstream &, double &, model_data &)>
-        (&bamr_class::compute_point), bc_arr[i], _2, ref(scr_out), _3, _4);
-      gfa[i]=std::bind
-        (std::mem_fn<int(ubvector &, vec_index &, ofstream &, ubvector &, model_data &)>
-        (&bamr_class::compute_deriv), bc_arr[i], _2, ref(pvi), ref(scr_out), _4, _5);
-    }
-
-    stepper.set_gradients(gfa);
-    
-  }
-    
-
-#ifdef BAMR_MPI
-    // Send a message to the next MPI rank
-    if (mpi_size>1 && mpi_rank<mpi_size-1) {
-      int tag=0, buffer=0;
-      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
-         tag,MPI_COMM_WORLD);
-    }
-#endif
-
-  // ---------------------------------------
+// ---------------------------------------
   // Put KDE stuff here, let's start with the single thread
   // version, and deal with OpenMP later
 
-#ifdef BAMR_KDE
+// #ifdef BAMR_KDE
   if (mcmc_method==string("kde") ||
       mcmc_method==string("kde_sklearn") ||
       mcmc_method==string("gauss")) {
@@ -1431,8 +1356,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     for (size_t j=0; j<tab_in.get_nlines(); j++) {
       vector<size_t> ix;
       for (size_t i=0; i<n_pars; i++) {
-	ix={j,i};
-	ten_in.get(ix)=tab_in.get(i+5,j);
+	      ix={j,i};
+	      ten_in.get(ix)=tab_in.get(i+5,j);
       }
     }
     
@@ -1474,36 +1399,36 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {
-	avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
-	std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
-	cout << "param,avg,stddev: " << j << " " << avg[j] 
-	     << " " << std[j] << endl;
+	      avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+	      std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+	      cout << "param,avg,stddev: " << j << " " << avg[j] 
+	           << " " << std[j] << endl;
       }
       
       ubmatrix covar(n_pars,n_pars);
       for(size_t i=0;i<n_pars;i++) {
-	for(size_t j=0;j<n_pars;j++) {
-	  if (i==j) {
-	    covar(i,j)=std[j]*std[j];
-	    //covar(i,j)/=var_dec_factor;
-	  } else {
-	    covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
-					 tab_in[j+5]);
-	    covar(i,j)/=2.0;
-	  }
-	}
+	      for(size_t j=0;j<n_pars;j++) {
+	        if (i==j) {
+	          covar(i,j)=std[j]*std[j];
+	          //covar(i,j)/=var_dec_factor;
+	        } else {
+	          covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
+					    tab_in[j+5]);
+	          covar(i,j)/=2.0;
+	        }
+	      }
       }
       
       gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
-	(new prob_dens_mdim_gaussian<>);
+	    (new prob_dens_mdim_gaussian<>);
       gpp->set_covar(n_pars,avg,covar);
       gpp->pdg.set_seed(mpi_rank*clock());
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. This code may need to be changed
       // for more than one OpenMP thread.
-      hmc.proposal.resize(1);
-      hmc.proposal[0].set_base(gpp);
+      stepper.proposal.resize(1);
+      stepper.proposal[0].set_base(gpp);
     
     }
     
@@ -1516,9 +1441,82 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 #endif
 
   }
+//#else
+#ifdef O2SCL_NEVER_DEFINED
+
+  if (mcmc_method==string("hmc")) {
+
+#ifdef BAMR_MPI
+    // Get MPI rank, etc.
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+      
+    // Ensure that multiple MPI ranks aren't reading from the
+    // filesystem at the same time
+    int tag=0, buffer=0;
+    if (mpi_size>1 && mpi_rank>=1) {
+      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+         tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    }
 #endif
+
+    cout << "Begin mcmc_method==hmc" << endl;
+    size_t np=this->n_params;
+    size_t np_ligo=nsd->n_ligo_params;
+    size_t np_eos=bc_arr[0]->mod->n_eos_params;
+    size_t np_src=nsd->n_sources;
+    size_t np_pop=nsd->pop.n_pop_params;
     
+    stepper.auto_grad.resize(np, true);
+
+    stepper.traj_length=1;
+    stepper.mom_step.resize(np);
+    for (size_t i=0; i<np; i++) {
+      stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
+                               *(this->rg[0].random()*2.0-1.0);
+    }
+
+    vector<bamr::point_funct> pfa(n_threads);
+    vector<bamr::deriv_funct> gfa(n_threads);
+
+    using namespace std::placeholders;
+
+    for (size_t i=0; i<n_threads; i++) {
+      pfa[i]=std::bind
+        (std::mem_fn<int(const ubvector &, ofstream &, double &, model_data &)>
+        (&bamr_class::compute_point), bc_arr[i], _2, ref(scr_out), _3, _4);
+      gfa[i]=std::bind
+        (std::mem_fn<int(ubvector &, vec_index &, ofstream &, ubvector &, model_data &)>
+        (&bamr_class::compute_deriv), bc_arr[i], _2, ref(scr_out), _4, _5);
+    }
+
+    // stepper.set_gradients(gfa);
+    
+    cout << "End of mcmc_method==hmc" << endl;
+    
+  }  
+
+#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      // int tag=0, buffer=0;
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+         tag,MPI_COMM_WORLD);
+    }
+#endif
+
+#endif
+
   // ---------------------------------------
+
+  for(size_t j=0;j<names.size();j++) {
+    pvi.append(names[j]);
+  }
+  // Copy the pvi object from mcmc_bamr to bamr_class so it can
+  // be used in compute_point()
+  for(size_t j=0;j<bc_arr.size();j++) {
+    bc_arr[j]->pvi=pvi;
+  }
   
   // Perform the MCMC simulation
   ubvector low2(low.size()), high2(high.size());

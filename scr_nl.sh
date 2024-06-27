@@ -34,4 +34,4 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
-	-initial-point-last out/nl_50 -mcmc
+	-initial-point-last out/nl_train -mcmc

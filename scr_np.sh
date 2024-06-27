@@ -1,8 +1,7 @@
 #! /usr/bin/bash
 
-# npoly:
-mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
-	-set max_iters 1000 -set file_update_time 1800 \
+./bamr -threads 1 -set prefix out/np \
+	-set max_iters 1 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -34,5 +33,4 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -method kde -set model_dpdm 0 \
-	-initial-point-last out/np_54a0 \
-	-mcmc > out/np.out 2>&1 &
+	-mcmc

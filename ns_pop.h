@@ -64,12 +64,6 @@ class ns_pop {
     /* Constructor to load source data */
     ns_pop() {
       pd.load_data();
-      an_ns.resize(pd.id_ns.size());
-      an_wd.resize(pd.id_wd.size());
-      an_lx.resize(pd.id_lx.size());
-      sn_ns.resize(pd.id_ns.size());
-      sn_wd.resize(pd.id_wd.size());
-      sn_lx.resize(pd.id_lx.size());
       debug=false;
     }
 
@@ -105,10 +99,10 @@ class ns_pop {
     double asym_norm(double, double, double);
 
     /* Derivative of the Skewed Normal PDF */
-    double deriv_sn(const int, double, double, double, double);
+    double deriv_sn(int , double , double , double , double );
 
     /* Derivative of the Asymmetric Normal PDF */
-    double deriv_an(double, double, double);
+    double deriv_an(double , double , double );
 
     /* Function to fill vectors with the names and units of 
     population parameter */
@@ -145,7 +139,7 @@ class ns_pop {
     vector<double> sn_lx;
 
 
-  private:
+  protected:
 
     /* PDF of standard normal distribution N(0,1) */
     double norm_pdf(double);

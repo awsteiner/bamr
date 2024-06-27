@@ -23,7 +23,7 @@ double ns_pop::asym_norm(double x, double c, double d) {
   else return k*norm_pdf(x/c/d);
 }
 
-double ns_pop::deriv_sn(const int i_wrt, double x, double m, 
+double ns_pop::deriv_sn(int i_wrt, double x, double m, 
                         double s, double a) {
   double k=1.0/s/sqrt(2.0*M_PI);
   double ef=exp(-0.5*pow((x-m)/s,2.0));
@@ -60,6 +60,10 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
+
+  if (sn_ns.size()==0) sn_ns.resize(pd.id_ns.size());
+  if (an_ns.size()==0) an_ns.resize(pd.id_ns.size());
+
   for (size_t i=0; i<pd.id_ns.size(); i++) {
     double mass=pd.mass_ns[i];
     double high=pd.high_ns[i];
@@ -106,6 +110,10 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
+
+  if (sn_wd.size()==0) sn_wd.resize(pd.id_wd.size());
+  if (an_wd.size()==0) an_wd.resize(pd.id_wd.size());
+
   for (size_t i=0; i<pd.id_wd.size(); i++) {
     double mass=pd.mass_wd[i];
     double high=pd.high_wd[i];
@@ -150,6 +158,10 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
     cout << "index name mass(data) asym scale M_star(param) "
          << "mean width skewness wgt AN SN" << endl;
   }
+
+  if (sn_lx.size()==0) sn_lx.resize(pd.id_lx.size());
+  if (an_lx.size()==0) an_lx.resize(pd.id_lx.size());
+
   for (size_t i=0; i<pd.id_lx.size(); i++) {
     double mass=pd.mass_lx[i]; 
     double low=pd.low_lx[i];

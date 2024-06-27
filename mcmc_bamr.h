@@ -107,19 +107,19 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-#ifdef BAMR_KDE
+//#ifdef BAMR_KDE
   class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
    mcmc_stepper_mh<point_funct,model_data,
                    ubvector,ubmatrix,
                    prob_cond_mdim_indep<>>> 
-#else
+/*#else
    class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
    mcmc_stepper_hmc<point_funct,model_data,ubvector>> 
-#endif
+#endif */
   {
   protected:
 
