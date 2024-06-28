@@ -47,6 +47,11 @@ struct pop_data {
   // vector<double> low_hx;
   // vector<double> high_hx;
 
+  /* Vectors to store the input quantities for NS populations */
+  std::vector<double> m_pop;
+  std::vector<double> lo_pop;
+  std::vector<double> hi_pop;
+
   /* Total number of stars in all populations */
   size_t n_stars;
 

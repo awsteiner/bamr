@@ -108,18 +108,18 @@ namespace bamr {
       objects. There's probably a better way to do this.
   */
 //#ifdef BAMR_KDE
-  class mcmc_bamr :
+/*  class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
    mcmc_stepper_mh<point_funct,model_data,
                    ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>> 
-/*#else
+                   prob_cond_mdim_indep<>>>*/
+//#else
    class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
    mcmc_stepper_hmc<point_funct,model_data,ubvector>> 
-#endif */
+//#endif
   {
   protected:
 

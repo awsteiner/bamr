@@ -288,6 +288,23 @@ void pop_data::load_data() {
   for (size_t i=0; i<low_lx.size(); i++) {
     high_lx.push_back(low_lx[i]);
   }
+
+  // Fill input data for all NS populations
+  for (size_t i=0; i<name_ns.size(); i++) {
+    m_pop.push_back(mass_ns[i]);
+    lo_pop.push_back(low_ns[i]);
+    hi_pop.push_back(high_ns[i]);
+  }
+  for (size_t i=0; i<name_wd.size(); i++) {
+    m_pop.push_back(mass_wd[i]);
+    lo_pop.push_back(low_wd[i]);
+    hi_pop.push_back(high_wd[i]);
+  }
+  for (size_t i=0; i<name_lx.size(); i++) {
+    m_pop.push_back(mass_lx[i]);
+    lo_pop.push_back(low_lx[i]);
+    hi_pop.push_back(high_lx[i]);
+  }
   
   // Count the total number of stars in all populations
   this->n_stars = id_ns.size() + id_wd.size() + id_lx.size();
