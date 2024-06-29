@@ -1578,9 +1578,6 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   size_t n_star_wd=pd.id_wd.size();
   size_t n_star_lx=pd.id_lx.size()+np_src;
   
-  grad.clear();
-  if (grad.size()!=np) grad.resize(np);
-  
   vector<double> mean(3), width(3), skew(3);
   mean[0]=pars[pvi["mean_NS"]];
   mean[1]=pars[pvi["mean_WD"]];

@@ -1480,13 +1480,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
                                *(unif(gen)*2.0-1.0);
     }
 
-    cout << "method=hmc: np=" << np << endl;
-
-    vector<bamr::point_funct> pfa(n_threads);
     vector<bamr::deriv_funct> gfa(n_threads);
-
     using namespace std::placeholders;
-
     for (size_t i=0; i<n_threads; i++) {
       gfa[i]=std::bind
         (std::mem_fn<int(ubvector &, point_funct &, ubvector &, model_data &)>
@@ -1538,6 +1533,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     Py_Finalize();
   }
 #endif
+
+  cout << "End of mcmc_func()" << endl;
 
   return 0;
 }
