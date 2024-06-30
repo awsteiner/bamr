@@ -1589,7 +1589,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   skew[1]=pars[pvi["skewness_WD"]];
   skew[2]=pars[pvi["skewness_LMS"]];
   
-  double M_max=dat.mvsr.get_constant("M_max");
+  double M_max=dat.m_max;
 
   double c_fsn_pop=1.0, c_fan_pop=1.0;
   double c_fsn_em=1.0, c_wgt_em=1.0;
@@ -1601,21 +1601,21 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
 
   M_star.push_back(pars[pvi["m1_gw19"]]);
   sn_star.push_back(fsn_gw19[0]);
-  for (size_t j=0; j<n_star_ns; j++) {
+  for (size_t j=0; j<pd.id_ns.size(); j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
     sn_star.push_back(nsp.sn_ns[j]);
     an_pop.push_back(nsp.an_ns[j]);
     c_fsn_pop*=nsp.sn_ns[j];
     c_fan_pop*=nsp.an_ns[j];
   }
-  for (size_t j=0; j<n_star_wd; j++) {
+  for (size_t j=0; j<pd.id_wd.size(); j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
     sn_star.push_back(nsp.sn_wd[j]);
     an_pop.push_back(nsp.an_wd[j]);
     c_fsn_pop*=nsp.sn_wd[j];
     c_fan_pop*=nsp.an_wd[j];
   }
-  for (size_t j=0; j<n_star_lx; j++) {
+  for (size_t j=0; j<pd.id_lx.size(); j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
     sn_star.push_back(nsp.sn_lx[j]);
     an_pop.push_back(nsp.an_lx[j]);
@@ -1641,19 +1641,23 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       double cf, ct1, ct2, d_gw, d_em, term=0.0;
       cf=wgt_pop[3]*wgt_gw19*c_fsn_gw*c_fsn_em;
       ct1=c_wgt_em;
-      ret*=deriv_fd(i_pars, pars, pf, d_gw, dat);
-      for (size_t j=0; j<np_src; j++) {
-        ct2=wgt_gw17*c_wgt_em/wgt_em[j];
-        ret*=deriv_fd(i_pars, pars, pf, d_em, dat);
-        term+=ct2*d_em;
+      for (size_t k=0; k<np_eos; k++) {
+        ret*=deriv_fd(i_pars, pars, pf, d_gw, dat);
+        term=0.0;
+        for (size_t j=0; j<np_src; j++) {
+          ct2=wgt_gw17*c_wgt_em/wgt_em[j];
+          ret*=deriv_fd(i_pars, pars, pf, d_em, dat);
+          term+=ct2*d_em;
+        }
+        if (ret!=0) {
+          cout << "bamr_class::compute_deriv() failure:" 
+               << " ix_return=" << m.ix_grad_failed << endl;
+          return m.ix_grad_failed;
+        }
+        grad[i_pars]=cf*(ct1*d_gw+term);
+        i_pars++;
+        cout << "EOS: i_pars=" << i_pars << endl;
       }
-      if (ret!=0) {
-        cout << "bamr_class::compute_gradient() failure:" 
-             << " ix_return=" << m.ix_grad_failed << endl;
-        return m.ix_grad_failed;
-      }
-      grad[i_pars]=cf*(ct1*d_gw+term);
-      i_pars++;
     }
 
     if (i_pars>=np_eos && i_pars<np_eos+np_ligo-1) { 
@@ -1661,14 +1665,17 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       int ret;
       double cf, d_gw;
       cf=wgt_pop[3]*wgt_gw19*c_fsn_gw*c_wgt_em*c_fsn_em;
-      ret=deriv_fd(i_pars, pars, pf, d_gw, dat);
-      if (ret!=0) {
-        cout << "bamr_class::compute_gradient() failure:" 
-             << " ix_return=" << m.ix_grad_failed << endl;
-        return m.ix_grad_failed;
+      for (size_t k=0; k<np_ligo-1; k++) {
+        ret=deriv_fd(i_pars, pars, pf, d_gw, dat);
+        if (ret!=0) {
+          cout << "bamr_class::compute_deriv() failure:" 
+               << " ix_return=" << m.ix_grad_failed << endl;
+          return m.ix_grad_failed;
+        }
+        grad[i_pars]=cf*d_gw;
+        i_pars++;
+        cout << "LIGO17: i_pars=" << i_pars << endl;
       }
-      grad[i_pars]=cf*d_gw;
-      i_pars++;
     }
     
     if (i_pars==np_eos+np_ligo-1) { 
@@ -1681,12 +1688,13 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
       int ret=deriv_fd(i_pars, pars, pf, d_gw, dat);
       if (ret!=0) {
-        cout << "bamr_class::compute_gradient() failure:" 
+        cout << "bamr_class::compute_deriv() failure:" 
              << " ix_return=" << m.ix_grad_failed << endl;
         return m.ix_grad_failed;
       }
       grad[i_pars]=cf*(ct1*d_gw+ct2*d_sn);
       i_pars++;
+      cout << "LIGO19: i_pars=" << i_pars << endl;
     }
 
     if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
@@ -1697,7 +1705,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         ct1=c_wgt_em*c_fsn_em/wgt_em[j];
         int ret=deriv_fd(i_pars, pars, pf, d_em, dat);
         if (ret!=0) {
-          cout << "bamr_class::compute_gradient() failure:" 
+          cout << "bamr_class::compute_deriv() failure:" 
                << " ix_return=" << m.ix_grad_failed << endl;
           return m.ix_grad_failed;
         }
@@ -1705,6 +1713,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         d_sn=nsp.deriv_sn(0, M_star[i_pars], mean[2], width[2], skew[2]);
         grad[i_pars]=cf*(ct1*d_em+ct2*d_sn);
         i_pars++;
+        cout << "Sources: i_pars=" << i_pars << endl;
       }
     }
 
@@ -1728,9 +1737,10 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
       for (size_t k=0; k<term.size(); k++) grad[i_pars+k]=cf*term[k];
       i_pars+=9;
+      cout << "Dist: i_pars=" << i_pars << endl;
     }
 
-    if (i_pars>np_eos+np_ligo+np_src+np_dist) { 
+    if (i_pars>=np_eos+np_ligo+np_src+np_dist) { 
       // w.r.t. the mass parameters M_*
       double cf, ct1, ct2, d_sn, d_an;
       cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
@@ -1745,9 +1755,13 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         d_sn=nsp.deriv_sn(0, M_star[j+1], mean[ip], width[ip], skew[ip]);
         grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
         i_pars++;
+        cout << "Mass: i_pars=" << i_pars << endl;
       }
     }
+    cout << "In while(): i_pars=" << i_pars << endl;
   }
+
+  cout << "End of compute_deriv()" << endl;
 
   return 0;
 }

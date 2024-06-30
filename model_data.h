@@ -60,6 +60,9 @@ namespace bamr {
     /// Grid quantities
     o2scl::table_units<> gridt;
 
+    /// The maximum mass
+    double m_max;
+
     /// The second maximum mass, when mmax_deriv is true
     double m_max2;
 

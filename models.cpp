@@ -517,6 +517,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
     // Add 'M_max' to the output table
     dat.mvsr.add_constant("M_max",m_max);
+    dat.m_max=m_max;
     
     // Find the central energy density of the maximum mass star.
     size_t row=dat.mvsr.lookup("gm",m_max);
