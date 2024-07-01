@@ -195,7 +195,7 @@ namespace bamr {
                               ubvector &grad, model_data &dat);
 
     virtual int deriv_fd(size_t index, ubvector &pars, point_funct &pf, 
-                         double &grad, model_data &dat);
+                         double &pfx, double &grad, model_data &dat);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point
