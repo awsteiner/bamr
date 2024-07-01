@@ -1590,8 +1590,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 #endif
 
-  cout << "End of mcmc_func()" << endl;
-
   return 0;
 }
 

@@ -25,16 +25,16 @@ double ns_pop::asym_norm(double x, double c, double d) {
 
 double ns_pop::deriv_sn(int i_wrt, double x, double m, 
                         double s, double a) {
-  double k=1.0/s/sqrt(2.0*M_PI);
-  double ef=exp(-0.5*pow((x-m)/s,2.0));
-  double p=(x-m)*a/s/sqrt(2.0);
-  double t1=a*sqrt(2.0/M_PI)*exp(-p*p)/s;
-  double t2=(x-m)*(1.0+erf(p))/s/s;
+  double k=1.0/s/sqrt(2.0*M_PI); //ok
+  double ef=exp(-0.5*pow((x-m)/s,2.0)); //ok
+  double p=a*(x-m)/s/sqrt(2.0); //ok
+  double t1=(x-m)*(1.0+erf(p))/s; //ok
+  double t2=2.0*a*exp(-p*p)/sqrt(2.0*M_PI); //ok
 
-  if (i_wrt==0) return k*ef*(t1-t2);
-  else if (i_wrt==1) return k*ef*(t2-t1);
-  else if (i_wrt==2) return k*ef*(t2-t1)*(x-m)/s;
-  else if (i_wrt==3) return k*ef*exp(-p*p);
+  if (i_wrt==0) return k*ef*(t2-t1)/s;
+  else if (i_wrt==1) return k*ef*(t1-t2)/s;
+  else if (i_wrt==2) return k*ef*(t1-t2)*(x-m)/s/s;
+  else if (i_wrt==3) return ef*exp(-p*p)*(x-m)/s/s/M_PI;
   else return 0.0;
 }
 
@@ -54,7 +54,6 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
   double width=pow(10.0, log10_width);
   double skew=pars[pvi["skewness_NS"]];
   double log_wgt=0.0;
-  eqn_solver es;
   
   if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
@@ -66,13 +65,12 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
 
   for (size_t i=0; i<pd.id_ns.size(); i++) {
     double mass=pd.mass_ns[i];
-    double high=pd.high_ns[i];
-    double low=pd.low_ns[i]; 
-    double asym=sqrt(high/low);
-    double scale=es.get_scale(low, high);
+    double asym=pd.asym_ns[i];
+    double scale=pd.scale_ns[i];
     double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
     an_ns[i]=asym_norm(mass-M_star, asym, scale);
     sn_ns[i]=skewed_norm(M_star, mean, width, skew);
+    an_nsp.push_back(an_ns[i]);
     double wgt_star=an_ns[i]*sn_ns[i];
     
     if (this->debug) {
@@ -104,7 +102,6 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
   double width=pow(10.0, log10_width);
   double skew=pars[pvi["skewness_WD"]];
   double log_wgt=0.0;
-  eqn_solver es;
 
   if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
@@ -116,13 +113,12 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
 
   for (size_t i=0; i<pd.id_wd.size(); i++) {
     double mass=pd.mass_wd[i];
-    double high=pd.high_wd[i];
-    double low=pd.low_wd[i];
-    double asym=sqrt(high/low);
-    double scale=es.get_scale(low, high);
+    double asym=pd.asym_wd[i];
+    double scale=pd.scale_wd[i];
     double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
     an_wd[i]=asym_norm(mass-M_star, asym, scale);
     sn_wd[i]=skewed_norm(M_star, mean, width, skew);
+    an_nsp.push_back(an_wd[i]);
     double wgt_star=an_wd[i]*sn_wd[i];
     
     if (this->debug) {
@@ -152,7 +148,6 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
   double width=pow(10.0, log10_width);
   double skew=pars[pvi["skewness_LMS"]];
   double log_wgt=0.0;
-  eqn_solver es;
 
   if (this->debug) {
     cout << "index name mass(data) asym scale M_star(param) "
@@ -164,13 +159,12 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
 
   for (size_t i=0; i<pd.id_lx.size(); i++) {
     double mass=pd.mass_lx[i]; 
-    double low=pd.low_lx[i];
-    double high=pd.high_lx[i];
-    double asym=sqrt(high/low);
-    double scale=es.get_scale(low, high);
+    double asym=pd.asym_lx[i];
+    double scale=pd.scale_lx[i];
     double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];
     an_lx[i]=asym_norm(mass-M_star, asym, scale);
     sn_lx[i]=skewed_norm(M_star, mean, width, skew);
+    an_nsp.push_back(an_lx[i]);
     double wgt_star=an_lx[i]*sn_lx[i];
     
     if (this->debug) {
