@@ -29,31 +29,28 @@ struct pop_data {
   vector<string> id_ns;
   vector<string> id_wd;
   vector<string> id_lx;
-  // vector<string> id_hms;
 
-  /* std::vector to store the measured NS mass */
+  /* Vectors to store the input data for all NS populations */
   vector<double> mass_ns;
   vector<double> mass_wd;
   vector<double> mass_lx;
-  // vector<double> mass_hms;
+  // vector<double> mass_hx;
+  vector<double> asym_ns;
+  vector<double> asym_wd;
+  vector<double> asym_lx;
+  vector<double> scale_ns;
+  vector<double> scale_wd;
+  vector<double> scale_lx;
 
-  /* std::vector to store 68% central limits of NS masses */
-  vector<double> low_ns;
-  vector<double> low_wd;
-  vector<double> high_ns;
-  vector<double> high_wd;
-  vector<double> low_lx;
-  vector<double> high_lx;
-  // vector<double> low_hx;
-  // vector<double> high_hx;
+  vector<double> mass_nsp;
+  vector<double> asym_nsp;
+  vector<double> scale_nsp;
 
-  /* Vectors to store the input quantities for NS populations */
-  std::vector<double> m_pop;
-  std::vector<double> lo_pop;
-  std::vector<double> hi_pop;
-
-  /* Total number of stars in all populations */
+  /* Count of numbers of stars in each population */
   size_t n_stars;
+  size_t n_star_ns;
+  size_t n_star_wd;
+  size_t n_star_lx;
 
   /* Function to load population mass data */
   void load_data();
@@ -137,6 +134,8 @@ class ns_pop {
     vector<double> an_ns;
     vector<double> an_wd;
     vector<double> an_lx;
+
+    vector<double> an_nsp;
 
     /* Store the values of SN(x|m,s,a) for all stars in a binary*/
     vector<double> sn_ns;

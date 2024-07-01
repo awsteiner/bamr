@@ -1578,10 +1578,6 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   double pfx=0.0;
   int func_ret=pf(np, pars, pfx, dat);
   if (func_ret!=o2scl::success) return m.ix_grad_failed;
-
-  size_t n_star_ns=pd.id_ns.size()+np_ligo;
-  size_t n_star_wd=pd.id_wd.size();
-  size_t n_star_lx=pd.id_lx.size()+np_src;
   
   vector<double> mean(3), width(3), skew(3);
   mean[0]=pars[pvi["mean_NS"]];
@@ -1597,36 +1593,33 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   double M_max=dat.m_max;
   cout << "M_max=" << M_max << endl;
 
-  double c_fsn_pop=1.0, c_fan_pop=1.0;
+  double c_fsn_nsp=1.0, c_fan_nsp=1.0;
   double c_fsn_em=1.0, c_wgt_em=1.0;
   double c_fsn_gw=1.0, c_wgt_gw=1.0;
-  vector<double> M_star, sn_star, an_pop;
+  vector<double> M_star, sn_star;
 
   for (size_t j=0; j<2; j++) c_fsn_gw*=fsn_gw19[j]*fsn_gw17[j];
   c_wgt_gw=wgt_gw19*wgt_gw17;
 
   M_star.push_back(pars[pvi["m1_gw19"]]);
   sn_star.push_back(fsn_gw19[0]);
-  for (size_t j=0; j<pd.id_ns.size(); j++) {
+  for (size_t j=0; j<pd.n_star_ns; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
     sn_star.push_back(nsp.sn_ns[j]);
-    an_pop.push_back(nsp.an_ns[j]);
-    c_fsn_pop*=nsp.sn_ns[j];
-    c_fan_pop*=nsp.an_ns[j];
+    c_fsn_nsp*=nsp.sn_ns[j];
+    c_fan_nsp*=nsp.an_ns[j];
   }
-  for (size_t j=0; j<pd.id_wd.size(); j++) {
+  for (size_t j=0; j<pd.n_star_wd; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
     sn_star.push_back(nsp.sn_wd[j]);
-    an_pop.push_back(nsp.an_wd[j]);
-    c_fsn_pop*=nsp.sn_wd[j];
-    c_fan_pop*=nsp.an_wd[j];
+    c_fsn_nsp*=nsp.sn_wd[j];
+    c_fan_nsp*=nsp.an_wd[j];
   }
-  for (size_t j=0; j<pd.id_lx.size(); j++) {
+  for (size_t j=0; j<pd.n_star_lx; j++) {
     M_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
     sn_star.push_back(nsp.sn_lx[j]);
-    an_pop.push_back(nsp.an_lx[j]);
-    c_fsn_pop*=nsp.sn_lx[j];
-    c_fan_pop*=nsp.an_lx[j];
+    c_fsn_nsp*=nsp.sn_lx[j];
+    c_fan_nsp*=nsp.an_lx[j];
   }
   for (size_t j=0; j<np_src; j++) {
     M_star.push_back(M_max*pars[pvi["mf_"+nsd->source_names[j]]]);
@@ -1637,10 +1630,10 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
 
   cout << "c_wgt_gw=" << c_wgt_gw << ", c_fsn_gw=" << c_fsn_gw << endl;
   cout << "c_wgt_em=" << c_wgt_em << ", c_fsn_em=" << c_fsn_em << endl;
-  cout << "c_fsn_pop=" << c_fsn_pop << ", c_fan_pop=" << c_fan_pop << endl;
+  cout << "c_fsn_nsp=" << c_fsn_nsp << ", c_fan_nsp=" << c_fan_nsp << endl;
   for (size_t j=0; j<M_star.size(); j++) {
     cout << "M_star[" << j << "]=" << M_star[j] << ", sn_star[" << j 
-         << "]=" << sn_star[j] << ", an_pop[" << j << "]=" << an_pop[j] << endl;
+         << "]=" << sn_star[j] << ", an_nsp[" << j << "]=" << nsp.an_nsp[j] << endl;
   }
   for (size_t j=0; j<3; j++) {
     cout << "mean[" << j << "]=" << mean[j] << ", width[" << j 
@@ -1688,7 +1681,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     if (i_pars==np_eos+np_ligo-1) { 
       // w.r.t. m1_gw19
       double cf, d_sn, d_gw;
-      cf=c_fsn_pop*c_fan_pop*c_wgt_gw*fsn_gw19[1]*c_fsn_em*c_wgt_em;
+      cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*fsn_gw19[1]*c_fsn_em*c_wgt_em;
       for (size_t j=0; j<fsn_gw17.size(); j++) cf*=fsn_gw17[j];
       d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
       int ret=deriv_fd(i_pars, pars, pf, pfx, d_gw, dat);
@@ -1704,7 +1697,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
       // w.r.t. the mass fractions mf_*
       double cf, d_sn, d_em, ct;
-      cf=c_fsn_pop*c_fan_pop*c_wgt_gw*c_fsn_gw*c_wgt_em;
+      cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em;
       for (size_t j=0; j<np_src; j++) {
         int ret=deriv_fd(i_pars, pars, pf, pfx,  d_em, dat);
         if (ret!=0) {
@@ -1725,13 +1718,13 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       // w.r.t. the distribution parameters 
       // mean_*, width_*, skewness_*
       double cf, d_sn, ct;
-      cf=c_fan_pop*c_wgt_gw*c_wgt_em;
+      cf=c_fan_nsp*c_wgt_gw*c_wgt_em;
       vector<double> term(np_dist);
       for (size_t j=0; j<M_star.size(); j++) {
         int ip;
-        ct=c_fsn_pop*c_fsn_gw*c_fsn_em/sn_star[j];
-        if (j<pd.id_ns.size()+1) ip=0;
-        else if (j>=pd.id_ns.size()+pd.id_wd.size()+1) ip=2;
+        ct=c_fsn_nsp*c_fsn_gw*c_fsn_em/sn_star[j];
+        if (j<pd.n_star_ns+1) ip=0;
+        else if (j>=pd.n_star_ns+pd.n_star_wd+1) ip=2;
         else ip=1;
         for (size_t k=0; k<3; k++) {
           d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], width[ip], skew[ip]);
@@ -1748,13 +1741,14 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       double cf, ct1, ct2, d_sn, d_an;
       cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
       for (size_t j=0; j<np_nsp; j++) {
-        ct1=c_fsn_pop*c_fan_pop/an_pop[j];
-        d_an=nsp.deriv_an(M_star[j+1]-pd.m_pop[j], pd.lo_pop[j], pd.hi_pop[j]);
-        ct2=c_fsn_pop*c_fan_pop/sn_star[j+1];
+        ct1=c_fsn_nsp*c_fan_nsp/nsp.an_nsp[j];
+        d_an=nsp.deriv_an(M_star[j+1]-pd.mass_nsp[j], 
+                          pd.asym_nsp[j], pd.scale_nsp[j]);
         int ip;
-        if (j<pd.id_ns.size()) ip=0;
-        else if (j>=pd.id_ns.size()+pd.id_wd.size()) ip=2;
+        if (j<pd.n_star_ns) ip=0;
+        else if (j>=pd.n_star_ns+pd.n_star_wd) ip=2;
         else ip=1;
+        ct2=c_fsn_nsp*c_fan_nsp/sn_star[j+1];
         d_sn=nsp.deriv_sn(0, M_star[j+1], mean[ip], width[ip], skew[ip]);
         grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
         cout << "Pop: i_pars=" << i_pars << endl;
@@ -1763,8 +1757,9 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     }
     cout << "In while(): i_pars=" << i_pars << endl;
   }
-
-  cout << "End of compute_deriv()" << endl;
+  double log_wgt=log(c_fan_nsp*c_fan_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em);
+  cout << "End of compute_deriv(): log_wgt_an=" << log_wgt << endl;
+  cout << "log_wgt_nu=" << pfx << endl;
 
   return 0;
 }

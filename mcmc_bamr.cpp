@@ -1458,7 +1458,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #endif
 
-    cout << "Begin mcmc_method==hmc" << endl;;
     size_t np_ligo=nsd->n_ligo_params;
     size_t np_eos=bc_arr[0]->mod->n_eos_params;
     size_t np_src=nsd->n_sources;
@@ -1488,10 +1487,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         (&bamr_class::compute_deriv), bc_arr[i], _2, _3, _4, _5);
     }
 
-    stepper.set_gradients(gfa);
-    
-    cout << "End of mcmc_method==hmc" << endl;
-    
+    stepper.set_gradients(gfa); 
   }
 
 #ifdef BAMR_MPI
@@ -1533,8 +1529,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     Py_Finalize();
   }
 #endif
-
-  cout << "End of mcmc_func()" << endl;
 
   return 0;
 }

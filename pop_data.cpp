@@ -9,225 +9,339 @@ void pop_data::load_data() {
   
   /* Data from NS-NS/DNS (some with asymmetric 68% limits)
      [source: Alsing et al. 2018] */
-  name_ns.push_back("J0453+1559 pulsar"); id_ns.push_back("J0453p");
-  mass_ns.push_back(1.559); high_ns.push_back(0.004); 
+  
+  vector<double> low_ns, high_ns;
+
+  name_ns.push_back("J0453+1559 pulsar");
+  id_ns.push_back("J0453p");
+  mass_ns.push_back(1.559);
+  high_ns.push_back(0.004);
   low_ns.push_back(0.004);
 
-  name_ns.push_back("J0453+1559 comp."); id_ns.push_back("J0453c");
-  mass_ns.push_back(1.174); high_ns.push_back(0.004); 
+  name_ns.push_back("J0453+1559 comp.");
+  id_ns.push_back("J0453c");
+  mass_ns.push_back(1.174);
+  high_ns.push_back(0.004);
   low_ns.push_back(0.004);
 
-  name_ns.push_back("J1906+0746 pulsar"); id_ns.push_back("J1906p");
-  mass_ns.push_back(1.291); high_ns.push_back(0.011); 
+  name_ns.push_back("J1906+0746 pulsar");
+  id_ns.push_back("J1906p");
+  mass_ns.push_back(1.291);
+  high_ns.push_back(0.011);
   low_ns.push_back(0.011);
 
-  name_ns.push_back("J1906+0746 comp."); id_ns.push_back("J1906c");
-  mass_ns.push_back(1.322); high_ns.push_back(0.011); 
+  name_ns.push_back("J1906+0746 comp.");
+  id_ns.push_back("J1906c");
+  mass_ns.push_back(1.322);
+  high_ns.push_back(0.011);
   low_ns.push_back(0.011);
 
-  name_ns.push_back("B1534+12 pulsar"); id_ns.push_back("B1534p"); 
-  mass_ns.push_back(1.3332); high_ns.push_back(0.001); 
+  name_ns.push_back("B1534+12 pulsar");
+  id_ns.push_back("B1534p");
+  mass_ns.push_back(1.3332);
+  high_ns.push_back(0.001);
   low_ns.push_back(0.001);
 
-  name_ns.push_back("B1534+12 comp."); id_ns.push_back("B1534c");
-  mass_ns.push_back(1.3452); high_ns.push_back(0.001); 
+  name_ns.push_back("B1534+12 comp.");
+  id_ns.push_back("B1534c");
+  mass_ns.push_back(1.3452);
+  high_ns.push_back(0.001);
   low_ns.push_back(0.001);
 
-  name_ns.push_back("B1913+16 pulsar"); id_ns.push_back("B1913p");
-  mass_ns.push_back(1.4398); high_ns.push_back(0.0002); 
+  name_ns.push_back("B1913+16 pulsar");
+  id_ns.push_back("B1913p");
+  mass_ns.push_back(1.4398);
+  high_ns.push_back(0.0002);
   low_ns.push_back(0.0002);
 
-  name_ns.push_back("B1913+16 comp."); id_ns.push_back("B1913c");
-  mass_ns.push_back(1.3886); high_ns.push_back(0.0002); 
+  name_ns.push_back("B1913+16 comp.");
+  id_ns.push_back("B1913c");
+  mass_ns.push_back(1.3886);
+  high_ns.push_back(0.0002);
   low_ns.push_back(0.0002);
 
-  name_ns.push_back("B2127+11C pulsar"); id_ns.push_back("B2127p");
-  mass_ns.push_back(1.358); high_ns.push_back(0.01); 
+  name_ns.push_back("B2127+11C pulsar");
+  id_ns.push_back("B2127p");
+  mass_ns.push_back(1.358);
+  high_ns.push_back(0.01);
   low_ns.push_back(0.01);
 
-  name_ns.push_back("B2127+11C comp."); id_ns.push_back("B2127c");
-  mass_ns.push_back(1.354); high_ns.push_back(0.01); 
+  name_ns.push_back("B2127+11C comp.");
+  id_ns.push_back("B2127c");
+  mass_ns.push_back(1.354);
+  high_ns.push_back(0.01);
   low_ns.push_back(0.01);
 
-  name_ns.push_back("J0737-3039A"); id_ns.push_back("J0737A");
-  mass_ns.push_back(1.3381); high_ns.push_back(0.0007); 
+  name_ns.push_back("J0737-3039A");
+  id_ns.push_back("J0737A");
+  mass_ns.push_back(1.3381);
+  high_ns.push_back(0.0007);
   low_ns.push_back(0.0007);
 
-  name_ns.push_back("J0737-3039B"); id_ns.push_back("J0737B");
-  mass_ns.push_back(1.2489); high_ns.push_back(0.0007); 
+  name_ns.push_back("J0737-3039B");
+  id_ns.push_back("J0737B");
+  mass_ns.push_back(1.2489);
+  high_ns.push_back(0.0007);
   low_ns.push_back(0.0007);
 
-  name_ns.push_back("J1756-2251 pulsar"); id_ns.push_back("J1756p");
-  mass_ns.push_back(1.312); high_ns.push_back(0.017); 
+  name_ns.push_back("J1756-2251 pulsar");
+  id_ns.push_back("J1756p");
+  mass_ns.push_back(1.312);
+  high_ns.push_back(0.017);
   low_ns.push_back(0.017);
 
-  name_ns.push_back("J1756-2251 comp."); id_ns.push_back("J1756c");
-  mass_ns.push_back(1.258); high_ns.push_back(0.017); 
+  name_ns.push_back("J1756-2251 comp.");
+  id_ns.push_back("J1756c");
+  mass_ns.push_back(1.258);
+  high_ns.push_back(0.017);
   low_ns.push_back(0.017);
 
-  name_ns.push_back("J1807-2500B pulsar"); id_ns.push_back("J1807p");
-  mass_ns.push_back(1.3655); high_ns.push_back(0.0021); 
+  name_ns.push_back("J1807-2500B pulsar");
+  id_ns.push_back("J1807p");
+  mass_ns.push_back(1.3655);
+  high_ns.push_back(0.0021);
   low_ns.push_back(0.0021);
 
-  name_ns.push_back("J1807-2500B comp."); id_ns.push_back("J1807c");
-  mass_ns.push_back(1.2064); high_ns.push_back(0.002); 
+  name_ns.push_back("J1807-2500B comp.");
+  id_ns.push_back("J1807c");
+  mass_ns.push_back(1.2064);
+  high_ns.push_back(0.002);
   low_ns.push_back(0.002);
 
   // [source: Kiziltan et al. 2013]
-  name_ns.push_back("J1518+4904 pulsar"); id_ns.push_back("J1518p");
-  mass_ns.push_back(1.56); high_ns.push_back(0.13); 
+  name_ns.push_back("J1518+4904 pulsar");
+  id_ns.push_back("J1518p");
+  mass_ns.push_back(1.56);
+  high_ns.push_back(0.13);
   low_ns.push_back(0.44);
 
-  name_ns.push_back("J1518+4904 comp."); id_ns.push_back("J1518c");
-  mass_ns.push_back(1.05); high_ns.push_back(0.45); 
+  name_ns.push_back("J1518+4904 comp.");
+  id_ns.push_back("J1518c");
+  mass_ns.push_back(1.05);
+  high_ns.push_back(0.45);
   low_ns.push_back(0.11);
 
-  name_ns.push_back("J1811-1736 pulsar"); id_ns.push_back("J1811p");
-  mass_ns.push_back(1.56); high_ns.push_back(0.24); 
+  name_ns.push_back("J1811-1736 pulsar");
+  id_ns.push_back("J1811p");
+  mass_ns.push_back(1.56);
+  high_ns.push_back(0.24);
   low_ns.push_back(0.45);
 
-  name_ns.push_back("J1811-1736 comp."); id_ns.push_back("J1811c");
-  mass_ns.push_back(1.12); high_ns.push_back(0.47); 
+  name_ns.push_back("J1811-1736 comp.");
+  id_ns.push_back("J1811c");
+  mass_ns.push_back(1.12);
+  high_ns.push_back(0.47);
   low_ns.push_back(0.13);
 
-  name_ns.push_back("J1829+2456 pulsar"); id_ns.push_back("J1829p");
-  mass_ns.push_back(1.20); high_ns.push_back(0.12); 
+  name_ns.push_back("J1829+2456 pulsar");
+  id_ns.push_back("J1829p");
+  mass_ns.push_back(1.20);
+  high_ns.push_back(0.12);
   low_ns.push_back(0.46);
 
-  name_ns.push_back("J1829+2456 comp."); id_ns.push_back("J1829c");
-  mass_ns.push_back(1.40); high_ns.push_back(0.46); 
+  name_ns.push_back("J1829+2456 comp.");
+  id_ns.push_back("J1829c");
+  mass_ns.push_back(1.40);
+  high_ns.push_back(0.46);
   low_ns.push_back(0.12);
 
   /* Data from NS-WD (some with asymmetric 68% limits)
      [source: Alsing et al. 2018, Kiziltan et al. 2013] */
-  name_wd.push_back("J2045+3633"); id_wd.push_back("J2045");
-  mass_wd.push_back(1.33); high_wd.push_back(0.3); 
+
+  vector<double> low_wd, high_wd;
+
+  name_wd.push_back("J2045+3633");
+  id_wd.push_back("J2045");
+  mass_wd.push_back(1.33);
+  high_wd.push_back(0.3);
   low_wd.push_back(0.3);
 
-  name_wd.push_back("J2053+4650"); id_wd.push_back("J2053");
-  mass_wd.push_back(1.40); high_wd.push_back(0.21); 
+  name_wd.push_back("J2053+4650");
+  id_wd.push_back("J2053");
+  mass_wd.push_back(1.40);
+  high_wd.push_back(0.21);
   low_wd.push_back(0.21);
 
-  name_wd.push_back("J1713+0747"); id_wd.push_back("J1713"); 
-  mass_wd.push_back(1.35); high_wd.push_back(0.07); 
+  name_wd.push_back("J1713+0747");
+  id_wd.push_back("J1713");
+  mass_wd.push_back(1.35);
+  high_wd.push_back(0.07);
   low_wd.push_back(0.07);
 
-  name_wd.push_back("B1855+09"); id_wd.push_back("B1855");
-  mass_wd.push_back(1.37); high_wd.push_back(0.13); 
+  name_wd.push_back("B1855+09");
+  id_wd.push_back("B1855");
+  mass_wd.push_back(1.37);
+  high_wd.push_back(0.13); 
   low_wd.push_back(0.13);
 
-  name_wd.push_back("J0751+1807"); id_wd.push_back("J0751");
-  mass_wd.push_back(1.72); high_wd.push_back(0.07); 
+  name_wd.push_back("J0751+1807");
+  id_wd.push_back("J0751");
+  mass_wd.push_back(1.72);
+  high_wd.push_back(0.07);
   low_wd.push_back(0.07);
 
-  name_wd.push_back("J1141-6545"); id_wd.push_back("J1141");
-  mass_wd.push_back(1.27); high_wd.push_back(0.01); 
+  name_wd.push_back("J1141-6545");
+  id_wd.push_back("J1141");
+  mass_wd.push_back(1.27);
+  high_wd.push_back(0.01);
   low_wd.push_back(0.01);
 
-  name_wd.push_back("J1738+0333"); id_wd.push_back("J1738");
-  mass_wd.push_back(1.47); high_wd.push_back(0.07); 
+  name_wd.push_back("J1738+0333");
+  id_wd.push_back("J1738");
+  mass_wd.push_back(1.47);
+  high_wd.push_back(0.07);
   low_wd.push_back(0.07);
 
-  name_wd.push_back("J1614-2230"); id_wd.push_back("J1614");
-  mass_wd.push_back(1.908); high_wd.push_back(0.016); 
+  name_wd.push_back("J1614-2230");
+  id_wd.push_back("J1614");
+  mass_wd.push_back(1.908);
+  high_wd.push_back(0.016);
   low_wd.push_back(0.016);
 
-  name_wd.push_back("J0348+0432"); id_wd.push_back("J0348");
-  mass_wd.push_back(2.01); high_wd.push_back(0.04); 
+  name_wd.push_back("J0348+0432");
+  id_wd.push_back("J0348");
+  mass_wd.push_back(2.01);
+  high_wd.push_back(0.04);
   low_wd.push_back(0.04);
 
-  name_wd.push_back("J2222-0137"); id_wd.push_back("J2222");
-  mass_wd.push_back(1.76); high_wd.push_back(0.06); 
+  name_wd.push_back("J2222-0137");
+  id_wd.push_back("J2222");
+  mass_wd.push_back(1.76);
+  high_wd.push_back(0.06);
   low_wd.push_back(0.06);
 
-  name_wd.push_back("J2234+0611"); id_wd.push_back("J2234");
-  mass_wd.push_back(1.393); high_wd.push_back(0.013); 
+  name_wd.push_back("J2234+0611");
+  id_wd.push_back("J2234");
+  mass_wd.push_back(1.393);
+  high_wd.push_back(0.013);
   low_wd.push_back(0.013);
 
-  name_wd.push_back("J1949+3106"); id_wd.push_back("J1949");
-  mass_wd.push_back(1.47); high_wd.push_back(0.43); 
+  name_wd.push_back("J1949+3106");
+  id_wd.push_back("J1949");
+  mass_wd.push_back(1.47);
+  high_wd.push_back(0.43);
   low_wd.push_back(0.43);
 
-  name_wd.push_back("J1012+5307"); id_wd.push_back("J1012");
-  mass_wd.push_back(1.83); high_wd.push_back(0.11); 
+  name_wd.push_back("J1012+5307");
+  id_wd.push_back("J1012");
+  mass_wd.push_back(1.83);
+  high_wd.push_back(0.11);
   low_wd.push_back(0.11);
 
-  name_wd.push_back("J0437-4715"); id_wd.push_back("J0437");
-  mass_wd.push_back(1.44); high_wd.push_back(0.07); 
+  name_wd.push_back("J0437-4715");
+  id_wd.push_back("J0437");
+  mass_wd.push_back(1.44);
+  high_wd.push_back(0.07);
   low_wd.push_back(0.07);
 
-  name_wd.push_back("J1909-3744"); id_wd.push_back("J1909");
-  mass_wd.push_back(1.48); high_wd.push_back(0.03); 
+  name_wd.push_back("J1909-3744");
+  id_wd.push_back("J1909");
+  mass_wd.push_back(1.48);
+  high_wd.push_back(0.03);
   low_wd.push_back(0.03);
 
-  name_wd.push_back("J1802-2124"); id_wd.push_back("J1802");
-  mass_wd.push_back(1.24); high_wd.push_back(0.11); 
+  name_wd.push_back("J1802-2124");
+  id_wd.push_back("J1802");
+  mass_wd.push_back(1.24);
+  high_wd.push_back(0.11);
   low_wd.push_back(0.11);
 
-  name_wd.push_back("J1911-5958A"); id_wd.push_back("J1911");
-  mass_wd.push_back(1.34); high_wd.push_back(0.08); 
+  name_wd.push_back("J1911-5958A");
+  id_wd.push_back("J1911");
+  mass_wd.push_back(1.34);
+  high_wd.push_back(0.08);
   low_wd.push_back(0.08);
 
-  name_wd.push_back("J2043+1711"); id_wd.push_back("J2043");
-  mass_wd.push_back(1.38); high_wd.push_back(0.13); 
+  name_wd.push_back("J2043+1711");
+  id_wd.push_back("J2043");
+  mass_wd.push_back(1.38);
+  high_wd.push_back(0.13);
   low_wd.push_back(0.13);
 
-  name_wd.push_back("J0337+1715"); id_wd.push_back("J0337");
-  mass_wd.push_back(1.4378); high_wd.push_back(0.0013); 
+  name_wd.push_back("J0337+1715");
+  id_wd.push_back("J0337");
+  mass_wd.push_back(1.4378);
+  high_wd.push_back(0.0013);
   low_wd.push_back(0.0013);
 
-  name_wd.push_back("J1946+3417"); id_wd.push_back("J1946");
-  mass_wd.push_back(1.828); high_wd.push_back(0.022); 
+  name_wd.push_back("J1946+3417");
+  id_wd.push_back("J1946");
+  mass_wd.push_back(1.828);
+  high_wd.push_back(0.022);
   low_wd.push_back(0.022);
 
-  name_wd.push_back("J1918-0642"); id_wd.push_back("J1918");
-  mass_wd.push_back(1.29); high_wd.push_back(0.1); 
+  name_wd.push_back("J1918-0642");
+  id_wd.push_back("J1918");
+  mass_wd.push_back(1.29);
+  high_wd.push_back(0.1);
   low_wd.push_back(0.1);
 
-  name_wd.push_back("J1600-3053"); id_wd.push_back("J1600");
-  mass_wd.push_back(2.3); high_wd.push_back(0.7); 
+  name_wd.push_back("J1600-3053");
+  id_wd.push_back("J1600");
+  mass_wd.push_back(2.3);
+  high_wd.push_back(0.7);
   low_wd.push_back(0.7);
 
   // [source: Kiziltan et al. 2013]
-  name_wd.push_back("J0621+1002"); id_wd.push_back("J0621");
-  mass_wd.push_back(1.70); high_wd.push_back(0.10); 
+  name_wd.push_back("J0621+1002");
+  id_wd.push_back("J0621");
+  mass_wd.push_back(1.70);
+  high_wd.push_back(0.10);
   low_wd.push_back(0.17);
 
-  name_wd.push_back("B2303+46"); id_wd.push_back("B2303");
-  mass_wd.push_back(1.38); high_wd.push_back(0.06); 
+  name_wd.push_back("B2303+46");
+  id_wd.push_back("B2303");
+  mass_wd.push_back(1.38);
+  high_wd.push_back(0.06);
   low_wd.push_back(0.10);
 
-  name_wd.push_back("J0024-7204H"); id_wd.push_back("J0024");
-  mass_wd.push_back(1.48); high_wd.push_back(0.03); 
+  name_wd.push_back("J0024-7204H");
+  id_wd.push_back("J0024");
+  mass_wd.push_back(1.48);
+  high_wd.push_back(0.03);
   low_wd.push_back(0.06);
 
-  name_wd.push_back("J0514-4002A"); id_wd.push_back("J0514");
-  mass_wd.push_back(1.49); high_wd.push_back(0.04); 
+  name_wd.push_back("J0514-4002A");
+  id_wd.push_back("J0514");
+  mass_wd.push_back(1.49);
+  high_wd.push_back(0.04);
   low_wd.push_back(0.27);
 
-  name_wd.push_back("B1516+02B"); id_wd.push_back("B1516");
-  mass_wd.push_back(2.10); high_wd.push_back(0.19); 
+  name_wd.push_back("B1516+02B");
+  id_wd.push_back("B1516");
+  mass_wd.push_back(2.10);
+  high_wd.push_back(0.19);
   low_wd.push_back(0.19);
 
-  name_wd.push_back("J1748-2446I"); id_wd.push_back("J1748I");
-  mass_wd.push_back(1.91); high_wd.push_back(0.02); 
+  name_wd.push_back("J1748-2446I");
+  id_wd.push_back("J1748I");
+  mass_wd.push_back(1.91);
+  high_wd.push_back(0.02);
   low_wd.push_back(0.10);
 
-  name_wd.push_back("J1748-2446J"); id_wd.push_back("J1748J");
-  mass_wd.push_back(1.79); high_wd.push_back(0.02); 
+  name_wd.push_back("J1748-2446J");
+  id_wd.push_back("J1748J");
+  mass_wd.push_back(1.79);
+  high_wd.push_back(0.02);
   low_wd.push_back(0.10);
 
-  name_wd.push_back("B1802-07"); id_wd.push_back("B1802");
-  mass_wd.push_back(1.26); high_wd.push_back(0.08); 
+  name_wd.push_back("B1802-07");
+  id_wd.push_back("B1802");
+  mass_wd.push_back(1.26);
+  high_wd.push_back(0.08);
   low_wd.push_back(0.17);
 
-  name_wd.push_back("B1911-5958A"); id_wd.push_back("B1911");
-  mass_wd.push_back(1.40); high_wd.push_back(0.16); 
+  name_wd.push_back("B1911-5958A");
+  id_wd.push_back("B1911");
+  mass_wd.push_back(1.40);
+  high_wd.push_back(0.16);
   low_wd.push_back(0.10);
 
   // [source: Cromartie et al. 2020]
-  name_wd.push_back("J0740+6620"); id_wd.push_back("J0740");
-  mass_wd.push_back(2.14); high_wd.push_back(0.20); 
+  name_wd.push_back("J0740+6620");
+  id_wd.push_back("J0740");
+  mass_wd.push_back(2.14);
+  high_wd.push_back(0.20);
   low_wd.push_back(0.18);
 
   /* Data from NS-MS (2 types of X-ray/optical binaries: HMXB
@@ -268,45 +382,81 @@ void pop_data::load_data() {
   name_hx.push_back("XTE J1855-026"); id_hx.push_back("XTEJ1855");
   mass_hx.push_back(1.41); low_hx.push_back(0.24); */
 
+  /* Data from NS-MS (2 types of X-ray/optical binaries: HMXB
+  and LMXB (includes QLMXBs), all with symmetric 68% limits) 
+  [source: Alsing et al. 2018] */
+
+  vector<double> low_lx, high_lx;
+
   // Low Mass X-ray Binaries (LMXBs)
-  name_lx.push_back("Cyg X-2"); id_lx.push_back("CygX2");
-  mass_lx.push_back(1.71); low_lx.push_back(0.21); 
+  name_lx.push_back("Cyg X-2");
+  id_lx.push_back("CygX2");
+  mass_lx.push_back(1.71);
+  low_lx.push_back(0.21);
   
-  name_lx.push_back("XTE J2123-058"); id_lx.push_back("XTEJ2123");
-  mass_lx.push_back(1.53); low_lx.push_back(0.42); 
+  name_lx.push_back("XTE J2123-058");
+  id_lx.push_back("XTEJ2123");
+  mass_lx.push_back(1.53);
+  low_lx.push_back(0.42);
   
-  name_lx.push_back("4U 1822-371"); id_lx.push_back("4U1822");
-  mass_lx.push_back(1.96); low_lx.push_back(0.36); 
+  name_lx.push_back("4U 1822-371");
+  id_lx.push_back("4U1822");
+  mass_lx.push_back(1.96);
+  low_lx.push_back(0.36);
   
-  name_lx.push_back("Her X-1"); id_lx.push_back("HerX1");
-  mass_lx.push_back(1.073); low_lx.push_back(0.36); 
+  name_lx.push_back("Her X-1");
+  id_lx.push_back("HerX1");
+  mass_lx.push_back(1.073);
+  low_lx.push_back(0.36);
   
-  name_lx.push_back("2S 0921-630"); id_lx.push_back("2S0921");
-  mass_lx.push_back(1.44); low_lx.push_back(0.1);
+  name_lx.push_back("2S 0921-630");
+  id_lx.push_back("2S0921");
+  mass_lx.push_back(1.44);
+  low_lx.push_back(0.1);
 
   // Symmetric 68% limits for LMXBs
   for (size_t i=0; i<low_lx.size(); i++) {
     high_lx.push_back(low_lx[i]);
   }
 
-  // Fill input data for all NS populations
+  // Fill input data and compute hyperparameters 
+  // for all NS populations
+  
+  eqn_solver es;
+  
   for (size_t i=0; i<name_ns.size(); i++) {
-    m_pop.push_back(mass_ns[i]);
-    lo_pop.push_back(low_ns[i]);
-    hi_pop.push_back(high_ns[i]);
+    double c=sqrt(high_ns[i]/low_ns[i]);
+    double d=es.get_scale(low_ns[i], high_ns[i]);
+    mass_nsp.push_back(mass_ns[i]);
+    asym_ns.push_back(c);
+    asym_nsp.push_back(c);
+    scale_ns.push_back(d);
+    scale_nsp.push_back(d);
   }
   for (size_t i=0; i<name_wd.size(); i++) {
-    m_pop.push_back(mass_wd[i]);
-    lo_pop.push_back(low_wd[i]);
-    hi_pop.push_back(high_wd[i]);
+    double c=sqrt(high_wd[i]/low_wd[i]);
+    double d=es.get_scale(low_wd[i], high_wd[i]);
+    mass_nsp.push_back(mass_wd[i]);
+    asym_wd.push_back(c);
+    asym_nsp.push_back(c);
+    scale_wd.push_back(d);
+    scale_nsp.push_back(d);
   }
   for (size_t i=0; i<name_lx.size(); i++) {
-    m_pop.push_back(mass_lx[i]);
-    lo_pop.push_back(low_lx[i]);
-    hi_pop.push_back(high_lx[i]);
+    double c=sqrt(high_lx[i]/low_lx[i]);
+    double d=es.get_scale(low_lx[i], high_lx[i]);
+    mass_nsp.push_back(mass_lx[i]);
+    asym_lx.push_back(c);
+    asym_nsp.push_back(c);
+    scale_lx.push_back(d);
+    scale_nsp.push_back(d);
   }
   
   // Count the total number of stars in all populations
-  this->n_stars = id_ns.size() + id_wd.size() + id_lx.size();
+  n_star_ns=id_ns.size();
+  n_star_wd=id_wd.size();
+  n_star_lx=id_lx.size();
+  
   // Currently, 61 = 24 + 32 + 5
+  this->n_stars=n_star_ns+n_star_wd+n_star_lx;
 }
