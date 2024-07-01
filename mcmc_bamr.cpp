@@ -22,8 +22,10 @@
   -------------------------------------------------------------------
 */
 #include "mcmc_bamr.h"
+
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
+#include <o2scl/interpm_idw.h>
 
 using namespace std;
 using namespace o2scl;
@@ -1293,6 +1295,26 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Note that kde_python doesn't work with n_threads>1
 
 #ifdef ANDREW
+
+  if (true) {
+    
+    this->n_retrain=1000;
+    this->emu_file="interp";
+    this->show_emu=1;
+    this->max_train_size=10000;
+
+    // Set up the shared pointer to the interpolation object
+    std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
+                                o2scl::const_matrix_view_table<>,
+                                o2scl::matrix_view_table<>>> ii
+      (new interpm_idw<boost::numeric::ublas::vector<double>,
+       o2scl::const_matrix_view_table<>,
+       o2scl::matrix_view_table<>>);
+    this->emu.resize(1);
+    this->emu[0]=ii;
+    ii->n_extra=5;
+    
+  }
   
   // #ifdef BAMR_KDE
   if (mcmc_method==string("kde") ||
