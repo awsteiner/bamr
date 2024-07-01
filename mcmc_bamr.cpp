@@ -1290,12 +1290,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   //-------------------------------------------------------------------
 
-// ---------------------------------------
-  // Put KDE stuff here, let's start with the single thread
-  // version, and deal with OpenMP later
+  // Note that kde_python doesn't work with n_threads>1
 
-#ifdef O2SCL_NEVER_DEFINED
-// #ifdef BAMR_KDE
+#ifdef ANDREW
+  
+  // #ifdef BAMR_KDE
   if (mcmc_method==string("kde") ||
       mcmc_method==string("kde_sklearn") ||
       mcmc_method==string("gauss")) {
@@ -1303,9 +1302,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Copy the table data to a tensor for use in kde_python.
     // We need a copy for each thread because kde_python takes
     // over the tensor data.
-
+    
     // AWS: I'm leaving this for Anik to change
-
+    
 #ifdef BAMR_MPI
     // Get MPI rank, etc.
     MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
@@ -1362,11 +1361,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       }
     }
     
-    // Train the KDE
-    if (mcmc_method==string("kde")) {
-
-#ifdef ANDREW
-    
     std::shared_ptr<mcmc_stepper_mh<point_funct,
                                     model_data,ubvector,
                                     ubmatrix,prob_cond_mdim_indep<>>>
@@ -1374,8 +1368,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
                  ubvector,ubmatrix,prob_cond_mdim_indep<>>);
     stepper=mh_stepper;
     
-#endif
-    
+    // Train the KDE
+    if (mcmc_method==string("kde")) {
+
       // Weights can be set here, but they are presumed to be
       // the same if this vector is empty
       vector<double> weights;
@@ -1387,8 +1382,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(kp);
+      mh_stepper->proposal.resize(1);
+      mh_stepper->proposal[0].set_base(kp);
     
     } else if (mcmc_method==string("kde_sklearn")) {
       
@@ -1402,8 +1397,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(kp);
+      mh_stepper->proposal.resize(1);
+      mh_stepper->proposal[0].set_base(kp);
       
     } else {
 
@@ -1439,8 +1434,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // Setting the KDE as the base distribution for the independent
       // conditional probability. This code may need to be changed
       // for more than one OpenMP thread.
-      stepper.proposal.resize(1);
-      stepper.proposal[0].set_base(gpp);
+      mh_stepper->proposal.resize(1);
+      mh_stepper->proposal[0].set_base(gpp);
     
     }
     
@@ -1453,9 +1448,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 #endif
 
   }
+  
 #endif
-
-// #ifdef O2SCL_NEVER_DEFINED
 
   if (mcmc_method==string("hmc")) {
 
@@ -1544,8 +1538,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
          tag,MPI_COMM_WORLD);
     }
 #endif
-
-//#endif
 
   // ---------------------------------------
 

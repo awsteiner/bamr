@@ -116,30 +116,41 @@ namespace bamr {
                    prob_cond_mdim_indep<>>>
 */
 //#else
-  
-   class mcmc_bamr :
+
+#ifdef ANDREW
+  class mcmc_bamr :
+    public o2scl::mcmc_para_emu
+  <point_funct,fill_funct,model_data,ubvector>
+#else
+  class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
    mcmc_stepper_hmc<point_funct,model_data,ubvector>>
+#endif
    
 //#endif
    
   {
   protected:
 
+    /** \brief The input tensor for the KDE proposal distribution
+     */
     o2scl::tensor<> ten_in;
-    
-    std::shared_ptr<o2scl::kde_python<ubvector>> kp;
 
+    /// The KDE proposal distribution
+    std::shared_ptr<o2scl::kde_python<ubvector>> kp;
+    
+    /// The Gaussian proposal distribution
     std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
     
     /** \brief If true, use index2 to take derivative of M_max
      */
     bool dv_index2;
 
-    /** \brief Train file name for python emulator*/
-
 #ifdef O2SCL_NEVER_DEFINED
+    
+    /** \brief Train file name for python emulator
+     */
     std::string emu_train;
 
     PyObject *train_modFile;
@@ -182,7 +193,10 @@ namespace bamr {
     /// A string indicating which model is used, set in \ref set_model().
     std::string model_type;
 
-    /// Desc
+    /** \brief The index of parameters
+
+        This is created in \ref mcmc_func().
+     */
     vec_index pvi;
     
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP
