@@ -1365,6 +1365,17 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Train the KDE
     if (mcmc_method==string("kde")) {
 
+#ifdef ANDREW
+    
+    std::shared_ptr<mcmc_stepper_mh<point_funct,
+                                    model_data,ubvector,
+                                    ubmatrix,prob_cond_mdim_indep<>>>
+      mh_stepper(new mcmc_stepper_mh<point_funct,model_data,
+                 ubvector,ubmatrix,prob_cond_mdim_indep<>>);
+    stepper=mh_stepper;
+    
+#endif
+    
       // Weights can be set here, but they are presumed to be
       // the same if this vector is empty
       vector<double> weights;
@@ -1458,26 +1469,54 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #endif
 
+#ifdef ANDREW
+    
+    std::shared_ptr<mcmc_stepper_hmc<point_funct,
+                                     model_data,ubvector>> hmc_stepper
+      (new mcmc_stepper_hmc<point_funct,model_data,
+       ubvector>);
+    stepper=hmc_stepper;
+    
+#endif
+    
+    cout << "Begin mcmc_method==hmc" << endl;;
     size_t np_ligo=nsd->n_ligo_params;
     size_t np_eos=bc_arr[0]->mod->n_eos_params;
     size_t np_src=nsd->n_sources;
     size_t np_pop=nsd->pop.n_pop_params;
     size_t np=names.size();
     
+#ifdef ANDREW
+    if (hmc_stepper->auto_grad.size()<np) hmc_stepper->auto_grad.resize(np);
+    for (size_t i=0; i<np; i++) hmc_stepper->auto_grad[i]=false;
+#else
     if (stepper.auto_grad.size()<np) stepper.auto_grad.resize(np);
     for (size_t i=0; i<np; i++) stepper.auto_grad[i]=false;
+#endif
 
+#ifdef ANDREW
+    hmc_stepper->traj_length=1;
+#else
     stepper.traj_length=1;
-
+#endif
+   
     random_device rd;
     mt19937 gen(rd());
     uniform_real_distribution<> unif(0,1);
 
+#ifdef ANDREW
+    hmc_stepper->mom_step.resize(np);
+    for (size_t i=0; i<np; i++) {
+      hmc_stepper->mom_step[i]=1.0e-6*(high[i]-low[i])
+                               *(unif(gen)*2.0-1.0);
+    }
+#else
     stepper.mom_step.resize(np);
     for (size_t i=0; i<np; i++) {
       stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
                                *(unif(gen)*2.0-1.0);
     }
+#endif
 
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
@@ -1487,7 +1526,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         (&bamr_class::compute_deriv), bc_arr[i], _2, _3, _4, _5);
     }
 
-    stepper.set_gradients(gfa); 
+#ifdef ANDREW
+    hmc_stepper->set_gradients(gfa);
+#else
+    stepper.set_gradients(gfa);
+#endif
+    
+    cout << "End of mcmc_method==hmc" << endl;
+    
   }
 
 #ifdef BAMR_MPI
