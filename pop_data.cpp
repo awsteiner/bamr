@@ -453,10 +453,10 @@ void pop_data::load_data() {
   }
   
   // Count the total number of stars in all populations
-  n_star_ns=id_ns.size();
-  n_star_wd=id_wd.size();
-  n_star_lx=id_lx.size();
-  
-  // Currently, 61 = 24 + 32 + 5
-  this->n_stars=n_star_ns+n_star_wd+n_star_lx;
+  n_dns=id_ns.size();
+  n_nswd=id_wd.size();
+  n_lmxb=id_lx.size();
+
+  // Currently, 59 = 22 + 32 + 5
+  this->n_stars=n_dns+n_nswd+n_lmxb;
 }

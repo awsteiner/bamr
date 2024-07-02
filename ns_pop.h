@@ -48,9 +48,9 @@ struct pop_data {
 
   /* Count of numbers of stars in each population */
   size_t n_stars;
-  size_t n_star_ns;
-  size_t n_star_wd;
-  size_t n_star_lx;
+  size_t n_dns;
+  size_t n_nswd;
+  size_t n_lmxb;
 
   /* Function to load population mass data */
   void load_data();
@@ -134,8 +134,6 @@ class ns_pop {
     vector<double> an_ns;
     vector<double> an_wd;
     vector<double> an_lx;
-
-    vector<double> an_nsp;
 
     /* Store the values of SN(x|m,s,a) for all stars in a binary*/
     vector<double> sn_ns;

@@ -28,12 +28,12 @@ double ns_pop::deriv_sn(int i_wrt, double x, double m,
   double k=1.0/s/sqrt(2.0*M_PI); //ok
   double ef=exp(-0.5*pow((x-m)/s,2.0)); //ok
   double p=a*(x-m)/s/sqrt(2.0); //ok
-  double t1=(x-m)*(1.0+erf(p))/s; //ok
-  double t2=2.0*a*exp(-p*p)/sqrt(2.0*M_PI); //ok
+  double t1=(x-m)*(1.0+erf(p))/s/s; //ok
+  double t2=2.0*a*exp(-p*p)/sqrt(2.0*M_PI)/s; //ok
 
-  if (i_wrt==0) return k*ef*(t2-t1)/s;
-  else if (i_wrt==1) return k*ef*(t1-t2)/s;
-  else if (i_wrt==2) return k*ef*(t1-t2)*(x-m)/s/s;
+  if (i_wrt==0) return k*ef*(t2-t1);
+  else if (i_wrt==1) return k*ef*(t1-t2);
+  else if (i_wrt==2) return k*ef*(t1-t2)*(x-m)/s;
   else if (i_wrt==3) return ef*exp(-p*p)*(x-m)/s/s/M_PI;
   else return 0.0;
 }
@@ -70,7 +70,6 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
     an_ns[i]=asym_norm(mass-M_star, asym, scale);
     sn_ns[i]=skewed_norm(M_star, mean, width, skew);
-    an_nsp.push_back(an_ns[i]);
     double wgt_star=an_ns[i]*sn_ns[i];
     
     if (this->debug) {
@@ -118,7 +117,6 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
     an_wd[i]=asym_norm(mass-M_star, asym, scale);
     sn_wd[i]=skewed_norm(M_star, mean, width, skew);
-    an_nsp.push_back(an_wd[i]);
     double wgt_star=an_wd[i]*sn_wd[i];
     
     if (this->debug) {
@@ -164,7 +162,6 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];
     an_lx[i]=asym_norm(mass-M_star, asym, scale);
     sn_lx[i]=skewed_norm(M_star, mean, width, skew);
-    an_nsp.push_back(an_lx[i]);
     double wgt_star=an_lx[i]*sn_lx[i];
     
     if (this->debug) {
