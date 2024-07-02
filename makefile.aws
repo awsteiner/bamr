@@ -585,8 +585,8 @@ prx2:
 		-mcmc > out/prx2.scr 2>&1 &
 
 mp_2024:
-	mpirun -np 2 --allow-run-as-root ./bamr -threads 1 \
-		-method gauss \
+	./bamr -threads 1 \
+		-method kde \
 		-set prefix out/mp -set max_iters 1000000 \
 		-set file_update_time 1800 -set verbose 1 \
 		-set mcmc_verbose 2 -set compute_cthick 1 \
@@ -617,6 +617,9 @@ mp_2024:
 		-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 		data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 		-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-		-set inc_pop 1 -set inc_ligo 1 -set use_kde 1 \
+		-set inc_pop 1 -set inc_ligo 1 \
 		-model new_poly -set model_dpdm 1 \
-		-initial-point-last out/mp_train -mcmc > out/mp.scr 2>&1 &
+		-initial-point-last out/mp_train -mcmc
+		
+#	mpirun -np 2 --allow-run-as-root ./bamr -threads 1 \
+#> out/mp.scr 2>&1 &

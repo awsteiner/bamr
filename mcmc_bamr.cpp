@@ -1306,17 +1306,67 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->max_train_size=10000;
     this->test_emu=true;
 
-    // Set up the shared pointer to the interpolation object
-    std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
-                                o2scl::const_matrix_view_table<>,
-                                o2scl::matrix_view_table<>>> ii
-      (new interpm_idw<boost::numeric::ublas::vector<double>,
-       o2scl::const_matrix_view_table<>,
-       o2scl::matrix_view_table<>>);
     this->emu.resize(1);
-    this->emu[0]=ii;
-    ii->n_extra=5;
-    
+
+    if (false) {
+      
+      // Set up the shared pointer to the interpolation object
+      std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
+				  o2scl::const_matrix_view_table<>,
+				  o2scl::matrix_view_table<>>> ii
+	(new interpm_idw<boost::numeric::ublas::vector<double>,
+	 o2scl::const_matrix_view_table<>,
+	 o2scl::matrix_view_table<>>);
+      this->emu[0]=ii;
+      ii->n_extra=5;
+      
+    } else if (false) {
+
+      std::shared_ptr<interpm_krige_optim<>> iko(new interpm_krige_optim<>);
+      typedef const const_matrix_row_gen
+	<o2scl::const_matrix_view_table<>> mat_x_row_t;
+         
+      // Setup the multidimensional covariance object
+      vector<std::shared_ptr<mcovar_base<ubvector,mat_x_row_t>>> vmfrn;
+      vmfrn.resize(1);
+      std::shared_ptr<mcovar_funct_rbf_noise<
+	ubvector,mat_x_row_t>> mfrn(new mcovar_funct_rbf_noise<ubvector,
+				    mat_x_row_t>);
+      vmfrn[0]=mfrn;
+      mfrn->len.resize(names.size());
+      
+      iko->verbose=2;
+      iko->def_mmin.verbose=1;
+      iko->full_min=true;
+      vector<double> len_list={0.1,0.3};
+      vector<double> l10_list={-15,-13};
+      vector<vector<double>> ptemp;
+      for(size_t j=0;j<names.size();j++) {
+	ptemp.push_back(len_list);
+      }
+      ptemp.push_back(l10_list);
+      vector<vector<vector<double>>> param_lists;
+      param_lists.push_back(ptemp);
+      
+      iko->set_covar(vmfrn,param_lists);
+
+      this->emu[0]=iko;
+      
+    } else {
+
+      std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
+				     o2scl::const_matrix_view_table<>,
+				     o2scl::matrix_view_table<>>> ip
+	(new interpm_python<boost::numeric::ublas::vector<double>,
+	 o2scl::const_matrix_view_table<>,
+	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval",
+				     "interpm_tf_dnn",
+				     ((std::string)"verbose=3,")+
+				     "transform=moto,hlayers=[50,100,50]",
+				     3));
+      this->emu[0]=ip;
+      
+    }
   }
   
   // #ifdef BAMR_KDE
@@ -1585,7 +1635,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   if (verbose>2) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
+#ifdef ANDREW
+  this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+#else
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
+#endif
 
 #ifdef O2SCL_NEVER_DEFINED  
   if (set->apply_emu) {
