@@ -1304,11 +1304,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->emu_file="interp";
     this->show_emu=1;
     this->max_train_size=10000;
-    this->test_emu=true;
+    this->test_emu=false;
 
     this->emu.resize(1);
 
-    if (false) {
+    if (true) {
       
       // Set up the shared pointer to the interpolation object
       std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
@@ -1361,9 +1361,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval",
 				     "interpm_tf_dnn",
-				     ((std::string)"verbose=3,")+
-				     "transform=moto,hlayers=[50,100,50]",
-				     3));
+				     ((std::string)"verbose=0,")+
+				     "transform=moto,hlayers=[50,100,50]",0));
       this->emu[0]=ip;
       
     }
