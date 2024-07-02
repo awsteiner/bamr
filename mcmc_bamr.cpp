@@ -1548,7 +1548,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
 #endif
     
-    cout << "Begin mcmc_method==hmc" << endl;;
     size_t np_ligo=nsd->n_ligo_params;
     size_t np_eos=bc_arr[0]->mod->n_eos_params;
     size_t np_src=nsd->n_sources;
@@ -1599,10 +1598,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     hmc_stepper->set_gradients(gfa);
 #else
     stepper.set_gradients(gfa);
-#endif
-    
-    cout << "End of mcmc_method==hmc" << endl;
-    
+#endif    
   }
 
 #ifdef BAMR_MPI
