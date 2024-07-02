@@ -125,7 +125,7 @@ namespace bamr {
   class mcmc_bamr :
     public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_hmc<point_funct,model_data,ubvector>>
+    mcmc_stepper_hmc<point_funct,model_data,ubvector>
 #endif
    
 //#endif
