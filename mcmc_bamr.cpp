@@ -26,6 +26,8 @@
 #include <o2scl/vector.h>
 #include <o2scl/hdf_io.h>
 #include <o2scl/interpm_idw.h>
+#include <o2scl/interpm_krige.h>
+#include <o2scl/interpm_python.h>
 
 using namespace std;
 using namespace o2scl;
@@ -1302,6 +1304,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->emu_file="interp";
     this->show_emu=1;
     this->max_train_size=10000;
+    this->test_emu=true;
 
     // Set up the shared pointer to the interpolation object
     std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
