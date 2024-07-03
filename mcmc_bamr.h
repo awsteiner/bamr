@@ -198,7 +198,7 @@ namespace bamr {
         This is created in \ref mcmc_func().
      */
     vec_index pvi;
-    
+
     /** \brief Vector of \ref bamr_class objects (one for each OpenMP
         thread)
 
@@ -257,6 +257,12 @@ namespace bamr {
     /** \brief Perform the MCMC simulation
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
+
+#ifdef ANDREW
+    /// Wrapper to the point function which uses the emulator
+    virtual int point_wrapper(size_t it, size_t np, const ubvector &p,
+                              double &log_wgt, model_data &dat);
+#endif
     
     /** \brief Set the number of OpenMP threads
      */

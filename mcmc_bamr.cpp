@@ -44,6 +44,7 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]=new bamr_class;
   bc_arr[0]->set=set;
   bc_arr[0]->nsd=nsd;
+
 }
 
 #ifdef O2SCL_NEVER_DEFINED
@@ -1070,6 +1071,38 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
   return 0;
 }
 
+#ifdef ANDREW
+int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
+                             double &log_wgt, model_data &dat) {
+
+  // We have to run the exact code a couple of times to make sure the
+  // model data object is filled with data before we run the
+  // emulator
+  
+  if (dat.eos.get_nlines()>0 && dat.mvsr.get_nlines()>0 &&
+      dat.gridt.get_nlines()>0 && dat.mvsr.is_constant("R_max") &&
+      dat.mvsr.is_constant("P_max") && n_retrain>0) {
+    
+    //std::cout << "Point emu. " << &dat << std::endl;
+    ubvector out(1);
+    emu[it]->eval(p,out);
+    log_wgt=out[0];
+    //std::cout << "Point emu done." << std::endl;
+    
+  } else {
+    
+    std::cout << "Point exact. " << &dat << std::endl;
+    int ret=((*func_ptr)[it])(np,p,log_wgt,dat);
+    std::cout << "Point exact done ret=" << ret << std::endl;
+    return ret;
+    
+  }
+
+  return 0;
+}
+
+#endif
+
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (model_type.length()==0) {
@@ -1308,7 +1341,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
     this->emu.resize(1);
 
-    if (true) {
+    if (false) {
       
       // Set up the shared pointer to the interpolation object
       std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
@@ -1362,7 +1395,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval",
 				     "interpm_tf_dnn",
 				     ((std::string)"verbose=0,")+
-				     "transform=moto,hlayers=[50,100,50]",0));
+				     "transform_in=moto,transform_out=moto,hlayers=[50,100,50]",0));
       this->emu[0]=ip;
       
     }

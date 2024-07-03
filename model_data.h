@@ -76,16 +76,20 @@ namespace bamr {
       eos=md.eos;
       gridt=md.gridt;
       sourcet=md.sourcet;
+      m_max=md.m_max;
+      m_max2=md.m_max2;
     }
 
     /** \brief Make operator= copy constructor private
      */
     model_data &operator=(const model_data &md) {
       if (this!=&md) {
-	      mvsr=md.mvsr;
-	      eos=md.eos;
-	      gridt=md.gridt;
-	      sourcet=md.sourcet;
+        mvsr=md.mvsr;
+        eos=md.eos;
+        gridt=md.gridt;
+        sourcet=md.sourcet;
+        m_max=md.m_max;
+        m_max2=md.m_max2;
       }
       return *this;
     }

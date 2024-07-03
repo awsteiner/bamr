@@ -94,6 +94,62 @@ void bamr_class::setup_filters() {
 int bamr_class::fill(const ubvector &pars, double weight, 
                      std::vector<double> &line, model_data &dat) {
 
+#ifdef ANDREW
+  
+  if (dat.mvsr.is_constant("R_max")==false) {
+    dat.mvsr.add_constant("R_max",0.0);
+  }
+  if (dat.eos.is_constant("nt")==false) {
+    dat.eos.add_constant("nt",0.0);
+    dat.eos.add_constant("prt",0.0);
+  }
+  if (dat.eos.is_constant("R1")==false) {
+    dat.eos.add_constant("M_chirp_gw17",0.0);
+    dat.eos.add_constant("m1_gw17",0.0);
+    dat.eos.add_constant("m2_gw17",0.0);
+    dat.eos.add_constant("R1",0.0);
+    dat.eos.add_constant("R2",0.0);
+    dat.eos.add_constant("I1",0.0);
+    dat.eos.add_constant("I2",0.0);
+    dat.eos.add_constant("I_bar1",0.0);
+    dat.eos.add_constant("I_bar2",0.0);
+    dat.eos.add_constant("Lambda1",0.0);
+    dat.eos.add_constant("Lambda2",0.0);
+    dat.eos.add_constant("Lambdat",0.0);
+    dat.eos.add_constant("del_Lambdat",0.0); 
+    dat.eos.add_constant("prob_gw17",0.0);
+    dat.eos.add_constant("eta",0.0);
+  }
+  if (dat.mvsr.is_constant("gm_nb1")==false) {
+    dat.mvsr.add_constant("gm_nb1",0.0);
+    dat.mvsr.add_constant("gm_nb2",0.0);
+    dat.mvsr.add_constant("gm_nb3",0.0);
+    dat.mvsr.add_constant("gm_nb4",0.0);
+    dat.mvsr.add_constant("gm_nb5",0.0);
+    dat.mvsr.add_constant("r_nb1",0.0);
+    dat.mvsr.add_constant("r_nb2",0.0);
+    dat.mvsr.add_constant("r_nb3",0.0);
+    dat.mvsr.add_constant("r_nb4",0.0);
+    dat.mvsr.add_constant("r_nb5",0.0);
+  }
+  if (dat.mvsr.is_constant("nb_max")==false) {
+    dat.mvsr.add_constant("nb_max",0.0);
+  }
+  if (dat.mvsr.is_constant("P_max")==false) {
+    dat.mvsr.add_constant("P_max",0.0);
+  }
+  if (dat.mvsr.is_constant("e_max")==false) {
+    dat.mvsr.add_constant("e_max",0.0);
+  }
+  if (dat.mvsr.is_constant("M_max")==false) {
+    dat.mvsr.add_constant("M_max",0.0);
+  }
+  if (dat.eos.is_constant("dpdM")==false) {
+    dat.eos.add_constant("dpdM",0.0);
+  }
+  
+#endif
+  
   if (set->apply_emu) {
     return 0;
   } else {
