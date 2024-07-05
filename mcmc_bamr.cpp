@@ -1337,11 +1337,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->emu_file="interp";
     this->show_emu=1;
     this->max_train_size=10000;
-    this->test_emu=false;
+    this->test_emu_file="test_emu.o2";
 
     this->emu.resize(1);
 
-    if (false) {
+    int intp=3;
+    if (intp==1) {
       
       // Set up the shared pointer to the interpolation object
       std::shared_ptr<interpm_idw<boost::numeric::ublas::vector<double>,
@@ -1353,7 +1354,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       this->emu[0]=ii;
       ii->n_extra=5;
       
-    } else if (false) {
+    } else if (intp==2) {
 
       std::shared_ptr<interpm_krige_optim<>> iko(new interpm_krige_optim<>);
       typedef const const_matrix_row_gen
@@ -1385,6 +1386,20 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
       this->emu[0]=iko;
       
+    } else if (intp==3) {
+
+      std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
+				     o2scl::const_matrix_view_table<>,
+				     o2scl::matrix_view_table<>>> ip
+	(new interpm_python<boost::numeric::ublas::vector<double>,
+	 o2scl::const_matrix_view_table<>,
+	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval_unc",
+				     "interpm_sklearn_gp",
+				     ((std::string)"verbose=1,")+
+				     "transform_in=quant,"+
+                                     "normalize_y=True",1));
+      this->emu[0]=ip;
+      
     } else {
 
       std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
@@ -1394,8 +1409,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval",
 				     "interpm_tf_dnn",
-				     ((std::string)"verbose=0,")+
-				     "transform_in=moto,transform_out=moto,hlayers=[50,100,50]",0));
+				     ((std::string)"verbose=1,")+
+				     "transform_in=quant,"+
+                                     "transform_out=quant,"+
+                                     "hlayers=[200,400,200]",1));
       this->emu[0]=ip;
       
     }
