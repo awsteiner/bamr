@@ -619,7 +619,8 @@ mp_2024:
 		-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
 		-set inc_pop 1 -set inc_ligo 1 \
 		-model new_poly -set model_dpdm 1 \
-		-initial-point-last out/mp_train -mcmc
+		-initial-point-last out/mp_train -mcmc \
+		> out/mp.scr 2>&1 &
 		
 #	mpirun -np 2 --allow-run-as-root ./bamr -threads 1 \
-#> out/mp.scr 2>&1 &
+
