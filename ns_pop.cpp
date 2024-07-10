@@ -25,11 +25,11 @@ double ns_pop::asym_norm(double x, double c, double d) {
 
 double ns_pop::deriv_sn(int i_wrt, double x, double m, 
                         double s, double a) {
-  double k=1.0/s/sqrt(2.0*M_PI); //ok
-  double ef=exp(-0.5*pow((x-m)/s,2.0)); //ok
-  double p=a*(x-m)/s/sqrt(2.0); //ok
-  double t1=(x-m)*(1.0+erf(p))/s/s; //ok
-  double t2=2.0*a*exp(-p*p)/sqrt(2.0*M_PI)/s; //ok
+  double k=1.0/s/sqrt(2.0*M_PI);
+  double ef=exp(-0.5*pow((x-m)/s,2.0));
+  double p=a*(x-m)/s/sqrt(2.0);
+  double t1=(x-m)*(1.0+erf(p))/s/s;
+  double t2=a*exp(-p*p)/sqrt(2.0/M_PI)/s;
 
   if (i_wrt==0) return k*ef*(t2-t1);
   else if (i_wrt==1) return k*ef*(t1-t2);
@@ -40,8 +40,8 @@ double ns_pop::deriv_sn(int i_wrt, double x, double m,
 
 double ns_pop::deriv_an(double x, double c, double d) {
   double k=2.0/(d*(c+1.0/c));
-  if (x<0.0) return -k*x*norm_pdf(c*x/d)*c*c/d/d;
-  else return -k*x*norm_pdf(x/(c*d))/c/c/d/d;
+  if (x<0.0) return k*x*norm_pdf(c*x/d)*c*c/d/d;
+  else return k*x*norm_pdf(x/(c*d))/c/c/d/d;
 }
 
 

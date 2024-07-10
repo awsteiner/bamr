@@ -1647,7 +1647,6 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   skew[2]=pars[pvi["skewness_LMS"]];
   
   double M_max=dat.m_max;
-  cout << "M_max=" << M_max << endl;
 
   double c_fsn_nsp=1.0, c_fan_nsp=1.0;
   double c_fsn_em=1.0,  c_wgt_em=1.0;
@@ -1691,7 +1690,10 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     c_wgt_em*=wgt_em[j];
   }
 
-  cout << "c_wgt_gw=" << c_wgt_gw << ", c_fsn_gw=" << c_fsn_gw << endl;
+  cout << "np_ligo=" << np_ligo << ", np_src=" << np_src 
+       << ", np_dist=" << np_dist << ", np_nsp=" << np_nsp << endl;
+       
+  /* cout << "c_wgt_gw=" << c_wgt_gw << ", c_fsn_gw=" << c_fsn_gw << endl;
   cout << "c_wgt_em=" << c_wgt_em << ", c_fsn_em=" << c_fsn_em << endl;
   cout << "c_fan_nsp=" << c_fan_nsp << ", c_fsn_nsp=" << c_fsn_nsp << endl;
   for (size_t j=0; j<M_star.size(); j++) {
@@ -1701,7 +1703,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   for (size_t j=0; j<np_src; j++) {
     cout << "wgt_em[" << j << "]=" << wgt_em[j] 
          << ", fsn_em[" << j << "]=" << fsn_em[j] << endl;
-  }
+  } */
 
   //-------------------------------------------------------------------------
 
@@ -1734,8 +1736,8 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
 
       i_pars++;
     }
-    /*
-    if (i_pars==np_eos+np_ligo-1) { 
+    
+    /*if (i_pars==np_eos+np_ligo-1) { 
       // w.r.t. m1_gw19
       double cf, d_sn, d_gw;
       cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*fsn_gw19[1]*c_fsn_em*c_wgt_em;
@@ -1767,46 +1769,63 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         cout << "Sources: i_pars=" << i_pars << endl;
         i_pars++;
       }
-    }
-    */
+    }*/
 
     if (i_pars>=np_eos+np_ligo+np_src && 
         i_pars<np_eos+np_ligo+np_src+np_dist) {
       // w.r.t. the distribution parameters 
       // mean_*, width_*, skewness_*
       double cf, d_sn, ct;
-      cf=c_fan_nsp*c_wgt_gw*c_wgt_em;
+      cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
       vector<double> term(np_dist);
       for (size_t j=0; j<M_star.size(); j++) {
+        ct=1.0/sn_star[j];
+
         int ip;
-        ct=c_fsn_nsp*c_fsn_gw*c_fsn_em/sn_star[j];
         if (j<pd.n_dns+np_ligo) ip=0;
         else if (j>=pd.n_dns+np_ligo+pd.n_nswd) ip=2;
         else ip=1;
+        
+        cout << "Dist: j=" << j << ", ip=" << ip << endl;
+
+        int n=j-np_ligo-pd.n_dns-pd.n_nswd-pd.n_lmxb;
         for (size_t k=0; k<3; k++) {
-          d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
-                            width[ip], skew[ip]);
-          term[k+3*ip]+=ct*d_sn;
+          if (n>=0) {
+            if (nsd->source_names[n]==string("0030")) {
+              term[k+3*ip]+=0.0;
+            } else {
+              d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
+                              width[ip], skew[ip]);
+              term[k+3*ip]+=ct*d_sn;
+            }
+          } else {
+            d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
+                              width[ip], skew[ip]);
+            term[k+3*ip]+=ct*d_sn;
+          }
         }
       }
-      for (size_t k=0; k<term.size(); k++) grad[i_pars+k]=cf*term[k];
-      cout << "Dist: i_pars=" << i_pars << endl;
+      for (size_t k=0; k<term.size(); k++) {
+        grad[i_pars+k]=cf*term[k];
+        cout << "Dist: i_pars=" << i_pars+k << endl;
+      }
+      // cout << "Dist: i_pars=" << i_pars << endl;
       i_pars+=9;
     }
 
     if (i_pars>=np_eos+np_ligo+np_src+np_dist) { 
       // w.r.t. the mass parameters M_*
       double cf, ct1, ct2, d_sn, d_an;
-      cf=c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
+      cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
       for (size_t j=0; j<np_nsp; j++) {
-        ct1=c_fsn_nsp*c_fan_nsp/an_star[j];
+        ct1=1.0/an_star[j];
         d_an=nsp.deriv_an(pd.mass_nsp[j]-M_star[j+np_ligo], 
                           pd.asym_nsp[j], pd.scale_nsp[j]);
         int ip;
         if (j<pd.n_dns) ip=0;
         else if (j>=pd.n_dns+pd.n_nswd) ip=2;
         else ip=1;
-        ct2=c_fsn_nsp*c_fan_nsp/sn_star[j+np_ligo];
+        ct2=1.0/sn_star[j+np_ligo];
         d_sn=nsp.deriv_sn(0, M_star[j+np_ligo], mean[ip], 
                           width[ip], skew[ip]);
         grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
