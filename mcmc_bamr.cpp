@@ -1597,10 +1597,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
 #endif
     
-    size_t np_ligo=nsd->n_ligo_params;
-    size_t np_eos=bc_arr[0]->mod->n_eos_params;
-    size_t np_src=nsd->n_sources;
-    size_t np_pop=nsd->pop.n_pop_params;
     size_t np=names.size();
     
 #ifdef ANDREW
@@ -1629,10 +1625,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #else
     stepper.mom_step.resize(np);
-    for (size_t i=0; i<np; i++) {
+    /*for (size_t i=0; i<np; i++) {
       stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
                                *(unif(gen)*2.0-1.0);
-    }
+    }*/
 #endif
 
     vector<bamr::deriv_funct> gfa(n_threads);

@@ -1617,102 +1617,18 @@ return o2scl::success;
 
 int bamr_class::compute_deriv(ubvector &pars, point_funct &pf, 
                               ubvector &grad, model_data &dat) {
-  cout << "Begin compute_deriv()" << endl;
-
-  ns_pop &nsp=nsd->pop;
-  pop_data &pd=nsd->pd;
+  num_deriv=true;
   model &m=*this->mod;
-
   size_t np=pars.size();
-  size_t np_eos=m.n_eos_params;
-  size_t np_ligo=nsd->n_ligo_params;
-  size_t np_src=nsd->n_sources;
-  size_t np_dist=nsp.n_pop_params-pd.n_stars;
-  size_t np_nsp=pd.n_stars;
 
   // Call the point function only once to compute f(x) for deriv_fd()
   double pfx=0.0;
   int func_ret=pf(np, pars, pfx, dat);
   if (func_ret!=o2scl::success) return m.ix_grad_failed;
   
-  vector<double> mean(3), width(3), skew(3);
-  mean[0]=pars[pvi["mean_NS"]];
-  mean[1]=pars[pvi["mean_WD"]];
-  mean[2]=pars[pvi["mean_LMS"]];
-  width[0]=pow(10.0, pars[pvi["log10_width_NS"]]);
-  width[1]=pow(10.0, pars[pvi["log10_width_WD"]]);
-  width[2]=pow(10.0, pars[pvi["log10_width_LMS"]]);
-  skew[0]=pars[pvi["skewness_NS"]];
-  skew[1]=pars[pvi["skewness_WD"]];
-  skew[2]=pars[pvi["skewness_LMS"]];
-  
-  double M_max=dat.m_max;
-
-  double c_fsn_nsp=1.0, c_fan_nsp=1.0;
-  double c_fsn_em=1.0,  c_wgt_em=1.0;
-  double c_fsn_gw=1.0,  c_wgt_gw=1.0;
-  vector<double> M_star, sn_star, an_star;
-
-  c_wgt_gw=wgt_gw19*wgt_gw17;
-  for (size_t j=0; j<2; j++) {
-    M_star.push_back(mass_gw17[j]);
-    sn_star.push_back(fsn_gw17[j]);
-    M_star.push_back(mass_gw19[j]);
-    sn_star.push_back(fsn_gw19[j]);
-    c_fsn_gw*=fsn_gw19[j]*fsn_gw17[j];
-  }
-
-  for (size_t j=0; j<pd.n_dns; j++) {
-    M_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
-    sn_star.push_back(nsp.sn_ns[j]);
-    an_star.push_back(nsp.an_ns[j]);
-    c_fsn_nsp*=nsp.sn_ns[j];
-    c_fan_nsp*=nsp.an_ns[j];
-  }
-  for (size_t j=0; j<pd.n_nswd; j++) {
-    M_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
-    sn_star.push_back(nsp.sn_wd[j]);
-    an_star.push_back(nsp.an_wd[j]);
-    c_fsn_nsp*=nsp.sn_wd[j];
-    c_fan_nsp*=nsp.an_wd[j];
-  }
-  for (size_t j=0; j<pd.n_lmxb; j++) {
-    M_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
-    sn_star.push_back(nsp.sn_lx[j]);
-    an_star.push_back(nsp.an_lx[j]);
-    c_fsn_nsp*=nsp.sn_lx[j];
-    c_fan_nsp*=nsp.an_lx[j];
-  }
-  for (size_t j=0; j<np_src; j++) {
-    M_star.push_back(M_max*pars[pvi["mf_"+nsd->source_names[j]]]);
-    sn_star.push_back(fsn_em[j]);
-    c_fsn_em*=fsn_em[j];
-    c_wgt_em*=wgt_em[j];
-  }
-
-  cout << "np_ligo=" << np_ligo << ", np_src=" << np_src 
-       << ", np_dist=" << np_dist << ", np_nsp=" << np_nsp << endl;
-       
-  /* cout << "c_wgt_gw=" << c_wgt_gw << ", c_fsn_gw=" << c_fsn_gw << endl;
-  cout << "c_wgt_em=" << c_wgt_em << ", c_fsn_em=" << c_fsn_em << endl;
-  cout << "c_fan_nsp=" << c_fan_nsp << ", c_fsn_nsp=" << c_fsn_nsp << endl;
-  for (size_t j=0; j<M_star.size(); j++) {
-    cout << "M_star[" << j << "]=" << M_star[j] << ", sn_star[" << j 
-         << "]=" << sn_star[j] << endl;
-  }
-  for (size_t j=0; j<np_src; j++) {
-    cout << "wgt_em[" << j << "]=" << wgt_em[j] 
-         << ", fsn_em[" << j << "]=" << fsn_em[j] << endl;
-  } */
-
-  //-------------------------------------------------------------------------
-
-  size_t i_pars=0;
-
-  while (i_pars<np) {
-
-    if (i_pars<np_eos+np_ligo+np_src) {
-      // w.r.t. {p}, Lambda, q, z_cdf, m1_gw19, mf_*
+  if (num_deriv==true) {
+    size_t i_pars=0;
+    while (i_pars<np) {
       double d_wgt;
       int ret=deriv_fd(i_pars, pars, pf, pfx, d_wgt, dat);
       if (ret!=0) {
@@ -1720,126 +1636,152 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         return m.ix_grad_failed;
       }
       grad[i_pars]=d_wgt;
-
-      if (i_pars<np_eos) {
-        cout << "EOS: i_pars=" << i_pars << endl;
-      }
-      else if (i_pars>=np_eos && i_pars<np_eos+np_ligo-1) {
-        cout << "GW17: i_pars=" << i_pars << endl;
-      }
-      else if (i_pars==np_eos+np_ligo-1) {
-        cout << "GW19: i_pars=" << i_pars << endl;
-      }
-      else {
-        cout << "EM: i_pars=" << i_pars << endl;
-      }
-
       i_pars++;
     }
-    
-    /*if (i_pars==np_eos+np_ligo-1) { 
-      // w.r.t. m1_gw19
-      double cf, d_sn, d_gw;
-      cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*fsn_gw19[1]*c_fsn_em*c_wgt_em;
-      for (size_t j=0; j<fsn_gw17.size(); j++) cf*=fsn_gw17[j];
-      d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
-      int ret=deriv_fd(i_pars, pars, pf, pfx, d_gw, dat);
-      if (ret!=0) {
-        cout << "bamr_class::compute_deriv() failure." << endl;
-        return m.ix_grad_failed;
-      }
-      grad[i_pars]=d_gw+cf*d_sn;
-      cout << "GW19: i_pars=" << i_pars << endl;
-      i_pars++;
+    return 0;
+  } else {
+
+    ns_pop &nsp=nsd->pop;
+    pop_data &pd=nsd->pd;
+
+    size_t np_eos=m.n_eos_params;
+    size_t np_ligo=nsd->n_ligo_params;
+    size_t np_src=nsd->n_sources;
+    size_t np_dist=nsp.n_pop_params-pd.n_stars;
+    size_t np_nsp=pd.n_stars;
+
+    vector<double> mean(3), width(3), skew(3);
+    mean[0]=pars[pvi["mean_NS"]];
+    mean[1]=pars[pvi["mean_WD"]];
+    mean[2]=pars[pvi["mean_LMS"]];
+    width[0]=pow(10.0, pars[pvi["log10_width_NS"]]);
+    width[1]=pow(10.0, pars[pvi["log10_width_WD"]]);
+    width[2]=pow(10.0, pars[pvi["log10_width_LMS"]]);
+    skew[0]=pars[pvi["skewness_NS"]];
+    skew[1]=pars[pvi["skewness_WD"]];
+    skew[2]=pars[pvi["skewness_LMS"]];
+
+    double M_max=dat.m_max;
+
+    double c_fsn_nsp=1.0, c_fan_nsp=1.0;
+    double c_fsn_em=1.0,  c_wgt_em=1.0;
+    double c_fsn_gw=1.0,  c_wgt_gw=1.0;
+    vector<double> M_star, sn_star, an_star;
+
+    c_wgt_gw=wgt_gw19*wgt_gw17;
+    for (size_t j=0; j<2; j++) {
+      M_star.push_back(mass_gw17[j]);
+      sn_star.push_back(fsn_gw17[j]);
+      M_star.push_back(mass_gw19[j]);
+      sn_star.push_back(fsn_gw19[j]);
+      c_fsn_gw*=fsn_gw19[j]*fsn_gw17[j];
     }
 
-    if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
-      // w.r.t. the mass fractions mf_*
-      double cf, d_sn, d_em, ct;
-      cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em;
-      for (size_t j=0; j<np_src; j++) {
-        int ret=deriv_fd(i_pars, pars, pf, pfx,  d_em, dat);
+    for (size_t j=0; j<pd.n_dns; j++) {
+      M_star.push_back(pars[pvi["M_"+pd.id_ns[j]]]);
+      sn_star.push_back(nsp.sn_ns[j]);
+      an_star.push_back(nsp.an_ns[j]);
+      c_fsn_nsp*=nsp.sn_ns[j];
+      c_fan_nsp*=nsp.an_ns[j];
+    }
+    for (size_t j=0; j<pd.n_nswd; j++) {
+      M_star.push_back(pars[pvi["M_"+pd.id_wd[j]]]);
+      sn_star.push_back(nsp.sn_wd[j]);
+      an_star.push_back(nsp.an_wd[j]);
+      c_fsn_nsp*=nsp.sn_wd[j];
+      c_fan_nsp*=nsp.an_wd[j];
+    }
+    for (size_t j=0; j<pd.n_lmxb; j++) {
+      M_star.push_back(pars[pvi["M_"+pd.id_lx[j]]]);
+      sn_star.push_back(nsp.sn_lx[j]);
+      an_star.push_back(nsp.an_lx[j]);
+      c_fsn_nsp*=nsp.sn_lx[j];
+      c_fan_nsp*=nsp.an_lx[j];
+    }
+    for (size_t j=0; j<np_src; j++) {
+      M_star.push_back(M_max*pars[pvi["mf_"+nsd->source_names[j]]]);
+      sn_star.push_back(fsn_em[j]);
+      c_fsn_em*=fsn_em[j];
+      c_wgt_em*=wgt_em[j];
+    }
+
+    //-------------------------------------------------------------------------
+
+    size_t i_pars=0;
+
+    while (i_pars<np) {
+
+      if (i_pars<np_eos+np_ligo+np_src) {
+        // w.r.t. {p}, Lambda, q, z_cdf, m1_gw19, mf_*
+        double d_wgt;
+        int ret=deriv_fd(i_pars, pars, pf, pfx, d_wgt, dat);
         if (ret!=0) {
           cout << "bamr_class::compute_deriv() failure." << endl;
           return m.ix_grad_failed;
         }
-        ct=c_fsn_em/fsn_em[j];
-        d_sn=nsp.deriv_sn(0, M_star[i_pars], mean[2], width[2], skew[2]);
-        grad[i_pars]=d_em+cf*ct*d_sn;
-        cout << "Sources: i_pars=" << i_pars << endl;
+        grad[i_pars]=d_wgt;
         i_pars++;
       }
-    }*/
 
-    if (i_pars>=np_eos+np_ligo+np_src && 
-        i_pars<np_eos+np_ligo+np_src+np_dist) {
-      // w.r.t. the distribution parameters 
-      // mean_*, width_*, skewness_*
-      double cf, d_sn, ct;
-      cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
-      vector<double> term(np_dist);
-      for (size_t j=0; j<M_star.size(); j++) {
-        ct=1.0/sn_star[j];
-
-        int ip;
-        if (j<pd.n_dns+np_ligo) ip=0;
-        else if (j>=pd.n_dns+np_ligo+pd.n_nswd) ip=2;
-        else ip=1;
-        
-        cout << "Dist: j=" << j << ", ip=" << ip << endl;
-
-        int n=j-np_ligo-pd.n_dns-pd.n_nswd-pd.n_lmxb;
-        for (size_t k=0; k<3; k++) {
-          if (n>=0) {
-            if (nsd->source_names[n]==string("0030")) {
-              term[k+3*ip]+=0.0;
+      if (i_pars>=np_eos+np_ligo+np_src && 
+          i_pars<np_eos+np_ligo+np_src+np_dist) {
+        // w.r.t. the distribution parameters 
+        double cf, d_sn, ct;
+        cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
+        vector<double> term(np_dist);
+        for (size_t j=0; j<M_star.size(); j++) {
+          ct=1.0/sn_star[j];
+          int ip;
+          if (j<pd.n_dns+np_ligo) ip=0;
+          else if (j>=pd.n_dns+np_ligo+pd.n_nswd) ip=2;
+          else ip=1;
+          cout << "Dist: j=" << j << ", ip=" << ip << endl;
+          int n=j-np_ligo-pd.n_dns-pd.n_nswd-pd.n_lmxb;
+          for (size_t k=0; k<3; k++) {
+            if (n>=0) {
+              if (nsd->source_names[n]==string("0030")) {
+                term[k+3*ip]+=0.0;
+              } else {
+                d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
+                                width[ip], skew[ip]);
+                term[k+3*ip]+=ct*d_sn;
+              }
             } else {
               d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
-                              width[ip], skew[ip]);
+                                width[ip], skew[ip]);
               term[k+3*ip]+=ct*d_sn;
             }
-          } else {
-            d_sn=nsp.deriv_sn(k+1, M_star[j], mean[ip], 
-                              width[ip], skew[ip]);
-            term[k+3*ip]+=ct*d_sn;
           }
         }
+        for (size_t k=0; k<term.size(); k++) {
+          grad[i_pars+k]=cf*term[k];
+          cout << "Dist: i_pars=" << i_pars+k << endl;
+        }
+        i_pars+=9;
       }
-      for (size_t k=0; k<term.size(); k++) {
-        grad[i_pars+k]=cf*term[k];
-        cout << "Dist: i_pars=" << i_pars+k << endl;
+
+      if (i_pars>=np_eos+np_ligo+np_src+np_dist) { 
+        // w.r.t. the mass parameters M_*
+        double cf, ct1, ct2, d_sn, d_an;
+        cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
+        for (size_t j=0; j<np_nsp; j++) {
+          ct1=1.0/an_star[j];
+          d_an=nsp.deriv_an(pd.mass_nsp[j]-M_star[j+np_ligo], 
+                            pd.asym_nsp[j], pd.scale_nsp[j]);
+          int ip;
+          if (j<pd.n_dns) ip=0;
+          else if (j>=pd.n_dns+pd.n_nswd) ip=2;
+          else ip=1;
+          ct2=1.0/sn_star[j+np_ligo];
+          d_sn=nsp.deriv_sn(0, M_star[j+np_ligo], mean[ip], 
+                            width[ip], skew[ip]);
+          grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
+          cout << "Pop: i_pars=" << i_pars << endl;
+          i_pars++;
+        }
       }
-      // cout << "Dist: i_pars=" << i_pars << endl;
-      i_pars+=9;
     }
 
-    if (i_pars>=np_eos+np_ligo+np_src+np_dist) { 
-      // w.r.t. the mass parameters M_*
-      double cf, ct1, ct2, d_sn, d_an;
-      cf=c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em;
-      for (size_t j=0; j<np_nsp; j++) {
-        ct1=1.0/an_star[j];
-        d_an=nsp.deriv_an(pd.mass_nsp[j]-M_star[j+np_ligo], 
-                          pd.asym_nsp[j], pd.scale_nsp[j]);
-        int ip;
-        if (j<pd.n_dns) ip=0;
-        else if (j>=pd.n_dns+pd.n_nswd) ip=2;
-        else ip=1;
-        ct2=1.0/sn_star[j+np_ligo];
-        d_sn=nsp.deriv_sn(0, M_star[j+np_ligo], mean[ip], 
-                          width[ip], skew[ip]);
-        grad[i_pars]=cf*(ct1*d_an+ct2*d_sn);
-        cout << "Pop: i_pars=" << i_pars << endl;
-        i_pars++;
-      }
-    }
+    return 0;
   }
-  double log_wgt=log(c_fan_nsp*c_fsn_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em*c_fsn_em);
-  cout << "End of compute_deriv()" << endl;
-  cout << scientific << setprecision(20);
-  cout << "log_wgt=" << log_wgt << ", pfx=" << pfx << endl;
-  if (log_wgt==pfx) cout << "OK: log_wgt==pfx" << endl;
-  cout << scientific << setprecision(6);
-
-  return 0;
 }

@@ -90,7 +90,9 @@ namespace bamr {
     
     /** \brief If true, include emulator from sklearn
      */
-    //bool apply_emu;
+#ifdef O2SCL_NEVER_DEFINED
+    bool apply_emu;
+#endif
     
     /** \brief If true, use index2 to take derivative of M_max
      */
@@ -153,8 +155,11 @@ namespace bamr {
     /// Model type string
     std::string model_type;
 
-    /// Desc
+    /// The index of parameters
     o2scl::vec_index pvi;
+
+    /// If true, compute numerical derivatives for all parameters
+    bool num_deriv;
     
     /// Vector to store log-weights to be passed to table
     std::vector<double> wgt_pop;
