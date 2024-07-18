@@ -1609,26 +1609,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
 #ifdef ANDREW
     hmc_stepper->traj_length=1;
+    hmc_stepper->mom_step.resize(np);
 #else
     stepper.traj_length=1;
-#endif
-   
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_real_distribution<> unif(0,1);
-
-#ifdef ANDREW
-    hmc_stepper->mom_step.resize(np);
-    for (size_t i=0; i<np; i++) {
-      hmc_stepper->mom_step[i]=1.0e-6*(high[i]-low[i])
-                               *(unif(gen)*2.0-1.0);
-    }
-#else
     stepper.mom_step.resize(np);
-    /*for (size_t i=0; i<np; i++) {
-      stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
-                               *(unif(gen)*2.0-1.0);
-    }*/
 #endif
 
     vector<bamr::deriv_funct> gfa(n_threads);
