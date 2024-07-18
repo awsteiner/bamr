@@ -107,15 +107,6 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-//#ifdef BAMR_KDE
-/*  class mcmc_bamr :
-    public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_mh<point_funct,model_data,
-                   ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>>
-*/
-//#else
 
 #ifdef ANDREW
   class mcmc_bamr :
@@ -124,15 +115,13 @@ namespace bamr {
 #else
   class mcmc_bamr :
     public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-    mcmc_stepper_hmc<point_funct,model_data,ubvector>>
+    <point_funct,fill_funct,model_data,ubvector>
 #endif
-   
-//#endif
    
   {
   protected:
 
+#ifdef ANDREW
     /** \brief The input tensor for the KDE proposal distribution
      */
     o2scl::tensor<> ten_in;
@@ -142,6 +131,7 @@ namespace bamr {
     
     /// The Gaussian proposal distribution
     std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
+#endif
     
     /** \brief If true, use index2 to take derivative of M_max
      */

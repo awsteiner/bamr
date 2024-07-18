@@ -1586,49 +1586,33 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
          tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     }
 #endif
-
-#ifdef ANDREW
     
     std::shared_ptr<mcmc_stepper_hmc<point_funct,
                                      model_data,ubvector>> hmc_stepper
-      (new mcmc_stepper_hmc<point_funct,model_data,
-       ubvector>);
+      (new mcmc_stepper_hmc<point_funct,model_data,ubvector>);
     stepper=hmc_stepper;
-    
-#endif
     
     size_t np=names.size();
     
-#ifdef ANDREW
-    if (hmc_stepper->auto_grad.size()<np) hmc_stepper->auto_grad.resize(np);
-    for (size_t i=0; i<np; i++) hmc_stepper->auto_grad[i]=false;
-#else
-    if (stepper.auto_grad.size()<np) stepper.auto_grad.resize(np);
-    for (size_t i=0; i<np; i++) stepper.auto_grad[i]=false;
-#endif
+    if (hmc_stepper->auto_grad.size()<np) {
+      hmc_stepper->auto_grad.resize(np);
+    }
+    for (size_t i=0; i<np; i++) {
+      hmc_stepper->auto_grad[i]=false;
+    }
 
-#ifdef ANDREW
     hmc_stepper->traj_length=1;
     hmc_stepper->mom_step.resize(np);
-#else
-    stepper.traj_length=1;
-    stepper.mom_step.resize(np);
-#endif
 
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
     for (size_t i=0; i<n_threads; i++) {
       gfa[i]=std::bind
-        (std::mem_fn<int(ubvector &, point_funct &, ubvector &, model_data &)>
-        (&bamr_class::compute_deriv), bc_arr[i], _2, _3, _4, _5);
+        (std::mem_fn<int(ubvector &,point_funct &,ubvector &,model_data &)>
+        (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5);
     }
 
-#ifdef ANDREW
     hmc_stepper->set_gradients(gfa);
-#else
-    stepper.set_gradients(gfa);
-#endif    
-  }
 
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -1638,6 +1622,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
          tag,MPI_COMM_WORLD);
     }
 #endif
+
+  }
 
   // ---------------------------------------
 
