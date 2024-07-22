@@ -104,7 +104,7 @@ class ns_pop {
     double deriv_sn(int , double , double , double , double );
 
     /* Derivative of the Asymmetric Normal PDF */
-    double deriv_an(double , double , double );
+    double deriv_an(double , double, double , double );
 
     /* Function to fill vectors with the names and units of 
     population parameter */

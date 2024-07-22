@@ -24,8 +24,8 @@ double ns_pop::asym_norm(double x, double c, double d) {
 }
 
 double ns_pop::deriv_sn(int i_wrt, double x, double m, 
-                        double s, double a) {
-  double k=1.0/s/sqrt(2.0*M_PI);
+                        double log10_s, double a) {
+  /*double k=1.0/s/sqrt(2.0*M_PI);
   double ef=exp(-0.5*pow((x-m)/s,2.0));
   double p=a*(x-m)/s/sqrt(2.0);
   double t1=(x-m)*(1.0+erf(p))/s/s;
@@ -35,13 +35,60 @@ double ns_pop::deriv_sn(int i_wrt, double x, double m,
   else if (i_wrt==1) return k*ef*(t1-t2);
   else if (i_wrt==2) return k*ef*(t1-t2)*(x-m)/s;
   else if (i_wrt==3) return ef*exp(-p*p)*(x-m)/s/s/M_PI;
+  else return 0.0;*/
+
+  double fv1, fv2, h;
+  double s=pow(10.0, log10_s);
+  fv1=skewed_norm(x, m, s, a);
+
+  double epsrel=1.0e-6, epsmin=1.0e-15;
+
+  if (i_wrt==0) {
+    h=epsrel*fabs(x);
+    if (fabs(h)<=epsmin) h=epsrel;
+    x+=h;
+  }
+  else if (i_wrt==1) {
+    h=epsrel*fabs(m);
+    if (fabs(h)<=epsmin) h=epsrel;
+    m+=h;
+  }
+  else if (i_wrt==2) {
+    h=epsrel*fabs(log10_s);
+    if (fabs(h)<=epsmin) h=epsrel;
+    log10_s+=h;
+    s=pow(10.0, log10_s);
+  }
+  else if (i_wrt==3) {
+    h=epsrel*fabs(a);
+    if (fabs(h)<=epsmin) h=epsrel;
+    a+=h;
+  }
   else return 0.0;
+
+  fv2=skewed_norm(x, m, s, a);
+
+  return (fv2-fv1)/h;
 }
 
-double ns_pop::deriv_an(double x, double c, double d) {
-  double k=2.0/(d*(c+1.0/c));
+double ns_pop::deriv_an(double m, double M, double c, double d) {
+  /*double k=2.0/(d*(c+1.0/c));
   if (x<0.0) return k*x*norm_pdf(c*x/d)*c*c/d/d;
-  else return k*x*norm_pdf(x/(c*d))/c/c/d/d;
+  else return k*x*norm_pdf(x/(c*d))/c/c/d/d;*/
+
+  double fv1, fv2, h;
+  double x=m-M;
+
+  double epsrel=1.0e-6, epsmin=1.0e-15;
+  h=epsrel*fabs(x);
+  if (fabs(h)<=epsmin) h=epsrel;
+
+  fv1=asym_norm(x, c, d);
+  M+=h;
+  x=m-M;
+  fv2=asym_norm(x, c, d);
+
+  return (fv2-fv1)/h;
 }
 
 
