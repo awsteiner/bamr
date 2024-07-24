@@ -1601,7 +1601,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       hmc_stepper->auto_grad[i]=false;
     }
 
-    hmc_stepper->traj_length=10;
+    hmc_stepper->traj_length=1;
 
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;

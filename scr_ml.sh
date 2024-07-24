@@ -1,14 +1,8 @@
 #! /usr/bin/bash
 
 # mlines:
-<<<<<<< HEAD
-	./bamr -threads 1 -set hmc 1 -set n_leapfrog 1
-	-set prefix out/ml -set max_iters 10 \
-	-set file_update_time 60 \
-=======
 mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
 	-set max_iters 100000 -set file_update_time 1800 \
->>>>>>> pop_kde
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -37,15 +31,8 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
 	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
 	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-<<<<<<< HEAD
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 \
-	-initial-point-last out/ml_59 -mcmc > out/ml.out 2>&1 &
-=======
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-set use_kde 1 -model new_lines -set model_dpdm 1 \
 	-initial-point-last out/ml_65a0 \
 	-mcmc > out/ml.out 2>&1 &
->>>>>>> pop_kde

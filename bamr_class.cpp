@@ -1574,7 +1574,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     cout << "End of bamr_class::compute_point()." << endl;
   }
 
-  if (iret==0 && set->verbose>=2) {
+  if (iret==0 && set->verbose>=1) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
@@ -1624,14 +1624,14 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   num_deriv=false;
   model &m=*this->mod;
   size_t np=pars.size();
-  // ubvector grad_fd(np);
+  ubvector grad_fd(np);
 
   // Call the point function only once to compute f(x) for deriv_fd()
   double pfx=0.0;
   int func_ret=pf(np, pars, pfx, dat);
   if (func_ret!=o2scl::success) return m.ix_grad_failed;
   
-  if (num_deriv==true) {
+  if (true) {
     size_t i_pars=0;
     while (i_pars<np) {
       double d_wgt;
@@ -1641,10 +1641,10 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
         return m.ix_grad_failed;
       }
       // grad_fd[i_pars]=d_wgt;
-      grad[i_pars]=d_wgt;
+      grad_fd[i_pars]=d_wgt;
       i_pars++;
     }
-  } else {
+   //} else {
 
     ns_pop &nsp=nsd->pop;
     pop_data &pd=nsd->pd;
@@ -1696,7 +1696,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
 
     //-------------------------------------------------------------------------
     double cf=exp(pfx); 
-    size_t i_pars=0;
+    i_pars=0;
 
     while (i_pars<np) {
 
@@ -1765,13 +1765,13 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
     }
 
-    /*for (size_t k=0; k<np; k++) {
+    for (size_t k=0; k<np; k++) {
       cout << "grad_an[" << k << "]=" << grad[k] 
            << ",\t grad_fd[" << k << "]=" << grad_fd[k]
            << ",\t delta=" << abs(grad_fd[k]-grad[k])/grad_fd[k];
       if (grad[k]==grad_fd[k]) cout << "\t match!" << endl;
       else cout << " " << endl;
-    }*/
+    }
 
   }
 
