@@ -402,8 +402,8 @@ int mcmc_bamr::mcmc_init() {
   mcmc_para_cli::mcmc_init();
 
   // Enable/diable storing rejected MCMC points
-  if (set->use_emulator) this->store_rejects=true;
-  else this->store_rejects=false;
+  /*if (set->use_emulator) this->store_rejects=true;
+  else this->store_rejects=false;*/
   
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -1264,7 +1264,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
-    if (set->use_emulator) { 
+    if (this->store_rejects==true) { 
       pfa[i]=std::bind
         (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
          (&bamr_class::compute_point_ext),bc_arr[i],std::placeholders::_2,

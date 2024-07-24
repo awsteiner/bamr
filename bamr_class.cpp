@@ -1570,13 +1570,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (set->verbose>=2) {
-    cout << "End of bamr_class::compute_point()." << endl;
-  }
-
   if (iret==0 && set->verbose>=1) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
+  }
+
+  if (set->verbose>=2) {
+    cout << "End of bamr_class::compute_point()." << endl;
   }
 
   return iret;
