@@ -33,6 +33,7 @@ using namespace o2scl_hdf;
 // For pi, pi^2, etc.
 using namespace o2scl_const;
 using namespace bamr;
+using namespace std::placeholders;
 
 void bamr_class::setup_filters() {
 
@@ -1593,25 +1594,118 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 int bamr_class::deriv_fd(size_t i, ubvector &x, point_funct &pf,
                          double &pfx, double &g, model_data &dat) {
-double fv1=pfx;
-double fv2, h;
-model &m=*this->mod;
-size_t np=x.size();
+  double x1=x[i], fv1=pfx;
+  double fv2, h;
+  model &m=*this->mod;
+  size_t np=x.size();
 
-// Adjust step size
-double epsrel=1.0e-6, epsmin=1.0e-15;
-h=epsrel*fabs(x[i]);
-if (fabs(h)<=epsmin) h=epsrel;
+  // Adjust step size
+  double epsrel=1.0e-6, epsmin=1.0e-15;
+  h=epsrel*fabs(x[i]);
+  if (fabs(h)<=epsmin) h=epsrel;
 
-// Compute: f'(x)=[f(x+h)-f(x)]/h
-x[i]+=h;
-int func_ret=pf(np, x, fv2, dat);
-if (func_ret!=o2scl::success) return m.ix_grad_failed;
-x[i]-=h;
+  // Compute: f'(x)=[f(x+h)-f(x)]/h
+  x[i]+=h;
+  int func_ret=pf(np, x, fv2, dat);
+  if (func_ret!=o2scl::success) return m.ix_grad_failed;
+  x[i]-=h;
 
-g=(exp(fv2)-exp(fv1))/h;
+  g=(exp(fv2)-exp(fv1))/h;
 
-return o2scl::success;
+  return o2scl::success;
+}
+
+
+int bamr_class::compute_gw17(const ubvector &pars, double &wgt,
+                             model_data &dat) {
+  model &m=*this->mod;
+  size_t np_eos=m.n_eos_params;
+
+  double M_chirp_det=pars[np_eos];
+  double q=pars[np_eos+1];
+  double z_cdf=pars[np_eos+2];
+  prob_dens_gaussian pdg(0.0099,0.0009);
+  double z=pdg.invert_cdf(z_cdf);
+  double M_chirp=M_chirp_det/(1.0+z);
+  double m1=M_chirp*pow(1.0+q,0.2)/pow(q,0.6);
+  double m2=M_chirp*pow(q,0.4)*pow(1.0+q,0.2);
+  double M_max=dat.m_max;
+      
+  if (m1>M_max || m2>M_max || m1<m2) return -1;
+
+  double R1=dat.mvsr.interp("gm",m1,"r");
+  double R2=dat.mvsr.interp("gm",m2,"r");
+  double I1=dat.mvsr.interp("gm",m1,"rjw")/3.0/schwarz_km;
+  double I2=dat.mvsr.interp("gm",m2,"rjw")/3.0/schwarz_km;
+  double G=schwarz_km/2.0;
+  double I_bar1=I1/G/G/m1/m1/m1;
+  double I_bar2=I2/G/G/m2/m2/m2;
+
+  double b0=-30.5395;
+  double b1=38.3931;
+  double b2=-16.3071;
+  double b3=3.36972;
+  double b4=-0.26105;
+    
+  double li=log(I_bar1);
+  double li2=li*li;
+  double li3=li*li2;
+  double li4=li*li3;
+  double li5=li*li4;
+  double li6=li*li5;
+  double Lambda1=exp(b0+b1*li+b2*li2+b3*li3+b4*li4);
+
+  li=log(I_bar2);
+  li2=li*li;
+  li3=li*li2;
+  li4=li*li3;
+  li5=li*li4;
+  li6=li*li5;
+  double Lambda2=exp(b0+b1*li+b2*li2+b3*li3+b4*li4);
+
+  double Lambdat=16.0/13.0*((m1+12.0*m2)*pow(m1,4.0)*Lambda1+
+                (m2+12.0*m1)*pow(m2,4.0)*Lambda2)/pow(m1+m2,5.0);
+
+  ubvector lin_v(3);
+  lin_v[0]=M_chirp_det;
+  lin_v[1]=q;
+  lin_v[2]=Lambdat;
+        
+  double prob=nsd->gw17_data_table.interp_linear(lin_v);
+        
+  for(size_t j=0;j<3;j++) {
+    if (lin_v[j]<nsd->gw17_data_table.get_grid(j,0) ||
+        lin_v[j]>nsd->gw17_data_table.get_grid
+        (j,nsd->gw17_data_table.get_size(j)-1)) {
+      return -1;
+    }
+  }
+
+  wgt=exp(prob);       
+  return 0;
+}
+
+
+int bamr_class::compute_gw19(const ubvector &pars, double &wgt, 
+                            model_data &dat) {
+  model &m=*this->mod;
+  size_t np_eos=m.n_eos_params;
+
+  double M_chirp=1.44;
+  double m1=pars[np_eos+3];
+  double m2=nsd->solver.get_m2(M_chirp, m1);
+  double M_max=dat.m_max;
+
+  if (m1>M_max || m2>M_max || m1<m2) return -1;
+
+  if (m1<nsd->gw19_data_table.get("rep",0) ||
+      m1>nsd->gw19_data_table.get("rep",
+        nsd->gw19_data_table.get_nlines()-1)) {
+    return -1; 
+  }
+      
+  wgt=nsd->gw19_data_table.interp_const("rep", m1, "wgt");
+  return 0;
 }
 
 
@@ -1700,7 +1794,51 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
 
     while (i_pars<np) {
 
-      while (i_pars<np_eos+np_ligo+np_src) {
+      while (i_pars<np_eos) {
+        // w.r.t. {p}, Lambda, q, z_cdf, m1_gw19, mf_*
+        double d_wgt;
+        int ret=deriv_fd(i_pars, pars, pf, pfx, d_wgt, dat);
+        if (ret!=0) {
+          cout << "bamr_class::compute_deriv() failure." << endl;
+          return m.ix_grad_failed;
+        }
+        grad[i_pars]=d_wgt;
+        i_pars++;
+      }
+
+      while (i_pars>=np_eos && i_pars<np_eos+np_ligo) {
+        // w.r.t. the GW parameters
+        double pfx1, pfx2;
+        int f_ret, d_ret;
+        bamr_class &bc=*this;
+        point_funct pf_gw17, pf_gw19;
+        pf_gw17=bind(compute_gw17, this, _2, _3, _4);
+        pf_gw19=bind(mem_fn<int(const ubvector &, double &, model_data &)>
+                         (&bamr_class::compute_gw19), bc, _2, _3, _4);
+        if (i_pars==np_eos+np_ligo-1) {
+          f_ret=compute_gw19(pars, pfx1, dat);
+          d_ret=deriv_fd(i_pars, pars, pf_gw19, pfx1, pfx2, dat);
+          if (f_ret!=0 || d_ret!=0) {
+            cout << "bamr_class::compute_deriv() failure." << endl;
+            return m.ix_grad_failed;
+          }
+          grad[i_pars]=pfx2;
+          i_pars++;
+        } else {
+          for (size_t j=0; j<3; j++) {
+            f_ret=compute_gw17(pars, pfx1, dat);
+            d_ret=deriv_fd(i_pars, pars, pf_gw17, pfx1, pfx2, dat);
+            if (f_ret!=0 || d_ret!=0) {
+              cout << "bamr_class::compute_deriv() failure." << endl;
+              return m.ix_grad_failed;
+            }
+            grad[i_pars]=pfx2;
+            i_pars++;
+          }
+        }
+      }
+
+      while (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) {
         // w.r.t. {p}, Lambda, q, z_cdf, m1_gw19, mf_*
         double d_wgt;
         int ret=deriv_fd(i_pars, pars, pf, pfx, d_wgt, dat);

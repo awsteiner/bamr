@@ -202,6 +202,12 @@ namespace bamr {
     virtual int deriv_fd(size_t index, ubvector &pars, point_funct &pf, 
                          double &pfx, double &grad, model_data &dat);
     
+    virtual int compute_gw17(const ubvector &pars, double &wgt, 
+                             model_data &dat);
+
+    virtual int compute_gw19(const ubvector &pars, double &wgt, 
+                             model_data &dat);
+    
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point
     */
