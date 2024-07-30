@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-mpirun -n 1 ./bamr -threads 1 \
+./bamr -threads 1 \
 	-set prefix out/np \
 	-set max_iters 1 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \

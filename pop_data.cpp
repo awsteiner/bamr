@@ -427,6 +427,7 @@ void pop_data::load_data() {
   for (size_t i=0; i<name_ns.size(); i++) {
     double c=sqrt(high_ns[i]/low_ns[i]);
     double d=es.get_scale(low_ns[i], high_ns[i]);
+    id_nsp.push_back(id_ns[i]);
     mass_nsp.push_back(mass_ns[i]);
     asym_ns.push_back(c);
     asym_nsp.push_back(c);
@@ -436,6 +437,7 @@ void pop_data::load_data() {
   for (size_t i=0; i<name_wd.size(); i++) {
     double c=sqrt(high_wd[i]/low_wd[i]);
     double d=es.get_scale(low_wd[i], high_wd[i]);
+    id_nsp.push_back(id_wd[i]);
     mass_nsp.push_back(mass_wd[i]);
     asym_wd.push_back(c);
     asym_nsp.push_back(c);
@@ -445,6 +447,7 @@ void pop_data::load_data() {
   for (size_t i=0; i<name_lx.size(); i++) {
     double c=sqrt(high_lx[i]/low_lx[i]);
     double d=es.get_scale(low_lx[i], high_lx[i]);
+    id_nsp.push_back(id_lx[i]);
     mass_nsp.push_back(mass_lx[i]);
     asym_lx.push_back(c);
     asym_nsp.push_back(c);

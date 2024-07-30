@@ -160,6 +160,8 @@ namespace bamr {
 
     /// If true, compute numerical derivatives for all parameters
     bool num_deriv;
+
+    size_t index;
     
     /// Vector to store log-weights to be passed to table
     std::vector<double> wgt_pop;
@@ -199,14 +201,13 @@ namespace bamr {
     virtual int compute_deriv(ubvector &pars, point_funct &pf, 
                               ubvector &grad, model_data &dat);
 
-    virtual int deriv_fd(size_t index, ubvector &pars, point_funct &pf, 
+    virtual int deriv_fd(size_t ix, ubvector &pars, point_funct &pf, 
                          double &pfx, double &grad, model_data &dat);
     
-    virtual int compute_gw17(const ubvector &pars, double &wgt, 
-                             model_data &dat);
-
-    virtual int compute_gw19(const ubvector &pars, double &wgt, 
-                             model_data &dat);
+    virtual int compute_gw17(const ubvector &, double &, model_data &);
+    virtual int compute_gw19(const ubvector &, double &, model_data &);
+    virtual int compute_isrc(size_t, const ubvector &, double &, model_data &);
+    virtual int compute_dist(size_t, const ubvector &, double &, model_data &);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point

@@ -42,6 +42,7 @@ struct pop_data {
   vector<double> scale_wd;
   vector<double> scale_lx;
 
+  vector<string> id_nsp;
   vector<double> mass_nsp;
   vector<double> asym_nsp;
   vector<double> scale_nsp;
@@ -128,7 +129,9 @@ class ns_pop {
 
     /* Combined likelihood function for all stars, except 
     GW170817, QLMXBs, PREs, and NICER */
-    double get_weight(const ubvector &, vec_index &, int &);
+    int compute_weight(const ubvector &, vec_index &, double &);
+
+    int compute_star(size_t, const ubvector &, vec_index &, double &);
 
     /* Store the values of AN(x|c,d) for all stars in a binary */
     vector<double> an_ns;
@@ -139,6 +142,8 @@ class ns_pop {
     vector<double> sn_ns;
     vector<double> sn_wd;
     vector<double> sn_lx;
+
+    vector<double> sn_nsp;
 
 
   protected:

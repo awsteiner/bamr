@@ -39,7 +39,7 @@ double ns_pop::deriv_sn(int i_wrt, double x, double m,
 
   double fv1, fv2, h;
   double s=pow(10.0, log10_s);
-  fv1=skewed_norm(x, m, s, a);
+  fv1=log(skewed_norm(x, m, s, a));
 
   double epsrel=1.0e-6, epsmin=1.0e-15;
 
@@ -66,7 +66,7 @@ double ns_pop::deriv_sn(int i_wrt, double x, double m,
   }
   else return 0.0;
 
-  fv2=skewed_norm(x, m, s, a);
+  fv2=log(skewed_norm(x, m, s, a));
 
   return (fv2-fv1)/h;
 }
@@ -83,10 +83,10 @@ double ns_pop::deriv_an(double m, double M, double c, double d) {
   h=epsrel*fabs(x);
   if (fabs(h)<=epsmin) h=epsrel;
 
-  fv1=asym_norm(x, c, d);
+  fv1=log(asym_norm(x, c, d));
   M+=h;
   x=m-M;
-  fv2=asym_norm(x, c, d);
+  fv2=log(asym_norm(x, c, d));
 
   return (fv2-fv1)/h;
 }
@@ -117,6 +117,7 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
     an_ns[i]=asym_norm(mass-M_star, asym, scale);
     sn_ns[i]=skewed_norm(M_star, mean, width, skew);
+    sn_nsp.push_back(sn_ns[i]);
     double wgt_star=an_ns[i]*sn_ns[i];
     
     if (this->debug) {
@@ -164,6 +165,7 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
     an_wd[i]=asym_norm(mass-M_star, asym, scale);
     sn_wd[i]=skewed_norm(M_star, mean, width, skew);
+    sn_nsp.push_back(sn_wd[i]);
     double wgt_star=an_wd[i]*sn_wd[i];
     
     if (this->debug) {
@@ -209,6 +211,7 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];
     an_lx[i]=asym_norm(mass-M_star, asym, scale);
     sn_lx[i]=skewed_norm(M_star, mean, width, skew);
+    sn_nsp.push_back(sn_lx[i]);
     double wgt_star=an_lx[i]*sn_lx[i];
     
     if (this->debug) {
@@ -233,22 +236,73 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
 
 
 // The combined likelihood function to be calculated
-double ns_pop::get_weight(const ubvector &pars, vec_index &pvi,
-                              int &ret) {
+int ns_pop::compute_weight(const ubvector &pars, vec_index &pvi,
+                           double &log_wgt) {
+  vector<double> mean(3), width(3), skew(3);
+  mean[0]=pars[pvi["mean_NS"]];
+  mean[1]=pars[pvi["mean_WD"]];
+  mean[2]=pars[pvi["mean_LMS"]];
+  width[0]=pow(10.0,pars[pvi["log10_width_NS"]]);
+  width[1]=pow(10.0,pars[pvi["log10_width_WD"]]);
+  width[2]=pow(10.0,pars[pvi["log10_width_LMS"]]);
+  skew[0]=pars[pvi["skewness_NS"]];
+  skew[1]=pars[pvi["skewness_WD"]];
+  skew[2]=pars[pvi["skewness_LMS"]]; 
 
-  double wgt_ns, wgt_wd, wgt_hms, wgt_lx, wgt; 
-
-  // Calculate log-likelihood for each population
-  wgt_ns=get_weight_ns(pars, pvi, ret);
-  wgt_wd=get_weight_wd(pars, pvi, ret);
-  // wgt_hms=get_weight_hx(pars, pvi, ret);
-  wgt_lx=get_weight_lx(pars, pvi, ret);
-
-  // Multiply all likelihoods. Note: This is log-likelihood.
-  wgt=wgt_ns+wgt_wd+wgt_lx; // + wgt_hms
+  for (size_t i=0; i<pd.id_nsp.size(); i++) {
+    int j, ret;
+    if (i<pd.n_dns) j=0;
+    else if (i>=pd.n_dns+pd.n_nswd) j=2;
+    else j=1;
+    double mass=pd.mass_nsp[i];
+    double asym=pd.asym_nsp[i];
+    double scale=pd.scale_nsp[i];
+    double M_star=pars[pvi[string("M_")+pd.id_nsp[i]]];
+    double f_an=asym_norm(mass-M_star, asym, scale);
+    double f_sn=skewed_norm(M_star, mean[j], width[j], skew[j]);
+    double wgt_star=f_an*f_sn;
+    if (wgt_star<=0.0) {
+      if (j==0) ret=30+i;
+      else if (j==1) ret=60+i;
+      else ret=100+i;
+      log_wgt=0.0;
+      return ret;
+    }
+    log_wgt+=log(wgt_star);
+  }
   
-  // Return the log-likelihood
-  return wgt;
+  return 0;
+}
+
+
+int ns_pop::compute_star(size_t ix, const ubvector &pars,
+                         vec_index &pvi, double &log_wgt) {
+  vector<double> mean(3), width(3), skew(3);
+  mean[0]=pars[pvi["mean_NS"]];
+  mean[1]=pars[pvi["mean_WD"]];
+  mean[2]=pars[pvi["mean_LMS"]];
+  width[0]=pow(10.0,pars[pvi["log10_width_NS"]]);
+  width[1]=pow(10.0,pars[pvi["log10_width_WD"]]);
+  width[2]=pow(10.0,pars[pvi["log10_width_LMS"]]);
+  skew[0]=pars[pvi["skewness_NS"]];
+  skew[1]=pars[pvi["skewness_WD"]];
+  skew[2]=pars[pvi["skewness_LMS"]]; 
+
+  int j, ret;
+  if (ix<pd.n_dns) j=0;
+  else if (ix>=pd.n_dns+pd.n_nswd) j=2;
+  else j=1;
+  double mass=pd.mass_nsp[ix];
+  double asym=pd.asym_nsp[ix];
+  double scale=pd.scale_nsp[ix];
+  double M_star=pars[pvi[string("M_")+pd.id_nsp[ix]]];
+  double f_an=asym_norm(mass-M_star, asym, scale);
+  double f_sn=skewed_norm(M_star, mean[j], width[j], skew[j]);
+  double wgt_star=f_an*f_sn;
+  if (wgt_star<=0.0) return -1;
+  log_wgt=log(wgt_star);
+  
+  return 0;
 }
 
 
