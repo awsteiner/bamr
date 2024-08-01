@@ -144,6 +144,7 @@ class ns_pop {
     vector<double> sn_lx;
 
     vector<double> sn_nsp;
+    vector<double> an_nsp;
 
 
   protected:
