@@ -143,10 +143,6 @@ class ns_pop {
     vector<double> sn_wd;
     vector<double> sn_lx;
 
-    vector<double> sn_nsp;
-    vector<double> an_nsp;
-
-
   protected:
 
     /* PDF of standard normal distribution N(0,1) */

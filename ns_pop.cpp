@@ -117,8 +117,6 @@ double ns_pop::get_weight_ns(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_ns[i]]];
     an_ns[i]=asym_norm(mass-M_star, asym, scale);
     sn_ns[i]=skewed_norm(M_star, mean, width, skew);
-    sn_nsp.push_back(sn_ns[i]);
-    an_nsp.push_back(an_ns[i]);
     double wgt_star=an_ns[i]*sn_ns[i];
     
     if (this->debug) {
@@ -166,8 +164,6 @@ double ns_pop::get_weight_wd(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_wd[i]]];
     an_wd[i]=asym_norm(mass-M_star, asym, scale);
     sn_wd[i]=skewed_norm(M_star, mean, width, skew);
-    sn_nsp.push_back(sn_wd[i]);
-    an_nsp.push_back(an_wd[i]);
     double wgt_star=an_wd[i]*sn_wd[i];
     
     if (this->debug) {
@@ -213,8 +209,6 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
     double M_star=pars[pvi[string("M_")+pd.id_lx[i]]];
     an_lx[i]=asym_norm(mass-M_star, asym, scale);
     sn_lx[i]=skewed_norm(M_star, mean, width, skew);
-    sn_nsp.push_back(sn_lx[i]);
-    an_nsp.push_back(an_lx[i]);
     double wgt_star=an_lx[i]*sn_lx[i];
     
     if (this->debug) {
@@ -228,7 +222,7 @@ double ns_pop::get_weight_lx(const ubvector &pars, vec_index &pvi,
       ret=100+i;
       return 0.0;
     }
-    log_wgt+=log(wgt_star); 
+    log_wgt+=log(wgt_star);
   }
   if (this->debug) {
     cout << "LMXB: " << log_wgt << endl;
