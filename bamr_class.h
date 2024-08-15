@@ -201,8 +201,8 @@ namespace bamr {
     virtual int compute_deriv(ubvector &pars, point_funct &pf, 
                               ubvector &grad, model_data &dat);
 
-    virtual int deriv_fd(size_t ix, ubvector &pars, point_funct &pf, 
-                         double &pfx, double &grad, model_data &dat);
+    virtual int numeric_deriv(size_t ix, ubvector &pars, point_funct &pf, 
+                              double &pfx, double &grad, model_data &dat);
     
     virtual int compute_gw17(const ubvector &, double &, model_data &);
     virtual int compute_gw19(const ubvector &, double &, model_data &);

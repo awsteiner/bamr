@@ -70,7 +70,7 @@ file-main2:
 
 XLO = 0.0
 XHI = 3.0
-YLO = 0.0
+YLO = 0.04
 YHI = 4.0
 DX = 99.0
 
