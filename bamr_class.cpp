@@ -1993,7 +1993,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
     }
 
-    // w.r.t. the mass parameters M_*
+    // w.r.t. M_*
     if (ip==np_eos+np_ligo+np_src+np_dist) {
       for (size_t j=0; j<np_nsp; j++) {
         point_funct pf_mass;
