@@ -35,4 +35,4 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
 	-initial-point-last out/nl_53_init \
-  -mcmc
+  	-mcmc

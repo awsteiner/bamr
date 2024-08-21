@@ -1934,6 +1934,11 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       ip++;
     }
 
+    // Call the point function again to restore output quantities
+    pfx=0.0;
+    f_ret=pf(np, pars, pfx, dat);
+    if (f_ret!=0) return m.ix_grad_failed;
+
     if (ip==np_eos) { // w.r.t. M_chirp_det, q, z_cdf
       pfx1=log(wgt_gw17*fsn_gw17[0]*fsn_gw17[1]);
       for (size_t j=0; j<3; j++) {
@@ -1974,8 +1979,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
     }
 
-    // w.r.t. mean_*, width_*, skew_*
-    if (ip==np_eos+np_ligo+np_src) { 
+    if (ip==np_eos+np_ligo+np_src) { // w.r.t. mean_*, width_*, skew_*
       for (size_t j=0; j<np_dist; j++) {
         point_funct pf_dist;
         pf_dist=bind(mem_fn<int(size_t,const ubvector&,double&,model_data&)>
@@ -1993,8 +1997,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
     }
 
-    // w.r.t. M_*
-    if (ip==np_eos+np_ligo+np_src+np_dist) {
+    if (ip==np_eos+np_ligo+np_src+np_dist) { // w.r.t. M_*
       for (size_t j=0; j<np_nsp; j++) {
         point_funct pf_mass;
         pf_mass=bind(mem_fn<int(size_t,const ubvector&,vec_index&,double&)>
