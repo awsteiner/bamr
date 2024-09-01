@@ -118,8 +118,11 @@ namespace bamr {
 //#else
 
 #ifdef ANDREW
+  //class mcmc_bamr :
+  //public o2scl::mcmc_para_emu
+  //<point_funct,fill_funct,model_data,ubvector>
   class mcmc_bamr :
-    public o2scl::mcmc_para_emu
+    public o2scl::mcmc_para_cli
   <point_funct,fill_funct,model_data,ubvector>
 #else
   class mcmc_bamr :
@@ -260,8 +263,8 @@ namespace bamr {
 
 #ifdef ANDREW
     /// Wrapper to the point function which uses the emulator
-    virtual int point_wrapper(size_t it, size_t np, const ubvector &p,
-                              double &log_wgt, model_data &dat);
+    //virtual int point_wrapper(size_t it, size_t np, const ubvector &p,
+    //double &log_wgt, model_data &dat);
 #endif
     
     /** \brief Set the number of OpenMP threads

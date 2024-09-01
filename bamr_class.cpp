@@ -557,11 +557,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
+      /*
       cout.precision(17);
       cout << "wgt_pop[0]: " << wgt_pop[0] << endl;
       cout << "wgt_pop[1]: " << wgt_pop[1] << endl;
       cout << "wgt_pop[2]: " << wgt_pop[2] << endl;
       cout.precision(6);
+      */
       wgt_pop[3]=wgt_pop[0]+wgt_pop[1]+wgt_pop[2];
       log_wgt+=wgt_pop[3];
       
@@ -1371,9 +1373,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
       wgt_gw19=prob_gw19;
-      cout.precision(17);
-      std::cout << "prob_gw19: " << log(prob_gw19) << std::endl;
-      cout.precision(6);
+      //cout.precision(17);
+      //std::cout << "prob_gw19: " << log(prob_gw19) << std::endl;
+      //cout.precision(6);
       log_wgt+=log(prob_gw19);
 
       // Store the values of m1 and m2 to compute derivatives
@@ -1665,16 +1667,18 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   if (set->verbose>=2) {
     cout << "End of bamr_class::compute_point()." << endl;
   }
-
+  
   if (iret==0) {
-    cout.precision(17);
-    for(size_t i=0;i<dat.sourcet.get_nlines();i++) {
+    /*
+      cout.precision(17);
+      for(size_t i=0;i<dat.sourcet.get_nlines();i++) {
       cout << i << " " << dat.sourcet.get("wgt",i) << endl;
-    }
-    cout << "prob_gw17: " <<  dat.eos.get_constant("prob_gw17") << endl;
+      }
+      cout << "prob_gw17: " <<  dat.eos.get_constant("prob_gw17") << endl;
+    */
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
-    exit(-1);
+    //exit(-1);
   }
 
 #ifdef ANDREW

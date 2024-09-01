@@ -398,7 +398,8 @@ int mcmc_bamr::mcmc_init() {
     model &m2=*(bc_arr[i]->mod);
     m.copy_params(m2);
   }
-  
+
+  this->def_stepper->step_fac[0]=1.0e6;
   mcmc_para_cli::mcmc_init();
 
 #ifndef ANDREW
@@ -1074,6 +1075,7 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
 }
 
 #ifdef ANDREW
+#ifdef O2SCL_NEVER_DEFINED
 int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
                              double &log_wgt, model_data &dat) {
 
@@ -1102,7 +1104,7 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
 
   return 0;
 }
-
+#endif
 #endif
 
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
@@ -1332,8 +1334,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Note that kde_python doesn't work with n_threads>1
 
 #ifdef ANDREW
+#ifdef O2SCL_NEVER_DEFINED
 
-  if (true) {
+  if (false) {
     
     this->n_retrain=0;
     this->emu_file="interp";
@@ -1580,6 +1583,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   
 #endif
+#endif
 
   if (mcmc_method==string("hmc")) {
 
@@ -1687,7 +1691,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
 #ifdef ANDREW
-  this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+  //this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 #else
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 #endif
