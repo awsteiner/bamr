@@ -95,15 +95,27 @@ int bamr_class::fill(const ubvector &pars, double weight,
                      std::vector<double> &line, model_data &dat) {
 
 #ifdef ANDREW
-  
+
+  if (dat.sourcet.get_nlines()==0) {
+    dat.sourcet.line_of_names("R M wgt atm ce");
+    dat.sourcet.new_column("cnb");
+    dat.sourcet.set_nlines(nsd->n_sources);
+  }
+  if (dat.gridt.get_nlines()==0) {
+    dat.gridt.line_of_names("P cs2 R PM Pnb EoA CT MB BE I I_bar Lambda_bar");
+    dat.gridt.set_nlines(set->grid_size);
+  }
   if (dat.mvsr.is_constant("R_max")==false) {
     dat.mvsr.add_constant("R_max",0.0);
   }
   if (dat.eos.is_constant("nt")==false) {
+    dat.eos.add_constant("S",0.0);
+    dat.eos.add_constant("L",0.0);
     dat.eos.add_constant("nt",0.0);
     dat.eos.add_constant("prt",0.0);
   }
-  if (dat.eos.is_constant("R1")==false) {
+  if (dat.eos.is_constant("R1")==false ||
+      dat.eos.is_constant("prob_gw17")==false) {
     dat.eos.add_constant("M_chirp_gw17",0.0);
     dat.eos.add_constant("m1_gw17",0.0);
     dat.eos.add_constant("m2_gw17",0.0);
@@ -424,6 +436,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (iret!=m.ix_success) {
       cout << "models::compute_star() failure:"
            << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
       log_wgt=0.0;
       return iret;
     }
@@ -454,6 +470,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_ns() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret;
       }
 
@@ -465,6 +485,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_gm_exceeds_mmax;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
       }
@@ -478,6 +502,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_wd() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret;
       }
       
@@ -489,6 +517,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_gm_exceeds_mmax;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
       }
@@ -502,6 +534,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_lx() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret;
       }
 
@@ -513,10 +549,19 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_gm_exceeds_mmax;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
       }
 
+      cout.precision(17);
+      cout << "wgt_pop[0]: " << wgt_pop[0] << endl;
+      cout << "wgt_pop[1]: " << wgt_pop[1] << endl;
+      cout << "wgt_pop[2]: " << wgt_pop[2] << endl;
+      cout.precision(6);
       wgt_pop[3]=wgt_pop[0]+wgt_pop[1]+wgt_pop[2];
       log_wgt+=wgt_pop[3];
       
@@ -566,6 +611,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_mr_outside;
         cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret;
       }
     }
@@ -673,6 +722,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_mr_outside;
           cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
               
@@ -978,6 +1031,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_mr_outside;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
       }
@@ -1076,6 +1133,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             iret=m.ix_mr_outside;
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
             return iret;
           }
                 
@@ -1102,6 +1163,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_mr_outside;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
               
@@ -1143,6 +1208,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_ligo_gm_invalid;
         cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret;
         
       } else {
@@ -1236,6 +1305,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             iret=m.ix_ligo_pars_outside;
             cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
             return iret;
           }
         }
@@ -1270,6 +1343,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_ligo_gm_invalid;
         cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret; 
       }   
 
@@ -1285,11 +1362,18 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_ligo_pars_outside;
         cout << "bamr_class::compute_point() failure:"
              << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
         return iret; 
       }
       
       prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
       wgt_gw19=prob_gw19;
+      cout.precision(17);
+      std::cout << "prob_gw19: " << log(prob_gw19) << std::endl;
+      cout.precision(6);
       log_wgt+=log(prob_gw19);
 
       // Store the values of m1 and m2 to compute derivatives
@@ -1323,6 +1407,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_pop_wgt_zero;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
         
@@ -1343,6 +1431,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           iret=m.ix_pop_wgt_zero;
           cout << "bamr_class::compute_point() failure:"
                << " ix_return=" << iret << endl;
+#ifdef ANDREW
+      log_wgt=-800.0-iret;
+      return 0;
+#endif
           return iret;
         }
 
@@ -1575,10 +1667,22 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   }
 
   if (iret==0) {
+    cout.precision(17);
+    for(size_t i=0;i<dat.sourcet.get_nlines();i++) {
+      cout << i << " " << dat.sourcet.get("wgt",i) << endl;
+    }
+    cout << "prob_gw17: " <<  dat.eos.get_constant("prob_gw17") << endl;
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
+    exit(-1);
   }
 
+#ifdef ANDREW
+  if (iret!=0) {
+    log_wgt=-800.0-iret;
+    return 0;
+  }
+#endif
   return iret;
 }
 

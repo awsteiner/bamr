@@ -401,9 +401,11 @@ int mcmc_bamr::mcmc_init() {
   
   mcmc_para_cli::mcmc_init();
 
+#ifndef ANDREW
   // Enable/diable storing rejected MCMC points
   if (set->use_emulator) this->store_rejects=true;
   else this->store_rejects=false;
+#endif
   
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -1091,9 +1093,9 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
     
   } else {
     
-    std::cout << "Point exact. " << &dat << std::endl;
+    //std::cout << "Point exact. " << &dat << std::endl;
     int ret=((*func_ptr)[it])(np,p,log_wgt,dat);
-    std::cout << "Point exact done ret=" << ret << std::endl;
+    //std::cout << "Point exact done ret=" << ret << std::endl;
     return ret;
     
   }
@@ -1333,11 +1335,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   if (true) {
     
-    this->n_retrain=1000;
+    this->n_retrain=0;
     this->emu_file="interp";
     this->show_emu=1;
     this->max_train_size=10000;
-    this->test_emu_file="test_emu.o2";
+    //this->test_emu_file="test_emu.o2";
 
     this->emu.resize(1);
 
@@ -1388,6 +1390,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
     } else if (intp==3) {
 
+      /*
       std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
 				     o2scl::const_matrix_view_table<>,
 				     o2scl::matrix_view_table<>>> ip
@@ -1399,9 +1402,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 				     "transform_in=quant,"+
                                      "normalize_y=True",1));
       this->emu[0]=ip;
+      */
       
     } else {
 
+      /*
       std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
 				     o2scl::const_matrix_view_table<>,
 				     o2scl::matrix_view_table<>>> ip
@@ -1414,6 +1419,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
                                      "transform_out=quant,"+
                                      "hlayers=[200,400,200]",1));
       this->emu[0]=ip;
+      */
       
     }
   }
