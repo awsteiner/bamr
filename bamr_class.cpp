@@ -1579,7 +1579,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (iret==0 && set->verbose>=1) {
+  if (iret==0 && set->verbose>=2) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
@@ -1743,7 +1743,8 @@ int bamr_class::compute_isrc(size_t ix, const ubvector &pars,
     wgt_star=0.0;
   } else {
     if (nsd->source_fnames_alt.size()>0) {
-      if (d_atm<2.0/3.0) {
+      //if (d_atm<2.0/3.0) {
+      if (dat.sourcet.get("atm",ix)<0.5) {
         wgt_star=nsd->source_tables[ix].interp(rad,mass,name);
       } else {
         wgt_star=nsd->source_tables_alt[ix].interp(rad,mass,name);
@@ -1838,7 +1839,7 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   size_t np=x.size();
 
   // Adjust step size
-  double epsrel=1.0e-6, epsmin=1.0e-15;
+  double epsrel=1.0e-4, epsmin=1.0e-15;
   h=epsrel*fabs(x[ix]);
   if (fabs(h)<=epsmin) h=epsrel;
 
@@ -1851,6 +1852,13 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   
   // f(x+h)-f(x)=log[wgt(x)]-log[wgt(x+h)]
   g=(fv1-fv2)/h;
+
+  /*cout.precision(2);
+  cout << "ix=" << ix << ", f1=" << fv1 << ",\t f2=" << fv2 
+       << ",\t df=" << abs(fv1-fv2) << ",\t h=" << h << ",\t g=" << g;
+  if (abs(g)>1.0e3) cout << "\t (large)" << endl;
+  else cout << endl;
+  cout.precision(6);*/
 
   return o2scl::success;
 }
@@ -2013,6 +2021,12 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       }
     }
   }
+
+  /*double g_max=0.0;
+  for (size_t j=0; j<np; j++) {
+    if (abs(grad[j])>g_max) g_max=abs(grad[j]);
+  }*/
+  for (size_t j=0; j<np; j++) grad[j]/=10.0;
 
   /*cout << scientific << setprecision(2);
   for (size_t k=0; k<np; k++) {
