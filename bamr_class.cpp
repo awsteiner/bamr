@@ -1840,7 +1840,10 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
 
   // Adjust step size
   double epsrel=1.0e-4, epsmin=1.0e-15;
-  h=epsrel*fabs(x[ix]);
+  //h=epsrel*fabs(x[ix]);
+  if (ix<2) h=1.0e-4*fabs(x[ix]);
+  if (ix==9) h=1.0e-5*fabs(x[ix]);
+  else h=1.0e-4*fabs(x[ix]);
   if (fabs(h)<=epsmin) h=epsrel;
 
   // Compute: f'(x)=[f(x+h)-f(x)]/h
@@ -1853,12 +1856,12 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   // f(x+h)-f(x)=log[wgt(x)]-log[wgt(x+h)]
   g=(fv1-fv2)/h;
 
-  /*cout.precision(2);
+  cout.precision(2);
   cout << "ix=" << ix << ", f1=" << fv1 << ",\t f2=" << fv2 
        << ",\t df=" << abs(fv1-fv2) << ",\t h=" << h << ",\t g=" << g;
   if (abs(g)>1.0e3) cout << "\t (large)" << endl;
   else cout << endl;
-  cout.precision(6);*/
+  cout.precision(6);
 
   return o2scl::success;
 }
@@ -2026,7 +2029,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   for (size_t j=0; j<np; j++) {
     if (abs(grad[j])>g_max) g_max=abs(grad[j]);
   }*/
-  for (size_t j=0; j<np; j++) grad[j]/=10.0;
+  // for (size_t j=0; j<np; j++) grad[j]/=10.0;
 
   /*cout << scientific << setprecision(2);
   for (size_t k=0; k<np; k++) {

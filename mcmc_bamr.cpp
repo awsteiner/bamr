@@ -1601,13 +1601,25 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       hmc_stepper->auto_grad[i]=false;
     }
 
+    if (hmc_stepper->mom_step.size()!=np) {
+      hmc_stepper->mom_step.resize(np);
+    }
+
+    // Scale the step sizes
+    for (size_t i=0; i<np; i++) {
+      double width=high[i]-low[i];
+      if (i<2) hmc_stepper->mom_step[i]=1.0e-3*width;
+      if (i==9) hmc_stepper->mom_step[i]=1.0e-4*width;
+      else hmc_stepper->mom_step[i]=1.0e-2*width;
+    }
+
     hmc_stepper->traj_length=1;
 
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
     for (size_t i=0; i<n_threads; i++) {
-      gfa[i]=std::bind
-        (std::mem_fn<int(ubvector &,point_funct &,ubvector &,model_data &)>
+      gfa[i]=std::bind(std::mem_fn<int(ubvector &,
+        point_funct &,ubvector &,model_data &)>
         (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5);
     }
 

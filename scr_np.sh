@@ -2,9 +2,8 @@
 
 # npoly
 mpirun -np 1 ./bamr -threads 1 -set aff_inv 0 \
-	-set couple_threads 0 -set n_walk 1 \
-	-set max_iters 15000 -set prefix out/np \
-	-set file_update_time 3600 \
+	-set couple_threads 0 -set n_walk 1 -set max_iters 1 \
+  -set prefix out/np -set file_update_time 3600 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
