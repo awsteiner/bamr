@@ -1606,17 +1606,99 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 
     // Scale the step sizes
-    for (size_t i=0; i<np; i++) {
-      double width=high[i]-low[i];
-      if (i<2) hmc_stepper->hmc_step[i]=1.0e-3*width;
-      else if (i==9 || i==40 || i==41) {
-        hmc_stepper->hmc_step[i]=1.0e-5*width;
-      }
-      else if (i==38 || i==44 || i==45) {
-        hmc_stepper->hmc_step[i]=1.0e-4*width;
-      }
-      else hmc_stepper->hmc_step[i]=1.0e-3*width;
-    }
+    hmc_stepper->hmc_step[ 0]=1.0e-2*(high[0]-low[0]);
+    hmc_stepper->hmc_step[ 1]=1.0e-2*(high[1]-low[1]);
+    hmc_stepper->hmc_step[ 2]=1.0e-3*(high[2]-low[2]);
+    hmc_stepper->hmc_step[ 3]=1.0e-3*(high[3]-low[3]);
+    hmc_stepper->hmc_step[ 4]=1.0e-2*(high[4]-low[4]);
+    hmc_stepper->hmc_step[ 5]=1.0e-2*(high[5]-low[5]);
+    hmc_stepper->hmc_step[ 6]=1.0e-2*(high[6]-low[6]);
+    hmc_stepper->hmc_step[ 7]=1.0e-2*(high[7]-low[7]);
+    hmc_stepper->hmc_step[ 8]=1.0e-2*(high[8]-low[8]);
+    hmc_stepper->hmc_step[ 9]=1.0e-2*(high[9]-low[9]);
+    hmc_stepper->hmc_step[10]=1.0e-3*(high[10]-low[10]);
+    hmc_stepper->hmc_step[11]=1.0e-2*(high[11]-low[11]);
+    hmc_stepper->hmc_step[12]=1.0e-2*(high[12]-low[12]);
+    hmc_stepper->hmc_step[13]=1.0e-2*(high[13]-low[13]);
+    hmc_stepper->hmc_step[14]=1.0e-2*(high[14]-low[14]);
+    hmc_stepper->hmc_step[15]=1.0e-2*(high[15]-low[15]);
+    hmc_stepper->hmc_step[16]=1.0e-2*(high[16]-low[16]);
+    hmc_stepper->hmc_step[17]=1.0e-2*(high[17]-low[17]);
+    hmc_stepper->hmc_step[18]=1.0e-2*(high[18]-low[18]);
+    hmc_stepper->hmc_step[19]=1.0e-2*(high[19]-low[19]);
+    hmc_stepper->hmc_step[20]=1.0e-2*(high[20]-low[20]);
+    hmc_stepper->hmc_step[21]=1.0e-2*(high[21]-low[21]);
+    hmc_stepper->hmc_step[22]=1.0e-2*(high[22]-low[22]);
+    hmc_stepper->hmc_step[23]=1.0e-3*(high[23]-low[23]);
+    hmc_stepper->hmc_step[24]=1.0e-2*(high[24]-low[24]);
+    hmc_stepper->hmc_step[25]=1.0e-2*(high[25]-low[25]);
+    hmc_stepper->hmc_step[26]=1.0e-2*(high[26]-low[26]);
+    hmc_stepper->hmc_step[27]=1.0e-2*(high[27]-low[27]);
+    hmc_stepper->hmc_step[28]=1.0e-2*(high[28]-low[28]);
+    hmc_stepper->hmc_step[29]=1.0e-3*(high[29]-low[29]);
+    hmc_stepper->hmc_step[30]=1.0e-2*(high[30]-low[30]);
+    hmc_stepper->hmc_step[31]=1.0e-3*(high[31]-low[31]);
+    hmc_stepper->hmc_step[32]=1.0e-3*(high[32]-low[32]);
+    hmc_stepper->hmc_step[33]=1.0e-2*(high[33]-low[33]);
+    hmc_stepper->hmc_step[34]=1.0e-3*(high[34]-low[34]);
+    hmc_stepper->hmc_step[35]=1.0e-3*(high[35]-low[35]);
+    hmc_stepper->hmc_step[36]=1.0e-3*(high[36]-low[36]);
+    hmc_stepper->hmc_step[37]=1.0e-3*(high[37]-low[37]);
+    hmc_stepper->hmc_step[38]=1.0e-4*(high[38]-low[38]);
+    hmc_stepper->hmc_step[39]=1.0e-4*(high[39]-low[39]);
+    hmc_stepper->hmc_step[40]=1.0e-4*(high[40]-low[40]);
+    hmc_stepper->hmc_step[41]=1.0e-4*(high[41]-low[41]);
+    hmc_stepper->hmc_step[42]=1.0e-2*(high[42]-low[42]);
+    hmc_stepper->hmc_step[43]=1.0e-3*(high[43]-low[43]);
+    hmc_stepper->hmc_step[44]=1.0e-4*(high[44]-low[44]);
+    hmc_stepper->hmc_step[45]=1.0e-4*(high[45]-low[45]);
+    hmc_stepper->hmc_step[46]=1.0e-2*(high[46]-low[46]);
+    hmc_stepper->hmc_step[47]=1.0e-2*(high[47]-low[47]);
+    hmc_stepper->hmc_step[48]=1.0e-3*(high[48]-low[48]);
+    hmc_stepper->hmc_step[49]=1.0e-3*(high[49]-low[49]);
+    hmc_stepper->hmc_step[50]=1.0e-2*(high[50]-low[50]);
+    hmc_stepper->hmc_step[51]=1.0e-2*(high[51]-low[51]);
+    hmc_stepper->hmc_step[52]=1.0e-2*(high[52]-low[52]);
+    hmc_stepper->hmc_step[53]=1.0e-2*(high[53]-low[53]);
+    hmc_stepper->hmc_step[54]=1.0e-2*(high[54]-low[54]);
+    hmc_stepper->hmc_step[55]=1.0e-2*(high[55]-low[55]);
+    hmc_stepper->hmc_step[56]=1.0e-2*(high[56]-low[56]);
+    hmc_stepper->hmc_step[57]=1.0e-2*(high[57]-low[57]);
+    hmc_stepper->hmc_step[58]=1.0e-2*(high[58]-low[58]);
+    hmc_stepper->hmc_step[59]=1.0e-2*(high[59]-low[59]);
+    hmc_stepper->hmc_step[60]=1.0e-2*(high[60]-low[60]);
+    hmc_stepper->hmc_step[61]=1.0e-3*(high[61]-low[61]);
+    hmc_stepper->hmc_step[62]=1.0e-2*(high[62]-low[62]);
+    hmc_stepper->hmc_step[63]=1.0e-3*(high[63]-low[63]);
+    hmc_stepper->hmc_step[64]=1.0e-2*(high[64]-low[64]);
+    hmc_stepper->hmc_step[65]=1.0e-2*(high[65]-low[65]);
+    hmc_stepper->hmc_step[66]=1.0e-2*(high[66]-low[66]);
+    hmc_stepper->hmc_step[67]=1.0e-2*(high[67]-low[67]);
+    hmc_stepper->hmc_step[68]=1.0e-2*(high[68]-low[68]);
+    hmc_stepper->hmc_step[69]=1.0e-2*(high[69]-low[69]);
+    hmc_stepper->hmc_step[70]=1.0e-2*(high[70]-low[70]);
+    hmc_stepper->hmc_step[71]=1.0e-2*(high[71]-low[71]);
+    hmc_stepper->hmc_step[72]=1.0e-2*(high[72]-low[72]);
+    hmc_stepper->hmc_step[73]=1.0e-2*(high[73]-low[73]);
+    hmc_stepper->hmc_step[74]=1.0e-4*(high[74]-low[74]);
+    hmc_stepper->hmc_step[75]=1.0e-2*(high[75]-low[75]);
+    hmc_stepper->hmc_step[76]=1.0e-2*(high[76]-low[76]);
+    hmc_stepper->hmc_step[77]=1.0e-2*(high[77]-low[77]);
+    hmc_stepper->hmc_step[78]=1.0e-2*(high[78]-low[78]);
+    hmc_stepper->hmc_step[79]=1.0e-2*(high[79]-low[79]);
+    hmc_stepper->hmc_step[80]=1.0e-2*(high[80]-low[80]);
+    hmc_stepper->hmc_step[81]=1.0e-2*(high[81]-low[81]);
+    hmc_stepper->hmc_step[82]=1.0e-2*(high[82]-low[82]);
+    hmc_stepper->hmc_step[83]=1.0e-2*(high[83]-low[83]);
+    hmc_stepper->hmc_step[84]=1.0e-2*(high[84]-low[84]);
+    hmc_stepper->hmc_step[85]=1.0e-2*(high[85]-low[85]);
+    hmc_stepper->hmc_step[86]=1.0e-2*(high[86]-low[86]);
+    hmc_stepper->hmc_step[87]=1.0e-2*(high[87]-low[87]);
+    hmc_stepper->hmc_step[88]=1.0e-2*(high[88]-low[88]);
+    hmc_stepper->hmc_step[89]=1.0e-2*(high[89]-low[89]);
+    hmc_stepper->hmc_step[90]=1.0e-2*(high[90]-low[90]);
+    hmc_stepper->hmc_step[91]=1.0e-2*(high[91]-low[91]);
+    hmc_stepper->hmc_step[92]=1.0e-2*(high[92]-low[92]);
 
     hmc_stepper->traj_length=1;
 
