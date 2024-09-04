@@ -1601,16 +1601,21 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       hmc_stepper->auto_grad[i]=false;
     }
 
-    if (hmc_stepper->mom_step.size()!=np) {
-      hmc_stepper->mom_step.resize(np);
+    if (hmc_stepper->hmc_step.size()!=np) {
+      hmc_stepper->hmc_step.resize(np);
     }
 
     // Scale the step sizes
     for (size_t i=0; i<np; i++) {
       double width=high[i]-low[i];
-      if (i<2) hmc_stepper->mom_step[i]=1.0e-3*width;
-      if (i==9) hmc_stepper->mom_step[i]=1.0e-4*width;
-      else hmc_stepper->mom_step[i]=1.0e-2*width;
+      if (i<2) hmc_stepper->hmc_step[i]=1.0e-3*width;
+      else if (i==9 || i==40 || i==41) {
+        hmc_stepper->hmc_step[i]=1.0e-5*width;
+      }
+      else if (i==38 || i==44 || i==45) {
+        hmc_stepper->hmc_step[i]=1.0e-4*width;
+      }
+      else hmc_stepper->hmc_step[i]=1.0e-3*width;
     }
 
     hmc_stepper->traj_length=1;

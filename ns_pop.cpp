@@ -295,6 +295,7 @@ int ns_pop::compute_star(size_t ix, const ubvector &pars,
   double M_star=pars[pvi[string("M_")+pd.id_nsp[ix]]];
   double f_an=asym_norm(mass-M_star, asym, scale);
   double f_sn=skewed_norm(M_star, mean[j], width[j], skew[j]);
+  cout << "k=" << ix+34 << ", an=" << f_an << ", sn=" << f_sn << endl;
   double wgt_star=f_an*f_sn;
   if (wgt_star<=0.0) return -1;
   log_wgt=log(wgt_star);
