@@ -1075,7 +1075,6 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
 }
 
 #ifdef ANDREW
-#ifdef O2SCL_NEVER_DEFINED
 int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
                              double &log_wgt, model_data &dat) {
 
@@ -1104,7 +1103,6 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
 
   return 0;
 }
-#endif
 #endif
 
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
@@ -1334,7 +1332,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // Note that kde_python doesn't work with n_threads>1
 
 #ifdef ANDREW
-#ifdef O2SCL_NEVER_DEFINED
 
   if (false) {
     
@@ -1582,7 +1579,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   }
   
-#endif
 #endif
 
   if (mcmc_method==string("hmc")) {
