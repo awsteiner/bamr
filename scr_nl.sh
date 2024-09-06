@@ -2,8 +2,8 @@
 
 # nlines
 mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
-	-set max_iters 10 -set file_update_time 3600 \
-	-set verbose 1 -set mcmc_verbose 2 \
+	-set max_iters 100 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 3 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
 	-set crust_from_L 0 -set compute_cthick 1 \
@@ -34,4 +34,4 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
-	-mcmc
+	-initial-point-last out/files/nl_54a0 -mcmc

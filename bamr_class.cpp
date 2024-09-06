@@ -1839,7 +1839,7 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   size_t np=x.size();
 
   // Adjust step size
-  double epsrel=1.0e-6, epsmin=1.0e-15;
+  double epsrel=1.0e-4, epsmin=1.0e-15;
   h=epsrel*abs(x[ix]);
   if (fabs(h)<=epsmin) h=epsrel;
 
