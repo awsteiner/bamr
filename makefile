@@ -468,13 +468,14 @@ empty:
 clean:
 	rm -f *.o bamr bamr_nompi process *.png
 
-npoly_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-	-set prefix out/npoly -set max_iters 10 -set n_walk 1 \
-	-set step_fac 10000.0 -set file_update_time 600 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
+# ----------------------------------------------------------------------
+mlines:
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
+	-set max_iters 1000 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 3 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 1 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
 	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
 	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
 	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
@@ -499,198 +500,20 @@ npoly_nompi:
 	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
 	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 0 -mcmc
-#> out/npoly.out 2>&1 &
-
-mpoly_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-	-set prefix out/mpoly -set max_iters 10 -set n_walk 1 \
-	-set step_fac 10000.0 -set file_update_time 600 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
-	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
-	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
-	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
-	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
-	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
-	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
-	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
-	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
-	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
-	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
-	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 1810b data/nks15/1810.o2 \
-	data/nks15/1810.o2 weights 0.7 mcarlo \
-	-add-data-alt 1724b data/nks15/1724.o2 \
-	data/nks15/1724.o2 weights 0.7 mcarlo \
-	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
-	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
-	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
-	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
-	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
-	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 1 -mcmc 
-#> out/mpoly.out 2>&1 &
-
-nlines_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-	-set prefix out/nlines -set max_iters 10 -set n_walk 1 \
-	-set step_fac 10000.0 -set file_update_time 600 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
-	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
-	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
-	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
-	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
-	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
-	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
-	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
-	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
-	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
-	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
-	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 1810b data/nks15/1810.o2 \
-	data/nks15/1810.o2 weights 0.7 mcarlo \
-	-add-data-alt 1724b data/nks15/1724.o2 \
-	data/nks15/1724.o2 weights 0.7 mcarlo \
-	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
-	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
-	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
-	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
-	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
-	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 0 -mcmc 
-#> out/nlines.out 2>&1 &
-
-mlines_nompi:
-	./bamr_nompi -threads 1 -set aff_inv 0 -set couple_threads 0 \
-	-set prefix out/mlines -set max_iters 10 -set n_walk 1 \
-	-set step_fac 10000.0 -set file_update_time 600 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
-	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
-	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
-	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
-	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
-	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
-	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
-	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
-	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
-	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
-	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
-	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 1810b data/nks15/1810.o2 \
-	data/nks15/1810.o2 weights 0.7 mcarlo \
-	-add-data-alt 1724b data/nks15/1724.o2 \
-	data/nks15/1724.o2 weights 0.7 mcarlo \
-	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
-	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
-	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
-	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
-	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
-	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 -mcmc 
-#> out/mlines.out 2>&1 &
-
-npoly:
-	./bamr -threads 16 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/np -set max_time 172800 -set n_walk 32 \
-	-set step_fac 2.0 -set file_update_time 14400 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
-	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
-	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
-	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
-	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
-	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
-	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
-	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
-	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
-	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
-	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
-	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 1810b data/nks15/1810.o2 \
-	data/nks15/1810.o2 weights 0.7 mcarlo \
-	-add-data-alt 1724b data/nks15/1724.o2 \
-	data/nks15/1724.o2 weights 0.7 mcarlo \
-	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
-	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
-	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
-	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
-	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
-	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 0 \
-	-initial-point-last out/np_pc -mcmc > out/np.out 2>&1 &
-
-mpoly:
-	./bamr -threads 16 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/mp -set max_time 172800 -set n_walk 32 \
-	-set step_fac 2.0 -set file_update_time 14400 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
-	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
-	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
-	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
-	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
-	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
-	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
-	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
-	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
-	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
-	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
-	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
-	-add-data-alt 1810b data/nks15/1810.o2 \
-	data/nks15/1810.o2 weights 0.7 mcarlo \
-	-add-data-alt 1724b data/nks15/1724.o2 \
-	data/nks15/1724.o2 weights 0.7 mcarlo \
-	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
-	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
-	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
-	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
-	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
-	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -set model_dpdm 1 \
-	-initial-point-last out/mp_pc -mcmc > out/mp.out 2>&1 &
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
+	-model new_lines -method hmc -set model_dpdm 1 \
+	-initial-point-last "out/files/ml_65a8" \
+	-mcmc 
+#> out/ml.log 2>&1 &
 
 nlines:
-	./bamr -threads 16 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/nl -set max_time 172800 -set n_walk 32 \
-	-set step_fac 2.0 -set file_update_time 14400 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
+	-set max_iters 1000 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 3 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 1 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
 	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
 	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
 	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
@@ -715,18 +538,20 @@ nlines:
 	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
 	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 0 \
-	-initial-point-last out/nl_pc -mcmc > out/nl.out 2>&1 &
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
+	-model new_lines -method hmc -set model_dpdm 0 \
+	-initial-point-last "out/files/nl_54a15" \
+	-mcmc 
+#> out/nl.log 2>&1 &
 
-mlines:
-	./bamr -threads 16 -set aff_inv 1 -set couple_threads 1 \
-	-set prefix out/ml -set max_time 172800 -set n_walk 32 \
-	-set step_fac 2.0 -set file_update_time 14400 \
-	-set verbose 1 -set mcmc_verbose 2 \
-	-set min_max_mass 2.0 -set norm_max 0 -set addl_quants 1 \
-	-set inc_baryon_mass 1 -set crust_from_L 0 -set compute_cthick 1 \
+mpoly:
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
+	-set max_iters 1000 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 3 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 1 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
 	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
 	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
 	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
@@ -751,9 +576,49 @@ mlines:
 	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
 	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 -set mmax_deriv 1 \
-	-set inc_pop 1 -set inc_ligo 1 \
-	-model new_lines -set model_dpdm 1 \
-	-initial-point-last out/ml_pc -mcmc > out/ml.out 2>&1 &
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
+	-model new_poly -method hmc -set model_dpdm 1 \
+	-initial-point-last "out/files/mp_56a15" \
+	-mcmc 
+#> out/mp.log 2>&1 &
+
+npoly:
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
+	-set max_iters 1000 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 3 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 1 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
+	-add-data-alt 6304 data/shb18/6304_H_nopl_syst_wilm.o2 \
+	data/shb18/6304_He_nopl_syst_wilm.o2 like 0.7 rescaled \
+	-add-data-alt 6397 data/shb18/6397_H_syst_wilm.o2 \
+	data/shb18/6397_He_syst_wilm3.o2 like 0.7 rescaled \
+	-add-data-alt M13 data/shs18/M13_H_rs.o2 \
+	data/shs18/M13_He_rs.o2 like 0.7 rescaled_0 \
+	-add-data-alt M28 data/shb18/M28_H_syst_wilm.o2 \
+	data/shb18/M28_He_syst_wilm.o2 like 0.7 rescaled \
+	-add-data-alt M30 data/egz20/M30_echi_H.o2 \
+	data/egz20/M30_echi_He.o2 like 0.7 rescaled \
+	-add-data-alt wCen data/shb18/wCen_H_syst_wilm.o2 \
+	data/shb18/wCen_H_syst_wilm.o2 like 0.7 rescaled \
+	-add-data-alt X7 data/shb18/X7_H_syst_wilm.o2 \
+	data/shb18/X7_He_syst_wilm.o2 like 0.7 rescaled \
+	-add-data-alt 1810b data/nks15/1810.o2 \
+	data/nks15/1810.o2 weights 0.7 mcarlo \
+	-add-data-alt 1724b data/nks15/1724.o2 \
+	data/nks15/1724.o2 weights 0.7 mcarlo \
+	-add-data-alt 1702 data/nat17/1702_D_X_int.o2 \
+	data/nat17/1702_D_X_int.o2 avgs 0.7 hist2_table \
+	-add-data-alt 0030 data/nicer/0030_st_pst.o2 \
+	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
+	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
+	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
+	-model new_poly -method hmc -set model_dpdm 0 \
+	-initial-point-last "out/files/np_54a15" \
+	-mcmc 
+#> out/np.log 2>&1 &
 
 include makefile.aws
