@@ -34,63 +34,6 @@ using namespace o2scl_hdf;
 using namespace o2scl_const;
 using namespace bamr;
 
-void bamr_class::setup_filters() {
-
-#ifdef BAMR_FFTW3
-
-  flt.resize(n_threads*nsd->n_sources);
-
-  // Input and output table references for convenience
-  std::vector<o2scl::table3d> &in=nsd->source_tables;
-  std::vector<o2scl::table3d> &in_alt=nsd->source_tables_alt;
-  std::vector<o2scl::table3d> &out=source_tables_is;
-  std::vector<o2scl::table3d> &out_alt=source_tables_alt_is;
-  
-  // Copy the original tables over if we're running this
-  // code for the first time
-  out.resize(nsd->n_sources*n_threads);
-  out_alt.resize(nsd->n_sources*n_threads);
-  for (size_t i=0;i<nsd->n_sources*n_threads;i++) {
-    out[i]=in[i % nsd->n_sources];
-    out_alt[i]=in_alt[i % nsd->n_sources];
-  }
-  
-  int mpi_rank=0, mpi_size=1;
-#ifdef BAMR_MPI
-  // Get MPI rank, etc.
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-  
-  // Ensure that multiple MPI ranks aren't reading from the
-  // filesystem at the same time
-  int tag=0, buffer=0;
-  if (mpi_size>1 && mpi_rank>=1) {
-    MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
-             tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-  }
-#endif
-
-  for(int k=0;k<n_threads;k++) {
-    for(size_t j=0;j<nsd->n_sources;j++) {
-      size_t Nx = in[j].get_nx();
-      size_t Ny = in[j].get_ny();
-      flt[k*nsd->n_sources+j]=new filters::Filter(Nx,Ny);
-    }
-  }
-
-#ifdef BAMR_MPI
-  // Send a message to the next MPI rank
-  if (mpi_size>1 && mpi_rank<mpi_size-1) {
-    MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
-             tag,MPI_COMM_WORLD);
-  }
-#endif
-
-#endif
-
-  return;
-}
-
 int bamr_class::fill(const ubvector &pars, double weight, 
                      std::vector<double> &line, model_data &dat) {
 
@@ -847,71 +790,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   
             size_t iiz=0;
                   
-#ifdef BAMR_FFTW3
-            for (double iix=-2.0;iix<2.01;iix+=0.2) {
-                    
-              double intrsc=pow(10.0,iix);
-              double dx = in[i].get_grid_x(1)-in[i].get_grid_x(0);
-              double dy = in[i].get_grid_y(1)-in[i].get_grid_y(0);
-                    
-              // radius direction
-              double sigx = intrsc/dx*5.0;
-              // mass direction
-              double sigy = intrsc/dy*1.4;  
-                    
-              cout << "Filtering " << nsd->source_names[i]
-                   << " log10(intsig): "
-                   << pars[i+mod->n_eos_params+nsd->n_sources]
-                   << " with intsig: " << intrsc
-                   << "\n  sigx: " << sigx << " sigy: " << sigy << std::endl;
-
-              // Set kernel
-              flt[fix]->init_gaussian_kernel(sigx,sigy);
-              flt[fix]->fft_kernel(); 
-                    
-              // Set input image
-              if (iik==0) {
-                flt[fix]->set_image(in[i],nsd->slice_names[i]);
-              } else {
-                flt[fix]->set_image(in_alt[i],nsd->slice_names[i]);
-              }
-                    
-              // Convolve
-              flt[fix]->fft_image_forward();
-              flt[fix]->apply_kernel();
-              flt[fix]->fft_image_backward();
-                    
-              // Read image back
-              if (iik==0) {
-                flt[fix]->get_image(out[fix],nsd->slice_names[i]);
-              } else {
-                flt[fix]->get_image(out_alt[fix],nsd->slice_names[i]);
-              }
-                    
-              if (iik==0) {
-                ubmatrix &outs=out[fix].get_slice(nsd->slice_names[i]);
-                cout << "outs: " << intrsc << " " << iik << " "
-                     << outs(0,0) << endl;
-                for(size_t i3=0;i3<in[i].get_nx();i3++) {
-                  for(size_t j3=0;j3<in[i].get_nx();j3++) {
-                    tg3.set(i3,j3,iiz,outs(i3,j3));
-                  }
-                }
-              } else {
-                ubmatrix &outs=out_alt[fix].get_slice(nsd->slice_names[i]);
-                cout << "outs: " << intrsc << " " << iik << " "
-                     << outs(0,0) << endl;
-                for(size_t i3=0;i3<in[i].get_nx();i3++) {
-                  for(size_t j3=0;j3<in[i].get_nx();j3++) {
-                    tg3.set(i3,j3,iiz,outs(i3,j3));
-                  }
-                }
-              }
-
-              iiz++;
-            }
-#endif
-                  
             hdf_file hfx;
             string fnamex=set->data_dir+"/cache/tg_"+o2scl::szttos(i)+
               "_"+o2scl::szttos(iik);
@@ -945,57 +823,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << " with intsig: " << intrsc
                   << "\n  sigx: " << sigx << " sigy: " << sigy << std::endl;
         }
-
-#ifdef BAMR_FFTW3
-        if (set->cached_intsc==false) {
-          // Set kernel
-          flt[fix]->init_gaussian_kernel(sigx,sigy);
-          flt[fix]->fft_kernel(); 
-                
-          // Set input image
-          if (atm==false) {
-            flt[fix]->set_image(in[i],nsd->slice_names[i]);
-          } else {
-            flt[fix]->set_image(in_alt[i],nsd->slice_names[i]);
-          }
-                
-          // Convolve
-          flt[fix]->fft_image_forward();
-          flt[fix]->apply_kernel();
-          flt[fix]->fft_image_backward();
-                
-          // Read image back
-          if (atm==false) {
-            flt[fix]->get_image(out[fix],nsd->slice_names[i]);
-          } else {
-            flt[fix]->get_image(out_alt[fix],nsd->slice_names[i]);
-          }
-
-          if (true) {
-            if (atm==false) {
-              ubmatrix &outs=out[fix].get_slice(nsd->slice_names[i]);
-              double sum=matrix_sum<ubmatrix,double>(outs);
-              // Renormalize
-              for(size_t j=0;j<outs.size1();j++) {
-                for(size_t k=0;k<outs.size2();k++) {
-                  outs(j,i)/=sum;
-                }
-              }
-            } else {
-              ubmatrix &outs=out_alt[fix].get_slice(nsd->slice_names[i]);
-              double sum=matrix_sum<ubmatrix,double>(outs);
-              // Renormalize
-              for(size_t j=0;j<outs.size1();j++) {
-                for(size_t k=0;k<outs.size2();k++) {
-                  outs(j,k)/=sum;
-                }
-              }
-            }
-          }
-              
-          // End of 'if (cached_intsc==false)'
-        }
-#endif
 
         // End of loop over sources
       }
@@ -1081,32 +908,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           } else {
 
             if (atm==false) {
-              if (set->cached_intsc) {
-
-                ubvector iu(3);
-                iu[0]=rad;
-                iu[1]=mass;
-                iu[2]=pars[i+mod->n_eos_params+nsd->n_sources];
-                dat.sourcet.set("wgt",i,fft_data[i*2].interp_linear(iu));
-              } else {
-                dat.sourcet.set("wgt",i,
-                                out[fix].interp
-                                (rad,mass,nsd->slice_names[i]));
-              }
+              dat.sourcet.set("wgt",i,
+                              out[fix].interp
+                              (rad,mass,nsd->slice_names[i]));
             } else {
-              if (set->cached_intsc) {
-                ubvector iu(3);
-                      
-                iu[0]=rad;
-                iu[1]=mass;
-                iu[2]=pars[i+mod->n_eos_params+nsd->n_sources];
-                dat.sourcet.set("wgt",i,
-                                fft_data[(i*2)+1].interp_linear(iu));
-              } else {
-                dat.sourcet.set("wgt",i,
-                                out_alt[fix].interp
-                                (rad,mass,nsd->slice_names[i]));
-              }
+              dat.sourcet.set("wgt",i,
+                              out_alt[fix].interp
+                              (rad,mass,nsd->slice_names[i]));
             }
                   
             // If the weight is lower than the threshold, set it equal

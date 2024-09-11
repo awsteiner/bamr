@@ -39,7 +39,6 @@
 
 #include "nstar_cold2.h"
 #include "models.h"
-#include "filters.h"
 
 /** \brief Main namespace
     
@@ -102,8 +101,6 @@ namespace bamr {
 
     //bool py_train;
 
-    void setup_filters();
-    
     // -------------------------------------------------------
     // New bint variables
 
@@ -116,12 +113,6 @@ namespace bamr {
      */
     int n_threads;
 
-#ifdef BAMR_FFTW3    
-    /** \brief The filter objects (one for each thread)
-     */
-    std::vector<filters::Filter *> flt;
-#endif
-    
     /** \brief Desc
      */
     o2scl::tensor_grid<> fft_data[22];

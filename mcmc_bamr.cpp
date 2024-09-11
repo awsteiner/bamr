@@ -657,32 +657,9 @@ int mcmc_bamr::mcmc_init() {
   nsd->load_mc(this->scr_out,mpi_size,mpi_rank,set);
 
   // -----------------------------------------------------------
-  // Setup filters
 
   for(size_t i=0;i<n_threads;i++) {
     bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-    if (set->apply_intsc) {
-      bc.setup_filters();
-    }
-  }
-
-  // Read FFT cache
-  
-  if (set->cached_intsc) {
-    for(size_t i=0;i<n_threads;i++) {
-      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-      hdf_file hfx;
-      for(size_t ii=0;ii<nsd->n_sources;ii++) {
-        string fname=((string)"data/cache/tg_")+szttos(ii)+"_0";
-        hfx.open(fname);
-        hdf_input(hfx,bc.fft_data[ii*2],"tg");
-        hfx.close();
-        fname=((string)"data/cache/tg_")+szttos(ii)+"_1";
-        hfx.open(fname);
-        hdf_input(hfx,bc.fft_data[ii*2+1],"tg");
-        hfx.close();
-      }
-    }
   }
 
   if (this->verbose>=2) {
@@ -911,14 +888,10 @@ int mcmc_bamr::combine_files(std::vector<std::string> &sv,
     t_final.set_maxlines(t_final.get_nlines());
   }
   
-  /*
-    AWS: commenting these out temporarily because they depend on
-    a more recent o2scl
-    
   std::vector<double> ac, ftom;
   o2scl::vector_autocorr_vector_fftw_mult(t_final["log_wgt"],
                                           t_final["mult"],ac);
-
+  
   size_t ac_len=o2scl::vector_autocorr_tau(ac,ftom,3);
   cout << "Autocorrelation length is: " << ac_len << endl;
 
@@ -932,7 +905,6 @@ int mcmc_bamr::combine_files(std::vector<std::string> &sv,
   hfx.open_or_create(file_final);
   hdf_output(hfx,indep,"markov_chain_0");
   hfx.close();
-  */
   
   return 0;
 }
@@ -1390,36 +1362,41 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
     } else if (intp==3) {
 
-      /*
       std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
 				     o2scl::const_matrix_view_table<>,
 				     o2scl::matrix_view_table<>>> ip
 	(new interpm_python<boost::numeric::ublas::vector<double>,
 	 o2scl::const_matrix_view_table<>,
-	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval_unc",
-				     "interpm_sklearn_gp",
+	 o2scl::matrix_view_table<>>("interpm_sklearn_gp",
 				     ((std::string)"verbose=1,")+
 				     "transform_in=quant,"+
                                      "normalize_y=True",1));
       this->emu[0]=ip;
-      */
       
     } else {
 
-      /*
       std::shared_ptr<interpm_python<boost::numeric::ublas::vector<double>,
 				     o2scl::const_matrix_view_table<>,
 				     o2scl::matrix_view_table<>>> ip
 	(new interpm_python<boost::numeric::ublas::vector<double>,
 	 o2scl::const_matrix_view_table<>,
-	 o2scl::matrix_view_table<>>("o2sclpy","set_data_str","eval","eval",
-				     "interpm_tf_dnn",
+	 o2scl::matrix_view_table<>>("interpm_tf_dnn",
 				     ((std::string)"verbose=1,")+
 				     "transform_in=quant,"+
                                      "transform_out=quant,"+
                                      "hlayers=[200,400,200]",1));
       this->emu[0]=ip;
-      */
+      
+      std::shared_ptr<classify_python<boost::numeric::ublas::vector<double>,
+                                      boost::numeric::ublas::vector<int>,
+                                      o2scl::const_matrix_view_table<>,
+                                      o2scl::matrix_view_table<>>> cp
+	(new classify_python<boost::numeric::ublas::vector<double>,
+         boost::numeric::ublas::vector<int>,
+	 o2scl::const_matrix_view_table<>,
+	 o2scl::matrix_view_table<>>("classify_sklearn_dtc",
+				     ((std::string)"verbose=2"),2));
+      this->emuc[0]=cp;
       
     }
   }
