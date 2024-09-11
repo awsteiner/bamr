@@ -821,6 +821,76 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
 
 } // End of model::compute_star()
 
+
+void model::compute_star2(const ubvector &pars, ofstream &scr_out, 
+                          model_data &dat, string model_type) {
+  
+  size_t np_eos=this->n_eos_params;
+  size_t np_ligo=nsd->n_ligo_params;
+  size_t np_src=nsd->n_sources;
+  
+  int ret;
+  compute_eos(pars,ret,scr_out,dat);
+  if (ret!=ix_success) return;
+
+  dat.eos.set_interp_type(o2scl::itp_linear);
+  dat.eos.set_unit("ed","1/fm^4");
+  dat.eos.set_unit("pr","1/fm^4");
+  dat.eos.set_unit("nb","1/fm^3");
+
+  ts.princ=set->mvsr_pr_inc;
+  ts.ang_vel=true;
+  ts.calc_gpot=true;
+
+  teos.read_table(dat.eos,"ed","pr","nb");
+
+  int info=ts.mvsr();
+  if (info!=0) return;
+
+  dat.mvsr=*(ts.get_results());
+  dat.mvsr.set_interp_type(o2scl::itp_linear);
+
+  double m_max=dat.mvsr.max("gm");
+  if (m_max<set->min_max_mass) return;
+  dat.m_max=m_max;
+
+  size_t row=dat.mvsr.lookup("gm",m_max);
+  double c_ed=dat.mvsr.get("ed",row);
+  if (model_type==((string)"new_poly") ||
+      model_type==((string)"new_lines")) {
+    double trans2=pars[7];
+    if (trans2>c_ed) return;
+  }
+
+  dat.eos.deriv("ed","pr","cs2");
+  for (size_t i=0;i<dat.eos.get_nlines();i++) {
+    if (dat.eos.get("ed",i)<c_ed) {
+      if (dat.eos.get("cs2",i)>1.0) return;
+    }
+  }
+
+  if (dat.sourcet.get_ncolumns()==0) {
+    dat.sourcet.line_of_names("R M wgt atm ce");
+    dat.sourcet.new_column("cnb");
+    dat.sourcet.set_nlines(nsd->n_sources);
+  }
+
+  for(size_t i=0;i<nsd->n_sources;i++) {
+    double mf=pars[np_eos+i];
+    double mass=m_max*mf;
+    double rad=dat.mvsr.interp("gm",mass,"r");
+    double atm=mf*1.0e8-((double)((int)(mf*1.0e8)));
+    dat.sourcet.set("M",i,mass);
+    dat.sourcet.set("R",i,rad);
+    if (atm<2.0/3.0) dat.sourcet.set("atm",i,0.0);
+    else dat.sourcet.set("atm",i,1.0);
+  }
+
+  return;
+
+} // End of model::compute_star2()
+
+
 void two_polytropes::setup_params(o2scl::cli &cl) {
   p_kin_sym.d=&se.a;
   p_kin_sym.help="Kinetic part of symmetry energy.";

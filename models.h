@@ -145,6 +145,9 @@ namespace bamr {
                               int &success, model_data &dat,
                               std::string model_type);
     
+    virtual void compute_star2(const ubvector &pars, std::ofstream &scr_out, 
+                              model_data &dat, std::string model_type);
+
     /// True if the model has an EOS
     bool has_eos;
 

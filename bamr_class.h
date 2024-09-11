@@ -206,8 +206,9 @@ namespace bamr {
     
     virtual int compute_gw17(const ubvector &, double &, model_data &);
     virtual int compute_gw19(const ubvector &, double &, model_data &);
-    virtual int compute_isrc(size_t, const ubvector &, double &, model_data &);
+    virtual int compute_em(size_t, const ubvector &, double &, model_data &);
     virtual int compute_dist(size_t, const ubvector &, double &, model_data &);
+    virtual int compute_point2(const ubvector &, double &, model_data &);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point
