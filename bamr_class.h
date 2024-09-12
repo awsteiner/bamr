@@ -198,23 +198,26 @@ namespace bamr {
     virtual int compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
                                   double &log_wgt, model_data &dat);
 
-    virtual int compute_deriv(ubvector &pars, point_funct &pf, 
-                              ubvector &grad, model_data &dat);
+    virtual int compute_deriv(ubvector &, point_funct &,
+                              ubvector &, model_data &);
 
-    virtual int numeric_deriv(size_t ix, ubvector &pars, point_funct &pf, 
-                              double &pfx, double &grad, model_data &dat);
+    virtual int numeric_deriv(size_t, ubvector &, point_funct &, 
+                              double &, double &, model_data &);
     
     virtual int compute_gw17(const ubvector &, double &, model_data &);
     virtual int compute_gw19(const ubvector &, double &, model_data &);
     virtual int compute_em(size_t, const ubvector &, double &, model_data &);
     virtual int compute_dist(size_t, const ubvector &, double &, model_data &);
-    virtual int compute_point2(const ubvector &, double &, model_data &);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
         current Monte Carlo point
     */
     virtual int fill(const ubvector &pars, double weight, 
                      std::vector<double> &line, model_data &dat);
+
+  protected:
+    bool atms_fixed=false;
+    virtual void fix_atms(const ubvector &, model_data &);
     
   };
 

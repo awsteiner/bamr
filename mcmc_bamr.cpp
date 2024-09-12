@@ -1739,6 +1739,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
     for (size_t i=0; i<n_threads; i++) {
+      double log_wgt;
       gfa[i]=std::bind(std::mem_fn<int(ubvector &,
         point_funct &,ubvector &,model_data &)>
         (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5);

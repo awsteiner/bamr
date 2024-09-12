@@ -471,8 +471,8 @@ clean:
 # ----------------------------------------------------------------------
 mlines:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
-	-set max_iters 1000 -set file_update_time 3600 \
-	-set verbose 1 -set mcmc_verbose 3 \
+	-set max_iters 1 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
 	-set crust_from_L 0 -set compute_cthick 1 \
@@ -509,7 +509,7 @@ mlines:
 
 nlines:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
-	-set max_iters 1000 -set file_update_time 3600 \
+	-set max_iters 1 -set file_update_time 3600 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -547,8 +547,8 @@ nlines:
 
 mpoly:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
-	-set max_iters 1000 -set file_update_time 3600 \
-	-set verbose 1 -set mcmc_verbose 3 \
+	-set max_iters 1 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
 	-set crust_from_L 0 -set compute_cthick 1 \
@@ -585,8 +585,8 @@ mpoly:
 
 npoly:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
-	-set max_iters 1000 -set file_update_time 3600 \
-	-set verbose 1 -set mcmc_verbose 3 \
+	-set max_iters 1 -set file_update_time 3600 \
+	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
 	-set crust_from_L 0 -set compute_cthick 1 \
