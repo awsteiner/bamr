@@ -28,6 +28,7 @@
 #include <o2scl/interpm_idw.h>
 #include <o2scl/interpm_krige.h>
 #include <o2scl/interpm_python.h>
+#include <o2scl/nflows_python.h>
 
 using namespace std;
 using namespace o2scl;
@@ -46,264 +47,6 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]->nsd=nsd;
 
 }
-
-#ifdef O2SCL_NEVER_DEFINED
-
-int mcmc_bamr::train(std::string file_name, std::vector<std::string> &names) {
-  
-  Py_Initialize();
-  PyRun_SimpleString("import sys");
-  PyRun_SimpleString("sys.path.append('./')");
-
-  // Todo: check to see if threading really works
-  //PyEval_InitThreads();
-  Py_DECREF(PyImport_ImportModule("threading"));
-
-  // train and test file names
-  string train_file = file_name;
-  string test_file = "test_data";
-
-  // Import python module
-  train_modFile = PyImport_ImportModule("emu");
-  if (train_modFile == 0) {
-    PyErr_Print();
-    std::exit(1);
-  }
-
-  // Copy parameter names to python module. This does not
-  // currently include the alt_ parameters for the atmosphere
-  train_tParam_Names=PyList_New(names.size());
-  for(size_t i=0; i<names.size(); i++){
-    PyList_SetItem(train_tParam_Names, i, 
-                   PyUnicode_FromString(names[i].c_str()));
-  }
-
-  // Python class object
-  train_trainClass = PyObject_GetAttrString(train_modFile, "modGpr");
-  assert(train_trainClass != 0);
-
-  // Create an instance of the modGpr class
-  if(PyCallable_Check(train_trainClass)) {
-    train_instance = PyObject_CallObject(train_trainClass, 0);
-  }
-  assert(train_instance != 0);
-
-  if(nsd->n_sources == 0 && !set->apply_intsc){
-    addtl_sources = PyLong_FromSize_t(0);
-  }
-  if(nsd->n_sources>0 && !set->apply_intsc){
-    addtl_sources = PyLong_FromSize_t(nsd->n_sources);
-  }
-  if(nsd->n_sources>0 && set->apply_intsc){
-    addtl_sources = PyLong_FromSize_t(nsd->n_sources);
-  } 
-
-  // Python arguments for the modGpr::modTrain() function
-  train_pArgs = PyTuple_Pack(4, 
-                             PyUnicode_FromString(train_file.c_str()),
-                             train_tParam_Names, train_tParam_Names,
-                             addtl_sources);
-
-  train_trainMthd = PyObject_GetAttrString(train_instance, "modTrain");
-  
-  // Call Python training function
-  if (PyCallable_Check(train_trainMthd)) {
-    PyObject_CallObject(train_trainMthd, train_pArgs);
-  }
-
-  return 0;
-}
-
-int mcmc_bamr::emu_train2(std::vector<std::string> &sv, bool itive_com) {
-
-  vector<string> files;
-  for(size_t k=1;k<sv.size();k++) {
-    files.push_back(sv[k]);
-  }
-
-  eb_arr.resize(n_threads);
-
-  for(size_t k=0;k<n_threads;k++) {
-    table_units<> tab;
-    //eb_arr[k].train(tab,bc_arr[i],&scr_out);
-  }
-    
-  return 0;
-}
-
-int mcmc_bamr::emu_points(std::vector<std::string> &sv, bool itive_com) {
-
-
-  if(sv.size()<2){
-    cout << "Need an emulated output filename." << endl;
-  }
-  if(sv.size()<3){
-    cout << "Need an posterior output filename." << endl;
-  }
-  string emu_file = sv[1];
-  string post_out = sv[2];
-  
-  // Initial row number
-  size_t init_row = 0;
-  if(sv.size()<4){
-    cout << "Computing postesrior from the first row." << endl;
-  }else{
-    init_row = o2scl::stoszt(sv[3]);
-    cout << "Computing postesrior from row number " << init_row << endl;
-  }
-
-  
-  // initialize the grids and columns
-  mcmc_init();
-
-  // Read emulated file to table
-  o2scl::table_units<> emu_init_table;
-  o2scl::table_units<> out_table;      
-  hdf_file hf_emu;
-  hf_emu.open(emu_file);
-  hf_emu.get_szt("n_params",this->n_params);
-  hdf_input(hf_emu,emu_init_table,"markov_chain_0");
-  hf_emu.close();
-  cout << "Emulated file copied to table" << endl;
-
-  model_data test_point;
-  double log_wgt;
-  ubvector emu_pars(n_params);
-
-  model &m=*(bc_arr[0]->mod);
-  bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[0]));
-  if (set->apply_intsc) {
-    bc.setup_filters();
-  }
-
-  // Open or create output file
-  hdf_file hf_out;
-
-  size_t nrows = emu_init_table.get_nlines();
-
-  int pthread=0;
-  bool set_col =false;
-  std::clock_t start_time = std::clock();
-
-  
-  // Check start time, which can be used to update file after some interval
-  // cout << "Start time : " << start_time << endl;
-  
-  for(size_t i=init_row; i<nrows; i++){
-
-    //cout << "working on row : " << i  << endl;
-
-    // copy parameter values to use in bamr_class::compute_point()
-    for(size_t j=5;j<5+n_params;j++) {
-      emu_pars(j-5) = emu_init_table.get(emu_init_table.get_column_name(j), i);
-    }
-
-    // Compute point success status
-    size_t iret = bc.compute_point(emu_pars, scr_out, log_wgt, test_point);
-
-    if(iret==0){
-
-      // copy row from tables in model_data 
-      ubvector temp_mvsr_row;
-      test_point.mvsr.get_row(i, temp_mvsr_row);
-      ubvector temp_eos_row;
-      test_point.eos.get_row(i, temp_eos_row);
-      ubvector temp_gridt_row;
-      test_point.gridt.get_row(i, temp_gridt_row);
-      /*
-        ubvector temp_sourcet_row;
-        test_point.sourcet.get_row(i, temp_sourcet_row);
-      */
-
-
-      cout << "mvsr table size : " << temp_mvsr_row.size() << endl;
-      cout << "eos table size : " << temp_eos_row.size() << endl;
-      cout << "gridt table size : " << temp_gridt_row.size() << endl;
-      //cout << "eos table size : " << temp_sourcet_row.size() << endl;
-
-
-      exit(0);
-      // copy data done.
-
-      vector<string> cols;
-      vector<double> col_vals;
-
-      cout << "compute_point return status : " << iret << endl;
-      cout << "predicted log_wgt : " <<
-        emu_init_table.get(emu_init_table.get_column_name(4), i) << endl;
-      cout << "compute_point log_wgt : " << log_wgt << endl;
-
-    std:string temp_const;
-      double temp_val;
-
-      for(size_t j=0; j<test_point.mvsr.get_nconsts(); j++){
-        test_point.mvsr.get_constant(j, temp_const, temp_val);
-        cols.push_back(temp_const);
-        col_vals.push_back(temp_val);
-      }
-
-      for(size_t j=0; j<test_point.eos.get_nconsts(); j++){
-        test_point.eos.get_constant(j, temp_const, temp_val);
-        cols.push_back(temp_const);
-        col_vals.push_back(temp_val);
-      }
-      
-
-      // Create/check column names in the new table
-      if(set_col==false){
-        for(size_t j=0; j<cols.size(); j++){
-          out_table.new_column(cols[j]);
-        }
-        // add M-R grid columns
-        for(int ij=0;ij<set->grid_size;ij++) {
-          out_table.new_column(((string)"R_")+o2scl::itos(ij));
-        }
-        /*
-        // add EOS grid
-        for(int i=0;i<set->grid_size;i++) {
-        out_table.new_column(((string)"P_")+o2scl::itos(i));
-        }
-        */
-        set_col=true;
-      }
-
-      // Interpolate M-R grid
-      test_point.mvsr.set_interp_type(itp_linear);
-      for(int ik=0;ik<set->grid_size;ik++) {
-        col_vals.push_back(test_point.mvsr.interp("gm",(ik+1)*
-                                                  (3.0-0.02)/100.0,"r"));
-      }
-      
-      /*
-        for(int i=0;i<set->grid_size;i++) {
-        double eval = m.e_grid[i];
-        double pres_temp=test_point.eos.interp("ed",eval,"pr");
-        col_vals.push_back(pres_temp);
-        }
-      */    
-      // cout << out_table.get_ncolumns() << " " << col_vals.size() << endl;
-      out_table.line_of_data(col_vals);
-      double duration = (std::clock()-start_time)/(double) CLOCKS_PER_SEC;
-      cout << "duration : "<< duration << endl;
-      if(duration-60.0 > 0.0 && duration-60.0 < 10.0){
-        hf_out.open_or_create(post_out);
-        hdf_output(hf_out, out_table, "emulated");
-        hf_out.close();
-      }
-
-    }else{
-      continue;
-    }
-  }
-  
-  hf_out.open_or_create(post_out);
-  hdf_output(hf_out, out_table, "emulated");
-  hf_out.close();
-  
-  return 0;
-}
-
-#endif
 
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
   
@@ -1122,17 +865,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   }
 
-#ifdef O2SCL_NEVER_DEFINED
- if (set->apply_emu) {    
-    for(size_t i=0;i<nsd->n_sources;i++) {
-      names.push_back(((string)"atm_")+o2scl::szttos(i));
-      units.push_back("");
-      low.push_back(0.0);
-      high.push_back(1.0);
-    }
-  }
-#endif
-
   // Send names and units to o2scl
   set_names_units(names,units);
   
@@ -1227,14 +959,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
   }
 
-#ifdef O2SCL_NEVER_DEFINED
-  if (set->emu_aws) {
-    if (eb_arr.size()!=n_threads) {
-      cerr << "Not enough emulators." << endl;
-    }
-  }
-#endif  
-
   vector<bamr::point_funct> pfa(n_threads);
   vector<bamr::fill_funct> ffa(n_threads);
   for(size_t i=0;i<n_threads;i++) {
@@ -1243,17 +967,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
          (&bamr_class::compute_point_ext),bc_arr[i],std::placeholders::_2,
          std::ref(scr_out),std::placeholders::_3,std::placeholders::_4);
-
-#ifdef O2SCL_NEVER_DEFINED
-    if (set->emu_aws) {
-      pfa[i]=std::bind
-        (std::mem_fn<int(size_t n,const ubvector &,double &,model_data &)>
-         (&emulator_bamr::eval),eb_arr[i],std::placeholders::_1,
-         std::placeholders::_2,std::placeholders::_3,
-         std::placeholders::_4);
-    }
-#endif
-
     } else {
       pfa[i]=std::bind
         (std::mem_fn<int(const ubvector &,ofstream &,double &,model_data &)>
@@ -1267,45 +980,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
   }
 
-#ifdef O2SCL_NEVER_DEFINED  
-  if (set->apply_emu) {
-    cout << "Applying train function." << endl;
-
-    // train the module
-    int pinfo=train(set->emu_train, names);
-    if(pinfo != 0){
-      cout << "Training Failed. " << endl;
-      exit(-1);
-    }
-
-    // Copy trained method to bint classes
-    for(size_t i=0;i<n_threads;i++){
-      bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-
-      // copy pyobject to bint class
-      //bc.emu_train=emu_train;
-      bc.train_modFile=train_modFile;
-      bc.train_trainClass=train_trainClass;
-      bc.train_instance=train_instance;
-      bc.train_trainMthd=train_trainMthd;
-      bc.train_tParam_Names=train_tParam_Names;
-      bc.addtl_sources=addtl_sources;
-    }
-
-    // Delete unnecessary PyObjects
-    Py_DECREF(train_modFile);
-    Py_DECREF(train_instance);
-    Py_DECREF(train_trainClass);
-  }
-#endif
-
   //-------------------------------------------------------------------
 
   // Note that kde_python doesn't work with n_threads>1
 
 #ifdef ANDREW
-
-  if (false) {
+  
+  if (true) {
     
     this->n_retrain=0;
     this->emu_file="interp";
@@ -1476,7 +1157,20 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     stepper=mh_stepper;
     
     // Train the KDE
-    if (mcmc_method==string("kde")) {
+    if (mcmc_method==string("nsf")) {
+
+      nf=std::shared_ptr<nflows_python<ubvector>>
+        (new nflows_python<ubvector>);
+      nf->set_function("o2sclpy",ten_in,"verbose=2", 
+		       "nflows_nsf",2);
+      
+      // Setting the KDE as the base distribution for the independent
+      // conditional probability. The kde_python class does not work
+      // for more than one OpenMP thread.
+      mh_stepper->proposal.resize(1);
+      mh_stepper->proposal[0].set_base(nf);
+    
+    } else if (mcmc_method==string("kde")) {
 
       // Weights can be set here, but they are presumed to be
       // the same if this vector is empty
@@ -1668,12 +1362,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 #else
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
-#endif
-
-#ifdef O2SCL_NEVER_DEFINED  
-  if (set->apply_emu) {
-    Py_Finalize();
-  }
 #endif
 
   return 0;

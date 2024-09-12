@@ -41,10 +41,7 @@
 #include <o2scl/hdf_file.h>
 #include <o2scl/mcmc_para.h>
 #include <o2scl/kde_python.h>
-
-#ifdef O2SCL_NEVER_DEFINED
-#include "emulator_bamr.h"
-#endif
+#include <o2scl/nflows_python.h>
 
 #ifdef BAMR_READLINE
 #include <o2scl/cli_readline.h>
@@ -143,50 +140,15 @@ namespace bamr {
     /// The KDE proposal distribution
     std::shared_ptr<o2scl::kde_python<ubvector>> kp;
     
+    /// The NF proposal distribution
+    std::shared_ptr<o2scl::nflows_python<ubvector>> nf;
+    
     /// The Gaussian proposal distribution
     std::shared_ptr<o2scl::prob_dens_mdim_gaussian<>> gpp;
     
     /** \brief If true, use index2 to take derivative of M_max
      */
     bool dv_index2;
-
-#ifdef O2SCL_NEVER_DEFINED
-    
-    /** \brief Train file name for python emulator
-     */
-    std::string emu_train;
-
-    PyObject *train_modFile;
-    PyObject *train_tParam_Names;
-    PyObject *train_trainClass;
-    PyObject *train_instance;
-    PyObject *train_trainMthd;
-    PyObject *train_pArgs;
-
-    /// The number of sources
-    PyObject *addtl_sources;
-    
-    PyObject *train_res;
-    PyObject *train_pTemp;
-    PyObject *train_temp;
-
-    bool py_train;
-
-    /** \brief Train the emulator based on data from \c file_name
-        using parameter names listed in \c names.
-        
-        This is called in mcmc_bamr::mcmc_func().
-    */
-    int train(std::string file_name, std::vector<std::string> &names);
-
-    /** \brief Calculate posteriors from the emulated points.
-     */
-    virtual int emu_points(std::vector<std::string> &sv,
-                           bool itive_com);
-    
-    virtual int emu_train2(std::vector<std::string> &sv,
-                           bool itive_com);
-#endif
 
     /** \brief A string specifying the sampling algorithm for MCMC
         Current options are: 'kde', 'kde_sklearn', 'gauss' and 'hmc'
@@ -211,10 +173,6 @@ namespace bamr {
         correctly.
     */
     std::vector<bamr_class *> bc_arr;
-
-#ifdef O2SCL_NEVER_DEFINED
-    std::vector<emulator_bamr> eb_arr;
-#endif
 
     /** \brief The \ref bamr::settings object 
         (shared by instances of \ref bamr_class)

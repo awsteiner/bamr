@@ -105,9 +105,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   
 #endif
   
-  if (set->apply_emu) {
-    return 0;
-  } else {
+  if (true) {
 
     /* These columns are redundant because the output table also 
     contains log_wgt_sources */
@@ -265,111 +263,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
   int iret;
 
-  if (set->apply_emu) {
-    
-#ifdef O2SCL_NEVER_DEFINED
-    
-    // create vector for emulator prediction
-    ubvector test_pars;
-    
-    // copy mcmc param values
-    test_pars = pars;
-    
-    // update emulator parameter vector with H or He atm values
-    if (nsd->n_sources>0) {
-      
-      test_pars.resize(pars.size()+nsd->n_sources);
-      
-      for(size_t i=0; i<pars.size(); i++){
-        test_pars[i] = pars[i];
-      }
-      /* 
-         MCMC paprmeter vector contains moddel params and $mf_$'s
-         from the sources. We calculate "atm" values from the $mf_$'s
-         and pass the additional atm values to the "emy.py". "emu.py"
-         was trained with "atm" columns with the mcmc_params. To 
-         emulate a point we need to update the "atm" values.
-      */      
-      for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
-        double atm=pars[i]*1.0e8-((double)((int)(pars[i]*1.0e8)));
-        if(atm<2/3){
-          test_pars[pars.size()] = 0;
-        } else {
-          test_pars[pars.size()] = 1;
-        }
-      }
-    }
+  if (true) {
 
-    // Create new pylist from param_vals
-    test_vals = PyList_New(test_pars.size());
-    for(size_t i=0; i<test_pars.size(); i++){
-      PyList_SetItem(test_vals, i, PyFloat_FromDouble(test_pars[i]));
-    }
-    
-    /* 
-       As a test, call emu.py:modGpr:show().
-    */
-    if (PyCallable_Check(train_trainMthd)) {
-      target_pred=PyObject_CallObject
-        (train_trainMthd, 
-         PyTuple_Pack(4,PyUnicode_FromString(set->emu_train.c_str()),
-                      train_tParam_Names,test_vals,addtl_sources));
-    }
-    
-    // Finally, set the value of log_wgt equal to the value returned
-    // by the python emulator
-    
-    // Check current MPI rank
-    int mpi_rank = 0;
-#ifdef BAMR_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-#endif
-    
-    // Check current OpenMP thread
-    int pthread=0;
-#ifdef O2SCL_OPENMP      
-    pthread=omp_get_thread_num();
-#endif
-
-    // Prediction vector copied from the python list stored in
-    // target_pred
-    ubvector preds;
-    preds.resize(PyList_Size(target_pred));
-    
-    for (long int i=0; i < PyList_Size(target_pred); i++) {
-      PyObject *pTarget = PyList_GetItem(target_pred, i);
-      preds[i] = PyFloat_AsDouble(pTarget);
-    }
-    
-    log_wgt = preds[0];
-    if (false) {
-      cout << "Emulated log_wgt by rank "<< mpi_rank
-           <<" and thread "<< pthread <<
-        " : " << log_wgt << endl;
-    }
-
-    double pred_Mmax = preds[2];
-    if (pred_Mmax < 2.0) {
-      iret=1;
-    }
-
-    double pred_e_max=preds[3];
-
-    // Check speed of sound causal limit
-    for (size_t i=0;i<100;i++) {
-      double e_i=mod->e_grid[i];
-      if (e_i<pred_e_max) {
-        if (preds[preds.size()-(i+1)] > 1.0) {
-          iret=1;
-        }
-      }
-    }
-
-    iret = 0;
-    
-#endif
-
-  } else {
     // Reference to model object for convenience
     model &m=*this->mod;
     
