@@ -157,11 +157,6 @@ namespace bamr {
 
     /// The index of parameters
     o2scl::vec_index pvi;
-
-    /// If true, compute numerical derivatives for all parameters
-    bool num_deriv;
-
-    size_t index;
     
     /// Vector to store log-weights to be passed to table
     std::vector<double> wgt_pop;
