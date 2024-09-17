@@ -982,6 +982,24 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   //-------------------------------------------------------------------
 
+  for(size_t j=0;j<names.size();j++) {
+    pvi.append(names[j]);
+  }
+  // Copy the pvi object from mcmc_bamr to bamr_class so it can
+  // be used in compute_point()
+  for(size_t j=0;j<bc_arr.size();j++) {
+    bc_arr[j]->pvi=pvi;
+  }
+  
+  // Perform the MCMC simulation
+  ubvector low2(low.size()), high2(high.size());
+  vector_copy(low,low2);
+  vector_copy(high,high2);
+
+  std::vector<model_data> dat_arr(2*this->n_walk*this->n_threads);
+
+  //-------------------------------------------------------------------
+  
   // Note that kde_python doesn't work with n_threads>1
 
 #ifdef ANDREW
@@ -1083,15 +1101,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   
   // #ifdef BAMR_KDE
-  if (mcmc_method==string("kde") ||
+  if (mcmc_method==string("nsf") ||
+      mcmc_method==string("kde") ||
       mcmc_method==string("kde_sklearn") ||
       mcmc_method==string("gauss")) {
     
     // Copy the table data to a tensor for use in kde_python.
     // We need a copy for each thread because kde_python takes
     // over the tensor data.
-    
-    // AWS: I'm leaving this for Anik to change
     
 #ifdef BAMR_MPI
     // Get MPI rank, etc.
@@ -1144,8 +1161,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     for (size_t j=0; j<tab_in.get_nlines(); j++) {
       vector<size_t> ix;
       for (size_t i=0; i<n_pars; i++) {
-	      ix={j,i};
-	      ten_in.get(ix)=tab_in.get(i+5,j);
+        ix={j,i};
+        ten_in.get(ix)=tab_in.get(i+5,j);
       }
     }
     
@@ -1161,8 +1178,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      nf->set_function("o2sclpy",ten_in,"verbose=2", 
-		       "nflows_nsf",2);
+      nf->set_function("o2sclpy",ten_in,"verbose=2","nflows_nsf",2);
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
@@ -1177,23 +1193,35 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       vector<double> weights;
 
       kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
-      kp->set_function("o2sclpy", ten_in, weights,
-		       "verbose=0", "kde_scipy");
+      kp->set_function("o2sclpy",ten_in,weights,
+		       "verbose=0","kde_scipy");
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
       // for more than one OpenMP thread.
       mh_stepper->proposal.resize(1);
       mh_stepper->proposal[0].set_base(kp);
-    
+
+      cout << "Here." << endl;
+      ubvector xt(n_pars);
+      ofstream fout("cp.o2");
+      for(size_t j=0;j<100;j++) {
+        kp->operator()(xt);
+        double lwt;
+        int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat_arr[0]);
+        cout << cpret << " " << lwt << " " << kp->log_pdf(xt) << endl;
+      }
+      fout.close();
+      exit(-1);
+      
     } else if (mcmc_method==string("kde_sklearn")) {
       
       kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
       uniform_grid_log_end<double> ug(1.0e-3,1.0e3,99);
       vector<double> bw_array;
       ug.vector(bw_array);
-      kp->set_function("o2sclpy", ten_in, bw_array,
-		       "verbose=0", "kde_sklearn");
+      kp->set_function("o2sclpy",ten_in,bw_array,
+		       "verbose=0","kde_sklearn");
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
@@ -1207,24 +1235,24 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {
-	      avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
-	      std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
-	      cout << "param,avg,stddev: " << j << " " << avg[j] 
-	           << " " << std[j] << endl;
+        avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+        std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+        cout << "param,avg,stddev: " << j << " " << avg[j] 
+             << " " << std[j] << endl;
       }
       
       ubmatrix covar(n_pars,n_pars);
       for(size_t i=0;i<n_pars;i++) {
-	      for(size_t j=0;j<n_pars;j++) {
-	        if (i==j) {
-	          covar(i,j)=std[j]*std[j];
-	          //covar(i,j)/=var_dec_factor;
-	        } else {
-	          covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
-					    tab_in[j+5]);
-	          covar(i,j)/=2.0;
-	        }
-	      }
+        for(size_t j=0;j<n_pars;j++) {
+          if (i==j) {
+            covar(i,j)=std[j]*std[j];
+            //covar(i,j)/=var_dec_factor;
+          } else {
+            covar(i,j)=vector_covariance(tab_in.get_nlines(),tab_in[i+5],
+                                         tab_in[j+5]);
+            covar(i,j)/=2.0;
+          }
+        }
       }
       
       gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
@@ -1324,7 +1352,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     hmc_stepper->set_gradients(gfa);
 #else
     stepper.set_gradients(gfa);
-#endif    
+#endif
+
+    // End of HMC section
   }
 
 #ifdef BAMR_MPI
@@ -1337,22 +1367,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 #endif
 
   // ---------------------------------------
-
-  for(size_t j=0;j<names.size();j++) {
-    pvi.append(names[j]);
-  }
-  // Copy the pvi object from mcmc_bamr to bamr_class so it can
-  // be used in compute_point()
-  for(size_t j=0;j<bc_arr.size();j++) {
-    bc_arr[j]->pvi=pvi;
-  }
-  
   // Perform the MCMC simulation
-  ubvector low2(low.size()), high2(high.size());
-  vector_copy(low,low2);
-  vector_copy(high,high2);
-
-  std::vector<model_data> dat_arr(2*this->n_walk*this->n_threads);
 
   if (verbose>2) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;

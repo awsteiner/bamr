@@ -31,8 +31,9 @@ mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
 	data/nicer/0030_st_pst.o2 prob 0.7 table3d \
 	-add-data-alt 0740 data/nicer/J0740_H_MR_t3d.o2 \
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
-	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
+        -method kde \
 	-set use_kde 1 -model new_poly -set model_dpdm 1 \
-	-initial-point-last out/mp_56a0 \
-	-mcmc > out/mp.out 2>&1 &
+	-initial-point-best out/mp_train \
+	-mcmc
+
