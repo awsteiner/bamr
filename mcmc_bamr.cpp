@@ -401,10 +401,26 @@ int mcmc_bamr::mcmc_init() {
 
   // -----------------------------------------------------------
 
-  for(size_t i=0;i<n_threads;i++) {
-    bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-  }
+  //for(size_t i=0;i<n_threads;i++) {
+  //bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
+  //}
 
+  //
+  if (true) {
+    cout << "Here3." << endl;
+    ubvector xt(this->n_params);
+    ofstream fout("cp.o2");
+    model_data dat;
+    for(size_t j=0;j<100;j++) {
+      kp->operator()(xt);
+      double lwt;
+      int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat);
+      cout << cpret << " " << lwt << " " << kp->log_pdf(xt) << endl;
+    }
+    fout.close();
+    exit(-1);
+  }
+  
   if (this->verbose>=2) {
     std::cout << "(rank " << this->mpi_rank
               << ") End mcmc_bamr::mcmc_init()." << std::endl;
@@ -1202,18 +1218,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       mh_stepper->proposal.resize(1);
       mh_stepper->proposal[0].set_base(kp);
 
-      cout << "Here." << endl;
-      ubvector xt(n_pars);
-      ofstream fout("cp.o2");
-      for(size_t j=0;j<100;j++) {
-        kp->operator()(xt);
-        double lwt;
-        int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat_arr[0]);
-        cout << cpret << " " << lwt << " " << kp->log_pdf(xt) << endl;
-      }
-      fout.close();
-      exit(-1);
-      
     } else if (mcmc_method==string("kde_sklearn")) {
       
       kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);

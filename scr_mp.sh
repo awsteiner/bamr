@@ -3,7 +3,7 @@
 # mpoly:
 mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
 	-set max_iters 100000 -set file_update_time 1800 \
-	-set verbose 1 -set mcmc_verbose 2 \
+	-set verbose 3 -set mcmc_verbose 3 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
 	-set crust_from_L 0 -set compute_cthick 1 \
