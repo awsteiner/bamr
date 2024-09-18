@@ -401,21 +401,31 @@ int mcmc_bamr::mcmc_init() {
 
   // -----------------------------------------------------------
 
-  //for(size_t i=0;i<n_threads;i++) {
-  //bamr_class &bc=dynamic_cast<bamr_class &>(*(bc_arr[i]));
-  //}
-
   //
   if (true) {
-    cout << "Here3." << endl;
     ubvector xt(this->n_params);
     ofstream fout("cp.o2");
     model_data dat;
-    for(size_t j=0;j<100;j++) {
+    for(size_t j=0;j<400;j++) {
       kp->operator()(xt);
       double lwt;
-      int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat);
-      cout << cpret << " " << lwt << " " << kp->log_pdf(xt) << endl;
+      bool fail=false;
+      for(size_t j=0;j<this->n_params;j++) {
+        if (xt[j]<low_copy[j] || xt[j]>high_copy[j]) {
+          cout << "Fail: " << j << " " << low_copy[j] << " "
+               << xt[j] << " " << high_copy[j] << endl;
+          fail=true;
+        }
+      }
+      if (fail==false) {
+        int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat);
+        if (lwt>-700.0) {
+          cout << "YY: " << cpret << " " << lwt << " "
+               << kp->log_pdf(xt) << endl;
+        } else {
+          cout << "Small likelihood." << endl;
+        }
+      }
     }
     fout.close();
     exit(-1);
@@ -1192,9 +1202,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Train the KDE
     if (mcmc_method==string("nsf")) {
 
+      if (verbose>0) {
+        std::cout << "Using nflows_python to generate proposal "
+                  << "distribution." << endl;
+      }
+      
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      nf->set_function("o2sclpy",ten_in,"verbose=2","nflows_nsf",2);
+      nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
+                       "nflows_nsf",2);
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
@@ -1204,6 +1220,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     } else if (mcmc_method==string("kde")) {
 
+      if (verbose>0) {
+        std::cout << "Using KDE from scipy to generate proposal "
+                  << "distribution." << endl;
+      }
+      
       // Weights can be set here, but they are presumed to be
       // the same if this vector is empty
       vector<double> weights;
@@ -1219,7 +1240,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       mh_stepper->proposal[0].set_base(kp);
 
     } else if (mcmc_method==string("kde_sklearn")) {
-      
+
+      if (verbose>0) {
+        std::cout << "Using KDE from sklearn to generate proposal "
+                  << "distribution." << endl;
+      }
       kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
       uniform_grid_log_end<double> ug(1.0e-3,1.0e3,99);
       vector<double> bw_array;
@@ -1235,7 +1260,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
     } else {
 
-      std::cout << "Setting up Gaussian:" << std::endl;
+      if (verbose>0) {
+        std::cout << "Using multivariate to generate proposal "
+                  << "distribution." << endl;
+      }
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {

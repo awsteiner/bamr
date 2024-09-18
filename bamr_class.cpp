@@ -272,8 +272,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     m.compute_star(pars,scr_out,iret,dat,model_type);
     
     if (iret!=m.ix_success) {
-      cout << "models::compute_star() failure:"
-           << " ix_return=" << iret << endl;
+      if (set->verbose>2) {
+        cout << "models::compute_star() failure:"
+             << " ix_return=" << iret << endl;
+      }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -321,8 +323,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << "for star " << pd.id_ns[i] << std::endl;
           log_wgt=0.0;
           iret=m.ix_gm_exceeds_mmax;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -353,8 +357,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 << "for star " << pd.id_wd[i] << std::endl;
           log_wgt=0.0;
           iret=m.ix_gm_exceeds_mmax;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -385,8 +391,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << "for star " << pd.id_lx[i] << std::endl;
           log_wgt=0.0;
           iret=m.ix_gm_exceeds_mmax;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -449,8 +457,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         log_wgt=0.0;
         iret=m.ix_mr_outside;
-        cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -560,8 +570,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                   << " and radius " << rad
                   << " with atm=" << atm << endl;
           iret=m.ix_mr_outside;
-          cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -753,8 +765,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           }
           log_wgt=0.0;
           iret=m.ix_mr_outside;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -836,8 +850,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
             iret=m.ix_mr_outside;
+          if (set->verbose>2) {
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -866,8 +882,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out << "IS weight not finite." << endl;
           log_wgt=0.0;
           iret=m.ix_mr_outside;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -911,8 +929,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 << std::endl;
         log_wgt=0.0;
         iret=m.ix_ligo_gm_invalid;
-        cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -1008,8 +1028,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->gw17_data_table.get_grid(jj,n_ligo-1) 
                     << endl;
             iret=m.ix_ligo_pars_outside;
+          if (set->verbose>2) {
             cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -1046,8 +1068,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         scr_out << "GW190425 invalid mass: m1=" << m1_gw19 << ", m2=" 
                 << m2_gw19 << ", Mmax=" << Mmax << endl;
         iret=m.ix_ligo_gm_invalid;
-        cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -1065,8 +1089,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 nsd->gw19_data_table.get_nlines()-1) << endl;
         log_wgt=0.0;
         iret=m.ix_ligo_pars_outside;
-        cout << "bamr_class::compute_point() failure:"
-             << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -1110,8 +1136,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out << "GW170817: DNS mass probability is zero" << endl;
           log_wgt=0.0;
           iret=m.ix_pop_wgt_zero;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
@@ -1134,8 +1162,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           scr_out << "GW190425: DNS mass probability is zero" << endl;
           log_wgt=0.0;
           iret=m.ix_pop_wgt_zero;
-          cout << "bamr_class::compute_point() failure:"
-               << " ix_return=" << iret << endl;
+          if (set->verbose>2) {
+            cout << "bamr_class::compute_point() failure:"
+                 << " ix_return=" << iret << endl;
+          }
 #ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
