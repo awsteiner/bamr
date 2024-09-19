@@ -57,8 +57,8 @@ namespace bamr {
   typedef std::function<int(const ubvector &,double,
                             std::vector<double> &,model_data &)> fill_funct;
 
-  typedef std::function<int(size_t,ubvector &,point_funct &,ubvector &, 
-                            model_data &)> deriv_funct;
+  typedef std::function<int(size_t,ubvector &,point_funct &,
+                            ubvector &, model_data &)> deriv_funct;
 
   /** \brief Compute neutron star structure for each MCMC point
 
@@ -211,7 +211,15 @@ namespace bamr {
                      std::vector<double> &line, model_data &dat);
 
   protected:
+
+    bool init_eval=true;
+    bool init_eval2=false;
+    bool final_eval=false;
     bool atms_fixed=false;
+    int i_call=0;
+    double log_wgt_s;
+    std::vector<bool> atm_s;
+
     virtual void fix_atms(const ubvector &, model_data &);
     
   };

@@ -392,7 +392,7 @@ void ns_pop::get_param_info() {
 
   // Set priors for mass parameters
   for (size_t i=0; i<pd.n_stars; i++) {
-    par_low.push_back(1.0);
+    par_low.push_back(0.5);
     par_high.push_back(2.5);
   }
   

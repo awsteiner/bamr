@@ -415,6 +415,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 #endif
 
   } else {
+
+    if (final_eval==true) {
+      log_wgt=log_wgt_s;
+      final_eval=false;
+      return 0;
+    }
+
     // Reference to model object for convenience
     model &m=*this->mod;
     
@@ -572,24 +579,28 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     
     // -----------------------------------------------
     // Determine the atm parameter
-    if (!atms_fixed) fix_atms(pars,dat);
-          
-    /*for (size_t i=0;i<nsd->n_sources;i++) {
-            
-      // Determine H or He from mass parameter
-      double mf;
-      if (set->inc_ligo) {
-        mf=pars[i+mod->n_eos_params+nsd->n_ligo_params];
-      } else {
-        mf=pars[i+mod->n_eos_params];
+
+    if (init_eval==true) {
+      atm_s.resize(nsd->n_sources);
+      for (size_t i=0; i<nsd->n_sources; i++) {
+        // Determine H or He from mass parameter
+        double mf;
+        if (set->inc_ligo) {
+          mf=pars[i+mod->n_eos_params+nsd->n_ligo_params];
+        } else {
+          mf=pars[i+mod->n_eos_params];
+        }
+        double d_atm=mf*1.0e8-((double)((int)(mf*1.0e8)));
+        if (d_atm<2.0/3.0) {
+          dat.sourcet.set("atm",i,0.0);
+        } else {
+          dat.sourcet.set("atm",i,1.0);
+        }
+        atm_s[i]=dat.sourcet.get("atm",i);
       }
-      double d_atm=mf*1.0e8-((double)((int)(mf*1.0e8)));
-      if (d_atm<2.0/3.0) {
-        dat.sourcet.set("atm",i,0.0);
-      } else {
-        dat.sourcet.set("atm",i,1.0);
-      }
-    }*/
+      init_eval=false;
+      init_eval2=true;
+    } else if (!atms_fixed) fix_atms(pars,dat);
 
     if (wgt_em.size()!=nsd->n_sources) wgt_em.resize(nsd->n_sources);
     if (fsn_em.size()!=nsd->n_sources) fsn_em.resize(nsd->n_sources);
@@ -1579,7 +1590,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (iret==0 && set->verbose>=2) {
+  if (iret==0 && set->verbose>=1) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
@@ -1602,37 +1613,44 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 void bamr_class::fix_atms(const ubvector &pars, model_data &dat) {
   
+  if (init_eval2==true) {
+    for(size_t i=0; i<nsd->n_sources; i++) {
+      dat.sourcet.set("atm",i,atm_s[i]);
+    }
+    init_eval2=false;
+    return;
+  }
+
   int ret;
   double w_curr, w_next;
-  
   random_device rd;
   mt19937 gen(rd());
   uniform_int_distribution<int> di(0,2);
   uniform_real_distribution<double> dr(0.0,1.0);
 
-  for(size_t i=0;i<nsd->n_sources;i++) {
+  for(size_t i=0; i<nsd->n_sources; i++) {
     if (nsd->source_fnames_alt.size()>0) {
-      
+
       // Randomly set atms
       if (di(gen)<2) dat.sourcet.set("atm",i,0.0);
       else dat.sourcet.set("atm",i,1.0);
-    
+
       // Evaluate current weight
       ret=compute_em(i, pars, w_curr, dat);
       if (ret!=0) return;
-    
+
       // Flip atms
       if (dat.sourcet.get("atm",i)<0.5) {
         dat.sourcet.set("atm",i,1.0);
       } else dat.sourcet.set("atm",i,0.0);
-    
+
       // Evaluate next weight
       ret=compute_em(i, pars, w_next, dat);
       if (ret!=0) return;
-    
+
       // Metropolis-Hastings
       if (dr(gen)>exp(w_next-w_curr)) {
-      
+
         // Reject and flip back
         if (dat.sourcet.get("atm",i)<0.5) {
           dat.sourcet.set("atm",i,1.0);
@@ -1719,7 +1737,7 @@ int bamr_class::compute_gw17(const ubvector &pars, double &log_wgt,
   
   log_wgt=wgt_star+log(sn_m1*sn_m2);
   
-  return o2scl::success;;
+  return o2scl::success;
 }
 
 
@@ -1753,12 +1771,12 @@ int bamr_class::compute_gw19(const ubvector &pars, double &log_wgt,
   
   log_wgt=log(wgt_star)+log(sn_m1*sn_m2);
   
-  return o2scl::success;;
+  return o2scl::success;
 }
 
 
 int bamr_class::compute_em(size_t ix, const ubvector &pars, 
-                            double &log_wgt, model_data &dat) {
+                           double &log_wgt, model_data &dat) {
   model &m=*this->mod;
   ns_pop &nsp = nsd->pop;
   size_t np_eos=m.n_eos_params;
@@ -1815,7 +1833,7 @@ int bamr_class::compute_em(size_t ix, const ubvector &pars,
     log_wgt=log(wgt_star);
   }
   
-  return o2scl::success;;
+  return o2scl::success;
 }
 
 
@@ -1906,6 +1924,7 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
 
 int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
                               ubvector &grad, model_data &dat) {
+  i_call++;
   model &m=*this->mod;
   size_t np=pars.size();
   ubvector grad_fd(np);
@@ -1914,7 +1933,10 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   double pfx;
   int f_ret=pf(np, pars, pfx, dat);
   if (f_ret!=0) return m.ix_grad_failed;
-  atms_fixed=true;
+
+  cout.precision(17);
+  cout << "compute_deriv(): pfx=" << pfx << endl;
+  cout.precision(6);
       
   ns_pop &nsp=nsd->pop;
   pop_data &pd=nsd->pd;
@@ -1957,31 +1979,43 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
                     (&bamr_class::compute_gw19),this,_2,_3,_4);
 
-  while (ip<np) {
-    double d_wgt;
-    int ret=numeric_deriv(ip,pars,pf,pfx,d_wgt,dat);
-    if (ret!=o2scl::success) {
-      cout << "bamr_class::compute_deriv() failure." << endl;
-      return m.ix_grad_failed;
+  atms_fixed=true;
+  if (i_call%2==0) log_wgt_s=pfx;
+  bool debug_deriv=false;
+
+  if (debug_deriv) {
+    while (ip<np) {
+      double d_wgt;
+      int ret=numeric_deriv(ip,pars,pf,pfx,d_wgt,dat);
+      if (ret!=o2scl::success) {
+        cout << "bamr_class::compute_deriv() failure." << endl;
+        return m.ix_grad_failed;
+      }
+      grad_fd[ip]=d_wgt;
+      ip++;
     }
-    grad_fd[ip]=d_wgt;
-    ip++;
+    ip=0;
   }
 
   //------------------------------------------------------------------------- 
-  ip=0;
   double pfx1, gfx;
 
   while (ip<np_eos) { // w.r.t. {p}
-    /*int ret=numeric_deriv(ip, pars, pf, pfx, gfx, dat);
-    if (ret!=o2scl::success) {
-      cout << "bamr_class::compute_deriv() failure." << endl;
-      return m.ix_grad_failed;
-    }*/
-    //grad[ip]=gfx;
-    grad[ip]=grad_fd[ip];
+    if (debug_deriv) grad[ip]=grad_fd[ip];
+    else {
+      int ret=numeric_deriv(ip,pars,pf,pfx,gfx,dat);
+      if (ret!=o2scl::success) {
+        cout << "bamr_class::compute_deriv() failure." << endl;
+        return m.ix_grad_failed;
+      }
+      grad[ip]=gfx;
+    }
     ip++;
   }
+
+  atms_fixed=false;
+  if (i_call%2==0) final_eval=true;
+
   if (ip==np_eos) { // w.r.t. M_chirp_det, q, z_cdf
     pfx1=log_w_gw17;
     for (size_t j=0; j<3; j++) {
@@ -2052,17 +2086,18 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     }
   }
 
-  cout.precision(2);
-  for (size_t k=0; k<np; k++) {
-    cout << "g_pf[" << k << "]=" << grad[k] 
-         << "\t g_fd=" << grad_fd[k]
-         << "\t err=" << abs((grad_fd[k]-grad[k])/grad_fd[k]);
-    if (abs((grad_fd[k]-grad[k])/grad_fd[k])>1.0e-7) {
-      cout << "\t large: i=" << k << endl;
-    } else cout << endl;
+  if (debug_deriv) {
+    cout.precision(2);
+    for (size_t k=0; k<np; k++) {
+      cout << "g_pf[" << k << "]=" << grad[k] 
+          << "\t g_fd=" << grad_fd[k]
+          << "\t err=" << abs((grad_fd[k]-grad[k])/grad_fd[k]);
+      if (abs((grad_fd[k]-grad[k])/grad_fd[k])>1.0e-7) {
+        cout << "\t large: i=" << k << endl;
+      } else cout << endl;
+    }
+    cout.precision(6);
   }
-  cout.precision(6);
 
-  atms_fixed=false;
   return 0;
 }

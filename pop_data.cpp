@@ -433,6 +433,8 @@ void pop_data::load_data() {
     asym_nsp.push_back(c);
     scale_ns.push_back(d);
     scale_nsp.push_back(d);
+    lo_nsp.push_back(low_ns[i]);
+    hi_nsp.push_back(high_ns[i]);
   }
   for (size_t i=0; i<name_wd.size(); i++) {
     double c=sqrt(high_wd[i]/low_wd[i]);
@@ -443,6 +445,8 @@ void pop_data::load_data() {
     asym_nsp.push_back(c);
     scale_wd.push_back(d);
     scale_nsp.push_back(d);
+    lo_nsp.push_back(low_wd[i]);
+    hi_nsp.push_back(high_wd[i]);
   }
   for (size_t i=0; i<name_lx.size(); i++) {
     double c=sqrt(high_lx[i]/low_lx[i]);
@@ -453,6 +457,8 @@ void pop_data::load_data() {
     asym_nsp.push_back(c);
     scale_lx.push_back(d);
     scale_nsp.push_back(d);
+    lo_nsp.push_back(low_lx[i]);
+    hi_nsp.push_back(high_lx[i]);
   }
   
   // Count the total number of stars in all populations

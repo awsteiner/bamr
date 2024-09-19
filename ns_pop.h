@@ -46,6 +46,8 @@ struct pop_data {
   vector<double> mass_nsp;
   vector<double> asym_nsp;
   vector<double> scale_nsp;
+  vector<double> lo_nsp;
+  vector<double> hi_nsp;
 
   /* Count of numbers of stars in each population */
   size_t n_stars;
