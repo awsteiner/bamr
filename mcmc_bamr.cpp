@@ -369,7 +369,7 @@ int mcmc_bamr::mcmc_init() {
     }
   }
   
-  if (nsd->n_sources>0){
+  if (nsd->n_sources>0) {
     for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((string)"log_wgt_")+
                               nsd->source_names[i]);
@@ -403,11 +403,18 @@ int mcmc_bamr::mcmc_init() {
 
   //
   if (true) {
+
     ubvector xt(this->n_params);
     ofstream fout("cp.o2");
     model_data dat;
     for(size_t j=0;j<400;j++) {
-      kp->operator()(xt);
+      if (mcmc_method=="kde" || mcmc_method=="kde_sklearn") {
+        kp->operator()(xt);
+      } else if (mcmc_method=="nsf") {
+        nf->operator()(xt);
+      } else {
+        gpp->operator()(xt);
+      }
       double lwt;
       bool fail=false;
       for(size_t j=0;j<this->n_params;j++) {
@@ -419,9 +426,17 @@ int mcmc_bamr::mcmc_init() {
       }
       if (fail==false) {
         int cpret=bc_arr[0]->compute_point(xt,fout,lwt,dat);
+        double lp;
+        if (mcmc_method=="kde" || mcmc_method=="kde_sklearn") {
+          lp=kp->log_pdf(xt);
+        } else if (mcmc_method=="nsf") {
+          lp=nf->log_pdf(xt);
+        } else {
+          lp=gpp->log_pdf(xt);
+        }
         if (lwt>-700.0) {
           cout << "YY: " << cpret << " " << lwt << " "
-               << kp->log_pdf(xt) << endl;
+               << lp << endl;
         } else {
           cout << "Small likelihood." << endl;
         }
@@ -1209,8 +1224,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
-                       "nflows_nsf",2);
+      nf->set_function("o2sclpy",ten_in,"verbose=1,max_iter=5000",
+                       "nflows_nsf",0);
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
@@ -1288,7 +1303,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       }
       
       gpp=std::shared_ptr<prob_dens_mdim_gaussian<>>
-	    (new prob_dens_mdim_gaussian<>);
+        (new prob_dens_mdim_gaussian<>);
       gpp->set_covar(n_pars,avg,covar);
       gpp->pdg.set_seed(mpi_rank*clock());
       
@@ -1404,6 +1419,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   if (verbose>2) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
+
 #ifdef ANDREW
   //this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
