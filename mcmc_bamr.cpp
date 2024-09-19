@@ -701,6 +701,7 @@ int mcmc_bamr::set_method(std::vector<std::string> &sv, bool itive_com) {
     return 0;
   }
   mcmc_method=sv[1];
+  bc_arr[0]->mcmc_method=sv[1];
   return 0;
 }
 
@@ -958,6 +959,8 @@ int mcmc_bamr::initial_point_last(std::vector<std::string> &sv,
   if (pos!=std::string::npos) {
     fname.replace(pos,6,o2scl::itos(mpi_rank));
   }
+
+  bc_arr[0]->init_file=fname;
 
   // Determine the number of parameters according to the
   // settings

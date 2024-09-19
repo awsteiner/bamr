@@ -155,6 +155,12 @@ namespace bamr {
     /// Model type string
     std::string model_type;
 
+    /// MCMC method type
+    std::string mcmc_method;
+
+    /// Initial point file name
+    std::string init_file;
+
     /// The index of parameters
     o2scl::vec_index pvi;
     
@@ -201,7 +207,7 @@ namespace bamr {
     
     virtual int compute_gw17(const ubvector &, double &, model_data &);
     virtual int compute_gw19(const ubvector &, double &, model_data &);
-    virtual int compute_em(size_t, const ubvector &, double &, model_data &);
+    virtual int compute_ems(size_t, const ubvector &, double &, model_data &);
     virtual int compute_dist(size_t, const ubvector &, double &, model_data &);
     
     /** \brief Fill vector in <tt>line</tt> with data from the
@@ -212,14 +218,15 @@ namespace bamr {
 
   protected:
 
-    bool init_eval=true;
-    bool init_eval2=false;
-    bool final_eval=false;
-    bool atms_fixed=false;
-    int i_call=0;
-    double log_wgt_s;
-    std::vector<bool> atm_s;
+    /// If true, initialize the atm parameters
+    bool init_atms=true;
 
+    bool atms_fixed=false;
+
+    /// Vector to store atm parameters
+    std::vector<bool> atms;
+
+    /// Function for Random Walk over atm parameters
     virtual void fix_atms(const ubvector &, model_data &);
     
   };

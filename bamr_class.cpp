@@ -416,12 +416,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
   } else {
 
-    if (final_eval==true) {
-      log_wgt=log_wgt_s;
-      final_eval=false;
-      return 0;
-    }
-
     // Reference to model object for convenience
     model &m=*this->mod;
     
@@ -580,8 +574,38 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     // -----------------------------------------------
     // Determine the atm parameter
 
-    if (init_eval==true) {
-      atm_s.resize(nsd->n_sources);
+    if (mcmc_method==string("hmc")) {
+      if (init_atms==true) {
+        atms.resize(nsd->n_sources);
+
+        table_units<> tin;
+        hdf_file hf;
+        hf.open(init_file);
+        hdf_input(hf,tin);
+        hf.close();
+        
+        bool found=false;
+        for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
+          if (tin.get("thread",row)==0 && 
+              tin.get("walker",row)==0 &&
+              tin.get("mult",row)>0.5) {
+            found=true;
+            for (size_t i=0; i<nsd->n_sources; i++) {
+              atms[i]=tin.get("atm_"+nsd->source_names[i],row);
+            }
+          }
+        }
+        fix_atms(pars,dat);
+        init_atms=false;
+      }
+
+      if (atms_fixed==false) fix_atms(pars,dat);
+
+      for(size_t i=0; i<nsd->n_sources; i++) {
+        dat.sourcet.set("atm",i,atms[i]);
+      }
+    
+    } else {
       for (size_t i=0; i<nsd->n_sources; i++) {
         // Determine H or He from mass parameter
         double mf;
@@ -596,11 +620,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         } else {
           dat.sourcet.set("atm",i,1.0);
         }
-        atm_s[i]=dat.sourcet.get("atm",i);
       }
-      init_eval=false;
-      init_eval2=true;
-    } else if (!atms_fixed) fix_atms(pars,dat);
+    }
+
 
     if (wgt_em.size()!=nsd->n_sources) wgt_em.resize(nsd->n_sources);
     if (fsn_em.size()!=nsd->n_sources) fsn_em.resize(nsd->n_sources);
@@ -1590,7 +1612,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (iret==0 && set->verbose>=1) {
+  if (iret==0 && set->verbose>=2) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
@@ -1612,14 +1634,6 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 
 void bamr_class::fix_atms(const ubvector &pars, model_data &dat) {
-  
-  if (init_eval2==true) {
-    for(size_t i=0; i<nsd->n_sources; i++) {
-      dat.sourcet.set("atm",i,atm_s[i]);
-    }
-    init_eval2=false;
-    return;
-  }
 
   int ret;
   double w_curr, w_next;
@@ -1629,37 +1643,42 @@ void bamr_class::fix_atms(const ubvector &pars, model_data &dat) {
   uniform_real_distribution<double> dr(0.0,1.0);
 
   for(size_t i=0; i<nsd->n_sources; i++) {
-    if (nsd->source_fnames_alt.size()>0) {
 
-      // Randomly set atms
-      if (di(gen)<2) dat.sourcet.set("atm",i,0.0);
-      else dat.sourcet.set("atm",i,1.0);
+    // Set initial value of atm
+    dat.sourcet.set("atm",i,atms[i]);
 
-      // Evaluate current weight
-      ret=compute_em(i, pars, w_curr, dat);
-      if (ret!=0) return;
+    // Evaluate current weight
+    ret=compute_ems(i, pars, w_curr, dat);
+    if (ret!=0) return;
 
-      // Flip atms
+    // Random walk over the atms
+    if (di(gen)<2) {
+      if (dat.sourcet.get("atm",i)>0.5) {
+        dat.sourcet.set("atm",i,0.0);
+      }
+    } else {
       if (dat.sourcet.get("atm",i)<0.5) {
         dat.sourcet.set("atm",i,1.0);
-      } else dat.sourcet.set("atm",i,0.0);
-
-      // Evaluate next weight
-      ret=compute_em(i, pars, w_next, dat);
-      if (ret!=0) return;
-
-      // Metropolis-Hastings
-      if (dr(gen)>exp(w_next-w_curr)) {
-
-        // Reject and flip back
-        if (dat.sourcet.get("atm",i)<0.5) {
-          dat.sourcet.set("atm",i,1.0);
-        } else dat.sourcet.set("atm",i,0.0);
-
-      } // Else accept and keep flipped
+      }
     }
+
+    // Evaluate next weight
+    ret=compute_ems(i, pars, w_next, dat);
+    if (ret!=0) return;
+
+    // Perform Metropolis-Hastings
+    if (dr(gen)>=exp(w_next-w_curr)) {
+
+      // Reject and flip back
+      dat.sourcet.set("atm",i,atms[i]);
+
+    } // Else accept and keep atm as is
+
+    // Store final value of atm
+    atms[i]=dat.sourcet.get("atm",i);
   }
 
+  atms_fixed=true;
   return;
 }
 
@@ -1775,7 +1794,7 @@ int bamr_class::compute_gw19(const ubvector &pars, double &log_wgt,
 }
 
 
-int bamr_class::compute_em(size_t ix, const ubvector &pars, 
+int bamr_class::compute_ems(size_t ix, const ubvector &pars, 
                            double &log_wgt, model_data &dat) {
   model &m=*this->mod;
   ns_pop &nsp = nsd->pop;
@@ -1924,7 +1943,6 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
 
 int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
                               ubvector &grad, model_data &dat) {
-  i_call++;
   model &m=*this->mod;
   size_t np=pars.size();
   ubvector grad_fd(np);
@@ -1979,9 +1997,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
                     (&bamr_class::compute_gw19),this,_2,_3,_4);
 
-  atms_fixed=true;
-  if (i_call%2==0) log_wgt_s=pfx;
-  bool debug_deriv=false;
+  bool debug_deriv=true;
 
   if (debug_deriv) {
     while (ip<np) {
@@ -2013,9 +2029,6 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     ip++;
   }
 
-  atms_fixed=false;
-  if (i_call%2==0) final_eval=true;
-
   if (ip==np_eos) { // w.r.t. M_chirp_det, q, z_cdf
     pfx1=log_w_gw17;
     for (size_t j=0; j<3; j++) {
@@ -2042,7 +2055,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     for(size_t j=0; j<np_src; j++) {
       point_funct pfem;
       pfem=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
-                       (&bamr_class::compute_em),this,ref(j),_2,_3,_4);
+                       (&bamr_class::compute_ems),this,ref(j),_2,_3,_4);
       pfx1=log_w_em[j];
       int ret=numeric_deriv(ip,pars,pfem,pfx1,gfx,dat);
       if (ret!=o2scl::success) {
