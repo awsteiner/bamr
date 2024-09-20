@@ -756,4 +756,4 @@ mlines:
 	-model new_lines -set model_dpdm 1 \
 	-initial-point-last out/ml_pc -mcmc > out/ml.out 2>&1 &
 
-include makefile.aws
+include makefile.user

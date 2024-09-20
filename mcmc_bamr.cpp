@@ -1224,8 +1224,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      nf->set_function("o2sclpy",ten_in,"verbose=1,max_iter=5000",
-                       "nflows_nsf",0);
+      nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
+                       "nflows_nsf",2);
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
