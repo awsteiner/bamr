@@ -402,7 +402,7 @@ int mcmc_bamr::mcmc_init() {
   // -----------------------------------------------------------
 
   //
-  if (true) {
+  if (false) {
 
     ubvector xt(this->n_params);
     ofstream fout("cp.o2");
@@ -443,7 +443,7 @@ int mcmc_bamr::mcmc_init() {
       }
     }
     fout.close();
-    exit(-1);
+    //exit(-1);
   }
   
   if (this->verbose>=2) {
@@ -1048,7 +1048,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   if (true) {
     
     this->n_retrain=0;
-    this->emu_file="interp";
+    this->emu_file="out/run10/run_7_9_10_emulate";
+    this->emuc_file="out/run10/run_7_9_10_classify";
     this->show_emu=1;
     this->max_train_size=10000;
     //this->test_emu_file="test_emu.o2";
@@ -1121,10 +1122,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	(new interpm_python<boost::numeric::ublas::vector<double>,
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("interpm_tf_dnn",
-				     ((std::string)"verbose=1,")+
+				     ((std::string)"verbose=0,")+
 				     "transform_in=quant,"+
                                      "transform_out=quant,"+
-                                     "hlayers=[200,400,200]",1));
+                                     "hlayers=[200,400,200]",0));
       this->emu[0]=ip;
       
       std::shared_ptr<classify_python<boost::numeric::ublas::vector<double>,
@@ -1135,7 +1136,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
          boost::numeric::ublas::vector<int>,
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("classify_sklearn_dtc",
-				     ((std::string)"verbose=2"),2));
+				     ((std::string)"verbose=0"),0));
       this->emuc[0]=cp;
       
     }
@@ -1178,7 +1179,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       else fname="out/nl_train";
     }
     else if (model_type==string("new_poly")) {
-      if (set->model_dpdm==1) fname="out/mp_train";
+      if (set->model_dpdm==1) fname="out/run7/run_7_proposal";
       else fname="out/np_train";
     }
     
@@ -1224,8 +1225,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
-                       "nflows_nsf",2);
+      //nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
+      nf->set_function("o2sclpy",ten_in,"verbose=0,max_iter=500",
+                       "nflows_nsf",0);
       
       // Setting the KDE as the base distribution for the independent
       // conditional probability. The kde_python class does not work
@@ -1421,8 +1423,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 
 #ifdef ANDREW
-  //this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
-  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
+  this->use_classifier=true;
+  this->n_retrain=1000000;
+  this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+  //this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 #else
   this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 #endif
