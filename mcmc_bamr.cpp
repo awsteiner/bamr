@@ -1051,12 +1051,14 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->emu_file="out/run10/run_7_9_10_emulate";
     this->emuc_file="out/run10/run_7_9_10_classify";
     this->show_emu=1;
-    this->max_train_size=10000;
+    this->max_train_size=1000000;
     //this->test_emu_file="test_emu.o2";
 
     this->emu.resize(1);
+    this->emuc.resize(1);
 
-    int intp=3;
+    int intp=4;
+    
     if (intp==1) {
       
       // Set up the shared pointer to the interpolation object
