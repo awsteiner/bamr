@@ -1597,16 +1597,12 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     size_t np=names.size();
     
-    if (hmc_stepper->auto_grad.size()<np) {
-      hmc_stepper->auto_grad.resize(np);
-    }
+    hmc_stepper->auto_grad.resize(np);
     for (size_t i=0; i<np; i++) {
       hmc_stepper->auto_grad[i]=false;
     }
 
-    if (hmc_stepper->hmc_step.size()!=np) {
-      hmc_stepper->hmc_step.resize(np);
-    }
+    hmc_stepper->hmc_step.resize(np);
 
     // Scale the step sizes
     // EoS parameters
@@ -1675,7 +1671,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     // Mass parameters
     pop_data &pd=nsd->pd;
     for (size_t i=0; i<pd.n_stars; i++) {
-      double width=min(pd.lo_nsp[i],pd.hi_nsp[i]);
+      double width=2.0*min(pd.lo_nsp[i],pd.hi_nsp[i]);
       hmc_stepper->hmc_step[34+i]=1.0e-1*width*(high[34+i]-low[34+i]);
     }
 

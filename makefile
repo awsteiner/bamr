@@ -541,7 +541,7 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/files/nl_54a15" \
+	-initial-point-last "out/files/nl_54a0" \
 	-mcmc 
 #> out/nl.log 2>&1 &
 
@@ -617,7 +617,7 @@ npoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/files/np_54a15" \
+	-initial-point-last "out/files/np_54a0" \
 	-mcmc 
 #> out/np.log 2>&1 &
 

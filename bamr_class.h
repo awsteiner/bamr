@@ -219,8 +219,9 @@ namespace bamr {
   protected:
 
     /// If true, initialize the atm parameters
-    bool init_atms=true;
+    bool init_eval=true;
 
+    /// If true, atm parameters are held fixed
     bool atms_fixed=false;
 
     /// Vector to store atm parameters
