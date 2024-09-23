@@ -1050,7 +1050,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     this->n_retrain=0;
     this->emu_file="out/run10/run_7_9_10_emulate";
     this->emuc_file="out/run10/run_7_9_10_classify";
-    this->show_emu=1;
+    this->show_emu=2;
     this->max_train_size=1000000;
     //this->test_emu_file="test_emu.o2";
 
