@@ -1605,68 +1605,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     hmc_stepper->hmc_step.resize(np);
 
     // Scale the step sizes
-    // EoS parameters
-    hmc_stepper->hmc_step[0]=1.0e-2*(high[0]-low[0]); // a
-    hmc_stepper->hmc_step[1]=1.0e-2*(high[1]-low[1]); // alpha
-    hmc_stepper->hmc_step[2]=1.0e-2*(high[2]-low[2]); // param_S
-    hmc_stepper->hmc_step[3]=1.0e-2*(high[3]-low[3]); // param_L
-    
-    if (model_type==string("new_lines")) {
-      hmc_stepper->hmc_step[5]=1.0e-2*(high[5]-low[5]); // trasn1
-      hmc_stepper->hmc_step[7]=1.0e-2*(high[7]-low[7]); // trans2
-      if (set->model_dpdm==1) { // ML
-        hmc_stepper->hmc_step[4]=1.0e-2*(high[4]-low[4]); // csq1
-        hmc_stepper->hmc_step[6]=1.0e-2*(high[6]-low[6]); // csq2
-        hmc_stepper->hmc_step[8]=1.0e-2*(high[8]-low[8]); // csq3
-      } else { // NL
-        hmc_stepper->hmc_step[4]=1.0e-2*(high[4]-low[4]);
-        hmc_stepper->hmc_step[6]=1.0e-2*(high[6]-low[6]);
-        hmc_stepper->hmc_step[8]=1.0e-2*(high[8]-low[8]);
-      }
-    } else if (model_type==string("new_poly")) {
-      hmc_stepper->hmc_step[5]=1.0e-2*(high[5]-low[5]); // trasn1
-      hmc_stepper->hmc_step[7]=1.0e-2*(high[7]-low[7]); // trans2
-      if (set->model_dpdm==1) { // MP
-        hmc_stepper->hmc_step[4]=1.0e-2*(high[4]-low[4]); // exp1
-        hmc_stepper->hmc_step[6]=1.0e-2*(high[6]-low[6]); // exp2
-        hmc_stepper->hmc_step[8]=1.0e-2*(high[8]-low[8]); // exp3
-      } else { // NP
-        hmc_stepper->hmc_step[4]=1.0e-2*(high[4]-low[4]);
-        hmc_stepper->hmc_step[6]=1.0e-2*(high[6]-low[6]);
-        hmc_stepper->hmc_step[8]=1.0e-2*(high[8]-low[8]);
-      }
+    for (size_t i=0; i<34; i++) {
+      hmc_stepper->hmc_step[i]=1.0e-2*(high[i]-low[i]);
     }
-    
-    // GW parameters
-    hmc_stepper->hmc_step[9] =1.0e-2*(high[9]-low[9]);
-    hmc_stepper->hmc_step[10]=1.0e-2*(high[10]-low[10]);
-    hmc_stepper->hmc_step[11]=1.0e-2*(high[11]-low[11]);
-    hmc_stepper->hmc_step[12]=1.0e-2*(high[12]-low[12]);
-    
-    // Mass fraction parameters
-    hmc_stepper->hmc_step[13]=1.0e-2*(high[13]-low[13]);
-    hmc_stepper->hmc_step[14]=1.0e-2*(high[14]-low[14]);
-    hmc_stepper->hmc_step[15]=1.0e-2*(high[15]-low[15]);
-    hmc_stepper->hmc_step[16]=1.0e-2*(high[16]-low[16]);
-    hmc_stepper->hmc_step[17]=1.0e-2*(high[17]-low[17]);
-    hmc_stepper->hmc_step[18]=1.0e-2*(high[18]-low[18]);
-    hmc_stepper->hmc_step[19]=1.0e-2*(high[19]-low[19]);
-    hmc_stepper->hmc_step[20]=1.0e-2*(high[20]-low[20]);
-    hmc_stepper->hmc_step[21]=1.0e-2*(high[21]-low[21]);
-    hmc_stepper->hmc_step[22]=1.0e-2*(high[22]-low[22]);
-    hmc_stepper->hmc_step[23]=1.0e-2*(high[23]-low[23]);
-    hmc_stepper->hmc_step[24]=1.0e-2*(high[24]-low[24]);
-    
-    // Population parameters
-    hmc_stepper->hmc_step[25]=1.0e-2*(high[25]-low[25]);
-    hmc_stepper->hmc_step[26]=1.0e-2*(high[26]-low[26]);
-    hmc_stepper->hmc_step[27]=1.0e-2*(high[27]-low[27]);
-    hmc_stepper->hmc_step[28]=1.0e-2*(high[28]-low[28]);
-    hmc_stepper->hmc_step[29]=1.0e-2*(high[29]-low[29]);
-    hmc_stepper->hmc_step[30]=1.0e-2*(high[30]-low[30]);
-    hmc_stepper->hmc_step[31]=1.0e-2*(high[31]-low[31]);
-    hmc_stepper->hmc_step[32]=1.0e-2*(high[32]-low[32]);
-    hmc_stepper->hmc_step[33]=1.0e-2*(high[33]-low[33]);
     
     // Mass parameters
     pop_data &pd=nsd->pd;
@@ -1681,8 +1622,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     using namespace std::placeholders;
     for (size_t i=0; i<n_threads; i++) {
       gfa[i]=std::bind(std::mem_fn<int(ubvector &,
-        point_funct &,ubvector &,model_data &)>
-        (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5);
+        point_funct &,ubvector &,model_data &,bool &)>
+        (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5,_6);
     }
 
     hmc_stepper->set_gradients(gfa);

@@ -541,9 +541,8 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/files/nl_54a0" \
-	-mcmc 
-#> out/nl.log 2>&1 &
+	-initial-point-last "out/files/nl_54a15" \
+	-mcmc > out/nl.log 2>&1 &
 
 mpoly:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \

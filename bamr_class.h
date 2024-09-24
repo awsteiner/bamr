@@ -58,7 +58,7 @@ namespace bamr {
                             std::vector<double> &,model_data &)> fill_funct;
 
   typedef std::function<int(size_t,ubvector &,point_funct &,
-                            ubvector &, model_data &)> deriv_funct;
+                            ubvector &, model_data &, bool &)> deriv_funct;
 
   /** \brief Compute neutron star structure for each MCMC point
 
@@ -200,7 +200,7 @@ namespace bamr {
                                   double &log_wgt, model_data &dat);
 
     virtual int compute_deriv(ubvector &, point_funct &,
-                              ubvector &, model_data &);
+                              ubvector &, model_data &, bool &);
 
     virtual int numeric_deriv(size_t, ubvector &, point_funct &, 
                               double &, double &, model_data &);
@@ -228,7 +228,7 @@ namespace bamr {
     std::vector<bool> atms;
 
     /// Function for Random Walk over atm parameters
-    virtual void fix_atms(const ubvector &, model_data &);
+    virtual void compute_atms(const ubvector &, model_data &);
     
   };
 

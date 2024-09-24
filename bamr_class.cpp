@@ -593,14 +593,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             }
           }
         }
-        fix_atms(pars,dat);
+        compute_atms(pars,dat);
         init_eval=false;
         cout << "compute_point(): init_eval" << endl;
       }
 
       if (atms_fixed==false) {
-        fix_atms(pars,dat);
-        cout << "compute_point(): fix_atms" << endl;
+        compute_atms(pars,dat);
+        cout << "compute_point(): compute_atms" << endl;
       }
 
       for(size_t i=0; i<nsd->n_sources; i++) {
@@ -1635,7 +1635,7 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 }
 
 
-void bamr_class::fix_atms(const ubvector &pars, model_data &dat) {
+void bamr_class::compute_atms(const ubvector &pars, model_data &dat) {
 
   int ret;
   double w_curr, w_next;
@@ -1944,8 +1944,10 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
 
 
 int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
-                              ubvector &grad, model_data &dat) {
-  bool debug_deriv=false;
+                              ubvector &grad, model_data &dat,
+                              bool &fix_atms) {
+  bool debug_deriv=true;
+  if (fix_atms) atms_fixed=false;
   
   // Call point function once to compute f(x) for numeric_deriv()
   double pfx;
@@ -2008,7 +2010,14 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     ip=0;
   }
 
+  point_funct pf17, pf19;
+  pf17=bind(mem_fn<int(const ubvector &,double &,model_data &)>
+                    (&bamr_class::compute_gw17),this,_2,_3,_4);
+  pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
+                    (&bamr_class::compute_gw19),this,_2,_3,_4);
+
   //------------------------------------------------------------------------- 
+  
   while (ip<np_eos) { // w.r.t. {p}
     if (debug_deriv) grad[ip]=grad_fd[ip];
     else {
@@ -2021,12 +2030,6 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     }
     ip++;
   }
-
-  point_funct pf17, pf19;
-  pf17=bind(mem_fn<int(const ubvector &,double &,model_data &)>
-                    (&bamr_class::compute_gw17),this,_2,_3,_4);
-  pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
-                    (&bamr_class::compute_gw19),this,_2,_3,_4);
 
   if (ip==np_eos) { // w.r.t. M_chirp_det, q, z_cdf
     pfx1=w_gw17;
