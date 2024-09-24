@@ -119,8 +119,8 @@ void mcmc_bamr::file_header(o2scl_hdf::hdf_file &hf) {
 int mcmc_bamr::mcmc_init() {
 
   if (this->verbose>=2) {
-    std::cout << "(rank " << this->mpi_rank
-              << ") Start mcmc_bamr::mcmc_init()." << std::endl;
+    std::cout << "mcmc_bamr::mcmc_init(): Starting rank "
+              << this->mpi_rank << "." << std::endl;
   }
 
   if (bc_arr.size()<1) {
@@ -447,8 +447,8 @@ int mcmc_bamr::mcmc_init() {
   }
   
   if (this->verbose>=2) {
-    std::cout << "(rank " << this->mpi_rank
-              << ") End mcmc_bamr::mcmc_init()." << std::endl;
+    std::cout << "mcmc_bamr::mcmc_init(): Done with rank "
+              << this->mpi_rank << std::endl;
   }
 
   return 0;
@@ -981,8 +981,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   } else {
 
     if (this->verbose>1) {
-      cout << "Parameters index, name, unit, low, high: " << endl;
+      cout << "mcmc_bamr::mcmc_func(): "
+           << "Parameters index, name, unit, low, init. value, high: "
+           << endl;
       for(size_t j=0;j<names.size();j++) {
+        cout << "  ";
         cout.width(3);
         cout << j << " ";
         cout.setf(ios::left);
@@ -1187,8 +1190,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     // Fill input data
     size_t n_pars=names.size(); 
-    cout << "KDE is reading the input table of " << n_pars 
-         << " parameters from file " << fname << endl;
+    cout << "mcmc_bamr::mcmc_fun(): Reading the input table of " << n_pars 
+         << " parameters\n  from file " << fname << endl;
     hf.open(fname);
     hdf_input(hf,tab_in);
     hf.close();
