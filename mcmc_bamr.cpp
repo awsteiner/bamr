@@ -1051,11 +1051,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   if (true) {
     
     this->n_retrain=0;
-    this->emu_file="out/run10/run_7_9_10_emulate";
-    this->emuc_file="out/run10/run_7_9_10_classify";
+    this->emu_file="out/run10/run_1_10_emulate_b";
+    this->emuc_file="out/run10/run_1_10_classify_c";
     this->show_emu=2;
     this->max_train_size=1000000;
-    //this->test_emu_file="test_emu.o2";
 
     this->emu.resize(1);
     this->emuc.resize(1);
@@ -1127,12 +1126,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 	(new interpm_python<boost::numeric::ublas::vector<double>,
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("interpm_tf_dnn",
-				     ((std::string)"verbose=0,")+
+				     ((std::string)"verbose=1,")+
 				     "transform_in=quant,"+
                                      "transform_out=quant,"+
-                                     "hlayers=[200,400,200]",0));
+                                     "epochs=400,hlayers=[200,400,200]",0));
       this->emu[0]=ip;
-      
+
+      /*
       std::shared_ptr<classify_python<boost::numeric::ublas::vector<double>,
                                       boost::numeric::ublas::vector<int>,
                                       o2scl::const_matrix_view_table<>,
@@ -1141,7 +1141,20 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
          boost::numeric::ublas::vector<int>,
 	 o2scl::const_matrix_view_table<>,
 	 o2scl::matrix_view_table<>>("classify_sklearn_dtc",
-				     ((std::string)"verbose=0"),0));
+				     ((std::string)"verbose=1"),0));
+      */
+      std::shared_ptr<classify_python<boost::numeric::ublas::vector<double>,
+                                      boost::numeric::ublas::vector<int>,
+                                      o2scl::const_matrix_view_table<>,
+                                      o2scl::matrix_view_table<>>> cp
+	(new classify_python<boost::numeric::ublas::vector<double>,
+         boost::numeric::ublas::vector<int>,
+	 o2scl::const_matrix_view_table<>,
+	 o2scl::matrix_view_table<>>
+         ("classify_sklearn_mlpc",((std::string)"verbose=1,max_iter=500,")+
+          "hlayers=[200,200]",0));
+      
+      
       this->emuc[0]=cp;
       
     }
@@ -1230,8 +1243,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       
       nf=std::shared_ptr<nflows_python<ubvector>>
         (new nflows_python<ubvector>);
-      //nf->set_function("o2sclpy",ten_in,"verbose=2,max_iter=5000",
-      nf->set_function("o2sclpy",ten_in,"verbose=0,max_iter=500",
+      nf->set_function("o2sclpy",ten_in,"verbose=1,max_iter=5000",
                        "nflows_nsf",0);
       
       // Setting the KDE as the base distribution for the independent

@@ -19,3 +19,4 @@ data/.svn/*
 data/*/.svn/*
 old_rel/.svn/*
 .vscode/*
+makefile.user
