@@ -133,6 +133,8 @@ namespace bamr {
   {
   protected:
 
+    rng<> pw_rng;
+    
     /** \brief The input tensor for the KDE proposal distribution
      */
     o2scl::tensor<> ten_in;

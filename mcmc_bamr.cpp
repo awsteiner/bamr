@@ -401,6 +401,8 @@ int mcmc_bamr::mcmc_init() {
 
   // -----------------------------------------------------------
 
+  rng_set_seed(pw_rng,mpi_size,mpi_rank);
+
   //
   if (false) {
 
@@ -846,7 +848,9 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
       if (use_classifier) {
         ubvector_int outc(1);
         emuc[it]->eval(p,outc);
-        if (outc[0]<=0) {
+        double rc=pw_rng.random();
+        // Allow 10% of points through even if the classifier rejects them
+        if (outc[0]<=0 && rc>0.9) {
           n_class_reject++;
           return 1;
         }
