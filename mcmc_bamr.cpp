@@ -1613,7 +1613,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     pop_data &pd=nsd->pd;
     for (size_t i=0; i<pd.n_stars; i++) {
       double width=2.0*min(pd.lo_nsp[i],pd.hi_nsp[i]);
-      hmc_stepper->hmc_step[34+i]=1.0e-1*width*(high[34+i]-low[34+i]);
+      hmc_stepper->hmc_step[34+i]=1.0e-2*width;
     }
 
     hmc_stepper->traj_length=1;
