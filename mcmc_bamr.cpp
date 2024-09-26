@@ -837,15 +837,33 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
   // We have to run the exact code a couple of times to make sure the
   // model data object is filled with data before we run the
   // emulator
-  
+
   if (dat.eos.get_nlines()>0 && dat.mvsr.get_nlines()>0 &&
       dat.gridt.get_nlines()>0 && dat.mvsr.is_constant("R_max") &&
       dat.mvsr.is_constant("P_max") && n_retrain>0) {
     
+    if (n_retrain>0) {
+      if (use_classifier) {
+        ubvector_int outc(1);
+        emuc[it]->eval(p,outc);
+        if (outc[0]<=0) {
+          n_class_reject++;
+          return 1;
+        }
+      }
+      n_total_emu++;
+      ubvector out(1);
+      emu[it]->eval(p,out);
+      log_wgt=out[0];
+    } else {
+      int ret=((*func_ptr)[it])(np,p,log_wgt,dat);
+      return ret;
+    }
+    
     //std::cout << "Point emu. " << &dat << std::endl;
-    ubvector out(1);
-    emu[it]->eval(p,out);
-    log_wgt=out[0];
+    //ubvector out(1);
+    //emu[it]->eval(p,out);
+    //log_wgt=out[0];
     //std::cout << "Point emu done." << std::endl;
     
   } else {
