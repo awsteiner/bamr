@@ -45,7 +45,9 @@ mcmc_bamr::mcmc_bamr() {
   bc_arr[0]=new bamr_class;
   bc_arr[0]->set=set;
   bc_arr[0]->nsd=nsd;
-
+  
+  time_emu=0.0;
+  time_class=0.0;
 }
 
 int mcmc_bamr::threads(std::vector<std::string> &sv, bool itive_com) {
@@ -847,7 +849,9 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
     if (n_retrain>0) {
       if (use_classifier) {
         ubvector_int outc(1);
+        double t0=MPI_Wtime();
         emuc[it]->eval(p,outc);
+        time_class+=MPI_Wtime()-t0;
         double rc=pw_rng.random();
         // Allow 10% of points through even if the classifier rejects them
         if (outc[0]<=0 && rc>0.9) {
@@ -857,7 +861,9 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
       }
       n_total_emu++;
       ubvector out(1);
+      double t1=MPI_Wtime();
       emu[it]->eval(p,out);
+      time_emu+=MPI_Wtime()-t1;
       log_wgt=out[0];
     } else {
       int ret=((*func_ptr)[it])(np,p,log_wgt,dat);

@@ -134,6 +134,8 @@ namespace bamr {
   protected:
 
     rng<> pw_rng;
+    double time_emu;
+    double time_class;
     
     /** \brief The input tensor for the KDE proposal distribution
      */
@@ -275,6 +277,14 @@ namespace bamr {
         the 'set' parameters.
     */
     virtual void setup_cli_mb();
+
+    virtual void outside_parallel() {
+      std::cout << "time_emu: " << time_emu
+                << "time_class: " << time_class << std::endl;
+      o2scl::mcmc_para_emu
+        <point_funct,fill_funct,model_data,ubvector>::outside_parallel();
+      return;
+    }
     
   };
 
