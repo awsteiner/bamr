@@ -854,7 +854,7 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
         time_class+=MPI_Wtime()-t0;
         double rc=pw_rng.random();
         // Allow 10% of points through even if the classifier rejects them
-        n_class_eval++;
+        n_total_class++;
         if (outc[0]<=0 && rc>0.9) {
           n_class_reject++;
           return 1;
