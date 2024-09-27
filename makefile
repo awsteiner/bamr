@@ -463,15 +463,15 @@ test-sync:
 # Misc
 # ----------------------------------------------------------------------
 
-empty: 
+empty:
 
 clean:
 	rm -f *.o bamr bamr_nompi process *.png
 
 # ----------------------------------------------------------------------
 mlines:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
-	-set max_iters 10000 -set file_update_time 1800 \
+	mpirun -np 6 ./bamr -threads 1 -set prefix out/ml \
+	-set max_time 432300 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -503,13 +503,12 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 1 \
-	-initial-point-last "out/files/ml_65a8" \
-	-mcmc 
-#> out/ml.log 2>&1 &
+	-initial-point-last "out/files/ml_65a<rank>" \
+	-mcmc > out/ml.log 2>&1 &
 
 nlines:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
-	-set max_iters 10000 -set file_update_time 1800 \
+	mpirun -np 6 ./bamr -threads 1 -set prefix out/nl \
+	-set max_time 432300 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -541,13 +540,12 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/files/nl_54a15" \
-	-mcmc 
-#> out/nl.log 2>&1 &
+	-initial-point-last "out/files/nl_54a<rank>" \
+	-mcmc > out/nl.log 2>&1 &
 
 mpoly:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
-	-set max_iters 10000 -set file_update_time 1800 \
+	mpirun -np 6 ./bamr -threads 1 -set prefix out/mp \
+	-set max_time 432300 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -579,13 +577,12 @@ mpoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -method hmc -set model_dpdm 1 \
-	-initial-point-last "out/files/mp_56a15" \
-	-mcmc 
-#> out/mp.log 2>&1 &
+	-initial-point-last "out/files/mp_56a<rank>" \
+	-mcmc > out/mp.log 2>&1 &
 
 npoly:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
-	-set max_iters 10000 -set file_update_time 1800 \
+	mpirun -np 6 ./bamr -threads 1 -set prefix out/np \
+	-set max_time 432300 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -617,8 +614,7 @@ npoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/files/np_54a15" \
-	-mcmc
-#> out/np.log 2>&1 &
+	-initial-point-last "out/files/np_54a<rank>" \
+	-mcmc > out/np.log 2>&1 &
 
 include makefile.aws
