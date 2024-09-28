@@ -1261,8 +1261,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       mh_stepper(new mcmc_stepper_mh<point_funct,model_data,
                  ubvector,ubmatrix,prob_cond_mdim_indep<>>);
     stepper=mh_stepper;
+
+    double train_time;
+#ifdef O2SCL_MPI
+    train_time=MPI_Wtime();
+#else
+    train_time=time(0);
+#endif
     
-    // Train the KDE
+    // Train the proposal distribution
     if (mcmc_method==string("nsf")) {
 
       if (verbose>0) {
@@ -1275,9 +1282,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       nf->set_function("o2sclpy",ten_in,"verbose=1,max_iter=5000",
                        "nflows_nsf",0);
       
-      // Setting the KDE as the base distribution for the independent
-      // conditional probability. The kde_python class does not work
-      // for more than one OpenMP thread.
       mh_stepper->proposal.resize(1);
       mh_stepper->proposal[0].set_base(nf);
     
@@ -1373,6 +1377,16 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   }
   
+#ifdef O2SCL_MPI
+    train_time=MPI_Wtime()-train_time;
+#else
+    train_time=time(0)-train_time;
+#endif
+    if (this->verbose>1) {
+      std::cout << "Proposal training time: " << train_time
+                << std::endl;
+    }
+    
 #endif
 
   if (mcmc_method==string("hmc")) {
