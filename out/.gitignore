@@ -1,5 +1,6 @@
 # Ignore all output files
 /*
+# except the followings
 !makefile
 !*.ipynb
-!*.sh
+!*.py
