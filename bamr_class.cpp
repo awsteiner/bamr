@@ -151,7 +151,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
   
 #endif
   
-  if (set->apply_emu) {
+  if (set->emu_tov) {
     return 0;
   } else {
 
@@ -310,7 +310,23 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
   int iret;
 
-  if (set->apply_emu) {
+  if (set->emu_tov) {
+
+    vector<string> eos_pars;
+
+    if (model_type=="new_poly" || model_type=="new_lines") {
+      eos_pars={"a","alpha","param_S","param_L",
+                "","trans1","","trans2",""};
+      if (model_type=="new_poly") {
+        eos_pars[4]="exp1";
+        eos_pars[6]="exp2";
+        eos_pars[8]="exp3";
+      } else {
+        eos_pars[4]="csq1";
+        eos_pars[6]="csq2";
+        eos_pars[8]="csq3";
+      }
+    }
     
 #ifdef O2SCL_NEVER_DEFINED
     

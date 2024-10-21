@@ -76,7 +76,7 @@ namespace bamr {
       crust_from_L=false;
       mpi_load_debug=false;
       data_dir="data";
-      apply_emu=false;
+      emu_tov=false;
       emu_aws=false;
       emu_post=false;
       //emu_train="";
@@ -216,7 +216,7 @@ namespace bamr {
 
     /** \brief If true, include emulator from sklearn
      */
-    bool apply_emu;
+    bool emu_tov;
     
     bool emu_aws;
 
@@ -431,9 +431,9 @@ namespace bamr {
       p_couple_threads.help="help";
       cl.par_list.insert(std::make_pair("couple_threads",&p_couple_threads));
       
-      p_apply_emu.b=&apply_emu;
+      p_apply_emu.b=&emu_tov;
       p_apply_emu.help="Activate emulator";
-      cl.par_list.insert(std::make_pair("apply_emu",&p_apply_emu));
+      cl.par_list.insert(std::make_pair("emu_tov",&p_apply_emu));
 
       p_emu_aws.b=&emu_aws;
       p_emu_aws.help="Activate emulator (v2)";

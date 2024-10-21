@@ -436,7 +436,7 @@ int mcmc_bamr::mcmc_init() {
     return exc_efailed;
   }
 
-  if (set->apply_emu==false) {
+  if (set->emu_tov==false) {
 
     // -----------------------------------------------------------
     // Add columns to table
