@@ -28,9 +28,8 @@
 #define BAMR_CLASS_H
 
 #include <iostream>
-
 #include <boost/numeric/ublas/vector.hpp>
-
+#include <o2scl/interpm_python.h>
 #include <Python.h>
 
 #ifdef BAMR_MPI
@@ -71,22 +70,9 @@ namespace bamr {
   class bamr_class {
 
   public:
-    /*
-      PyObject *train_modFile;
-      PyObject *train_tParam_Names;
-      PyObject *train_trainClass;
-      PyObject *train_instance;
-      PyObject *train_trainMthd;
-      PyObject *train_pArgs;
-      PyObject *addtl_sources;
-      PyObject *train_res;
-      PyObject *train_pTemp;
-      PyObject *train_temp;
-      PyObject *test_show;
-      PyObject *test_vals;
-      PyObject *target_cols;
-      PyObject *target_pred;
-    */
+
+    void train_emu(std::string fname);
+    o2scl::interpm_python<> ip_dtr;
     
     /** \brief If true, include emulator from sklearn
      */

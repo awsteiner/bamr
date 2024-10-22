@@ -470,7 +470,7 @@ clean:
 
 # ----------------------------------------------------------------------
 mlines:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/ml \
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/ml2 \
 	-set max_time 864300 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
@@ -503,8 +503,9 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -method hmc -set model_dpdm 1 \
+	-set emu_tov 1 \
 	-initial-point-last "out/ml_67" \
-	-mcmc > out/ml.log 2>&1 &
+	-mcmc
 
 nlines:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \

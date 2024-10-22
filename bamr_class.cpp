@@ -300,6 +300,56 @@ int bamr_class::fill(const ubvector &pars, double weight,
   
 }
 
+void bamr_class::train_emu(string fname) {
+  
+  vector<string> rads, eosp;
+  o2scl::table_units<> tab;
+
+  if (model_type=="new_poly") {
+    eosp={"a", "alpha", "param_S", "param_L", "exp1", "trans1",
+          "exp2", "trans2", "exp3"};
+  } else if (model_type=="new_lines") {
+    eosp={"a", "alpha", "param_S", "param_L", "csq1", "trans1",
+          "csq2", "trans2", "csq3"};
+  }
+
+  for (size_t i=0;i<100;i++) {
+    rads.push_back("R_"+o2scl::szttos(i));
+  }
+
+  hdf_file hf;
+  hf.open(fname);
+  hdf_input(hf, tab);
+  hf.close();
+
+  tensor tx, ty;
+  vector<size_t> sx={tab.get_nlines(), eosp.size()}; 
+  vector<size_t> sy={tab.get_nlines(), rads.size()};
+
+  tx.resize(2, sx);
+  for(size_t j=0; j<tab.get_nlines(); j++) {
+    vector<size_t> ix;
+    for(size_t i=0;i<eosp.size();i++) {
+      ix={j,i};
+      tx.get(ix)=tab.get(eosp[i],j);
+    }
+  }
+
+  ty.resize(2, sy);
+  for(size_t j=0; j<tab.get_nlines(); j++) {
+    vector<size_t> ix;
+    for(size_t i=0; i<rads.size(); i++) {
+      ix={j,i};
+      ty.get(ix)=tab.get(rads[i],j);
+    }
+  }
+
+  ip_dtr.set_functions("interpm_sklearn_dtr", "verbose=1", 1, "o2sclpy",
+                       "set_data_str", "eval", "eval","eval");
+  ip_dtr.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
+
+}
+
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat) {
   if (set->verbose>=2) {
@@ -307,133 +357,104 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   }
 
   log_wgt=0.0;
-
   int iret;
+
+  // Reference to model object for convenience
+  model &m=*this->mod;
 
   if (set->emu_tov) {
 
-    vector<string> eos_pars;
+    size_t n_eosp=m.n_eos_params;
+    size_t ip=n_eosp-1;
 
-    if (model_type=="new_poly" || model_type=="new_lines") {
-      eos_pars={"a","alpha","param_S","param_L",
-                "","trans1","","trans2",""};
-      if (model_type=="new_poly") {
-        eos_pars[4]="exp1";
-        eos_pars[6]="exp2";
-        eos_pars[8]="exp3";
-      } else {
-        eos_pars[4]="csq1";
-        eos_pars[6]="csq2";
-        eos_pars[8]="csq3";
+    if (init_eval) {
+      train_emu(init_file);
+      init_eval=false;
+    }
+
+    std::vector<double> gm(100);
+    for (size_t i=0; i<100; i++) {
+      gm[i]=0.2+i*(3.0-0.2)/99.0;
+    }
+
+    double m_max=0.0, m_max2=0.0;
+    ubvector ex(n_eosp),  ey(100);
+    ubvector ex2(n_eosp), ey2(100);
+
+    for (size_t i=0; i<n_eosp; i++) {
+      ex[i]=pars[i];
+      ex2[i]=pars[i];
+    }
+
+    ip_dtr.eval(ex, ey);
+
+    dat.mvsr.clear();
+    dat.mvsr.line_of_names("gm r");  
+
+    for (size_t i=0; i<100; i++) {
+      vector<double> line={gm[i], ey[i]};
+      dat.mvsr.line_of_data(2, line);
+      if (dat.mvsr.get("r",i)<=0.0) {
+        dat.mvsr.set("gm",i,0.0);
       }
     }
-    
-#ifdef O2SCL_NEVER_DEFINED
-    
-    // create vector for emulator prediction
-    ubvector test_pars;
-    
-    // copy mcmc param values
-    test_pars = pars;
-    
-    // update emulator parameter vector with H or He atm values
-    if (nsd->n_sources>0) {
+
+    m_max=dat.mvsr.max("gm");
+    dat.mvsr.add_constant("M_max", m_max);
+
+    if (set->mmax_deriv==true) {
+      ex2[ip]*=1.1;
+      ip_dtr.eval(ex2, ey2);
       
-      test_pars.resize(pars.size()+nsd->n_sources);
-      
-      for(size_t i=0; i<pars.size(); i++){
-        test_pars[i] = pars[i];
-      }
-      /* 
-         MCMC paprmeter vector contains moddel params and $mf_$'s
-         from the sources. We calculate "atm" values from the $mf_$'s
-         and pass the additional atm values to the "emy.py". "emu.py"
-         was trained with "atm" columns with the mcmc_params. To 
-         emulate a point we need to update the "atm" values.
-      */      
-      for(size_t i=(pars.size()-nsd->n_sources); i<pars.size(); i++){
-        double atm=pars[i]*1.0e8-((double)((int)(pars[i]*1.0e8)));
-        if(atm<2/3){
-          test_pars[pars.size()] = 0;
-        } else {
-          test_pars[pars.size()] = 1;
+      dat.mvsr.clear();
+      dat.mvsr.line_of_names("gm r");  
+
+      for (size_t i=0; i<100; i++) {
+        vector<double> line={gm[i], ey2[i]};
+        dat.mvsr.line_of_data(2, line);
+        if (dat.mvsr.get("r",i)<=0.0) {
+          dat.mvsr.set("gm",i,0.0);
         }
       }
-    }
 
-    // Create new pylist from param_vals
-    test_vals = PyList_New(test_pars.size());
-    for(size_t i=0; i<test_pars.size(); i++){
-      PyList_SetItem(test_vals, i, PyFloat_FromDouble(test_pars[i]));
-    }
-    
-    /* 
-       As a test, call emu.py:modGpr:show().
-    */
-    if (PyCallable_Check(train_trainMthd)) {
-      target_pred=PyObject_CallObject
-        (train_trainMthd, 
-         PyTuple_Pack(4,PyUnicode_FromString(set->emu_train.c_str()),
-                      train_tParam_Names,test_vals,addtl_sources));
-    }
-    
-    // Finally, set the value of log_wgt equal to the value returned
-    // by the python emulator
-    
-    // Check current MPI rank
-    int mpi_rank = 0;
-#ifdef BAMR_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-#endif
-    
-    // Check current OpenMP thread
-    int pthread=0;
-#ifdef O2SCL_OPENMP      
-    pthread=omp_get_thread_num();
-#endif
-
-    // Prediction vector copied from the python list stored in
-    // target_pred
-    ubvector preds;
-    preds.resize(PyList_Size(target_pred));
-    
-    for (long int i=0; i < PyList_Size(target_pred); i++) {
-      PyObject *pTarget = PyList_GetItem(target_pred, i);
-      preds[i] = PyFloat_AsDouble(pTarget);
-    }
-    
-    log_wgt = preds[0];
-    if (false) {
-      cout << "Emulated log_wgt by rank "<< mpi_rank
-           <<" and thread "<< pthread <<
-        " : " << log_wgt << endl;
-    }
-
-    double pred_Mmax = preds[2];
-    if (pred_Mmax < 2.0) {
-      iret=1;
-    }
-
-    double pred_e_max=preds[3];
-
-    // Check speed of sound causal limit
-    for (size_t i=0;i<100;i++) {
-      double e_i=mod->e_grid[i];
-      if (e_i<pred_e_max) {
-        if (preds[preds.size()-(i+1)] > 1.0) {
-          iret=1;
-        }
+      for (size_t i=0; i<100; i++) {
+        cout << "gm=" << dat.mvsr.get("gm",i) 
+             << ", r=" << dat.mvsr.get("r",i) << endl;
       }
-    }
 
-    iret = 0;
+      m_max2=dat.mvsr.max("gm");
+      dat.mvsr.add_constant("M_max2", m_max2);
+
+      double dpdM=(ex2[ip]-ex[ip])/(m_max2-m_max);
+
+      if (isfinite(dpdM)==false) {
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", m_max2=" << m_max2 << std::endl;
+        iret=m.ix_deriv_infinite;
+        return iret;
+      }
+      
+      if (dpdM<=0.0) {
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
+                << dpdM << std::endl;
+        iret=m.ix_deriv_infinite;
+        return iret;
+      }
+
+      dat.eos.add_constant("dpdM", dpdM);
+      log_wgt+=log(dpdM);
+
+      cout << "m_max=" << m_max << ", m_max2=" << m_max2 
+           << ", dpdM=" << dpdM << ", log_wgt=" << log_wgt << endl;
+
+      exit(-1);
+
+    }
     
-#endif
+    // vector_out(cout, ey, true);
+    // exit(0);
 
   } else {
-
-    // Reference to model object for convenience
-    model &m=*this->mod;
     
     // Compute the M vs R curve and return a non-zero value if it failed
     m.compute_star(pars,scr_out,iret,dat,model_type);
