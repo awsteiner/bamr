@@ -247,7 +247,7 @@ int ns_pop::compute_weight(const ubvector &pars, vec_index &pvi,
   skew[2]=pars[pvi["skewness_LMS"]]; 
 
   for (size_t i=0; i<pd.id_nsp.size(); i++) {
-    int j, ret;
+    int j;
     if (i<pd.n_dns) j=0;
     else if (i>=pd.n_dns+pd.n_nswd) j=2;
     else j=1;
@@ -258,13 +258,7 @@ int ns_pop::compute_weight(const ubvector &pars, vec_index &pvi,
     double f_an=asym_norm(mass-M_star, asym, scale);
     double f_sn=skewed_norm(M_star, mean[j], width[j], skew[j]);
     double wgt_star=f_an*f_sn;
-    if (wgt_star<=0.0) {
-      if (j==0) ret=30+i;
-      else if (j==1) ret=60+i;
-      else ret=100+i;
-      log_wgt=0.0;
-      return ret;
-    }
+    if (wgt_star<=0.0) return 100+i;
     log_wgt+=log(wgt_star);
   }
   

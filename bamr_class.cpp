@@ -150,8 +150,27 @@ int bamr_class::fill(const ubvector &pars, double weight,
   }
   
 #endif
+
+  // Reference to model object for convenience
+  model &m=*this->mod;
   
   if (set->emu_tov) {
+    if (m.has_eos) {
+      line.push_back(dat.mvsr.get_constant("M_max"));
+    }
+
+    if (nsd->n_sources>0) {
+      for(size_t i=0;i<nsd->n_sources;i++) {
+        if (dat.eos.is_constant(((std::string)"log_wgt_")+
+                                nsd->source_names[i])){
+          line.push_back(dat.eos.get_constant(((std::string)"log_wgt_")+
+                                              nsd->source_names[i]));
+        } else {
+          line.push_back(-800);
+        }
+      }
+    }
+
     return 0;
   } else {
 
@@ -167,9 +186,6 @@ int bamr_class::fill(const ubvector &pars, double weight,
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("M",i));
     }
-    
-    // Reference to model object for convenience
-    model &m=*this->mod;
 
     if (m.has_eos) {
       for(int i=0;i<set->grid_size;i++) {
@@ -317,6 +333,10 @@ void bamr_class::train_emu(string fname) {
     rads.push_back("R_"+o2scl::szttos(i));
   }
 
+  if (set->mmax_deriv) rads.push_back("dpdM");
+  rads.push_back("I_bar1");
+  rads.push_back("I_bar2");
+
   hdf_file hf;
   hf.open(fname);
   hdf_input(hf, tab);
@@ -365,94 +385,192 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   if (set->emu_tov) {
 
     size_t n_eosp=m.n_eos_params;
-    size_t ip=n_eosp-1;
+    size_t ip=n_eosp-1, sy;
+    size_t n_ligo=nsd->n_ligo_params;
+    
+    if (set->mmax_deriv) sy=103;
+    else sy=102;
 
-    if (init_eval) {
-      train_emu(init_file);
-      init_eval=false;
-    }
+    //---------------------------------------------------------------------
+
+    if (init_eval) train_emu("out/aff_inv/nl_all");
+
+    //---------------------------------------------------------------------
 
     std::vector<double> gm(100);
     for (size_t i=0; i<100; i++) {
       gm[i]=0.2+i*(3.0-0.2)/99.0;
     }
 
-    double m_max=0.0, m_max2=0.0;
-    ubvector ex(n_eosp),  ey(100);
-    ubvector ex2(n_eosp), ey2(100);
+    double m_max=0.0;
+    ubvector ex(n_eosp), ey(sy);
 
     for (size_t i=0; i<n_eosp; i++) {
       ex[i]=pars[i];
-      ex2[i]=pars[i];
     }
 
     ip_dtr.eval(ex, ey);
 
-    dat.mvsr.clear();
-    dat.mvsr.line_of_names("gm r");  
+    //vector_out(cout, pars, true);
+    //cout << endl;
+    //vector_out(cout, ex, true);
+    //cout << endl;
+    //vector_out(cout, ey, true);
+    //cout << endl;
+    //int k;
+    //cin >> k;
 
-    for (size_t i=0; i<100; i++) {
+    dat.mvsr.clear();
+    dat.mvsr.line_of_names("gm r");
+
+    size_t i=0;
+    while (ey[i]>0.0) { 
       vector<double> line={gm[i], ey[i]};
       dat.mvsr.line_of_data(2, line);
-      if (dat.mvsr.get("r",i)<=0.0) {
-        dat.mvsr.set("gm",i,0.0);
-      }
+      i++;
     }
 
+    // hdf_file hf;
+    // hf.open_or_create("mvsr.h5");
+    // hdf_output(hf, dat.mvsr, "mvsr");
+    // hf.close();
+
     m_max=dat.mvsr.max("gm");
+
+    if (m_max<set->min_max_mass) {
+      iret=m.ix_small_mmax;
+      cout << "M_max: too small, ix_return=" << iret << endl;
+      scr_out << "Reject: M_max=" << m_max << " < " 
+              << set->min_max_mass << std::endl;
+      return m.ix_small_mmax;
+    } // end of m_max<set->min_max_mass
+
+    dat.m_max=m_max;
     dat.mvsr.add_constant("M_max", m_max);
+    dat.mvsr.add_constant("I_bar1", ey[101]);
+    dat.mvsr.add_constant("I_bar2", ey[102]);
 
     if (set->mmax_deriv==true) {
-      ex2[ip]*=1.1;
-      ip_dtr.eval(ex2, ey2);
-      
-      dat.mvsr.clear();
-      dat.mvsr.line_of_names("gm r");  
+      double dpdm=ey[100];
+      dat.eos.add_constant("dpdM", dpdm);
+      if (set->model_dpdm) log_wgt+=log(dpdm);
+    } // end of set->mmax_deriv
 
-      for (size_t i=0; i<100; i++) {
-        vector<double> line={gm[i], ey2[i]};
-        dat.mvsr.line_of_data(2, line);
-        if (dat.mvsr.get("r",i)<=0.0) {
-          dat.mvsr.set("gm",i,0.0);
+    if (init_eval==true) {
+      table_units<> tin;
+      hdf_file hf;
+      hf.open(init_file);
+      hdf_input(hf,tin);
+      hf.close();
+
+      grad2.resize(pars.size());
+      atms.resize(nsd->n_sources);
+      
+      bool found=false;
+      for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
+        if (tin.get("thread",row)==0 && tin.get("walker",row)==0 &&
+            tin.get("mult",row)>0.5) {
+          found=true;
+          for (size_t i=0; i<nsd->n_sources; i++) {
+            atms[i]=tin.get("atm_"+nsd->source_names[i],row);
+          }
+        }
+      }
+      
+      dat.sourcet.line_of_names("M R atm wgt");
+      dat.sourcet.set_nlines(nsd->n_sources);
+      compute_atms(pars,dat);
+      init_eval=false;
+    } // end of init_eval==true
+
+    dat.sourcet.clear();
+    dat.sourcet.line_of_names("M R atm wgt");
+    dat.sourcet.set_nlines(nsd->n_sources);
+
+    if (atms_fixed==false) compute_atms(pars,dat);
+    
+    for(size_t i=0; i<nsd->n_sources; i++) {
+      dat.sourcet.set("atm",i,atms[i]);
+    }
+
+    dat.mvsr.set_interp_type(o2scl::itp_linear);
+
+    for (size_t i=0; i<nsd->n_sources; i++) {
+      double mf, m_em, r_em, w_em;
+      
+      if (set->inc_ligo) mf=pars[n_eosp+i+n_ligo];
+      else mf=pars[n_eosp+i];
+      
+      m_em=mf*m_max;
+      
+      if (m_em>m_max) {
+        iret=m.ix_gm_exceeds_mmax;
+        cout << "EM: M>M_max, ix_return=" << iret << endl;
+        scr_out << "Reject: M>M_max for EM star " << i << std::endl;
+        return m.ix_gm_exceeds_mmax;
+      }
+
+      r_em=dat.mvsr.interp("gm", m_em, "r");
+      dat.sourcet.set("M", i, m_em);
+      dat.sourcet.set("R", i, r_em);
+
+      // cout << "mass=" << m_em << ", radius=" << r_em << endl;
+
+      iret=compute_ems(i, pars, w_em, dat);
+
+      if (iret!=m.ix_success) {
+        cout << "EM: w=0, ix_return=" << iret << endl;
+        scr_out << "Reject: w=0 for EM star " << i << std::endl;
+        return m.ix_pop_wgt_zero;
+      }
+
+      dat.sourcet.set("wgt", i, exp(w_em));
+      dat.eos.add_constant("log_wgt_"+nsd->source_names[i], w_em);
+      log_wgt+=w_em;
+    } // end of nsd->n_sources
+
+
+    if (set->inc_pop) {
+      ns_pop &nsp=nsd->pop;
+      pop_data &pd=nsd->pd;
+
+      for (size_t i=0; i<pd.n_stars; i++) {
+        if (m_max<pars[pvi[string("M_")+pd.id_nsp[i]]]) {
+          iret=m.ix_gm_exceeds_mmax;
+          cout << "NSP: M>M_max, ix_return=" << iret << endl;
+          scr_out << "Reject: M>M_max for NSP star " << i << std::endl;
+          return m.ix_gm_exceeds_mmax;
         }
       }
 
-      for (size_t i=0; i<100; i++) {
-        cout << "gm=" << dat.mvsr.get("gm",i) 
-             << ", r=" << dat.mvsr.get("r",i) << endl;
+      iret=nsp.compute_weight(pars, pvi, log_wgt);
+
+      if (iret!=m.ix_success) {
+        iret=iret-100;
+        cout << "NSP: w=0, ix_return=" << iret << endl;
+        scr_out << "Reject: w=0 for NSP star " << iret << std::endl;
+        return m.ix_pop_wgt_zero;
       }
+    } // end of set->inc_pop
 
-      m_max2=dat.mvsr.max("gm");
-      dat.mvsr.add_constant("M_max2", m_max2);
-
-      double dpdM=(ex2[ip]-ex[ip])/(m_max2-m_max);
-
-      if (isfinite(dpdM)==false) {
-        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
-                << ", m_max2=" << m_max2 << std::endl;
-        iret=m.ix_deriv_infinite;
-        return iret;
+    if (set->inc_ligo) {
+      double w_gw17, w_gw19;
+      iret=compute_gw17(pars, w_gw17, dat);
+      if (iret!=m.ix_success) {
+        cout << "GW17: w=0, ix_return=" << iret << endl;
+        scr_out << "Reject: w=0 for GW17" << std::endl;
+        return m.ix_pop_wgt_zero;
       }
-      
-      if (dpdM<=0.0) {
-        scr_out << "Rejected: dp/dM is negative: dp/dM="
-                << dpdM << std::endl;
-        iret=m.ix_deriv_infinite;
-        return iret;
+      log_wgt+=w_gw17;
+
+      iret=compute_gw19(pars, w_gw19, dat);
+      if (iret!=m.ix_success) {
+        cout << "GW19: w=0, ix_return=" << iret << endl;
+        scr_out << "Reject: w=0 for GW19" << std::endl;
+        return m.ix_pop_wgt_zero;
       }
-
-      dat.eos.add_constant("dpdM", dpdM);
-      log_wgt+=log(dpdM);
-
-      cout << "m_max=" << m_max << ", m_max2=" << m_max2 
-           << ", dpdM=" << dpdM << ", log_wgt=" << log_wgt << endl;
-
-      exit(-1);
-
-    }
-    
-    // vector_out(cout, ey, true);
-    // exit(0);
+      log_wgt+=w_gw19;
+    } // end of set->inc_ligo
 
   } else {
     
@@ -1738,11 +1856,19 @@ int bamr_class::compute_gw17(const ubvector &pars, double &log_wgt,
 
   double R1=dat.mvsr.interp("gm",m1,"r");
   double R2=dat.mvsr.interp("gm",m2,"r");
-  double I1=dat.mvsr.interp("gm",m1,"rjw")/3.0/schwarz_km;
-  double I2=dat.mvsr.interp("gm",m2,"rjw")/3.0/schwarz_km;
   double G=schwarz_km/2.0;
-  double I_bar1=I1/G/G/m1/m1/m1;
-  double I_bar2=I2/G/G/m2/m2/m2;
+  
+  double I1, I2, I_bar1, I_bar2;
+  if (set->emu_tov) {
+    I_bar1=dat.mvsr.get_constant("I_bar1");
+    I_bar2=dat.mvsr.get_constant("I_bar2");
+  } else {
+    I1=dat.mvsr.interp("gm",m1,"rjw")/3.0/schwarz_km;
+    I2=dat.mvsr.interp("gm",m2,"rjw")/3.0/schwarz_km;
+    I_bar1=I1/G/G/m1/m1/m1;
+    I_bar2=I2/G/G/m2/m2/m2;
+  }
+  
   double b0=-30.5395;
   double b1=38.3931;
   double b2=-16.3071;
@@ -1987,8 +2113,8 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   }
   
   // Call point function once to compute f(x) for numeric_deriv()
-  double pfx;
-  size_t np=pars.size();
+  double pfx, gfx;
+  size_t np=pars.size(), ip=0;
   model &m=*this->mod;
   int f_ret=pf(np, pars, pfx, dat);
   if (f_ret!=0) return m.ix_grad_failed;
@@ -1996,7 +2122,20 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   /*cout.precision(17);
   cout << "compute_deriv(): pfx=" << pfx << endl;
   cout.precision(6);*/
-  
+
+  if (set->emu_tov) {
+    while (ip<np) {
+      int ret=numeric_deriv(ip,pars,pf,pfx,gfx,dat);
+      if (ret!=o2scl::success) {
+        cout << "bamr_class::compute_deriv() failure." << endl;
+        return m.ix_grad_failed;
+      }
+      grad[ip]=gfx;
+      ip++;
+    }
+    return 0;
+  }
+
   ubvector grad_fd(np);
   ns_pop &nsp=nsd->pop;
   pop_data &pd=nsd->pd;
@@ -2005,9 +2144,8 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
   size_t np_src=nsd->n_sources;
   size_t np_dist=nsp.n_pop_params-pd.n_stars;
   size_t np_nsp=pd.n_stars;
-  size_t ip=0;
+  double M_max=dat.m_max, pfx1;
 
-  double M_max=dat.m_max, pfx1, gfx;
   double w_gw17=log(wgt_gw17*fsn_gw17[0]*fsn_gw17[1]); 
   double w_gw19=log(wgt_gw19*fsn_gw19[0]*fsn_gw19[1]);
   vector<double> w_em, w_nsp;
@@ -2044,128 +2182,97 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
     }
     ip=0;
   }
-  
-  bool compute_all=true;
-  /*if (fix_atms==true) {
-    while (ip<np) {
-      if (ip==np_eos+np_ligo) { // w.r.t. mf_*
-        for(size_t j=0; j<np_src; j++) {
-          point_funct pfem;
-          pfem=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
-                           (&bamr_class::compute_ems),this,ref(j),_2,_3,_4);
-          pfx1=w_em[j];
-          int ret=numeric_deriv(ip,pars,pfem,pfx1,gfx,dat);
-          if (ret!=o2scl::success) {
-            cout << "bamr_class::compute_deriv() failure." << endl;
-            return m.ix_grad_failed;
-          }
-          grad[ip]=gfx;
-          ip++;
-        }
-      } else {
-        grad[ip]=grad2[ip];
-        ip++;
-      }
-    }
-    ip=0;
-    fix_atms=false;
-    compute_all=false;
-  }*/
 
-  //------------------------------------------------------------------------- 
+//-------------------------------------------------------------
 
-  if (compute_all==true) {
+  point_funct pf17, pf19;
+  pf17=bind(mem_fn<int(const ubvector &,double &,model_data &)>
+                    (&bamr_class::compute_gw17),this,_2,_3,_4);
+  pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
+                    (&bamr_class::compute_gw19),this,_2,_3,_4);
 
-    point_funct pf17, pf19;
-    pf17=bind(mem_fn<int(const ubvector &,double &,model_data &)>
-                      (&bamr_class::compute_gw17),this,_2,_3,_4);
-    pf19=bind(mem_fn<int(const ubvector &,double &,model_data &)>
-                      (&bamr_class::compute_gw19),this,_2,_3,_4);
-
-    while (ip<np_eos) { // w.r.t. {p}
-      if (debug_deriv) grad[ip]=grad_fd[ip];
-      else {
-        int ret=numeric_deriv(ip,pars,pf,pfx,gfx,dat);
-        if (ret!=o2scl::success) {
-          cout << "bamr_class::compute_deriv() failure." << endl;
-          return m.ix_grad_failed;
-        }
-        grad[ip]=gfx;
-      }
-      ip++;
-    }
-
-    // w.r.t. M_chirp_det, q, z_cdf
-    pfx1=w_gw17;
-    for (size_t j=0; j<3; j++) {
-      int ret=numeric_deriv(ip,pars,pf17,pfx1,gfx,dat);
+  while (ip<np_eos) { // w.r.t. {p}
+    if (debug_deriv) grad[ip]=grad_fd[ip];
+    else {
+      int ret=numeric_deriv(ip,pars,pf,pfx,gfx,dat);
       if (ret!=o2scl::success) {
         cout << "bamr_class::compute_deriv() failure." << endl;
         return m.ix_grad_failed;
       }
       grad[ip]=gfx;
-      ip++;
     }
-  
-    // w.r.t. m1_gw19
-    pfx1=w_gw19;
-    int ret=numeric_deriv(ip,pars,pf19,pfx1,gfx,dat);
+    ip++;
+  }
+
+  // w.r.t. M_chirp_det, q, z_cdf
+  pfx1=w_gw17;
+  for (size_t j=0; j<3; j++) {
+    int ret=numeric_deriv(ip,pars,pf17,pfx1,gfx,dat);
     if (ret!=o2scl::success) {
       cout << "bamr_class::compute_deriv() failure." << endl;
       return m.ix_grad_failed;
     }
     grad[ip]=gfx;
     ip++;
+  }
+  
+  // w.r.t. m1_gw19
+  pfx1=w_gw19;
+  int ret=numeric_deriv(ip,pars,pf19,pfx1,gfx,dat);
+  if (ret!=o2scl::success) {
+    cout << "bamr_class::compute_deriv() failure." << endl;
+    return m.ix_grad_failed;
+  }
+  grad[ip]=gfx;
+  ip++;
 
-    // w.r.t. mf_*
-    for(size_t j=0; j<np_src; j++) {
-      point_funct pfem;
-      pfem=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
-                       (&bamr_class::compute_ems),this,ref(j),_2,_3,_4);
-      pfx1=w_em[j];
-      int ret=numeric_deriv(ip,pars,pfem,pfx1,gfx,dat);
-      if (ret!=o2scl::success) {
-        cout << "bamr_class::compute_deriv() failure." << endl;
-        return m.ix_grad_failed;
-      }
-      grad[ip]=gfx;
-      ip++;
+  // w.r.t. mf_*
+  for(size_t j=0; j<np_src; j++) {
+    point_funct pfem;
+    pfem=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
+                     (&bamr_class::compute_ems),this,ref(j),_2,_3,_4);
+    pfx1=w_em[j];
+    int ret=numeric_deriv(ip,pars,pfem,pfx1,gfx,dat);
+    if (ret!=o2scl::success) {
+      cout << "bamr_class::compute_deriv() failure." << endl;
+      return m.ix_grad_failed;
     }
+    grad[ip]=gfx;
+    ip++;
+  }
   
-    // w.r.t. mean_*, width_*, skew_*
-    for (size_t j=0; j<np_dist; j++) {
-      point_funct pfd;
-      pfd=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
-                    (&bamr_class::compute_dist),this,ref(j),_2,_3,_4);
-      if (j<3) pfx1=log(c_fsn_ns);
-      else if (j>=3 && j<6) pfx1=log(c_fsn_wd);
-      else pfx1=log(c_fsn_lx);
-      int ret=numeric_deriv(ip,pars,pfd,pfx1,gfx,dat);
-      if (ret!=o2scl::success) {
-        cout << "bamr_class::compute_deriv() failure." << endl;
-        return m.ix_grad_failed;
-      }
-      grad[ip]=gfx;
-      ip++;
+  // w.r.t. mean_*, width_*, skew_*
+  for (size_t j=0; j<np_dist; j++) {
+    point_funct pfd;
+    pfd=bind(mem_fn<int(size_t,const ubvector &,double &,model_data &)>
+                  (&bamr_class::compute_dist),this,ref(j),_2,_3,_4);
+    if (j<3) pfx1=log(c_fsn_ns);
+    else if (j>=3 && j<6) pfx1=log(c_fsn_wd);
+    else pfx1=log(c_fsn_lx);
+    int ret=numeric_deriv(ip,pars,pfd,pfx1,gfx,dat);
+    if (ret!=o2scl::success) {
+      cout << "bamr_class::compute_deriv() failure." << endl;
+      return m.ix_grad_failed;
     }
+    grad[ip]=gfx;
+    ip++;
+  }
   
-    // w.r.t. M_*
-    for (size_t j=0; j<np_nsp; j++) {
-      point_funct pfm;
-      pfm=bind(mem_fn<int(size_t,const ubvector &,vec_index &,double &)>
-              (&ns_pop::compute_star),nsd->pop,ref(j),_2,ref(pvi),_3);
-      pfx1=w_nsp[j];
-      int ret=numeric_deriv(ip,pars,pfm,pfx1,gfx,dat);
-      if (ret!=o2scl::success) {
-        cout << "bamr_class::compute_deriv() failure." << endl;
-        return m.ix_grad_failed;
-      }
-      grad[ip]=gfx;
-      ip++;
+  // w.r.t. M_*
+  for (size_t j=0; j<np_nsp; j++) {
+    point_funct pfm;
+    pfm=bind(mem_fn<int(size_t,const ubvector &,vec_index &,double &)>
+            (&ns_pop::compute_star),nsd->pop,ref(j),_2,ref(pvi),_3);
+    pfx1=w_nsp[j];
+    int ret=numeric_deriv(ip,pars,pfm,pfx1,gfx,dat);
+    if (ret!=o2scl::success) {
+      cout << "bamr_class::compute_deriv() failure." << endl;
+      return m.ix_grad_failed;
     }
+    grad[ip]=gfx;
+    ip++;
   }
 
-  // for (size_t j=0; j<np; j++) grad2[j]=grad[j];
 
   if (debug_deriv) {
     cout.precision(2);

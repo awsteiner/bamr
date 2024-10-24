@@ -621,19 +621,22 @@ int mcmc_bamr::mcmc_init() {
       this->table->set_unit("m2_gw19","Msun");
       this->table->new_column("prob_gw19");
     }
-  }
   
-  if (nsd->n_sources>0){
-    for(size_t i=0;i<nsd->n_sources;i++) {
-      this->table->new_column(((string)"log_wgt_")+
-                              nsd->source_names[i]);
+    if (set->inc_pop) {
+      this->table->new_column("log_wgt_NS");
+      this->table->new_column("log_wgt_WD");
+      this->table->new_column("log_wgt_LMS");
+      this->table->new_column("log_wgt_pop");
     }
-  }
-  if (set->inc_pop) {
-    this->table->new_column("log_wgt_NS");
-    this->table->new_column("log_wgt_WD");
-    this->table->new_column("log_wgt_LMS");
-    this->table->new_column("log_wgt_pop");
+  
+  } else {
+    if (m.has_eos) this->table->new_column("M_max");
+    if (nsd->n_sources>0){
+      for(size_t i=0;i<nsd->n_sources;i++) {
+        this->table->new_column("log_wgt_"+
+                                nsd->source_names[i]);
+      }
+    }
   }
   
   // -----------------------------------------------------------
