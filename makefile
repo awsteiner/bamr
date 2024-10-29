@@ -549,7 +549,7 @@ mlines:
 
 nlines:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/test_nl \
-	-set max_iters 1000000 -set file_update_time 1800 \
+	-set max_iters 1000000 -set file_update_time 300 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -623,8 +623,10 @@ mpoly:
 	-mcmc > out/mp.log 2>&1 &
 
 npoly:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/np \
-	-set max_time 864300 -set file_update_time 1800 \
+	mpirun -np 1 ./bamr -threads 1 -set aff_inv 1 \
+  -set couple-threads 0 -set n_walk 300 \
+  -set prefix out/np_emu -set max_iters 1 \
+  -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -655,8 +657,8 @@ npoly:
 	data/nicer/J0740_H_MR_t3d.o2 prob 0.7 table3d \
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
-	-model new_poly -method hmc -set model_dpdm 0 \
-	-initial-point-last "out/np_56" \
+	-model new_poly -set model_dpdm 0 -set emu_tov 1 \
+	-initial-point-last "out/np_new" \
 	-mcmc > out/np.log 2>&1 &
 
 include makefile.aws

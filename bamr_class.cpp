@@ -334,8 +334,8 @@ void bamr_class::train_emu(string fname) {
   }
 
   if (set->mmax_deriv) rads.push_back("dpdM");
-  rads.push_back("I_bar1");
-  rads.push_back("I_bar2");
+  rads.push_back("I1");
+  rads.push_back("I2");
 
   hdf_file hf;
   hf.open(fname);
@@ -364,8 +364,8 @@ void bamr_class::train_emu(string fname) {
     }
   }
 
-  ip_dtr.set_functions("interpm_sklearn_dtr", "verbose=1", 1, "o2sclpy",
-                       "set_data_str", "eval", "eval","eval");
+  ip_dtr.set_functions("interpm_sklearn_dtr", "verbose=1, criterion=absolute_error",
+                        1, "o2sclpy", "set_data_str", "eval", "eval","eval");
   ip_dtr.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
 
 }
@@ -393,7 +393,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     //---------------------------------------------------------------------
 
-    if (init_eval) train_emu("out/aff_inv/nl_all");
+    if (init_eval) train_emu("out/aff_inv/np_all2");
 
     //---------------------------------------------------------------------
 
@@ -411,8 +411,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     ip_dtr.eval(ex, ey);
 
+    /*cout << endl;
+    for (size_t i=0; i<pars.size(); i++) {
+      cout << pvi[i] << " " << pars[i] << endl;
+    }
     //vector_out(cout, pars, true);
-    //cout << endl;
+    cout << endl;*/
     //vector_out(cout, ex, true);
     //cout << endl;
     //vector_out(cout, ey, true);
@@ -447,8 +451,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     dat.m_max=m_max;
     dat.mvsr.add_constant("M_max", m_max);
-    dat.mvsr.add_constant("I_bar1", ey[101]);
-    dat.mvsr.add_constant("I_bar2", ey[102]);
+    dat.mvsr.add_constant("I1", ey[101]);
+    dat.mvsr.add_constant("I2", ey[102]);
 
     if (set->mmax_deriv==true) {
       double dpdm=ey[100];
@@ -1860,14 +1864,15 @@ int bamr_class::compute_gw17(const ubvector &pars, double &log_wgt,
   
   double I1, I2, I_bar1, I_bar2;
   if (set->emu_tov) {
-    I_bar1=dat.mvsr.get_constant("I_bar1");
-    I_bar2=dat.mvsr.get_constant("I_bar2");
+    I1=dat.mvsr.get_constant("I1");
+    I2=dat.mvsr.get_constant("I2");
   } else {
     I1=dat.mvsr.interp("gm",m1,"rjw")/3.0/schwarz_km;
     I2=dat.mvsr.interp("gm",m2,"rjw")/3.0/schwarz_km;
-    I_bar1=I1/G/G/m1/m1/m1;
-    I_bar2=I2/G/G/m2/m2/m2;
   }
+
+  I_bar1=I1/G/G/m1/m1/m1;
+  I_bar2=I2/G/G/m2/m2/m2;
   
   double b0=-30.5395;
   double b1=38.3931;
