@@ -72,13 +72,7 @@ namespace bamr {
   public:
 
     void train_emu(std::string fname);
-    o2scl::interpm_python<> ip_dtr;
-    
-    /** \brief If true, include emulator from sklearn
-     */
-#ifdef O2SCL_NEVER_DEFINED
-    bool apply_emu;
-#endif
+    o2scl::interpm_python<> ip_dnn1, ip_dnn2;
     
     /** \brief If true, use index2 to take derivative of M_max
      */

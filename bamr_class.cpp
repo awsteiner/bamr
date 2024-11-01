@@ -333,40 +333,53 @@ void bamr_class::train_emu(string fname) {
     rads.push_back("R_"+o2scl::szttos(i));
   }
 
-  if (set->mmax_deriv) rads.push_back("dpdM");
-  rads.push_back("I1");
-  rads.push_back("I2");
-
   hdf_file hf;
   hf.open(fname);
   hdf_input(hf, tab);
   hf.close();
 
-  tensor tx, ty;
+  tensor tx, ty, tz;
   vector<size_t> sx={tab.get_nlines(), eosp.size()}; 
   vector<size_t> sy={tab.get_nlines(), rads.size()};
+  vector<size_t> sz={tab.get_nlines(), 1};
 
   tx.resize(2, sx);
   for(size_t j=0; j<tab.get_nlines(); j++) {
-    vector<size_t> ix;
-    for(size_t i=0;i<eosp.size();i++) {
-      ix={j,i};
+    for(size_t i=0; i<eosp.size(); i++) {
+      vector<size_t> ix={j,i};
       tx.get(ix)=tab.get(eosp[i],j);
     }
   }
 
   ty.resize(2, sy);
   for(size_t j=0; j<tab.get_nlines(); j++) {
-    vector<size_t> ix;
     for(size_t i=0; i<rads.size(); i++) {
-      ix={j,i};
+      vector<size_t> ix={j,i};
       ty.get(ix)=tab.get(rads[i],j);
     }
   }
 
-  ip_dtr.set_functions("interpm_sklearn_dtr", "verbose=1, criterion=absolute_error",
-                        1, "o2sclpy", "set_data_str", "eval", "eval","eval");
-  ip_dtr.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
+  tz.resize(2, sz);
+  for(size_t j=0; j<tab.get_nlines(); j++) {
+    vector<size_t> ix={j,0};
+    tz.get(ix)=tab.get("R_max",j);
+  }
+
+  string dnn1_setup="verbose=1,"
+                    "transform_in='minmax_0',"
+                    "transform_out='minmax_0',"
+                    "test_size=0.2,"
+                    "hlayers=[320,512,224],"
+                    "activations=['relu','relu','relu'],"
+                    "out_act='sigmoid',"
+                    "batch_size=128,"
+                    "epochs=200,"
+                    "es_min_delta=1.0e-6,"
+                    "es_patience=10,"
+                    "ls_patience=10";
+  ip_dnn1.set_functions("interpm_tf_dnn", dnn1_setup, 1, "o2sclpy",
+                        "set_data_str", "eval", "eval","eval");
+  ip_dnn1.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
 
 }
 
@@ -385,11 +398,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   if (set->emu_tov) {
 
     size_t n_eosp=m.n_eos_params;
-    size_t ip=n_eosp-1, sy;
+    size_t ip=n_eosp-1, sy=100;
     size_t n_ligo=nsd->n_ligo_params;
-    
-    if (set->mmax_deriv) sy=103;
-    else sy=102;
 
     //---------------------------------------------------------------------
 
@@ -409,7 +419,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       ex[i]=pars[i];
     }
 
-    ip_dtr.eval(ex, ey);
+    ip_dnn1.eval(ex, ey);
 
     /*cout << endl;
     for (size_t i=0; i<pars.size(); i++) {
