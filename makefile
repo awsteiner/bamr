@@ -548,8 +548,8 @@ mlines:
 	-mcmc
 
 nlines:
-	mpirun -np 1 ./bamr -threads 1 -set prefix out/test_nl \
-	-set max_iters 1000000 -set file_update_time 300 \
+	mpirun -np 1 ./bamr -threads 1 -set prefix out/nl \
+	-set max_iters 100 -set file_update_time 300 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -583,7 +583,7 @@ nlines:
 	-model new_lines -method hmc -set emu_tov 1 \
 	-set model_dpdm 0 \
 	-initial-point-last "out/aff_inv/nl_all" \
-	-mcmc > out/nl.log 2>&1 &
+	-mcmc
 
 mpoly:
 	mpirun -np 1 ./bamr -threads 1 -set prefix out/mp \
