@@ -70,8 +70,7 @@ endif
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS_MPI) $(INC_DIRS) $(READLINE_VAR) \
-	$(FFTW_VAR) -DBAMR_MPI $(COMPILER_FLAGS_OPENMP) $(PYTHON_INCLUDES) \
-	-DO2SCL_NO_BOOST_MULTIPRECISION
+	$(FFTW_VAR) -DBAMR_MPI $(COMPILER_FLAGS_OPENMP) $(PYTHON_INCLUDES)
 
 ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
 	$(PYTHON_INCLUDES)
@@ -103,11 +102,8 @@ models.o: models.cpp models.h
 bamr_class.o: bamr_class.cpp bamr_class.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bamr_class.o -c bamr_class.cpp
 
-#bc_wrap.o: bc_wrap.cpp bc_wrap.h models.o main.o nstar_cold2.o
-#	$(MPI_CXX) $(ALL_FLAGS_MPI) -o bc_wrap.o -c bc_wrap.cpp
-
-#emulator_bamr.o: emulator_bamr.cpp emulator_bamr.h
-#	$(MPI_CXX) $(ALL_FLAGS_MPI) -o emulator_bamr.o -c emulator_bamr.cpp
+#emu_tov.o: emu_tov.cpp emu_tov.h
+#	$(MPI_CXX) $(ALL_FLAGS_MPI) -o emu_tov.o -c emu_tov.cpp
 
 mcmc_bamr.o: mcmc_bamr.cpp mcmc_bamr.h models.o main.o nstar_cold2.o
 	$(MPI_CXX) $(ALL_FLAGS_MPI) -o mcmc_bamr.o -c mcmc_bamr.cpp
@@ -157,8 +153,8 @@ models_nompi.o: models.cpp models.h
 ns_data_nompi.o: ns_data.cpp ns_data.h
 	$(CXX) $(ALL_FLAGS) -o ns_data_nompi.o -c ns_data.cpp
 
-#emulator_bamr_nompi.o: emulator_bamr.cpp emulator_bamr.h
-#	$(CXX) $(ALL_FLAGS) -o emulator_bamr_nompi.o -c emulator_bamr.cpp 
+#emu_tov_nompi.o: emu_tov.cpp emu_tov.h
+#	$(CXX) $(ALL_FLAGS) -o emu_tov_nompi.o -c emu_tov.cpp 
 
 mcmc_bamr_nompi.o: mcmc_bamr.cpp mcmc_bamr.h
 	$(CXX) $(ALL_FLAGS) -o mcmc_bamr_nompi.o -c mcmc_bamr.cpp
