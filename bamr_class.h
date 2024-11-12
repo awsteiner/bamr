@@ -72,7 +72,7 @@ namespace bamr {
   public:
 
     void train_emu(std::string fname);
-    o2scl::interpm_python<> ip_dnn1, ip_dnn2;
+    o2scl::interpm_python<> ip_dnn1, ip_dnn2, ip_dnn3;
     
     /** \brief If true, use index2 to take derivative of M_max
      */

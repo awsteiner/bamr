@@ -365,12 +365,21 @@ void bamr_class::train_emu(string fname) {
     tz.get(ix)=tab.get("R_max",j);
   }
 
-  string dnn1_setup="verbose=1, transform_in='minmax_0', transform_out='minmax_0',test_size=0.2, hlayers=[320,512,224], activations=['relu','relu','relu'],out_act='sigmoid', batch_size=128, epochs=200, es_min_delta=1.0e-6, es_patience=10, ls_patience=10";
+  string dnn1_setup=string("verbose=1, transform_in=minmax_1, ")
+                          +"transform_out=minmax_0, test_size=0.2, "
+                          +"hlayers=[100], activations=[relu], "
+                          +"out_act=sigmoid, batch_size=32, epochs=10, "
+                          +"es_min_delta=1.0e-6, es_patience=10, "
+                          +"ls_patience=10";
   ip_dnn1.set_functions("interpm_tf_dnn", dnn1_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
   ip_dnn1.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
 
-  string dnn2_setup="verbose=1, transform_in='minmax_0', transform_out='minmax_0',test_size=0.2, batch_size=128, epochs=200, es_min_delta=1.0e-5,es_patience=10, ls_patience=5";
+  string dnn2_setup=string("verbose=1, transform_in=minmax_0, ")
+                          +"transform_out=minmax_0, test_size=0.2, "
+                          +"hlayers=[100], activations=[relu], "
+                          +"batch_size=32, epochs=10, es_min_delta=1.0e-5, "
+                          +"es_patience=10, ls_patience=5";
   ip_dnn2.set_functions("interpm_tf_dnn", dnn2_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
   ip_dnn2.set_data_tensor(sy[1], sz[1], tab.get_nlines(), ty, tz);
