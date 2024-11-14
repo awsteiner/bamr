@@ -318,72 +318,107 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
 void bamr_class::train_emu(string fname) {
   
-  vector<string> rads, eosp;
+  vector<string> nx1, nx2, nx3, ny1, ny2, ny3;
   o2scl::table_units<> tab;
-
-  if (model_type=="new_poly") {
-    eosp={"a", "alpha", "param_S", "param_L", "exp1", "trans1",
-          "exp2", "trans2", "exp3"};
-  } else if (model_type=="new_lines") {
-    eosp={"a", "alpha", "param_S", "param_L", "csq1", "trans1",
-          "csq2", "trans2", "csq3"};
-  }
-
-  for (size_t i=0;i<100;i++) {
-    rads.push_back("R_"+o2scl::szttos(i));
-  }
 
   hdf_file hf;
   hf.open(fname);
   hdf_input(hf, tab);
   hf.close();
 
-  tensor tx, ty, tz;
-  vector<size_t> sx={tab.get_nlines(), eosp.size()}; 
-  vector<size_t> sy={tab.get_nlines(), rads.size()};
-  vector<size_t> sz={tab.get_nlines(), 1};
+  if (model_type=="new_poly") {
+    nx1={"a", "alpha", "param_S", "param_L", "exp1", "trans1",
+          "exp2", "trans2", "exp3"};
+  } else if (model_type=="new_lines") {
+    nx1={"a", "alpha", "param_S", "param_L", "csq1", "trans1",
+          "csq2", "trans2", "csq3"};
+  }
 
-  tx.resize(2, sx);
+  for (size_t i=0;i<100;i++) {
+    ny1.push_back("R_"+o2scl::szttos(i));
+  }
+
+  nx2=ny1;
+  ny2={"R_max"};
+  nx3=nx1;
+  nx3.push_back("M_chirp_det");
+  nx3.push_back("q");
+  nx3.push_back("z_cdf");
+  ny3={"I1", "I2"};
+
+  tensor tx1, tx2, tx3, ty1, ty2, ty3;
+  vector<size_t> sx1={tab.get_nlines(), nx1.size()}; 
+  vector<size_t> sy1={tab.get_nlines(), ny1.size()};
+  vector<size_t> sx2=sy1;
+  vector<size_t> sy2={tab.get_nlines(), ny2.size()};
+  vector<size_t> sx3={tab.get_nlines(), nx3.size()};
+  vector<size_t> sy3={tab.get_nlines(), ny3.size()};
+
+  tx1.resize(2, sx1);
   for(size_t j=0; j<tab.get_nlines(); j++) {
-    for(size_t i=0; i<eosp.size(); i++) {
+    for(size_t i=0; i<nx1.size(); i++) {
       vector<size_t> ix={j,i};
-      tx.get(ix)=tab.get(eosp[i],j);
+      tx1.get(ix)=tab.get(nx1[i],j);
     }
   }
 
-  ty.resize(2, sy);
+  ty1.resize(2, sy1);
   for(size_t j=0; j<tab.get_nlines(); j++) {
-    for(size_t i=0; i<rads.size(); i++) {
+    for(size_t i=0; i<ny1.size(); i++) {
       vector<size_t> ix={j,i};
-      ty.get(ix)=tab.get(rads[i],j);
+      ty1.get(ix)=tab.get(ny1[i],j);
     }
   }
 
-  tz.resize(2, sz);
+  tx2=ty1;
+
+  ty2.resize(2, sy2);
   for(size_t j=0; j<tab.get_nlines(); j++) {
     vector<size_t> ix={j,0};
-    tz.get(ix)=tab.get("R_max",j);
+    ty2.get(ix)=tab.get(ny2[0],j);
   }
 
-  string dnn1_setup=string("verbose=1, transform_in=minmax_1, ")
-                          +"transform_out=minmax_0, test_size=0.2, "
-                          +"hlayers=[100], activations=[relu], "
-                          +"out_act=sigmoid, batch_size=32, epochs=10, "
-                          +"es_min_delta=1.0e-6, es_patience=10, "
-                          +"ls_patience=10";
+  tx3.resize(2, sx3);
+  for(size_t j=0; j<tab.get_nlines(); j++) {
+    for(size_t i=0; i<nx3.size(); i++) {
+      vector<size_t> ix={j,i};
+      tx3.get(ix)=tab.get(nx3[i],j);
+    }
+  }
+
+  ty3.resize(2, sy3);
+  for(size_t j=0; j<tab.get_nlines(); j++) {
+    for(size_t i=0; i<ny3.size(); i++) {
+      vector<size_t> ix={j,i};
+      ty3.get(ix)=tab.get(ny3[i],j);
+    }
+  }
+
+  string dnn1_setup=string("verbose=1, test_size=0.2, ")+
+                    "transform_in=minmax_1, transform_out=minmax_0, "
+                    +"hlayers=[512,256,512], activations=[relu,relu,relu], "
+                    +"out_act=sigmoid, batch_size=128, epochs=200";
   ip_dnn1.set_functions("interpm_tf_dnn", dnn1_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
-  ip_dnn1.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
+  ip_dnn1.set_data_tensor(sx1[1], sy1[1], tab.get_nlines(), tx1, ty1);
 
-  string dnn2_setup=string("verbose=1, transform_in=minmax_0, ")
-                          +"transform_out=minmax_0, test_size=0.2, "
-                          +"hlayers=[100], activations=[relu], "
-                          +"batch_size=32, epochs=10, es_min_delta=1.0e-5, "
-                          +"es_patience=10, ls_patience=5";
+  string dnn2_setup=string("verbose=1, test_size=0.2, ")+
+                    "transform_in=minmax_1, transform_out=minmax_1, "
+                    +"hlayers=[64,128,32], activations=[relu,relu,relu], "
+                    +"out_act=sigmoid, batch_size=128, epochs=100";
   ip_dnn2.set_functions("interpm_tf_dnn", dnn2_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
-  ip_dnn2.set_data_tensor(sy[1], sz[1], tab.get_nlines(), ty, tz);
+  ip_dnn2.set_data_tensor(sx1[1], sy2[1], tab.get_nlines(), tx1, ty2);
+
+  string dnn3_setup=string("verbose=1, test_size=0.2, ")+
+                    "transform_in=minmax_1, transform_out=minmax_1, "
+                    +"hlayers=[32,128], activations=[relu,relu], "
+                    +"out_act=sigmoid, batch_size=128, epochs=200";
+  ip_dnn3.set_functions("interpm_tf_dnn", dnn3_setup, 1, "o2sclpy",
+                        "set_data_str", "eval", "eval","eval");
+  ip_dnn3.set_data_tensor(sx3[1], sy3[1], tab.get_nlines(), tx3, ty3);
 }
+
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat) {
@@ -398,9 +433,13 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
   model &m=*this->mod;
 
   if (set->emu_tov) {
-
     size_t n_eosp=m.n_eos_params;
-    size_t ip=n_eosp-1, sy=100;
+    size_t sx1=n_eosp;
+    size_t sy1=100;
+    size_t sx2=sy1;
+    size_t sy2=1;
+    size_t sx3=sx1+3;
+    size_t sy3=2;
     size_t n_ligo=nsd->n_ligo_params;
 
     //---------------------------------------------------------------------
@@ -415,43 +454,36 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
 
     double m_max=0.0;
-    ubvector ex(n_eosp), ey(sy);
+    ubvector vx1(sx1), vy1(sy1);
+    ubvector vy2(sy2);
+    ubvector vx3(sx3), vy3(sy3);
 
-    for (size_t i=0; i<n_eosp; i++) {
-      ex[i]=pars[i];
+    for (size_t i=0; i<sx1; i++) vx1[i]=pars[i];
+    for (size_t i=0; i<sx3; i++) vx3[i]=pars[i];
+
+    ip_dnn1.eval(vx1, vy1);
+    ip_dnn2.eval(vx1, vy2);
+    ip_dnn3.eval(vx3, vy3);
+
+    double r_max=vy2[0];
+
+    for (size_t i=sy1-1; i>=0; i--) {
+      if (vy1[i]>r_max) break;
+      vy1[i]=0.0;
     }
-
-    ip_dnn1.eval(ex, ey);
-
-    /*cout << endl;
-    for (size_t i=0; i<pars.size(); i++) {
-      cout << pvi[i] << " " << pars[i] << endl;
-    }
-    //vector_out(cout, pars, true);
-    cout << endl;*/
-    //vector_out(cout, ex, true);
-    //cout << endl;
-    //vector_out(cout, ey, true);
-    //cout << endl;
-    //int k;
-    //cin >> k;
 
     dat.mvsr.clear();
     dat.mvsr.line_of_names("gm r");
 
     size_t i=0;
-    while (ey[i]>0.0) { 
-      vector<double> line={gm[i], ey[i]};
+    while (vy1[i]>0.0) { 
+      vector<double> line={gm[i], vy1[i]};
       dat.mvsr.line_of_data(2, line);
       i++;
     }
 
-    // hdf_file hf;
-    // hf.open_or_create("mvsr.h5");
-    // hdf_output(hf, dat.mvsr, "mvsr");
-    // hf.close();
-
-    m_max=dat.mvsr.max("gm");
+    dat.mvsr.set_interp_type(o2scl::itp_linear);
+    m_max=dat.mvsr.interp("r",r_max,"gm");
 
     if (m_max<set->min_max_mass) {
       iret=m.ix_small_mmax;
@@ -463,11 +495,29 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     dat.m_max=m_max;
     dat.mvsr.add_constant("M_max", m_max);
-    dat.mvsr.add_constant("I1", ey[101]);
-    dat.mvsr.add_constant("I2", ey[102]);
+    dat.mvsr.add_constant("R_max", r_max);
+    dat.mvsr.add_constant("I1", vy3[0]);
+    dat.mvsr.add_constant("I2", vy3[1]);
 
     if (set->mmax_deriv==true) {
-      double dpdm=ey[100];
+      ubvector ex1(sx1), ey1(sy1), ey2(sy2);
+      for (size_t i=0; i<sx1; i++) ex1[i]=pars[i];
+      ex1[sx1-1]*=1.01;
+      ip_dnn1.eval(ex1, ey1);
+      ip_dnn2.eval(ex1, ey2);
+      double r_max2=ey2[0];
+      double m_max2=dat.mvsr.interp("r",r_max2,"gm");
+      double dpdm=(ex1[sx1-1]-vx1[sx1-1])/(m_max2-m_max);
+      if (isfinite(dpdm)==false) {
+        scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
+                << ", m_max2=" << m_max2 << std::endl;
+        return m.ix_deriv_infinite;
+      }
+      if (dpdm<=0.0) {
+        scr_out << "Rejected: dp/dM is negative: dp/dM="
+                << dpdm << std::endl;
+        return m.ix_deriv_infinite;
+      }
       dat.eos.add_constant("dpdM", dpdm);
       if (set->model_dpdm) log_wgt+=log(dpdm);
     } // end of set->mmax_deriv
@@ -508,8 +558,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     for(size_t i=0; i<nsd->n_sources; i++) {
       dat.sourcet.set("atm",i,atms[i]);
     }
-
-    dat.mvsr.set_interp_type(o2scl::itp_linear);
 
     for (size_t i=0; i<nsd->n_sources; i++) {
       double mf, m_em, r_em, w_em;
@@ -1782,7 +1830,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (iret==0 && set->verbose>=2) {
+  if (iret==0 && set->verbose>=1) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
