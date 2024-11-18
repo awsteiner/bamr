@@ -338,18 +338,16 @@ void bamr_class::train_emu(string fname) {
     ny1.push_back("R_"+o2scl::szttos(i));
   }
 
-  nx2=ny1;
-  ny2={"R_max"};
+  ny2={"M_max"};
   nx3=nx1;
   nx3.push_back("M_chirp_det");
   nx3.push_back("q");
   nx3.push_back("z_cdf");
   ny3={"I1", "I2"};
 
-  tensor tx1, tx2, tx3, ty1, ty2, ty3;
+  tensor tx1, ty1, ty2, tx3, ty3;
   vector<size_t> sx1={tab.get_nlines(), nx1.size()}; 
   vector<size_t> sy1={tab.get_nlines(), ny1.size()};
-  vector<size_t> sx2=sy1;
   vector<size_t> sy2={tab.get_nlines(), ny2.size()};
   vector<size_t> sx3={tab.get_nlines(), nx3.size()};
   vector<size_t> sy3={tab.get_nlines(), ny3.size()};
@@ -369,8 +367,6 @@ void bamr_class::train_emu(string fname) {
       ty1.get(ix)=tab.get(ny1[i],j);
     }
   }
-
-  tx2=ty1;
 
   ty2.resize(2, sy2);
   for(size_t j=0; j<tab.get_nlines(); j++) {
@@ -404,7 +400,7 @@ void bamr_class::train_emu(string fname) {
 
   string dnn2_setup=string("verbose=1, test_size=0.2, ")+
                     "transform_in=minmax_1, transform_out=minmax_1, "
-                    +"hlayers=[64,128,32], activations=[relu,relu,relu], "
+                    +"hlayers=[32,64,16], activations=[relu,relu,relu], "
                     +"out_act=sigmoid, batch_size=128, epochs=100";
   ip_dnn2.set_functions("interpm_tf_dnn", dnn2_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
@@ -412,7 +408,7 @@ void bamr_class::train_emu(string fname) {
 
   string dnn3_setup=string("verbose=1, test_size=0.2, ")+
                     "transform_in=minmax_1, transform_out=minmax_1, "
-                    +"hlayers=[32,128], activations=[relu,relu], "
+                    +"hlayers=[96,48,64], activations=[relu,relu,relu], "
                     +"out_act=sigmoid, batch_size=128, epochs=200";
   ip_dnn3.set_functions("interpm_tf_dnn", dnn3_setup, 1, "o2sclpy",
                         "set_data_str", "eval", "eval","eval");
@@ -453,7 +449,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       gm[i]=0.2+i*(3.0-0.2)/99.0;
     }
 
-    double m_max=0.0;
     ubvector vx1(sx1), vy1(sy1);
     ubvector vy2(sy2);
     ubvector vx3(sx3), vy3(sy3);
@@ -465,25 +460,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     ip_dnn2.eval(vx1, vy2);
     ip_dnn3.eval(vx3, vy3);
 
-    double r_max=vy2[0];
-
-    for (size_t i=sy1-1; i>=0; i--) {
-      if (vy1[i]>r_max) break;
-      vy1[i]=0.0;
-    }
-
-    dat.mvsr.clear();
-    dat.mvsr.line_of_names("gm r");
-
-    size_t i=0;
-    while (vy1[i]>0.0) { 
-      vector<double> line={gm[i], vy1[i]};
-      dat.mvsr.line_of_data(2, line);
-      i++;
-    }
-
-    dat.mvsr.set_interp_type(o2scl::itp_linear);
-    m_max=dat.mvsr.interp("r",r_max,"gm");
+    double m_max=vy2[0];
 
     if (m_max<set->min_max_mass) {
       iret=m.ix_small_mmax;
@@ -491,7 +468,29 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       scr_out << "Reject: M_max=" << m_max << " < " 
               << set->min_max_mass << std::endl;
       return m.ix_small_mmax;
-    } // end of m_max<set->min_max_mass
+    }
+
+    dat.mvsr.clear();
+    dat.mvsr2.clear();
+    dat.mvsr.line_of_names("gm r");
+    dat.mvsr2.line_of_names("gm r");
+
+    for (size_t i=0; i<sy1; i++) {
+      vector<double> line={gm[i], vy1[i]};
+      dat.mvsr2.line_of_data(2, line);
+    }
+
+    dat.mvsr2.set_interp_type(o2scl::itp_linear);
+    double r_max=dat.mvsr2.interp("gm",m_max,"r");
+
+    for (size_t i=0; i<sy1; i++) {
+      if (gm[i]<m_max) {
+        vector<double> line={gm[i], vy1[i]};
+        dat.mvsr.line_of_data(2, line);
+        //cout << "gm=" << dat.mvsr.get("gm",i) 
+        //     << ", r=" << dat.mvsr.get("r",i) << endl;
+      }
+    }
 
     dat.m_max=m_max;
     dat.mvsr.add_constant("M_max", m_max);
@@ -500,24 +499,49 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     dat.mvsr.add_constant("I2", vy3[1]);
 
     if (set->mmax_deriv==true) {
+      
       ubvector ex1(sx1), ey1(sy1), ey2(sy2);
       for (size_t i=0; i<sx1; i++) ex1[i]=pars[i];
       ex1[sx1-1]*=1.01;
+      
       ip_dnn1.eval(ex1, ey1);
       ip_dnn2.eval(ex1, ey2);
-      double r_max2=ey2[0];
-      double m_max2=dat.mvsr.interp("r",r_max2,"gm");
+      
+      double m_max2=ey2[0];
+      if (m_max2<set->min_max_mass) {
+        iret=m.ix_small_mmax;
+        cout << "M_max2: too small, ix_return=" << iret << endl;
+        scr_out << "Reject: M_max2=" << m_max2 << " < " 
+                << set->min_max_mass << std::endl;
+        return m.ix_small_mmax;
+      }
+
+      dat.mvsr2.clear();
+      dat.mvsr2.line_of_names("gm r");
+
+      for (size_t i=0; i<sy1; i++) {
+        vector<double> line={gm[i], ey1[i]};
+        dat.mvsr2.line_of_data(2, line);
+      }
+
+      dat.mvsr2.set_interp_type(o2scl::itp_linear);
+      double r_max2=dat.mvsr2.interp("gm",m_max2,"r");
+      
       double dpdm=(ex1[sx1-1]-vx1[sx1-1])/(m_max2-m_max);
+      
       if (isfinite(dpdm)==false) {
+        iret=m.ix_deriv_infinite;
         scr_out << "Rejected: dp/dM is infinite: m_max=" << m_max 
                 << ", m_max2=" << m_max2 << std::endl;
         return m.ix_deriv_infinite;
       }
       if (dpdm<=0.0) {
+        iret=m.ix_deriv_infinite;
         scr_out << "Rejected: dp/dM is negative: dp/dM="
                 << dpdm << std::endl;
         return m.ix_deriv_infinite;
       }
+      
       dat.eos.add_constant("dpdM", dpdm);
       if (set->model_dpdm) log_wgt+=log(dpdm);
     } // end of set->mmax_deriv
@@ -1830,7 +1854,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     }
   }
 
-  if (iret==0 && set->verbose>=1) {
+  if (iret==0 && set->verbose>=2) {
     cout << "bamr_class::compute_point() success:"
          << " log_wgt=" << log_wgt << endl;
   }
