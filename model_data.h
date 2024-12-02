@@ -50,7 +50,6 @@ namespace bamr {
 
     /// M vs. R data
     o2scl::table_units<> mvsr;
-    o2scl::table_units<> mvsr2;
 
     /// EOS data
     o2scl::table_units<> eos;
@@ -74,7 +73,6 @@ namespace bamr {
      */
     model_data(const model_data &md) {
       mvsr=md.mvsr;
-      mvsr2=md.mvsr2;
       eos=md.eos;
       gridt=md.gridt;
       sourcet=md.sourcet;
@@ -87,7 +85,6 @@ namespace bamr {
     model_data &operator=(const model_data &md) {
       if (this!=&md) {
         mvsr=md.mvsr;
-        mvsr2=md.mvsr2;
         eos=md.eos;
         gridt=md.gridt;
         sourcet=md.sourcet;
