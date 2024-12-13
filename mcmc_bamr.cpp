@@ -637,13 +637,32 @@ int mcmc_bamr::mcmc_init() {
     }
   
   } else {
-    if (m.has_eos) this->table->new_column("M_max");
-    if (nsd->n_sources>0){
-      for(size_t i=0;i<nsd->n_sources;i++) {
-        this->table->new_column("log_wgt_"+
-                                nsd->source_names[i]);
+
+    for(int i=0; i<set->grid_size; i++) {
+      this->table->new_column(((string)"R_")+o2scl::itos(i));
+      this->table->set_unit(((string)"R_")+o2scl::itos(i),
+                            "km");
+    }
+
+    if (m.has_eos) {
+      this->table->new_column("M_max");
+      this->table->set_unit("M_max","Msun");
+
+      if (set->mmax_deriv) {
+        this->table->new_column("dpdM");
+        this->table->set_unit("dpdM","1/Msun");
+        this->table->new_column("M_max2");
+        this->table->set_unit("M_max2","Msun");
       }
     }
+
+    if (set->inc_ligo) {
+      this->table->new_column("I1");
+      this->table->set_unit("I1","Msun*km^2");
+      this->table->new_column("I2");
+      this->table->set_unit("I2","Msun*km^2");
+    }
+
   }
   
   // -----------------------------------------------------------

@@ -30,17 +30,17 @@ for i in range(y_ncol):
 x, y = x.T, y.T
 x_tr, x_ts, y_tr, y_ts = train_test_split(x, y, test_size=0.1, random_state=42)
 
-DTR=DecisionTreeRegressor(criterion='absolute_error', random_state=42)
-scoring='neg_mean_squared_error'
-cv, n_jobs=10, -1
+DTR = DecisionTreeRegressor(criterion='absolute_error', random_state=42)
+scoring = 'neg_mean_squared_error'
+cv, n_jobs = 10, -1
 hp_dtr = {
-    'max_depth': [18, 20, 22],   # NP: 10, MP: 22
-    'min_samples_leaf': [2],     # NP: 1,  MP: 2
-    #'min_samples_split': [2],   # NP: 2,  MP: 2
+    'max_depth': [20, 22, 24],     # NP: 10, MP: 22, ML: 25, NL: 28
+    'min_samples_leaf': [1, 2, 3], # NP: 1,  MP: 2,  ML: 2,  NL: 3
+    'min_samples_split': [2, 3],   # NP: 2,  MP: 2,  ML: 2,  NL: 2
 }
 gs_dtr = GridSearchCV(estimator=DTR, param_grid=hp_dtr,
-                       scoring=scoring, cv=cv, n_jobs=n_jobs,
-                       return_train_score=True, verbose=2)
+                      scoring=scoring, cv=cv, n_jobs=n_jobs,
+                      return_train_score=True, verbose=2)
 gs_dtr.fit(x_tr, y_tr)
 best_dtr = gs_dtr.best_estimator_
 best_hps = gs_dtr.best_params_

@@ -155,23 +155,25 @@ int bamr_class::fill(const ubvector &pars, double weight,
   model &m=*this->mod;
   
   if (set->emu_tov) {
+    
+    for(int i=0; i<set->grid_size; i++) {
+      line.push_back(dat.gridt.get("R",i));
+    }
+
     if (m.has_eos) {
       line.push_back(dat.mvsr.get_constant("M_max"));
-    }
-
-    if (nsd->n_sources>0) {
-      for(size_t i=0;i<nsd->n_sources;i++) {
-        if (dat.eos.is_constant(((std::string)"log_wgt_")+
-                                nsd->source_names[i])){
-          line.push_back(dat.eos.get_constant(((std::string)"log_wgt_")+
-                                              nsd->source_names[i]));
-        } else {
-          line.push_back(-800);
-        }
+      if (set->mmax_deriv) {
+        line.push_back(dat.eos.get_constant("dpdM"));
+        line.push_back(dat.m_max2);
       }
     }
+    if (set->inc_ligo) {
+      line.push_back(dat.eos.get_constant("I1"));
+      line.push_back(dat.eos.get_constant("I2"));
+    }
 
-    return 0;
+    return o2scl::success;;
+
   } else {
 
     /* These columns are redundant because the output table also 
@@ -331,7 +333,7 @@ void bamr_class::train_emu(string fname) {
   x.push_back("M_chirp_det");
   x.push_back("q");
 
-  for (size_t i=0;i<100;i++) {
+  for (size_t i=0; i<set->grid_size; i++) {
     y.push_back("R_"+o2scl::szttos(i));
   }
 
@@ -366,9 +368,25 @@ void bamr_class::train_emu(string fname) {
     }
   }
 
-  ip_dtr.set_functions("interpm_sklearn_dtr", 
-                       "verbose=1, criterion=absolute_error",
-                        1, "o2sclpy", "set_data_str", "eval", "eval","eval");
+  string options_dtr;
+
+  if (model_type=="new_poly") {
+    if (set->model_dpdm) { // MP
+      options_dtr="max_depth=22, min_samples_leaf=2, min_samples_split=2";
+    } else {               // NP
+      options_dtr="max_depth=10, min_samples_leaf=1, min_samples_split=2";
+    }
+  } else if (model_type=="new_lines") {
+    if (set->model_dpdm) { // ML
+      options_dtr="max_depth=15, min_samples_leaf=1, min_samples_split=3";
+      //options_dtr="verbose=1";
+    } else {               // NL
+      options_dtr="max_depth=28, min_samples_leaf=3, min_samples_split=2";
+    }
+  }
+
+  ip_dtr.set_functions("interpm_sklearn_dtr", options_dtr, 1, 
+                       "o2sclpy", "set_data_str", "eval", "eval","eval");
 
   ip_dtr.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);
 }
@@ -395,7 +413,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (init_eval) {
       string fname;
       if (model_type=="new_lines") {
-        if (set->model_dpdm) fname="out/aff_inv/ml_all";
+        if (set->model_dpdm) fname="out/aff_inv/ml_train2";
         else fname="out/aff_inv/nl_all";
       } else if (model_type=="new_poly") {
         if (set->model_dpdm) fname="out/aff_inv/mp_all";
@@ -404,8 +422,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       train_emu(fname);
     }
 
-    std::vector<double> gm(100);
-    for (size_t i=0; i<100; i++) {
+    std::vector<double> gm(set->grid_size);
+    for (size_t i=0; i<set->grid_size; i++) {
       gm[i]=0.2+i*(3.0-0.2)/99.0;
     }
 
@@ -417,10 +435,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     ip_dtr.eval(ex, ey);
 
-    double m_max=ey[100];
-    double dpdM=ey[101];
-    double I1=ey[102];
-    double I2=ey[103];
+    double m_max=ey[100], dpdM=ey[101], I1=ey[102], I2=ey[103];
 
     //dat.eos.clear();
     dat.mvsr.clear();
@@ -442,60 +457,84 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       return m.ix_small_mmax;
     }
 
-    dat.mvsr.set_interp_type(itp_linear);
-    double r_max=dat.mvsr.interp("gm", m_max, "r");
     double dp=0.01*pars[n_eosp-1];
     double m_max2=m_max+dp/dpdM;
 
     dat.m_max=m_max;
     dat.m_max2=m_max2;
     dat.mvsr.add_constant("M_max", m_max);
-    dat.mvsr.add_constant("R_max", r_max);
     dat.eos.add_constant("dpdM", dpdM);
     dat.eos.add_constant("I1", I1);
     dat.eos.add_constant("I2", I2);
 
-    cout << "M_max=" << m_max << ", R_max=" << r_max << ", dpdM=" << dpdM 
-         << ", I1=" << I1 << ", I2=" << I2 << endl;
+    if (dat.gridt.get_ncolumns()==0) { 
+      dat.gridt.set_nlines(set->grid_size);
+      dat.gridt.new_column("R");
+    }
+
+    for (int i=0; i<set->grid_size; i++) {
+      if (gm[i]<m_max) dat.gridt.set("R",i,ey[i]);
+      else dat.gridt.set("R",i,0.0);
+    }
 
     if (set->model_dpdm) log_wgt+=log(dpdM);
 
-    if (init_eval==true) {
-      table_units<> tin;
-      hdf_file hf;
-      hf.open(init_file);
-      hdf_input(hf,tin);
-      hf.close();
-
-      grad2.resize(pars.size());
-      atms.resize(nsd->n_sources);
-      
-      bool found=false;
-      for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
-        if (tin.get("thread",row)==0 && tin.get("walker",row)==0 &&
-            tin.get("mult",row)>0.5) {
-          found=true;
-          for (size_t i=0; i<nsd->n_sources; i++) {
-            atms[i]=tin.get("atm_"+nsd->source_names[i],row);
-          }
-        }
-      }
-      
+    if (dat.sourcet.get_ncolumns()==0) {
       dat.sourcet.line_of_names("M R atm wgt");
       dat.sourcet.set_nlines(nsd->n_sources);
-      compute_atms(pars,dat);
-      init_eval=false;
-    } // end of init_eval==true
-
-    dat.sourcet.clear();
-    dat.sourcet.line_of_names("M R atm wgt");
-    dat.sourcet.set_nlines(nsd->n_sources);
-
-    if (atms_fixed==false) compute_atms(pars,dat);
-    
-    for(size_t i=0; i<nsd->n_sources; i++) {
-      dat.sourcet.set("atm",i,atms[i]);
     }
+    
+    if (mcmc_method==string("hmc")) {
+      if (init_eval==true) {
+        table_units<> tin;
+        hdf_file hf;
+        hf.open(init_file);
+        hdf_input(hf,tin);
+        hf.close();
+
+        grad2.resize(pars.size());
+        atms.resize(nsd->n_sources);
+      
+        bool found=false;
+        for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
+          if (tin.get("thread",row)==0 && tin.get("walker",row)==0 &&
+              tin.get("mult",row)>0.5) {
+            found=true;
+            for (size_t i=0; i<nsd->n_sources; i++) {
+              atms[i]=tin.get("atm_"+nsd->source_names[i],row);
+            }
+          }
+        }
+      
+        compute_atms(pars,dat);
+      } // end of init_eval==true
+
+      if (atms_fixed==false) compute_atms(pars,dat);
+    
+      for(size_t i=0; i<nsd->n_sources; i++) {
+        dat.sourcet.set("atm",i,atms[i]);
+      }
+    } // End of mcmc_method=="hmc"
+    else {
+
+      for (size_t i=0; i<nsd->n_sources; i++) {
+        // Determine H or He from mass parameter
+        double mf;
+        if (set->inc_ligo) {
+          mf=pars[i+mod->n_eos_params+nsd->n_ligo_params];
+        } else {
+          mf=pars[i+mod->n_eos_params];
+        }
+        double d_atm=mf*1.0e8-((double)((int)(mf*1.0e8)));
+        if (d_atm<2.0/3.0) {
+          dat.sourcet.set("atm",i,0.0);
+        } else {
+          dat.sourcet.set("atm",i,1.0);
+        }
+      }
+    }
+
+    if (init_eval==true) init_eval=false;
 
     for (size_t i=0; i<nsd->n_sources; i++) {
       double mf, m_em, r_em, w_em;
@@ -525,7 +564,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
 
       dat.sourcet.set("wgt", i, exp(w_em));
-      dat.eos.add_constant("log_wgt_"+nsd->source_names[i], w_em);
       log_wgt+=w_em;
     } // end of nsd->n_sources
 
@@ -538,7 +576,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         if (m_max<pars[pvi[string("M_")+pd.id_nsp[i]]]) {
           iret=m.ix_gm_exceeds_mmax;
           cout << "NSP: M>M_max, ix_return=" << iret << endl;
-          scr_out << "Reject: M>M_max for NSP star " << i << std::endl;
+          cout << "Reject: M>M_max for NSP star " << pd.id_nsp[i] << std::endl;
+          cout << "M_max=" << m_max << ", M=" << pars[pvi[string("M_")+pd.id_nsp[i]]] << endl;
           return m.ix_gm_exceeds_mmax;
         }
       }
@@ -569,6 +608,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
       log_wgt+=w_gw19;
     } // end of set->inc_ligo
+
+    cout << "log_wgt=" << log_wgt << endl;
 
   } else {
     
@@ -1871,11 +1912,7 @@ int bamr_class::compute_gw17(const ubvector &pars, double &log_wgt,
   I_bar1=I1/G/G/m1/m1/m1;
   I_bar2=I2/G/G/m2/m2/m2;
   
-  double b0=-30.5395;
-  double b1=38.3931;
-  double b2=-16.3071;
-  double b3=3.36972;
-  double b4=-0.26105;
+  double b0=-30.5395, b1=38.3931, b2=-16.3071, b3=3.36972, b4=-0.26105;
     
   double li=log(I_bar1);
   double li2=li*li;
@@ -1936,6 +1973,7 @@ int bamr_class::compute_gw19(const ubvector &pars, double &log_wgt,
 
   if (m1>M_max || m2>M_max || m1<m2) {
     cout << "GW19: Invalid mass" << endl;
+    cout << "m1=" << m1 << ", m2=" << m2 << ", M_max=" << M_max << endl;
     return -1;
   }
 
@@ -1980,14 +2018,23 @@ int bamr_class::compute_ems(size_t ix, const ubvector &pars,
   
   dat.mvsr.set_interp_type(o2scl::itp_linear);
   double mf=pars[ix+np_eos+np_ligo];
+  //cout << "Compute_ems: Mf: " << mf << endl;
   double mass=mf*M_max;
   double rad=dat.mvsr.interp("gm",mass,"r");
 
   if (mass<set->in_m_min || mass>set->in_m_max || 
       rad<set->in_r_min || rad>set->in_r_max) {
     cout << "EM: Mass or radius of star "
-         << ix << " out of range" << endl;
-    return -1;
+         << nsd->source_names[ix] << " out of range" << endl;
+    cout << "pars[ix]=" << pars[ix+np_eos+np_ligo] << ", mf=" << mf << ", m_max=" << M_max << endl;
+    if (mass<set->in_m_min || mass>set->in_m_max) {
+      cout << "mass=" << mass << ", m_min=" << set->in_m_min << ", m_max=" << set->in_m_max << endl;
+    }
+    if (rad<set->in_r_min || rad>set->in_r_max) {
+      cout << "rad=" << rad << ", r_min=" << set->in_r_min << ", r_max=" << set->in_r_max << endl;
+    }
+    exit(1);
+    //return -1;
   }
 
   string name=nsd->slice_names[ix];
@@ -2098,14 +2145,17 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   double fv1=pfx, fv2, h;
   size_t np=x.size();
 
-  double epsrel=1.0e-6, epsmin=1.0e-15;
+  double epsrel=1.0e-5, epsmin=1.0e-15;
   h=epsrel*abs(x[ix]);
   if (fabs(h)<=epsmin) h=epsrel;
 
   x[ix]+=h;
 
   int func_ret=pf(np, x, fv2, dat);
-  if (func_ret!=o2scl::success) return -1;
+  if (func_ret!=o2scl::success) {
+    cout << "bamr_class::numeric_deriv() failure: ix=" << ix << endl;
+    return -1;
+  }
   x[ix]-=h;
   
   // f(x+h)-f(x)=log[wgt(x)]-log[wgt(x+h)]
