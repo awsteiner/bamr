@@ -207,9 +207,6 @@ namespace bamr {
     /// Vector to store atm parameters
     std::vector<bool> atms;
 
-    /// Vector to store gradients at current point
-    ubvector grad2;
-
     /// Function for Random Walk over atm parameters
     virtual void compute_atms(const ubvector &, model_data &);
     

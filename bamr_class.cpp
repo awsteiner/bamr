@@ -378,10 +378,11 @@ void bamr_class::train_emu(string fname) {
     }
   } else if (model_type=="new_lines") {
     if (set->model_dpdm) { // ML
-      options_dtr="max_depth=15, min_samples_leaf=1, min_samples_split=3";
-      //options_dtr="verbose=1";
+      //options_dtr="max_depth=25, min_samples_leaf=2, min_samples_split=2";
+      options_dtr="verbose=1";
     } else {               // NL
-      options_dtr="max_depth=28, min_samples_leaf=3, min_samples_split=2";
+      //options_dtr="max_depth=28, min_samples_leaf=3, min_samples_split=2";
+      options_dtr="verbose=1";
     }
   }
 
@@ -394,9 +395,6 @@ void bamr_class::train_emu(string fname) {
 
 int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out, 
                               double &log_wgt, model_data &dat) {
-  if (set->verbose>=2) {
-    cout << "Begin bamr_class::compute_point()" << endl;
-  }
 
   log_wgt=0.0;
   int iret;
@@ -413,8 +411,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     if (init_eval) {
       string fname;
       if (model_type=="new_lines") {
-        if (set->model_dpdm) fname="out/aff_inv/ml_train2";
-        else fname="out/aff_inv/nl_all";
+        if (set->model_dpdm) fname="out/aff_inv/ml_train";
+        else fname="out/nl_train";
       } else if (model_type=="new_poly") {
         if (set->model_dpdm) fname="out/aff_inv/mp_all";
         else fname="out/aff_inv/np_all";
@@ -492,9 +490,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         hdf_input(hf,tin);
         hf.close();
 
-        grad2.resize(pars.size());
         atms.resize(nsd->n_sources);
-      
         bool found=false;
         for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
           if (tin.get("thread",row)==0 && tin.get("walker",row)==0 &&
@@ -608,8 +604,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       }
       log_wgt+=w_gw19;
     } // end of set->inc_ligo
-
-    cout << "log_wgt=" << log_wgt << endl;
 
   } else {
     
@@ -776,7 +770,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         hdf_input(hf,tin);
         hf.close();
         
-        grad2.resize(pars.size());
         atms.resize(nsd->n_sources);
         bool found=false;
         for(size_t row=tin.get_nlines()-1; row>=0 && found==false; row--) {
@@ -788,7 +781,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             }
           }
         }
-        compute_atms(pars,dat);
+        atms_fixed=true;
         init_eval=false;
       }
 
@@ -1810,10 +1803,6 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
          << " log_wgt=" << log_wgt << endl;
   }
 
-  if (set->verbose>=2) {
-    cout << "End of bamr_class::compute_point()." << endl;
-  }
-
   return iret;
 }
 
@@ -2033,8 +2022,7 @@ int bamr_class::compute_ems(size_t ix, const ubvector &pars,
     if (rad<set->in_r_min || rad>set->in_r_max) {
       cout << "rad=" << rad << ", r_min=" << set->in_r_min << ", r_max=" << set->in_r_max << endl;
     }
-    exit(1);
-    //return -1;
+    return -1;
   }
 
   string name=nsd->slice_names[ix];
@@ -2145,7 +2133,7 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
   double fv1=pfx, fv2, h;
   size_t np=x.size();
 
-  double epsrel=1.0e-5, epsmin=1.0e-15;
+  double epsrel=1.0e-6, epsmin=1.0e-15;
   h=epsrel*abs(x[ix]);
   if (fabs(h)<=epsmin) h=epsrel;
 
