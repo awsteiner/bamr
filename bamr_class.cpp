@@ -2128,9 +2128,10 @@ int bamr_class::compute_dist(size_t ix, const ubvector &pars,
 }
 
 
-int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
+int bamr_class::numeric_deriv(size_t ix, const ubvector &x2, point_funct &pf,
                          double &pfx, double &g, model_data &dat) {
   double fv1=pfx, fv2, h;
+  ubvector x=x2;
   size_t np=x.size();
 
   double epsrel=1.0e-6, epsmin=1.0e-15;
@@ -2153,7 +2154,7 @@ int bamr_class::numeric_deriv(size_t ix, ubvector &x, point_funct &pf,
 }
 
 
-int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
+int bamr_class::compute_deriv(const ubvector &pars, point_funct &pf,
                               ubvector &grad, model_data &dat,
                               bool &fix_atms) {
   bool debug_deriv=false;

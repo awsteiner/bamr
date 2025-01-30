@@ -1634,7 +1634,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 
     // 1/30 fixme
-    /*
+    
     hmc_stepper->hmc_step.resize(np);
 
     // Scale the step sizes
@@ -1654,13 +1654,13 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
     for (size_t i=0; i<n_threads; i++) {
-      gfa[i]=std::bind(std::mem_fn<int(ubvector &,
+      gfa[i]=std::bind(std::mem_fn<int(const ubvector &,
         point_funct &,ubvector &,model_data &,bool &)>
         (&bamr_class::compute_deriv),bc_arr[i],_2,_3,_4,_5,_6);
     }
 
     hmc_stepper->set_gradients(gfa);
-    */
+    
 
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
