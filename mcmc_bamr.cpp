@@ -1142,8 +1142,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     return 1;
   }
 
-  std::vector<std::string> names;
-  std::vector<std::string> units;
+  std::vector<std::string> pnames;
+  std::vector<std::string> punits;
+  std::vector<std::string> dnames;
+  std::vector<std::string> dunits;
 
   vector<double> low, high;
   // Get upper and lower parameter limits and also the column names
@@ -1151,15 +1153,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   // nuisance variables for the data points). The other columns and
   // units are specified in mcmc_init() function manually using a call
   // to table::new_column().
-  bc_arr[0]->mod->get_param_info(names,units,low,high); 
+  bc_arr[0]->mod->get_param_info(pnames,punits,low,high); 
 
-  nsd->data_params(names,units,low,high,set);
+  nsd->data_params(pnames,punits,low,high,set);
   
   if (set->apply_intsc) {
 
     for(size_t i=0;i<nsd->n_sources;i++) {
-      names.push_back(((string)"log10_is_")+nsd->source_names[i]);
-      units.push_back("");
+      pnames.push_back(((string)"log10_is_")+nsd->source_names[i]);
+      punits.push_back("");
       low.push_back(-2.0);
       high.push_back(2.0);
     }
@@ -1172,27 +1174,27 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
     // Set names, units, low, high for population parameters
     for (size_t i=0; i<pop.n_pop_params; i++) {
-      names.push_back(pop.par_names[i]);
-      units.push_back(pop.par_units[i]);
+      pnames.push_back(pop.par_names[i]);
+      punits.push_back(pop.par_units[i]);
       low.push_back(pop.par_low[i]);
       high.push_back(pop.par_high[i]);
     }
-
+    
   }
-
+  
 #ifdef O2SCL_NEVER_DEFINED
- if (set->apply_emu) {    
+  if (set->apply_emu) {    
     for(size_t i=0;i<nsd->n_sources;i++) {
-      names.push_back(((string)"atm_")+o2scl::szttos(i));
-      units.push_back("");
+      pnames.push_back(((string)"atm_")+o2scl::szttos(i));
+      punits.push_back("");
       low.push_back(0.0);
       high.push_back(1.0);
     }
   }
 #endif
-
+  
   // Send names and units to o2scl
-  set_names_units(names,units);
+  set_names_units(pnames,punits,dnames,dunits);
   
   // Set initial points if they have not already been set by the user
   if (this->initial_points.size()==0) {
@@ -1201,7 +1203,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     vector<double> init;
     
     bc_arr[0]->mod->initial_point(init);
-
+    
     nsd->initial_point(set,init);
     
     if (set->apply_intsc) {
@@ -1237,18 +1239,18 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     if (this->verbose>1) {
       cout << "Summary of default initial point: " << endl;
       cout << "Sizes of names, units, low, high, and init: "
-           << names.size() << " " << units.size() << " "
+           << pnames.size() << " " << punits.size() << " "
            << low.size() << " " << high.size() << " "
            << init.size() << endl;
       cout << "Parameter index, name, unit, low, init, high: " << endl;
-      for(size_t j=0;j<names.size();j++) {
+      for(size_t j=0;j<pnames.size();j++) {
         cout.width(3);
         cout << j << " ";
         cout.width(18);
-        cout << names[j] << " ";
+        cout << pnames[j] << " ";
         cout.width(6);
         cout.setf(ios::left);
-        cout << units[j] << " ";
+        cout << punits[j] << " ";
         cout.unsetf(ios::left);
         cout.setf(ios::showpos);
         cout << low[j] << " " << init[j] << " " << high[j];
@@ -1267,15 +1269,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
     if (this->verbose>1) {
       cout << "Parameters index, name, unit, low, high: " << endl;
-      for(size_t j=0;j<names.size();j++) {
+      for(size_t j=0;j<pnames.size();j++) {
         cout.width(3);
         cout << j << " ";
         cout.setf(ios::left);
         cout.width(18);
-        cout << names[j];
+        cout << pnames[j];
         cout << " ";
         cout.width(6);
-        cout << units[j] << " ";
+        cout << punits[j] << " ";
         cout.unsetf(ios::left);
         cout.setf(ios::showpos);
         cout << low[j] << " " << initial_points[0][j] << " "
@@ -1624,13 +1626,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       (new mcmc_stepper_hmc<point_funct,model_data,ubvector>);
     stepper=hmc_stepper;
     
-    size_t np=names.size();
+    size_t np=pnames.size();
     
     hmc_stepper->auto_grad.resize(np);
     for (size_t i=0; i<np; i++) {
       hmc_stepper->auto_grad[i]=false;
     }
 
+    // 1/30 fixme
+    /*
     hmc_stepper->hmc_step.resize(np);
 
     // Scale the step sizes
@@ -1656,6 +1660,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 
     hmc_stepper->set_gradients(gfa);
+    */
 
 #ifdef BAMR_MPI
     // Send a message to the next MPI rank
@@ -1670,8 +1675,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   // ---------------------------------------
 
-  for(size_t j=0;j<names.size();j++) {
-    pvi.append(names[j]);
+  for(size_t j=0;j<pnames.size();j++) {
+    pvi.append(pnames[j]);
   }
   // Copy the pvi object from mcmc_bamr to bamr_class so it can
   // be used in compute_point()
@@ -1690,9 +1695,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
 #ifdef ANDREW
-  this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+  this->mcmc_emu(pnames.size(),low2,high2,pfa,ffa,dat_arr);
 #else
-  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
+  this->mcmc_fill(pnames.size(),low2,high2,pfa,ffa,dat_arr);
 #endif
 
 #ifdef O2SCL_NEVER_DEFINED  

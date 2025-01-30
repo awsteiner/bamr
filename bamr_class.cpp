@@ -386,7 +386,7 @@ void bamr_class::train_emu(string fname) {
     }
   }
 
-  ip_dtr.set_functions("interpm_sklearn_dtr", options_dtr, 1, 
+  ip_dtr.set_function("interpm_sklearn_dtr", options_dtr, 1, 
                        "o2sclpy", "set_data_str", "eval", "eval","eval");
 
   ip_dtr.set_data_tensor(sx[1], sy[1], tab.get_nlines(), tx, ty);

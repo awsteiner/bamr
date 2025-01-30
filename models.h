@@ -951,6 +951,15 @@ namespace bamr {
      */
     virtual int calc_e(o2scl::fermion &n, o2scl::fermion &p,
                        o2scl::thermo &th);
+
+    /** \brief Equation of state as a function of baryon, charge,
+        and strangeness density at finite temperature
+    */
+    virtual int calc_temp_f_gen(double nB, double nQ, double nS,
+                                double T, thermo &th) {
+      return 0;
+    }
+    
     
   };
 
