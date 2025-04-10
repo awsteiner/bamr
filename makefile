@@ -541,7 +541,7 @@ mpoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 1 \
-	-initial-point-last "out/mp_60r<rank>" \
+	-initial-point-last "out/mp_62r<rank>" \
 	-mcmc > out/mp.log 2>&1 &
 
 nlines:
@@ -579,7 +579,7 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 0 \
-	-initial-point-last "out/nl_60r<rank>" \
+	-initial-point-last "out/nl_61r<rank>" \
 	-mcmc > out/nl.log 2>&1 &
 
 npoly:

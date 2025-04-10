@@ -725,30 +725,29 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       if (mass<set->in_m_min || mass>set->in_m_max || 
           rad<set->in_r_min || rad>set->in_r_max) {
         scr_out << "Rejected: Mass or radius outside range." << std::endl;
-        scr_out << "M limits: " << set->in_m_min << " "
-                << set->in_m_max << std::endl;
-        scr_out << "R limits: " << set->in_r_min << " "
-                << set->in_r_max << std::endl;
+
+        if (set->verbose>=2) {
+          scr_out << "M limits: " << set->in_m_min << " "
+                  << set->in_m_max << std::endl;
+          scr_out << "R limits: " << set->in_r_min << " "
+                  << set->in_r_max << std::endl;
+        }
         
-        if (nsd->n_sources>0) {
-          scr_out.precision(2);
-          scr_out.setf(ios::showpos);
-          scr_out << "M ";
-        
-          for(size_t j=0;j<nsd->n_sources;j++) {
-            scr_out << dat.sourcet.get("M",j) << " ";
-          }
-        
-          scr_out << std::endl;
-          scr_out << "R ";
-        
-          for(size_t j=0;j<nsd->n_sources;j++) {
-            scr_out << dat.sourcet.get("R",j) << " ";
-          }
-        
-          scr_out << std::endl;
-          scr_out.precision(6);
-          scr_out.unsetf(ios::showpos);
+        if (mass<set->in_m_min) {
+          scr_out << "Mass " << mass << " < " << set->in_m_min 
+                  << " for star " << nsd->source_names[i] << std::endl;
+        }
+        if (mass>set->in_m_max) {
+          scr_out << "Mass " << mass << " > " << set->in_m_max 
+                  << " for star " << nsd->source_names[i] << std::endl;
+        }
+        if (rad<set->in_r_min) {
+          scr_out << "Radius " << rad << " < " << set->in_r_min 
+                  << " for star " << nsd->source_names[i] << std::endl;
+        }
+        if (rad>set->in_r_max) {
+          scr_out << "Radius " << rad << " > " << set->in_r_max 
+                  << " for star " << nsd->source_names[i] << std::endl;
         }
 
         log_wgt=0.0;
