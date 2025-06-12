@@ -469,9 +469,9 @@ clean:
 # ----------------------------------------------------------------------
 
 mlines:
-	mpirun -n 8 ./bamr -threads 2 -set prefix out/ml \
-	-set aff_inv 1 -set couple_threads 1 -set n_walk 256 \
-	-set max_time 605100 -set file_update_time 1800 \
+	mpirun -n 1 ./bamr -threads 1 -set prefix out/ml \
+	-set aff_inv 0 -set couple_threads 0 -set n_walk 1 \
+	-set max_iters 1 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -503,8 +503,9 @@ mlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 1 \
-	-initial-point-last "out/ml_71r<rank>" \
-	-mcmc > out/ml.log 2>&1 &
+	-initial-point-last "out/ml70_first" \
+	-mcmc 
+#> out/ml.log 2>&1 &
 
 mpoly:
 	mpirun -n 8 ./bamr -threads 2 -set prefix out/mp \
@@ -541,13 +542,13 @@ mpoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 1 \
-	-initial-point-last "out/mp_62r<rank>" \
+	-initial-point-last "out/mp_64r<rank>" \
 	-mcmc > out/mp.log 2>&1 &
 
 nlines:
-	mpirun -n 8 ./bamr -threads 2 -set prefix out/nl \
+	mpirun -n 12 ./bamr -threads 2 -set prefix out/nl \
 	-set aff_inv 1 -set couple_threads 1 -set n_walk 256 \
-	-set max_time 605100 -set file_update_time 1800 \
+	-set max_time 259500 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -579,13 +580,13 @@ nlines:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_lines -set model_dpdm 0 \
-	-initial-point-last "out/nl_61r<rank>" \
+	-initial-point-last "out/nl_56r<rank>" \
 	-mcmc > out/nl.log 2>&1 &
 
 npoly:
-	mpirun -n 8 ./bamr -threads 2 -set prefix out/np \
+	mpirun -n 12 ./bamr -threads 2 -set prefix out/np \
 	-set aff_inv 1 -set couple_threads 1 -set n_walk 256 \
-	-set max_time 605100 -set file_update_time 1800 \
+	-set max_time 259500 -set file_update_time 1800 \
 	-set verbose 1 -set mcmc_verbose 2 \
 	-set min_max_mass 2.0 -set norm_max 0 \
 	-set addl_quants 1 -set inc_baryon_mass 1 \
@@ -617,7 +618,7 @@ npoly:
 	-set apply_intsc 0 -set cached_intsc 0 \
 	-set mmax_deriv 1 -set inc_pop 1 -set inc_ligo 1 \
 	-model new_poly -set model_dpdm 0 \
-	-initial-point-last "out/np_60r<rank>" \
+	-initial-point-last "out/np_56r<rank>" \
 	-mcmc > out/np.log 2>&1 &
 
 

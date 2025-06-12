@@ -443,13 +443,13 @@ int mcmc_bamr::mcmc_init() {
 
     /* These columns are redundant because the output table also 
     contains log_wgt_sources */
-    for(size_t i=0;i<nsd->n_sources;i++) {
+    /* for(size_t i=0;i<nsd->n_sources;i++) {
       this->table->new_column(((std::string)"wgt_")+nsd->source_names[i]);
       if (!set->norm_max) {
         this->table->set_unit(((std::string)"wgt_")+nsd->source_names[i],
                               "1/km/Msun");
       }
-    } 
+    } */
   
     // It is important here that all of these columns which store values
     // over a grid are either always positive or always negative,
@@ -615,25 +615,40 @@ int mcmc_bamr::mcmc_init() {
       this->table->new_column("Lambda2");
       this->table->new_column("Lambdat");
       this->table->new_column("del_Lambdat");    
-      this->table->new_column("prob_gw17");
       this->table->new_column("eta");
       this->table->new_column("m2_gw19");
       this->table->set_unit("m2_gw19","Msun");
-      this->table->new_column("prob_gw19");
+      this->table->new_column("log_wgt_gw17");
+      this->table->new_column("log_wgt_gw19");
+      if (set->inc_pop) {
+        this->table->new_column("log_SN_gw17");
+        this->table->new_column("log_SN_gw19");
+      }
     }
 
     if (nsd->n_sources>0){
       for(size_t i=0;i<nsd->n_sources;i++) {
-        this->table->new_column("log_wgt_"+
-                                nsd->source_names[i]);
+        this->table->new_column("log_wgt_"+nsd->source_names[i]);
+      }
+      if (set->inc_pop) {
+        for (size_t i=0; i<nsd->n_sources; i++) {
+          if (nsd->source_names[i]!=string("0030")) {
+            this->table->new_column("log_SN_"+nsd->source_names[i]);
+          }
+        }
       }
     }
   
     if (set->inc_pop) {
       this->table->new_column("log_wgt_NS");
       this->table->new_column("log_wgt_WD");
-      this->table->new_column("log_wgt_LMS");
-      this->table->new_column("log_wgt_pop");
+      this->table->new_column("log_wgt_LX");
+    }
+
+    if (m.has_eos) {
+      if (set->mmax_deriv) {
+        this->table->new_column("log_dpdM");
+      }
     }
   
   } else {

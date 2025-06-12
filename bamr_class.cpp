@@ -118,7 +118,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
     dat.eos.add_constant("Lambda2",0.0);
     dat.eos.add_constant("Lambdat",0.0);
     dat.eos.add_constant("del_Lambdat",0.0); 
-    dat.eos.add_constant("prob_gw17",0.0);
+    dat.eos.add_constant("log_wgt_gw17",0.0);
     dat.eos.add_constant("eta",0.0);
   }
   if (dat.mvsr.is_constant("gm_nb1")==false) {
@@ -164,7 +164,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.mvsr.get_constant("M_max"));
       if (set->mmax_deriv) {
         line.push_back(dat.eos.get_constant("dpdM"));
-        line.push_back(dat.m_max2);
+        line.push_back(dat.eos.get_constant("M_max2"));
       }
     }
     if (set->inc_ligo) {
@@ -178,9 +178,9 @@ int bamr_class::fill(const ubvector &pars, double weight,
 
     /* These columns are redundant because the output table also 
     contains log_wgt_sources */
-    for(size_t i=0;i<nsd->n_sources;i++) {
+    /* for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("wgt",i));
-    } 
+    } */
 
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("R",i));
@@ -220,7 +220,7 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.mvsr.get_constant("M_max"));
       if (set->mmax_deriv) {
         line.push_back(dat.eos.get_constant("dpdM"));
-        line.push_back(dat.m_max2);
+        line.push_back(dat.eos.get_constant("M_max2"));
       }
       line.push_back(dat.mvsr.get_constant("P_max"));
       line.push_back(dat.mvsr.get_constant("e_max"));
@@ -289,10 +289,14 @@ int bamr_class::fill(const ubvector &pars, double weight,
       line.push_back(dat.eos.get_constant("Lambda2"));
       line.push_back(dat.eos.get_constant("Lambdat"));
       line.push_back(dat.eos.get_constant("del_Lambdat"));    
-      line.push_back(dat.eos.get_constant("prob_gw17"));
       line.push_back(dat.eos.get_constant("eta"));
-      line.push_back(mass_gw19[1]);
-      line.push_back(log(wgt_gw19));
+      line.push_back(dat.eos.get_constant("m2_gw19"));
+      line.push_back(dat.eos.get_constant("log_wgt_gw17"));
+      line.push_back(dat.eos.get_constant("log_wgt_gw19"));
+      if (set->inc_pop) {
+        line.push_back(dat.eos.get_constant("log_SN_gw17"));
+        line.push_back(dat.eos.get_constant("log_SN_gw19"));
+      }
     }
     
     if (nsd->n_sources>0) {
@@ -305,11 +309,25 @@ int bamr_class::fill(const ubvector &pars, double weight,
           line.push_back(-800);
         }
       }
+      if (set->inc_pop) {
+        for (size_t i=0; i<nsd->n_sources; i++) {
+          if (nsd->source_names[i]!=string("0030")) {
+            line.push_back(dat.eos.get_constant(std::string("log_SN_")+
+                                                nsd->source_names[i]));
+          }
+        }
+      }
     }
     
     if (set->inc_pop) {
       for (size_t i=0; i<wgt_pop.size(); i++) {
         line.push_back(wgt_pop[i]);
+      }
+    }
+
+    if (m.has_eos) {
+      if (set->mmax_deriv) {
+        line.push_back(dat.eos.get_constant("log_dpdM"));
       }
     }
     
@@ -619,7 +637,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
     // If likelihood is also a function of M_max, multiply by dpdM
     if (set->mmax_deriv && set->model_dpdm) {
-      log_wgt+=log(dat.eos.get_constant("dpdM"));
+      log_wgt+=dat.eos.get_constant("log_dpdM");
     }
 
     // Calculate likelihood if using mass data from populations
@@ -630,7 +648,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
       double M_max=dat.mvsr.max("gm");
       
-      if (wgt_pop.size()!=4) wgt_pop.resize(4);
+      if (wgt_pop.size()!=3) wgt_pop.resize(3);
       wgt_pop[0]=pop.get_weight_ns(pars,pvi,iret);
       
       if (iret!=m.ix_success) {
@@ -658,6 +676,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
+      log_wgt+=wgt_pop[0];
+
       wgt_pop[1]=pop.get_weight_wd(pars,pvi,iret);
       if (iret!=m.ix_success) {
         log_wgt=0.0;
@@ -681,6 +701,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return iret;
         }
       }
+
+      log_wgt+=wgt_pop[1];
 
       wgt_pop[2]=pop.get_weight_lx(pars,pvi,iret);
       if (iret!=m.ix_success) {
@@ -706,11 +728,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
       }
 
-      wgt_pop[3]=wgt_pop[0]+wgt_pop[1]+wgt_pop[2];
-      log_wgt+=wgt_pop[3];
+      log_wgt+=wgt_pop[2];
       
-      /* cout << "Final pop result: ";
-        vector_out(cout, pop_weights, true); */
     }
 
     // ----------------------------------------------------------------
@@ -916,9 +935,10 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             }
           
             double m_em=mf*m_max_current;
-            double sn_em=pop.skewed_norm(m_em,mean,width,skew);
-            log_wgt+=log(sn_em);
-            fsn_em[i]=sn_em;
+            fsn_em[i]=pop.skewed_norm(m_em,mean,width,skew);
+            log_wgt+=log(fsn_em[i]);
+            dat.eos.add_constant(string("log_SN_")+nsd->source_names[i],
+                                 log(fsn_em[i]));
           } else {
             fsn_em[i]=1.0;
           }
@@ -1286,7 +1306,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                             (out[fix].get_slice(nsd->slice_names[i]))/1.0e8);
           }
                 
-          // If the weight is zero, then return failure
+          // If the weight is still zero, then return failure
           if (dat.sourcet.get("wgt",i)<=0.0) {
             scr_out << "Weight zero for source " << i << " "
                     << nsd->source_names[i]
@@ -1460,7 +1480,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         }
         
         prob_data=prob;          
-        dat.eos.add_constant("prob_gw17",prob_data); 
+        dat.eos.add_constant("log_wgt_gw17",prob_data); 
         log_wgt+=(prob_data);
 
         // Store the output quantities to compute derivatives
@@ -1517,12 +1537,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         return iret;
       }
       wgt_gw19=prob_gw19;
+      dat.eos.add_constant("log_wgt_gw19",log(prob_gw19));
       log_wgt+=log(prob_gw19);
 
       // Store the values of m1 and m2 to compute derivatives
       if (mass_gw19.size()!=2) mass_gw19.resize(2);
       mass_gw19[0]=m1_gw19;
       mass_gw19[1]=m2_gw19;
+      dat.eos.add_constant("m2_gw19",m2_gw19);
       
       // End GW190425
 
@@ -1532,7 +1554,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       // PDF for the GW170817 and GW190425 stars
       if (set->inc_pop) {
         ns_pop &pop = nsd->pop;
-        double mean, width, skew, sn_m1, sn_m2, sn_ligo;
+        double mean, width, skew, sn_m1, sn_m2, sn_gw;
         mean=pars[pvi["mean_NS"]];
         width=pow(10.0, pars[pvi["log10_width_NS"]]);
         skew=pars[pvi["skewness_NS"]];
@@ -1540,11 +1562,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         // GW170817
         sn_m1=pop.skewed_norm(m1,mean,width,skew);
         sn_m2=pop.skewed_norm(m2,mean,width,skew);
-        sn_ligo=sn_m1*sn_m2;
+        sn_gw=sn_m1*sn_m2;
         
         // This is very unlikely, but we should still check if
         // NS-NS probability of m1 or m2 is too small
-        if (sn_ligo<=0.0) {
+        if (sn_gw<=0.0) {
           scr_out << "GW170817: DNS mass probability is zero" << endl;
           log_wgt=0.0;
           iret=m.ix_pop_wgt_zero;
@@ -1553,7 +1575,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return iret;
         }
         
-        log_wgt+=log(sn_ligo);
+        dat.eos.add_constant("log_SN_gw17",log(sn_gw));
+        log_wgt+=log(sn_gw);
 
         if (fsn_gw17.size()!=2) fsn_gw17.resize(2);
         fsn_gw17[0]=sn_m1;
@@ -1562,9 +1585,9 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         // GW190425
         sn_m1=pop.skewed_norm(m1_gw19,mean,width,skew);
         sn_m2=pop.skewed_norm(m2_gw19,mean,width,skew);
-        sn_ligo=sn_m1*sn_m2;
+        sn_gw=sn_m1*sn_m2;
         
-        if (sn_ligo<=0.0) {
+        if (sn_gw<=0.0) {
           scr_out << "GW190425: DNS mass probability is zero" << endl;
           log_wgt=0.0;
           iret=m.ix_pop_wgt_zero;
@@ -1573,7 +1596,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
           return iret;
         }
 
-        log_wgt+=log(sn_ligo);
+        dat.eos.add_constant("log_SN_gw19",log(sn_gw));
+        log_wgt+=log(sn_gw);
 
         if (fsn_gw19.size()!=2) fsn_gw19.resize(2);
         fsn_gw19[0]=sn_m1;

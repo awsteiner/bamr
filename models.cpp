@@ -113,7 +113,7 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
     // ---------------------------------------------------------------
     // Sarah's section part 1 of 2
 
-    if (set->mmax_deriv==true) { 
+    if (set->mmax_deriv==true) {
 
       // Modify the last EoS parameter: exp3 (poly.) or csq3 (lines)
       ubvector pars2=pars;
@@ -571,10 +571,12 @@ void model::compute_star(const ubvector &pars, std::ofstream &scr_out,
                 << dpdM << std::endl;
         ret=ix_deriv_infinite;
         return;
-      } 
+      }
 
       // Add 'dpdM' to the output table
       eost.add_constant("dpdM",dpdM);
+      eost.add_constant("M_max2",dat.m_max2);
+      eost.add_constant("log_dpdM",log(dpdM));
 
     } // End of Sarah's section part 2 of 2
 
