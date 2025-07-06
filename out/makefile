@@ -827,3 +827,189 @@ file-rm:
 #
 #clean:
 #	rm -f figs/*.png figs/*.pdf tmp/*.o2 
+
+
+
+# Explicit list of input files
+FILES := np_66r0 np_66r1 np_66r2 np_66r3 np_66r4 np_66r5 np_66r6 np_66r7
+
+DIR := revs
+
+.PHONY: revise-all
+revise-all:
+	@for f in $(FILES); do \
+	  echo "Processing $$f"; \
+	  acol -read $(DIR)/$$f markov_chain_0 -set precision 16 \
+	    -delete-col log_wgt_6304 -delete-col log_wgt_6397 -delete-col log_wgt_M13 \
+	    -delete-col log_wgt_M28 -delete-col log_wgt_M30 -delete-col log_wgt_wCen \
+	    -delete-col log_wgt_X7 -delete-col log_wgt_1810b -delete-col log_wgt_1724b \
+	    -delete-col log_wgt_1702 -delete-col log_wgt_0030 -delete-col log_wgt_0740 \
+	    -function prob_gw17 log_wgt_gw17 -delete-col prob_gw17 \
+	    -function prob_gw19 log_wgt_gw19 -delete-col prob_gw19 \
+	    -function "10^log10_width_NS" width_NS \
+	    -function "1/sqrt(2*3.1415926535897932)/width_NS" cf \
+	    -function "exp(-0.5*((m1_gw17-mean_NS)/width_NS)^2)" pdf \
+	    -function "1+erf((m1_gw17-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	    -function "cf*pdf*cdf" SN_m1_gw17 \
+	    -function "exp(-0.5*((m2_gw17-mean_NS)/width_NS)^2)" pdf \
+	    -function "1+erf((m2_gw17-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	    -function "cf*pdf*cdf" SN_m2_gw17 \
+		-function "log(SN_m1_gw17*SN_m2_gw17)" log_SN_gw17 \
+		-delete-col SN_m1_gw17 -delete-col SN_m2_gw17 \
+	    -function "exp(-0.5*((m1_gw19-mean_NS)/width_NS)^2)" pdf \
+	    -function "1+erf((m1_gw19-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	    -function "cf*pdf*cdf" SN_m1_gw19 \
+		-function "exp(-0.5*((m2_gw19-mean_NS)/width_NS)^2)" pdf \
+	    -function "1+erf((m2_gw19-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
+	    -function "cf*pdf*cdf" SN_m2_gw19 \
+		-function "log(SN_m1_gw19*SN_m2_gw19)" log_SN_gw19 \
+		-delete-col SN_m1_gw19 -delete-col SN_m2_gw19 -delete-col width_NS \
+	    -function "log(wgt_6304)" log_wgt_6304 -delete-col wgt_6304 \
+	    -function "log(wgt_6397)" log_wgt_6397 -delete-col wgt_6397 \
+	    -function "log(wgt_M13)" log_wgt_M13 -delete-col wgt_M13 \
+	    -function "log(wgt_M28)" log_wgt_M28 -delete-col wgt_M28 \
+	    -function "log(wgt_M30)" log_wgt_M30 -delete-col wgt_M30 \
+	    -function "log(wgt_wCen)" log_wgt_wCen -delete-col wgt_wCen \
+	    -function "log(wgt_X7)" log_wgt_X7 -delete-col wgt_X7 \
+	    -function "log(wgt_1810b)" log_wgt_1810b -delete-col wgt_1810b \
+	    -function "log(wgt_1724b)" log_wgt_1724b -delete-col wgt_1724b \
+	    -function "log(wgt_1702)" log_wgt_1702 -delete-col wgt_1702 \
+	    -function "log(wgt_0030)" log_wgt_0030 -delete-col wgt_0030 \
+	    -function "log(wgt_0740)" log_wgt_0740 -delete-col wgt_0740 \
+	    -function "10^log10_width_LMS" width_LMS \
+	    -function "1/sqrt(2*3.1415926535897932)/width_LMS" cf \
+	    -function "exp(-0.5*((Mns_6304-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_6304-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_6304 \
+	    -function "exp(-0.5*((Mns_6397-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_6397-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_6397 \
+	    -function "exp(-0.5*((Mns_M13-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_M13-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_M13 \
+	    -function "exp(-0.5*((Mns_M28-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_M28-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_M28 \
+	    -function "exp(-0.5*((Mns_M30-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_M30-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_M30 \
+	    -function "exp(-0.5*((Mns_wCen-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_wCen-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_wCen \
+	    -function "exp(-0.5*((Mns_X7-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_X7-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_X7 \
+	    -function "exp(-0.5*((Mns_1810b-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_1810b-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_1810b \
+	    -function "exp(-0.5*((Mns_1724b-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_1724b-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_1724b \
+	    -function "exp(-0.5*((Mns_1702-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_1702-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_1702 \
+	    -function "exp(-0.5*((Mns_0740-mean_LMS)/width_LMS)^2)" pdf \
+	    -function "1+erf((Mns_0740-mean_LMS)*(skewness_LMS)/width_LMS/sqrt(2))" cdf \
+	    -function "log(cf*pdf*cdf)" log_SN_0740 \
+	    -delete-col width_LMS -delete-col log_wgt_pop \
+	    -delete-col cf -delete-col pdf -delete-col cdf \
+	    -function log_wgt_NS log_wgt_ns -delete-col log_wgt_NS \
+	    -function log_wgt_ns log_wgt_NS -delete-col log_wgt_ns \
+	    -function log_wgt_WD log_wgt_wd -delete-col log_wgt_WD \
+	    -function log_wgt_wd log_wgt_WD -delete-col log_wgt_wd \
+	    -function log_wgt_LMS log_wgt_LX -delete-col log_wgt_LMS \
+	    -function "log(dpdM)" log_dpdM \
+	    -internal $(DIR)/$$f || echo "Failed on $$f"; \
+	done
+
+
+.PHONY: get_nlines
+get_nlines:
+	@files="-read $(DIR)/np_55r0 markov_chain_0"; \
+	echo "Building file list for acol – starting with np_55r0"; \
+	$(foreach f,$(FILES), \
+	  echo "  + $(DIR)/$(f)"; \
+	  files="$$files -cat $(DIR)/$(f)"; \
+	) \
+	cmd="acol $$files -nlines"; \
+	echo "$$cmd"; \
+	eval $$cmd
+
+
+#.PHONY: remove-init
+#remove-init:
+#	@$(foreach f,$(FILES), \
+#	  echo "Removing first 512 rows in $(f)"; \
+#	  cmd="acol -read revs/$(f) markov_chain_0 \
+#	       -index -select-rows 'N>=512' -delete-col N \
+#	       -internal thin/$(f)"; \
+#	  echo "$$cmd"; \
+#	  $$cmd || echo "Failed on $(f)"; \
+#	)
+
+#MODEL := nl
+
+.PHONY: thin-out
+thin-out:
+	@echo "Thinning out model '$(MODEL)'"; \
+	cmd="acol -read thin/$(MODEL)_66r0 markov_chain_0"; \
+	$(foreach f,$(FILES), cmd="$$cmd -cat thin/$(f)";) \
+	cmd="$$cmd -index -select-rows 'N%100==0' -delete-col N \
+	     -internal thin/$(MODEL)_thin"; \
+	echo "$$cmd"; \
+	eval $$cmd || echo "Failed on $(MODEL)_thin"
+
+
+MODEL := nl
+RANKS := 0 1 2 3 4 5 6 7
+i_next := 66
+
+.PHONY: remove-zeros
+remove-zeros:
+	@$(foreach r,$(RANKS), \
+	  echo "Removing zero mults in $(MODEL)_$(r)_out"; \
+	  cmd='acol -read $(MODEL)_$(r)_out markov_chain_0 \
+	       -select-rows "mult>0" \
+	       -internal $(MODEL)_$(r)_out'; \
+	  echo "$$cmd"; \
+	  eval $$cmd || echo "Failed on $(MODEL)_$(r)_out"; \
+	)
+
+.PHONY: copy-hdf5
+copy-hdf5:
+	@$(foreach r,$(RANKS), \
+	  echo "Copying hdf5 file $(MODEL)_$(r)_out"; \
+	  cmd="acol -h5-copy $(MODEL)_$(r)_out \
+	       $(MODEL)_$(i_next)r$(r)"; \
+	  echo "$$cmd"; \
+	  $$cmd || echo "Failed on $(MODEL)_$(r)_out"; \
+	)
+
+.PHONY: remove-init
+remove-init:
+	@$(foreach r,$(RANKS), \
+	  echo "Removing first 512 rows in $(MODEL)_$(r)_out"; \
+	  cmd='acol -read $(MODEL)_$(r)_out markov_chain_0 -index \
+	       -select-rows "N>=512" -delete-col N \
+	       -internal $(MODEL)_$(r)_out'; \
+	  echo "$$cmd"; \
+	  eval $$cmd || echo "Failed on $(MODEL)_$(r)_out"; \
+	)
+
+i_last := 66
+
+.PHONY: remap-walkers
+remap-walkers:
+	@$(foreach r,$(RANKS), \
+	  echo "Remapping walkers in $(MODEL)_$(i_last)r$(r)"; \
+	  cmd='acol -read $(MODEL)_$(i_last)r$(r) markov_chain_0 -index \
+	       -function "N%256" walker -function "(N/256)%2" thread \
+	       -delete-col N -internal $(MODEL)_$(i_last)r$(r)'; \
+	  echo "$$cmd"; \
+	  eval $$cmd || echo "Failed on $(MODEL)_$(i_last)r$(r)"; \
+	)
+
+.PHONY: clean-up
+clean-up:
+	@echo "Cleaning up output files"; \
+	rm -f *_out *_scr *.log;
