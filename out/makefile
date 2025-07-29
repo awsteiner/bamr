@@ -960,9 +960,9 @@ thin-out:
 	eval $$cmd || echo "Failed on $(MODEL)_thin"
 
 
-MODEL := nl
+MODEL := np
 RANKS := 0 1 2 3 4 5 6 7
-i_next := 66
+i_next := 68
 
 .PHONY: remove-zeros
 remove-zeros:
