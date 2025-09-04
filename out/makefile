@@ -54,7 +54,7 @@ file-main2:
 	-function "exp(-0.5*((1.4-mean_NS)/width_NS)^2)" pdf \
 	-function "1+erf((1.4-mean_NS)*(skewness_NS)/width_NS/sqrt(2))" cdf \
 	-function "cf*pdf*cdf" SN_NS \
-	-function "1/sqrt(2*3.1416)/width_WD" cf \
+	-function "1/sqrt(2*3.1416)/width_WD" cf \#file = ['ml_80r0', 'ml_80r1', 'ml_80r2', 'ml_80r3', 'ml_80r4', 'ml_80r5', 'ml_80r6', 'ml_80r7']
 	-function "exp(-0.5*((1.6-mean_WD)/width_WD)^2)" pdf \
 	-function "1+erf((1.6-mean_WD)*(skewness_WD)/width_WD/sqrt(2))" cdf \
 	-function "cf*pdf*cdf" SN_WD \
@@ -960,9 +960,9 @@ thin-out:
 	eval $$cmd || echo "Failed on $(MODEL)_thin"
 
 
-MODEL := np
+MODEL := mp
 RANKS := 0 1 2 3 4 5 6 7
-i_next := 68
+i_next := 71
 
 .PHONY: remove-zeros
 remove-zeros:
