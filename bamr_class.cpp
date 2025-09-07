@@ -2178,9 +2178,8 @@ int bamr_class::numeric_deriv(size_t ix, const ubvector &x2, point_funct &pf,
 
 
 int bamr_class::compute_deriv(const ubvector &pars, point_funct &pf,
-                              ubvector &grad, model_data &dat,
-                              bool &fix_atms) {
-  bool debug_deriv=false;
+                              ubvector &grad, model_data &dat) {
+  bool debug_deriv=false, fix_atms=true;
   if (fix_atms==true) {
     atms_fixed=false;
     fix_atms=false;
