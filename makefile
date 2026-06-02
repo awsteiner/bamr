@@ -620,5 +620,55 @@ npoly:
 	-initial-point-last "out/np_68r<rank>" \
 	-mcmc > out/np.log 2>&1 &
 
+ml-test:
+	./bamr -threads 1 -set prefix out/ml -method rw \
+	-set max_iters 100000 -set file_update_time 300 \
+	-set verbose 1 -set mcmc_verbose 2 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 0 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 0 -set inc_ligo 0 \
+	-model new_lines -set model_dpdm 1 \
+	-initial-point-last "out/ml_1" \
+	-mcmc
+
+nl-test:
+	./bamr -threads 1 -set prefix out/nl -method rw \
+	-set max_iters 100000 -set file_update_time 300 \
+	-set verbose 1 -set mcmc_verbose 2 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 0 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 0 -set inc_ligo 0 \
+	-model new_lines -set model_dpdm 0 \
+	-initial-point-last "out/nl_1" \
+	-mcmc
+
+mp-test:
+	./bamr -threads 1 -set prefix out/mp -method rw \
+	-set max_iters 100000 -set file_update_time 300 \
+	-set verbose 1 -set mcmc_verbose 2 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 0 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 0 -set inc_ligo 0 \
+	-model new_poly -set model_dpdm 1 \
+	-mcmc
+
+np-test:
+	./bamr -threads 1 -set prefix out/np -method rw \
+	-set max_iters 100000 -set file_update_time 300 \
+	-set verbose 1 -set mcmc_verbose 2 \
+	-set min_max_mass 2.0 -set norm_max 0 \
+	-set addl_quants 0 -set inc_baryon_mass 1 \
+	-set crust_from_L 0 -set compute_cthick 1 \
+	-set apply_intsc 0 -set cached_intsc 0 \
+	-set mmax_deriv 1 -set inc_pop 0 -set inc_ligo 0 \
+	-model new_poly -set model_dpdm 0 \
+	-initial-point-last "out/np_0" \
+	-mcmc 
 
 include makefile.aws

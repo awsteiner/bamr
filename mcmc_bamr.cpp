@@ -1690,6 +1690,44 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   // ---------------------------------------
 
+
+  if (mcmc_method==string("rw")) {
+
+#ifdef BAMR_MPI
+    // Ensure that multiple MPI ranks aren't reading from the
+    // filesystem at the same time
+    int tag=0, buffer=0;
+    if (mpi_size>1 && mpi_rank>=1) {
+      MPI_Recv(&buffer,1,MPI_INT,mpi_rank-1,
+         tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    }
+#endif
+    
+    std::shared_ptr<mcmc_stepper_rw<point_funct,
+                                     model_data,ubvector>> rw_stepper
+      (new mcmc_stepper_rw<point_funct,model_data,ubvector>);
+    stepper=rw_stepper;
+    
+    size_t np=pnames.size();
+    rw_stepper->step_fac.resize(np);
+    for (size_t i=0; i<np; i++) {
+      rw_stepper->step_fac[i]=100.0*(high[i]-low[i]);
+    }
+    
+#ifdef BAMR_MPI
+    // Send a message to the next MPI rank
+    if (mpi_size>1 && mpi_rank<mpi_size-1) {
+      int tag=0, buffer=0;
+      MPI_Send(&buffer,1,MPI_INT,mpi_rank+1,
+         tag,MPI_COMM_WORLD);
+    }
+#endif
+
+  }
+
+  // ---------------------------------------
+
+
   for(size_t j=0;j<pnames.size();j++) {
     pvi.append(pnames[j]);
   }
