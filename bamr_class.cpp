@@ -37,8 +37,6 @@ using namespace bamr;
 int bamr_class::fill(const ubvector &pars, double weight, 
                      std::vector<double> &line, model_data &dat) {
 
-#ifdef ANDREW
-
   if (dat.sourcet.get_nlines()==0) {
     dat.sourcet.line_of_names("R M wgt atm ce");
     dat.sourcet.new_column("cnb");
@@ -103,12 +101,10 @@ int bamr_class::fill(const ubvector &pars, double weight,
     dat.eos.add_constant("dpdM",0.0);
   }
   
-#endif
-  
   if (true) {
 
     /* These columns are redundant because the output table also 
-    contains log_wgt_sources */
+       contains log_wgt_sources */
     for(size_t i=0;i<nsd->n_sources;i++) {
       line.push_back(dat.sourcet.get("wgt",i));
     } 
@@ -276,12 +272,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         cout << "models::compute_star() failure:"
              << " ix_return=" << iret << endl;
       }
-#ifdef ANDREW
       log_wgt=-800.0-iret;
       return 0;
-#endif
-      log_wgt=0.0;
-      return iret;
     }
 
     // If likelihood is also a function of M_max, multiply by dpdM
@@ -302,7 +294,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
       
       if (iret!=m.ix_success) {
         /* iret_old = 30+i, where "i" is the star index
-        30 was added to avoid iret=0 when wgt=0 for NS-NS */
+           30 was added to avoid iret=0 when wgt=0 for NS-NS */
         log_wgt=0.0;
         iret=iret-30;
         scr_out << "NS-NS: Returned zero weight for star "
@@ -310,11 +302,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_ns() failure:"
              << " ix_return=" << iret << endl;
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret;
+        log_wgt=-800.0-iret;
+        return 0;
       }
 
       for (size_t i=0; i<pd.id_ns.size(); i++) {
@@ -327,11 +316,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
       }
 
@@ -344,28 +330,22 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_wd() failure:"
              << " ix_return=" << iret << endl;
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret;
+        log_wgt=-800.0-iret;
+        return 0;
       }
       
       for (size_t i=0; i<pd.id_wd.size(); i++) {
         if (M_max<pars[pvi[string("M_")+pd.id_wd[i]]]) {
           scr_out << "NS-WD: Gravitational mass beyond M_max "
-                << "for star " << pd.id_wd[i] << std::endl;
+                  << "for star " << pd.id_wd[i] << std::endl;
           log_wgt=0.0;
           iret=m.ix_gm_exceeds_mmax;
           if (set->verbose>2) {
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
       }
 
@@ -378,11 +358,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         iret=m.ix_pop_wgt_zero;
         cout << "ns_pop::weight_lx() failure:"
              << " ix_return=" << iret << endl;
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret;
+        log_wgt=-800.0-iret;
+        return 0;
       }
 
       for (size_t i=0; i<pd.id_lx.size(); i++) {
@@ -395,26 +372,23 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
       }
 
       /*
-      cout.precision(17);
-      cout << "wgt_pop[0]: " << wgt_pop[0] << endl;
-      cout << "wgt_pop[1]: " << wgt_pop[1] << endl;
-      cout << "wgt_pop[2]: " << wgt_pop[2] << endl;
-      cout.precision(6);
+        cout.precision(17);
+        cout << "wgt_pop[0]: " << wgt_pop[0] << endl;
+        cout << "wgt_pop[1]: " << wgt_pop[1] << endl;
+        cout << "wgt_pop[2]: " << wgt_pop[2] << endl;
+        cout.precision(6);
       */
       wgt_pop[3]=wgt_pop[0]+wgt_pop[1]+wgt_pop[2];
       log_wgt+=wgt_pop[3];
       
       /* cout << "Final pop result: ";
-        vector_out(cout, pop_weights, true); */
+         vector_out(cout, pop_weights, true); */
     }
 
     // ----------------------------------------------------------------
@@ -457,15 +431,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
 
         log_wgt=0.0;
         iret=m.ix_mr_outside;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
-          }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret;
+        if (set->verbose>2) {
+          cout << "bamr_class::compute_point() failure:"
+               << " ix_return=" << iret << endl;
+        }
+        log_wgt=-800.0-iret;
+        return 0;
       }
     }
     
@@ -574,11 +545,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
               
         // Include the weight for this source
@@ -586,7 +554,7 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         wgt_em[i]=dat.sourcet.get("wgt",i);
 
         /* If population is included, calculate the skewed normal (SN) 
-        PDF for the sources: QLMXBs, PREs, and NICER */
+           PDF for the sources: QLMXBs, PREs, and NICER */
         if (set->inc_pop) {
           if (nsd->source_names[i]!=string("0030")) {
             ns_pop &pop=nsd->pop;
@@ -769,11 +737,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
       }
 
@@ -850,17 +815,14 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << " with mass " << mass << " and radius "
                     << rad << " with atm=" << atm << endl;
             iret=m.ix_mr_outside;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
+            if (set->verbose>2) {
+              cout << "bamr_class::compute_point() failure:"
+                   << " ix_return=" << iret << endl;
+            }
+            log_wgt=-800.0-iret;
+            return 0;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-            return iret;
-          }
-                
+          
           // Include the weight for this source
           log_wgt+=log(dat.sourcet.get("wgt",i));
 
@@ -886,11 +848,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
               
       }
@@ -929,15 +888,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                 << std::endl;
         log_wgt=0.0;
         iret=m.ix_ligo_gm_invalid;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
-          }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret;
+        if (set->verbose>2) {
+          cout << "bamr_class::compute_point() failure:"
+               << " ix_return=" << iret << endl;
+        }
+        log_wgt=-800.0-iret;
+        return 0;
         
       } else {
         
@@ -1028,15 +984,12 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
                     << nsd->gw17_data_table.get_grid(jj,n_ligo-1) 
                     << endl;
             iret=m.ix_ligo_pars_outside;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
-          }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-            return iret;
+            if (set->verbose>2) {
+              cout << "bamr_class::compute_point() failure:"
+                   << " ix_return=" << iret << endl;
+            }
+            log_wgt=-800.0-iret;
+            return 0;
           }
         }
         
@@ -1068,36 +1021,30 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
         scr_out << "GW190425 invalid mass: m1=" << m1_gw19 << ", m2=" 
                 << m2_gw19 << ", Mmax=" << Mmax << endl;
         iret=m.ix_ligo_gm_invalid;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
-          }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret; 
+        if (set->verbose>2) {
+          cout << "bamr_class::compute_point() failure:"
+               << " ix_return=" << iret << endl;
+        }
+        log_wgt=-800.0-iret;
+        return 0;
       }   
 
       // Check if m1 is within the range of the input data table
       if (m1_gw19<nsd->gw19_data_table.get("rep",0) ||
           m1_gw19>nsd->gw19_data_table.get("rep",
-            nsd->gw19_data_table.get_nlines()-1)) {
+                                           nsd->gw19_data_table.get_nlines()-1)) {
         scr_out << "GW190425 m1 is out of range: m1=" << m1_gw19 
                 << ", m1_low=" << nsd->gw19_data_table.get("rep",0) 
                 << ", m1_high=" << nsd->gw19_data_table.get("rep",
-                nsd->gw19_data_table.get_nlines()-1) << endl;
+                                                            nsd->gw19_data_table.get_nlines()-1) << endl;
         log_wgt=0.0;
         iret=m.ix_ligo_pars_outside;
-          if (set->verbose>2) {
-            cout << "bamr_class::compute_point() failure:"
-                 << " ix_return=" << iret << endl;
-          }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-        return iret; 
+        if (set->verbose>2) {
+          cout << "bamr_class::compute_point() failure:"
+               << " ix_return=" << iret << endl;
+        }
+        log_wgt=-800.0-iret;
+        return 0;
       }
       
       prob_gw19=nsd->gw19_data_table.interp_const("rep", m1_gw19, "wgt");
@@ -1140,11 +1087,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
         
         log_wgt+=log(sn_ligo);
@@ -1166,11 +1110,8 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
             cout << "bamr_class::compute_point() failure:"
                  << " ix_return=" << iret << endl;
           }
-#ifdef ANDREW
-      log_wgt=-800.0-iret;
-      return 0;
-#endif
-          return iret;
+          log_wgt=-800.0-iret;
+          return 0;
         }
 
         log_wgt+=log(sn_ligo);
@@ -1414,15 +1355,11 @@ int bamr_class::compute_point(const ubvector &pars, std::ofstream &scr_out,
     //exit(-1);
   }
 
-#ifdef ANDREW
   if (iret!=0) {
     log_wgt=-800.0-iret;
-    return 0;
   }
-#endif
-  return iret;
+  return 0;
 }
-
 
 int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out, 
                                   double &log_wgt, model_data &dat) {
@@ -1434,25 +1371,25 @@ int bamr_class::compute_point_ext(const ubvector &pars, std::ofstream &scr_out,
 
 int bamr_class::deriv_fd(size_t i, ubvector &x, point_funct &pf,
                          double &pfx, double &g, model_data &dat) {
-double fv1=pfx;
-double fv2, h;
-model &m=*this->mod;
-size_t np=x.size();
+  double fv1=pfx;
+  double fv2, h;
+  model &m=*this->mod;
+  size_t np=x.size();
 
-// Adjust step size
-double epsrel=1.0e-6, epsmin=1.0e-15;
-h=epsrel*fabs(x[i]);
-if (fabs(h)<=epsmin) h=epsrel;
+  // Adjust step size
+  double epsrel=1.0e-6, epsmin=1.0e-15;
+  h=epsrel*fabs(x[i]);
+  if (fabs(h)<=epsmin) h=epsrel;
 
-// Compute: f'(x)=[f(x+h)-f(x)]/h
-x[i]+=h;
-int func_ret=pf(np, x, fv2, dat);
-if (func_ret!=o2scl::success) return m.ix_grad_failed;
-x[i]-=h;
+  // Compute: f'(x)=[f(x+h)-f(x)]/h
+  x[i]+=h;
+  int func_ret=pf(np, x, fv2, dat);
+  if (func_ret!=o2scl::success) return m.ix_grad_failed;
+  x[i]-=h;
 
-g=(exp(fv2)-exp(fv1))/h;
+  g=(exp(fv2)-exp(fv1))/h;
 
-return o2scl::success;
+  return o2scl::success;
 }
 
 
@@ -1576,7 +1513,7 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       i_pars++;
     }
     /*
-    if (i_pars==np_eos+np_ligo-1) { 
+      if (i_pars==np_eos+np_ligo-1) { 
       // w.r.t. m1_gw19
       double cf, d_sn, d_gw;
       cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*fsn_gw19[1]*c_fsn_em*c_wgt_em;
@@ -1584,31 +1521,31 @@ int bamr_class::compute_deriv(ubvector &pars, point_funct &pf,
       d_sn=nsp.deriv_sn(0, M_star[0], mean[0], width[0], skew[0]);
       int ret=deriv_fd(i_pars, pars, pf, pfx, d_gw, dat);
       if (ret!=0) {
-        cout << "bamr_class::compute_deriv() failure." << endl;
-        return m.ix_grad_failed;
+      cout << "bamr_class::compute_deriv() failure." << endl;
+      return m.ix_grad_failed;
       }
       grad[i_pars]=d_gw+cf*d_sn;
       cout << "GW19: i_pars=" << i_pars << endl;
       i_pars++;
-    }
+      }
 
-    if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
+      if (i_pars>=np_eos+np_ligo && i_pars<np_eos+np_ligo+np_src) { 
       // w.r.t. the mass fractions mf_*
       double cf, d_sn, d_em, ct;
       cf=c_fsn_nsp*c_fan_nsp*c_wgt_gw*c_fsn_gw*c_wgt_em;
       for (size_t j=0; j<np_src; j++) {
-        int ret=deriv_fd(i_pars, pars, pf, pfx,  d_em, dat);
-        if (ret!=0) {
-          cout << "bamr_class::compute_deriv() failure." << endl;
-          return m.ix_grad_failed;
-        }
-        ct=c_fsn_em/fsn_em[j];
-        d_sn=nsp.deriv_sn(0, M_star[i_pars], mean[2], width[2], skew[2]);
-        grad[i_pars]=d_em+cf*ct*d_sn;
-        cout << "Sources: i_pars=" << i_pars << endl;
-        i_pars++;
+      int ret=deriv_fd(i_pars, pars, pf, pfx,  d_em, dat);
+      if (ret!=0) {
+      cout << "bamr_class::compute_deriv() failure." << endl;
+      return m.ix_grad_failed;
       }
-    }
+      ct=c_fsn_em/fsn_em[j];
+      d_sn=nsp.deriv_sn(0, M_star[i_pars], mean[2], width[2], skew[2]);
+      grad[i_pars]=d_em+cf*ct*d_sn;
+      cout << "Sources: i_pars=" << i_pars << endl;
+      i_pars++;
+      }
+      }
     */
 
     if (i_pars>=np_eos+np_ligo+np_src && 

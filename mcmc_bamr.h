@@ -104,33 +104,10 @@ namespace bamr {
       copy_params() function to copy model parameters between model
       objects. There's probably a better way to do this.
   */
-//#ifdef BAMR_KDE
-/*  class mcmc_bamr :
-    public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-   mcmc_stepper_mh<point_funct,model_data,
-                   ubvector,ubmatrix,
-                   prob_cond_mdim_indep<>>>
-*/
-//#else
-
-#ifdef ANDREW
   class mcmc_bamr :
     public o2scl::mcmc_para_emu
-  <point_funct,fill_funct,model_data,ubvector>
-  //class mcmc_bamr :
-  //public o2scl::mcmc_para_cli
-  //<point_funct,fill_funct,model_data,ubvector>
-#else
-  class mcmc_bamr :
-    public o2scl::mcmc_para_cli
-  <point_funct,fill_funct,model_data,ubvector,
-    mcmc_stepper_hmc<point_funct,model_data,ubvector>
-#endif
-   
-//#endif
-   
-  {
+  <point_funct,fill_funct,model_data,ubvector> {
+    
   protected:
 
     rng<> pw_rng;
@@ -223,11 +200,9 @@ namespace bamr {
      */
     virtual int mcmc_func(std::vector<std::string> &sv, bool itive_com);
 
-#ifdef ANDREW
     /// Wrapper to the point function which uses the emulator
     virtual int point_wrapper(size_t it, size_t np, const ubvector &p,
                               double &log_wgt, model_data &dat);
-#endif
     
     /** \brief Set the number of OpenMP threads
      */

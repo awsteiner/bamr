@@ -147,11 +147,9 @@ int mcmc_bamr::mcmc_init() {
   this->def_stepper->step_fac[0]=1.0e6;
   mcmc_para_cli::mcmc_init();
 
-#ifndef ANDREW
   // Enable/diable storing rejected MCMC points
   if (set->use_emulator) this->store_rejects=true;
   else this->store_rejects=false;
-#endif
   
   // -----------------------------------------------------------
   // Make sure the settings are consistent
@@ -421,10 +419,10 @@ int mcmc_bamr::mcmc_init() {
       }
       double lwt;
       bool fail=false;
-      for(size_t j=0;j<this->n_params;j++) {
-        if (xt[j]<low_copy[j] || xt[j]>high_copy[j]) {
-          cout << "Fail: " << j << " " << low_copy[j] << " "
-               << xt[j] << " " << high_copy[j] << endl;
+      for(size_t jk=0;jk<this->n_params;jk++) {
+        if (xt[jk]<low_copy[jk] || xt[jk]>high_copy[jk]) {
+          cout << "Fail: " << jk << " " << low_copy[jk] << " "
+               << xt[jk] << " " << high_copy[jk] << endl;
           fail=true;
         }
       }
@@ -834,7 +832,6 @@ int mcmc_bamr::read_prev_results_mb(std::vector<std::string> &sv,
   return 0;
 }
 
-#ifdef ANDREW
 int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
                              double &log_wgt, model_data &dat) {
 
@@ -849,10 +846,18 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
     if (n_retrain>0) {
       if (use_classifier) {
         ubvector_int outc(1);
+#ifdef BAMR_MPI
         double t0=MPI_Wtime();
+#else
+        double t0=time(0);
+#endif
         // AWS: caused compile failure, 7/21/26
         //emuc[it]->eval(p,outc);
+#ifdef BAMR_MPI
         time_class+=MPI_Wtime()-t0;
+#else
+        time_class+=time(0)-t0;
+#endif
         double rc=pw_rng.random();
         // Allow 10% of points through even if the classifier rejects them
         n_total_class++;
@@ -863,9 +868,17 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
       }
       n_total_emu++;
       ubvector out(1);
+#ifdef BAMR_MPI
       double t1=MPI_Wtime();
+#else
+      double t1=time(0);
+#endif
       emu[it]->eval(p,out);
+#ifdef BAMR_MPI
       time_emu+=MPI_Wtime()-t1;
+#else
+      time_emu+=time(0)-t1;
+#endif
       log_wgt=out[0];
     } else {
       int ret=((*func_ptr)[it])(np,p,log_wgt,dat);
@@ -889,7 +902,6 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
 
   return 0;
 }
-#endif
 
 int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
@@ -1077,8 +1089,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   
   // Note that kde_python doesn't work with n_threads>1
 
-#ifdef ANDREW
-  
   if (true) {
     
     this->n_retrain=0;
@@ -1403,8 +1413,6 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   //<< std::endl;
   //}
     
-#endif
-
   if (mcmc_method==string("hmc")) {
 
 #ifdef BAMR_MPI
@@ -1417,15 +1425,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 #endif
 
-#ifdef ANDREW
-    
     std::shared_ptr<mcmc_stepper_hmc<point_funct,
                                      model_data,ubvector>> hmc_stepper
       (new mcmc_stepper_hmc<point_funct,model_data,
        ubvector>);
     stepper=hmc_stepper;
-    
-#endif
     
     size_t np_ligo=nsd->n_ligo_params;
     size_t np_eos=bc_arr[0]->mod->n_eos_params;
@@ -1433,37 +1437,20 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     size_t np_pop=nsd->pop.n_pop_params;
     size_t np=names.size();
     
-#ifdef ANDREW
     if (hmc_stepper->auto_grad.size()<np) hmc_stepper->auto_grad.resize(np);
     for (size_t i=0; i<np; i++) hmc_stepper->auto_grad[i]=false;
-#else
-    if (stepper.auto_grad.size()<np) stepper.auto_grad.resize(np);
-    for (size_t i=0; i<np; i++) stepper.auto_grad[i]=false;
-#endif
 
-#ifdef ANDREW
     hmc_stepper->traj_length=1;
-#else
-    stepper.traj_length=1;
-#endif
    
     random_device rd;
     mt19937 gen(rd());
     uniform_real_distribution<> unif(0,1);
 
-#ifdef ANDREW
     hmc_stepper->mom_step.resize(np);
     for (size_t i=0; i<np; i++) {
       hmc_stepper->mom_step[i]=1.0e-6*(high[i]-low[i])
                                *(unif(gen)*2.0-1.0);
     }
-#else
-    stepper.mom_step.resize(np);
-    for (size_t i=0; i<np; i++) {
-      stepper.mom_step[i]=1.0e-6*(high[i]-low[i])
-                               *(unif(gen)*2.0-1.0);
-    }
-#endif
 
     vector<bamr::deriv_funct> gfa(n_threads);
     using namespace std::placeholders;
@@ -1473,13 +1460,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
         (&bamr_class::compute_deriv), bc_arr[i], _2, _3, _4, _5);
     }
 
-#ifdef ANDREW
     // AWS: caused compile failure, 7/21/26
     //hmc_stepper->set_gradients(gfa);
-#else
-    // AWS: caused compile failure, 7/21/26
-    //stepper.set_gradients(gfa);
-#endif
 
     // End of HMC section
   }
@@ -1500,14 +1482,10 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     cout << "In mcmc_bamr::mcmc_func(): Going to mcmc_fill()." << endl;
   }
 
-#ifdef ANDREW
   this->use_classifier=true;
   this->n_retrain=1000000;
   this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
   //this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
-#else
-  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
-#endif
 
   return 0;
 }
