@@ -1484,8 +1484,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
 
   this->use_classifier=true;
   this->n_retrain=1000000;
-  this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
-  //this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
+  if (false) this->mcmc_emu(names.size(),low2,high2,pfa,ffa,dat_arr);
+  this->mcmc_fill(names.size(),low2,high2,pfa,ffa,dat_arr);
 
   return 0;
 }
