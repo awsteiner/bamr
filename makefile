@@ -7,37 +7,17 @@
 # HDF5 libraries. By default, this is taken from the enviroment
 # variable LDFLAGS.
 
-LDFLAGS = -L/usr/local/lib \
-		-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib
-
 LIB_DIRS = $(LDFLAGS)
 
 # This variable may need to be modified to specify the include
 # directories for the GSL, Boost, HDF5, and O2scl header files. By
 # default this is taken from the environment variable CXXFLAGS.
 
-CXXFLAGS = -I/usr/lib/x86_64-linux-gnu/openmpi/include \
-		-I/usr/lib/x86_64-linux-gnu/hdf5/serial/include \
-		-I/usr/include/python3.8
-
 INC_DIRS = $(CXXFLAGS)
-
-PYTHON_LDFLAGS = $(SHELL_PYTHON_LDFLAGS) -lpython3.10
-PYTHON_CXXFLAGS = $(SHELL_PYTHON_INCLUDES)
-
-# Generic (no MPI necessary) C++ compiler (e.g. g++)
-CXX = g++
-
-# C++ compiler (e.g. mpicxx).
-MPI_CXX = mpic++
 
 # Set these to be empty if you do not have GNU readline support
 READLINE_VAR = -DBAMR_READLINE
 READLINE_LIB = -lreadline -lncurses
-
-# Set these to be empty if you do not have FFTW3
-FFTW_VAR = -DBAMR_FFTW3
-FFTW_LIB = -lfftw3
 
 # Basic compiler flags with and without MPI
 COMPILER_FLAGS = -std=c++0x -O3 -Wall -Wno-unused
@@ -53,7 +33,7 @@ include $(UTKNA_MAKEFILE)
 
 # UTK configuration
 LIB_DIRS = $(UTKNA_O2SCL_LIBS)
-INC_DIRS = $(UTKNA_O2SCL_INCS) -DO2SCL_NO_BOOST_MULTIPRECISION
+INC_DIRS = $(UTKNA_O2SCL_INCS) 
 CXX = $(UTKNA_CXX)
 MPI_CXX = $(UTKNA_MPI_CXX)
 BAMR_DIR = $(UTKNA_BAMR_DIR)
@@ -70,12 +50,12 @@ endif
 # ----------------------------------------------------------------------
 
 ALL_FLAGS_MPI = $(COMPILER_FLAGS_MPI) $(INC_DIRS) $(READLINE_VAR) \
-	$(FFTW_VAR) -DBAMR_MPI $(COMPILER_FLAGS_OPENMP) $(PYTHON_INCLUDES) \
+	-DBAMR_MPI $(COMPILER_FLAGS_OPENMP) $(PYTHON_INCLUDES) \
 
-ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) $(FFTW_VAR) \
+ALL_FLAGS = $(COMPILER_FLAGS) $(INC_DIRS) $(READLINE_VAR) \
 	$(PYTHON_INCLUDES)
 
-LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) $(READLINE_LIB) $(FFTW_LIB)
+LIBS = $(LIB_DIRS) $(PYTHON_LDFLAGS) $(READLINE_LIB) 
 
 # ----------------------------------------------------------------------
 # Targets for bamr

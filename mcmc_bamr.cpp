@@ -850,7 +850,8 @@ int mcmc_bamr::point_wrapper(size_t it, size_t np, const ubvector &p,
       if (use_classifier) {
         ubvector_int outc(1);
         double t0=MPI_Wtime();
-        emuc[it]->eval(p,outc);
+        // AWS: caused compile failure, 7/21/26
+        //emuc[it]->eval(p,outc);
         time_class+=MPI_Wtime()-t0;
         double rc=pw_rng.random();
         // Allow 10% of points through even if the classifier rejects them
@@ -936,7 +937,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
 
   // Send names and units to o2scl
-  set_names_units(names,units);
+  // AWS: caused compile failure, 7/21/26
+  //set_names_units(names,units);
   
   // Set initial points if they have not already been set by the user
   if (this->initial_points.size()==0) {
@@ -1081,12 +1083,15 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     
     this->n_retrain=0;
     this->emu_file="out/run10/run_1_10_emulate_b";
-    this->emuc_file="out/run10/run_1_10_classify_c";
+    // AWS: caused compile failure, 7/21/26
+    //this->emuc_file="out/run10/run_1_10_classify_c";
     this->show_emu=2;
-    this->max_train_size=1000000;
+    // AWS: caused compile failure, 7/21/26
+    //this->max_train_size=1000000;
 
     this->emu.resize(1);
-    this->emuc.resize(1);
+    // AWS: caused compile failure, 7/21/26
+    //this->emuc.resize(1);
 
     int intp=4;
     
@@ -1184,7 +1189,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
           "hlayers=[200,200]",0));
       
       
-      this->emuc[0]=cp;
+      // AWS: caused compile failure, 7/21/26
+      //this->emuc[0]=cp;
       
     }
   }
@@ -1296,6 +1302,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // the same if this vector is empty
       vector<double> weights;
 
+      // AWS: caused compile failure, 7/21/26
+#ifdef O2SCL_NEVER_DEFINED
       kp=std::shared_ptr<kde_python<ubvector>>(new kde_python<ubvector>);
       kp->set_function("o2sclpy",ten_in,weights,
 		       "verbose=0","kde_scipy");
@@ -1305,6 +1313,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // for more than one OpenMP thread.
       mh_stepper->proposal.resize(1);
       mh_stepper->proposal[0].set_base(kp);
+#endif
 
     } else if (mcmc_method==string("kde_sklearn")) {
 
@@ -1316,6 +1325,8 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       uniform_grid_log_end<double> ug(1.0e-3,1.0e3,99);
       vector<double> bw_array;
       ug.vector(bw_array);
+      // AWS: caused compile failure, 7/21/26
+#ifdef O2SCL_NEVER_DEFINED
       kp->set_function("o2sclpy",ten_in,bw_array,
 		       "verbose=0","kde_sklearn");
       
@@ -1324,6 +1335,7 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       // for more than one OpenMP thread.
       mh_stepper->proposal.resize(1);
       mh_stepper->proposal[0].set_base(kp);
+#endif
       
     } else {
 
@@ -1334,8 +1346,9 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
       ubvector std(n_pars), avg(n_pars);
       cout << "j param,avg,std: " << endl;
       for(size_t j=0;j<n_pars;j++) {
-        avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
-        std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
+        // AWS: caused compile failure, 7/21/26
+        //avg[j]=vector_mean(tab_in.get_nlines(),tab_in[j+5]);
+        //std[j]=vector_stddev(tab_in.get_nlines(),tab_in[j+5]);
         cout << "param,avg,stddev: " << j << " " << avg[j] 
              << " " << std[j] << endl;
       }
@@ -1378,14 +1391,17 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
   }
   
 #ifdef O2SCL_MPI
-    train_time=MPI_Wtime()-train_time;
+  // AWS: caused compile failure, 7/21/26
+  //train_time=MPI_Wtime()-train_time;
 #else
-    train_time=time(0)-train_time;
+  // AWS: caused compile failure, 7/21/26
+  //train_time=time(0)-train_time;
 #endif
-    if (this->verbose>1) {
-      std::cout << "Proposal training time: " << train_time
-                << std::endl;
-    }
+  // AWS: caused compile failure, 7/21/26
+  //if (this->verbose>1) {
+  //std::cout << "Proposal training time: " << train_time
+  //<< std::endl;
+  //}
     
 #endif
 
@@ -1458,9 +1474,11 @@ int mcmc_bamr::mcmc_func(std::vector<std::string> &sv, bool itive_com) {
     }
 
 #ifdef ANDREW
-    hmc_stepper->set_gradients(gfa);
+    // AWS: caused compile failure, 7/21/26
+    //hmc_stepper->set_gradients(gfa);
 #else
-    stepper.set_gradients(gfa);
+    // AWS: caused compile failure, 7/21/26
+    //stepper.set_gradients(gfa);
 #endif
 
     // End of HMC section
